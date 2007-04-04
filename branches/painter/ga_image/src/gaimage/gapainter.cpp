@@ -73,9 +73,20 @@ void Painter::fillPolygon(PointArray& points)
 ///
 /// \param points array of points to be sorted
 ///
+/// \return vector of indices, represents sort order from low to high
+///
 ////////////////////////////////////////////////////////////////////////////////
-void Painter::qSortPointsY(PointArray& points, const int& min, const int& max)
+std::vector<unsigned int> Painter::qSortPointsY(PointArray& points, const int& min, const int& max)
 {
+	std::vector<unsigned int> indices;
+
+	for (int i=0; i<points.size(); ++i)
+	{
+		indices.push_back(i);
+	}
+
+	/// \todo qsort is working, now change to pure index sorting
+
 	if (min < max)
 	{
 		int i = min;

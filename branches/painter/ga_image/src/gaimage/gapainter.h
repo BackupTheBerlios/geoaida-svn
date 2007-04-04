@@ -21,7 +21,6 @@
 
 //--- standard header --------------------------------------------------------//
 #include <vector>
-#include <list>
 
 //--- project header ---------------------------------------------------------//
 #include "gaimage.h"
@@ -51,12 +50,7 @@ class Painter
 		Image& img_;	///< image that is used for all operations
 
 	private:
-		void qSortPointsY(PointArray&, const int&, const int&);
-
-		struct Edge
-		{
-			y_top
-		};
+		std::vector<unsigned int> qSortPointsY(PointArray&, const int&, const int&);
 };
 
 } // namespace Ga
