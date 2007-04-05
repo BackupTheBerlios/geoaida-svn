@@ -30,6 +30,7 @@ namespace Ga
 {
 
 typedef std::vector<Ga::Point> PointArray;
+typedef std::vector<unsigned int> IndexArray;
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -50,7 +51,7 @@ class Painter
 		Image& img_;	///< image that is used for all operations
 
 	private:
-		std::vector<unsigned int> qSortPointsY(PointArray&, const int&, const int&);
+		void qSortPointsY(PointArray&, IndexArray&, const int&, const int&);
 };
 
 } // namespace Ga

@@ -51,62 +51,103 @@ void Painter::drawPolygon(const PointArray& points)
 ////////////////////////////////////////////////////////////////////////////////
 void Painter::fillPolygon(PointArray& points)
 {
-	// vector for sorted points, original vector needed for neighbours
-	std::vector<Ga::Point> sPoints = points;
+	IndexArray indices;
 
+	// create index array
+	for (int i=0; i<points.size(); ++i)
+	{
+		indices.push_back(i);
+	}
 	// sort points by their y coordinate
-	qSortPointsY(sPoints, 0, sPoints.size()-1);
+	qSortPointsY(points, indices, 0, points.size()-1);
 
 	// start at the topmost point
-	for (int i=0; i<sPoints.size(); ++i)
+	for (int i=0; i<points.size(); ++i)
 	{
-		
-		std::cout << "Processing point " << i << ": " << sPoints[i].x() << ", " << sPoints[i].y() << std::endl;
-
-		// 		img_.set(sPoints[i].x(), sPoints[i].y(), 0);
+		std::cout << points[indices[i]].y() << std::endl;
 	}
 }
+
+// ////////////////////////////////////////////////////////////////////////////////
+// ///
+// /// \brief method to sort points by their y position using quicksort
+// ///
+// /// \param points array of points to be sorted
+// /// \param indices array of indices for sorted point array
+// ///
+// ////////////////////////////////////////////////////////////////////////////////
+// void Painter::qSortPointsY(PointArray& points, IndexArray& indices, const int& min, const int& max)
+// {
+// 	if (min < max)
+// 	{
+// // 		int py = points[indices[max]].y();
+// 		int py = points[max].y();
+// 
+// 		int i = min-1;
+// 		int j = max;
+// 		while (true)
+// 		{
+// // 			do ++i; while (points[indices[i]].y() < py);
+// // 			do --j; while (points[indices[j]].y() > py);
+// 			do ++i; while (points[i].y()< py);
+// 			do --j; while (points[j].y()> py);
+// 			if (i<j)
+// 			{
+// // 				unsigned int k = indices[i];
+// // 				indices[i] = indices[j];
+// // 				indices[j] = k;
+// 				Point p = points[i];
+// 				points[i] = points[j];
+// 				points[j] = p;
+// 			}
+// 			else break;
+// 		}
+// // 		unsigned int k = indices[i];
+// // 		indices[i] = indices[max];
+// // 		indices[max] = k;
+// 		Point p = points[i];
+// 		points[i] = points[max];
+// 		points[max] = p;
+// 
+// 		qSortPointsY(points, indices, min, i-1);
+// 		qSortPointsY(points, indices, i+1, max);
+// 	}
+// }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 /// \brief method to sort points by their y position using quicksort
 ///
 /// \param points array of points to be sorted
-///
-/// \return vector of indices, represents sort order from low to high
+/// \param indices array of indices for sorted point array
 ///
 ////////////////////////////////////////////////////////////////////////////////
-std::vector<unsigned int> Painter::qSortPointsY(PointArray& points, const int& min, const int& max)
+void Painter::qSortPointsY(PointArray& points, IndexArray& indices, const int& min, const int& max)
 {
-	std::vector<unsigned int> indices;
-
-	for (int i=0; i<points.size(); ++i)
-	{
-		indices.push_back(i);
-	}
-
-	/// \todo qsort is working, now change to pure index sorting
-
 	if (min < max)
 	{
-		int i = min;
-		int j = max-1;
-		while (i<j)
+		int py = points[indices[max]].y();
+
+		int i = min-1;
+		int j = max;
+		while (true)
 		{
-			while (points[i].y()<points[max].y()) ++i;
-			while (points[j].y()>points[max].y()) --j;
+			do ++i; while (points[indices[i]].y() < py);
+			do --j; while (points[indices[j]].y() > py);
 			if (i<j)
 			{
-				Point p = points[i];
-				points[i] = points[j];
-				points[j] = p;
+				unsigned int k = indices[i];
+				indices[i] = indices[j];
+				indices[j] = k;
 			}
+			else break;
 		}
-		Point p = points[i];
-		points[i] = points[max];
-		points[max] = p;
-		qSortPointsY(points, min, i-1);
-		qSortPointsY(points, i+1, max);
+		unsigned int k = indices[i];
+		indices[i] = indices[max];
+		indices[max] = k;
+
+		qSortPointsY(points, indices, min, i-1);
+		qSortPointsY(points, indices, i+1, max);
 	}
 }
 
