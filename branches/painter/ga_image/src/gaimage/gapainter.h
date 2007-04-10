@@ -20,6 +20,7 @@
 #define __GA_PAINTER_H
 
 //--- standard header --------------------------------------------------------//
+#include <list>
 #include <vector>
 
 //--- project header ---------------------------------------------------------//
@@ -45,13 +46,20 @@ class Painter
 
 		//--- methods --------------------------------------------------------//
 		void drawPolygon(const PointArray& points);
-		void fillPolygon(PointArray& points);
+		void fillPolygon(const PointArray& points);
 
 	protected:
 		Image& img_;	///< image that is used for all operations
 
 	private:
-		void qSortPointsY(PointArray&, IndexArray&, const int&, const int&);
+		void qSortPointsY(const PointArray&, IndexArray&, const int&, const int&) const;
+
+		class Edge
+		{
+			public:
+				Point p0;
+				Point p1;
+		};
 };
 
 } // namespace Ga

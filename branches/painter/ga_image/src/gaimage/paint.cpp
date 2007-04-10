@@ -49,22 +49,13 @@ int main(int argc, char** argv)
 	img=255;
 
 	// define the polygon
-// 	points.push_back(Ga::Point(400,300));
-// 	points.push_back(Ga::Point(50,200));
-// 	points.push_back(Ga::Point(200,100));
-// 	points.push_back(Ga::Point(310,80));
-// 	points.push_back(Ga::Point(180,280));
-// 	points.push_back(Ga::Point(100,260));
-// 	points.push_back(Ga::Point(220,130));
-
-	// define the polygon
-	points.push_back(Ga::Point(100,260));
 	points.push_back(Ga::Point(50,200));
+	points.push_back(Ga::Point(200,100));
 	points.push_back(Ga::Point(220,130));
 	points.push_back(Ga::Point(310,80));
 	points.push_back(Ga::Point(400,300));
-	points.push_back(Ga::Point(200,100));
 	points.push_back(Ga::Point(180,280));
+	points.push_back(Ga::Point(100,260));
 
 	// draw the filled polygon
 	painter.fillPolygon(points);

@@ -49,9 +49,10 @@ void Painter::drawPolygon(const PointArray& points)
 /// \param points array of points defining the polygon
 ///
 ////////////////////////////////////////////////////////////////////////////////
-void Painter::fillPolygon(PointArray& points)
+void Painter::fillPolygon(const PointArray& points)
 {
-	IndexArray indices;
+	IndexArray			indices;
+	std::list<Edge>		edges;
 
 	// create index array
 	for (int i=0; i<points.size(); ++i)
@@ -61,7 +62,12 @@ void Painter::fillPolygon(PointArray& points)
 	// sort points by their y coordinate
 	qSortPointsY(points, indices, 0, points.size()-1);
 
-	// start at the topmost point
+	// start with the topmost point
+	for (int i=0; i<points.size(); ++i)
+	{	
+	}
+
+	// output for testing purposes
 	for (int i=0; i<points.size(); ++i)
 	{
 		std::cout << points[indices[i]].y() << std::endl;
@@ -80,31 +86,22 @@ void Painter::fillPolygon(PointArray& points)
 // {
 // 	if (min < max)
 // 	{
-// // 		int py = points[indices[max]].y();
 // 		int py = points[max].y();
 // 
 // 		int i = min-1;
 // 		int j = max;
 // 		while (true)
 // 		{
-// // 			do ++i; while (points[indices[i]].y() < py);
-// // 			do --j; while (points[indices[j]].y() > py);
 // 			do ++i; while (points[i].y()< py);
 // 			do --j; while (points[j].y()> py);
 // 			if (i<j)
 // 			{
-// // 				unsigned int k = indices[i];
-// // 				indices[i] = indices[j];
-// // 				indices[j] = k;
 // 				Point p = points[i];
 // 				points[i] = points[j];
 // 				points[j] = p;
 // 			}
 // 			else break;
 // 		}
-// // 		unsigned int k = indices[i];
-// // 		indices[i] = indices[max];
-// // 		indices[max] = k;
 // 		Point p = points[i];
 // 		points[i] = points[max];
 // 		points[max] = p;
@@ -122,7 +119,7 @@ void Painter::fillPolygon(PointArray& points)
 /// \param indices array of indices for sorted point array
 ///
 ////////////////////////////////////////////////////////////////////////////////
-void Painter::qSortPointsY(PointArray& points, IndexArray& indices, const int& min, const int& max)
+void Painter::qSortPointsY(const PointArray& points, IndexArray& indices, const int& min, const int& max) const
 {
 	if (min < max)
 	{
