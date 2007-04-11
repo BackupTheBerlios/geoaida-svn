@@ -52,7 +52,8 @@ void Painter::drawPolygon(const PointArray& points)
 void Painter::fillPolygon(const PointArray& points)
 {
 	IndexArray			indices;
-	std::list<Edge>		edges;
+	std::vector<Edge>	edges;
+	std::vector<Edge>	active_edges;
 
 	// create index array
 	for (int i=0; i<points.size(); ++i)
@@ -62,16 +63,28 @@ void Painter::fillPolygon(const PointArray& points)
 	// sort points by their y coordinate
 	qSortPointsY(points, indices, 0, points.size()-1);
 
-	// start with the topmost point
-	for (int i=0; i<points.size(); ++i)
-	{	
+	// sort edges by their topmost point
+	for (int i=0; i<indices.size()-1; ++i)
+	{
+		Point prev(0,0);
+		Point next(0,0);
+
+		// catch overflow
+		if (0 == indices[i])
+			prev=points.back();
+		else
+			prev=points[indices[i]-1];
+		if (points.size()-1 == indices[i])
+			next=points[0];
+		else
+			next=points[indices[i]+1];
+		
+		std::cout << "(" << points[indices[i]].x() << ", " << points[indices[i]].y() << ") -- " <<
+					"Prev: (" << prev.x() << ", " << prev.y() << ") -- " <<
+					"Next: (" << next.x() << ", " << next.y() << ")" << std::endl;
 	}
 
-	// output for testing purposes
-	for (int i=0; i<points.size(); ++i)
-	{
-		std::cout << points[indices[i]].y() << std::endl;
-	}
+// 	edges.push_back(Edge());
 }
 
 // ////////////////////////////////////////////////////////////////////////////////

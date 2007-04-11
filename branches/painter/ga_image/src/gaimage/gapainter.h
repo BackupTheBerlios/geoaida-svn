@@ -57,8 +57,12 @@ class Painter
 		class Edge
 		{
 			public:
-				Point p0;
-				Point p1;
+				Edge(int, int, double);
+
+				int		y_max;
+				int		y_min;
+				double	dx_dy;
+				
 		};
 };
 
