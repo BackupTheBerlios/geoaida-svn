@@ -52,19 +52,31 @@ class Painter
 		Image& img_;	///< image that is used for all operations
 
 	private:
-		void qSortPointsY(const PointArray&, IndexArray&, const int&, const int&) const;
 
 		class Edge
 		{
 			public:
-				Edge(int, int, double);
+
+				Edge(int _y_min, int _y_max, double _dx_dy):
+					y_min(_y_min),
+					y_max(_y_max),
+					dx_dy(_dx_dy),
+					x(0.0){};
 
 				int		y_max;
 				int		y_min;
 				double	dx_dy;
+				double	x;
 				
 		};
+
+		void qSortPointsY(const PointArray&, IndexArray&, const int&, const int&) const;
+
+		friend bool EdgeSortX(const Edge&, const Edge&);
 };
+
+bool EdgeSortX(const Painter::Edge&, const Painter::Edge&);
+
 
 } // namespace Ga
 

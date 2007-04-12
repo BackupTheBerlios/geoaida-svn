@@ -53,19 +53,21 @@ void Painter::fillPolygon(const PointArray& points)
 {
 	IndexArray			indices;
 	std::vector<Edge>	edges;
-	std::vector<Edge>	active_edges;
+	std::list<Edge>		active_edges;
 
 	// create index array
 	for (int i=0; i<points.size(); ++i)
 	{
 		indices.push_back(i);
+		img_.set(points[i].x(),points[i].y(), 0.0);
 	}
 	// sort points by their y coordinate
 	qSortPointsY(points, indices, 0, points.size()-1);
 
-	// sort edges by their topmost point
+	// create and sort edges by their topmost point
 	for (int i=0; i<indices.size()-1; ++i)
 	{
+		Point p=points[indices[i]];
 		Point prev(0,0);
 		Point next(0,0);
 
@@ -79,12 +81,60 @@ void Painter::fillPolygon(const PointArray& points)
 		else
 			next=points[indices[i]+1];
 		
-		std::cout << "(" << points[indices[i]].x() << ", " << points[indices[i]].y() << ") -- " <<
-					"Prev: (" << prev.x() << ", " << prev.y() << ") -- " <<
-					"Next: (" << next.x() << ", " << next.y() << ")" << std::endl;
+		// insert edges in vector
+		if (next.y() >= p.y())
+		{
+			edges.push_back(Edge(p.y(), next.y(), static_cast<double>(next.x()-p.x())/(next.y()-p.y())));
+			edges.back().x = p.x();
+		}
+		if (prev.y() >= p.y())
+		{
+			edges.push_back(Edge(p.y(), prev.y(), static_cast<double>(prev.x()-p.x())/(prev.y()-p.y())));
+			edges.back().x = p.x();
+		}
 	}
 
-// 	edges.push_back(Edge());
+	// begin filling the polygon
+	for (unsigned int i=points[indices[0]].y(); i<points[indices.back()].y(); ++i)
+	{
+		// select active edges
+		active_edges.clear();
+		for (int j=0; j<edges.size(); ++j)
+		{
+			if ((edges[j].y_min <= i) && (i <= edges[j].y_max))
+			{
+				active_edges.push_back(edges[j]);
+				active_edges.back().x = static_cast<double>(i-edges[j].y_min)*active_edges.back().dx_dy + edges[j].x;
+			}
+		}
+
+		// sort active edges
+		active_edges.sort(EdgeSortX);
+
+		// draw horizontal lines
+		std::list<Edge>::const_iterator ci=active_edges.begin();
+		while (ci != active_edges.end())
+		{
+			img_.set(static_cast<int>((*ci).x),i, 0.0);
+				++ci;
+		}
+
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////////
+///
+/// \brief compare function for std::sort algorithm
+///
+/// \param e1 edge 1
+/// \param e2 edge 2
+///
+/// \return edge 1 smaller than edge 2?
+///
+////////////////////////////////////////////////////////////////////////////////
+bool EdgeSortX(const Painter::Edge& e1, const Painter::Edge& e2)
+{
+  return e1.x < e2.x;
 }
 
 // ////////////////////////////////////////////////////////////////////////////////
