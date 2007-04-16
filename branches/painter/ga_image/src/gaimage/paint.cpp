@@ -42,23 +42,34 @@ int main(int argc, char** argv)
 	Ga::Image img(typeid(unsigned char),500, 500);
 	FILE* File;
 
-	Ga::PointArray	points;
+	Ga::PointArray	poly1;
+	Ga::PointArray	poly2;
 	Ga::Painter		painter(img);
 
 	// white image
 	img=255;
 
-	// define the polygon
-	points.push_back(Ga::Point(50,200));
-	points.push_back(Ga::Point(200,100));
-	points.push_back(Ga::Point(220,130));
-	points.push_back(Ga::Point(310,80));
-	points.push_back(Ga::Point(400,300));
-	points.push_back(Ga::Point(180,280));
-	points.push_back(Ga::Point(100,260));
+	// define the first polygon
+	poly1.push_back(Ga::Point(50,200));
+	poly1.push_back(Ga::Point(200,100));
+	poly1.push_back(Ga::Point(220,130));
+	poly1.push_back(Ga::Point(310,80));
+	poly1.push_back(Ga::Point(400,300));
+	poly1.push_back(Ga::Point(180,280));
+	poly1.push_back(Ga::Point(100,260));
+
+	// define a second polygon
+	poly2.push_back(Ga::Point(50,350));
+	poly2.push_back(Ga::Point(100,400));
+	poly2.push_back(Ga::Point(150,350));
+	poly2.push_back(Ga::Point(200,400));
+	poly2.push_back(Ga::Point(250,360));
+	poly2.push_back(Ga::Point(300,410));
+	poly2.push_back(Ga::Point(150,420));
 
 	// draw the filled polygon
-	painter.fillPolygon(points);
+	painter.fillPolygon(poly1);
+	painter.fillPolygon(poly2);
 
 	// write file to disc
 	File=fopen("polytest.pnm","w"); 
