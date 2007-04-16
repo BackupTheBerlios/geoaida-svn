@@ -45,6 +45,8 @@ class Painter
 		Painter(Image& img);
 
 		//--- methods --------------------------------------------------------//
+		void drawLineH(const int&, const int&, const int&);
+
 		void drawPolygon(const PointArray& points);
 		void fillPolygon(const PointArray& points);
 

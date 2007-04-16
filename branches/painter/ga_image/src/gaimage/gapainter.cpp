@@ -33,6 +33,25 @@ Painter::Painter(Image& img) : img_(img)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
+/// \brief method to draw a horizontal line
+///
+/// This method draws a horizontal line. Wether it is optimised, nor you can
+/// choose the colour, the channel or anything. It is just a placeholder for
+/// testing purposes.
+///
+/// \param _x1 left end of line
+/// \param _x2 right end of line
+/// \param _y y coordinate of line
+///
+////////////////////////////////////////////////////////////////////////////////
+void Painter::drawLineH(const int& _x1, const int& _x2, const int& _y)
+{
+	for (int i=_x1; i<=_x2; ++i)
+		img_.set(i,_y, 0.0);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
 /// \brief method to draw a polygon, i.e. its outline
 ///
 /// \param points array of points defining the polygon
@@ -95,13 +114,13 @@ void Painter::fillPolygon(const PointArray& points)
 	}
 
 	// begin filling the polygon
-	for (unsigned int i=points[indices[0]].y(); i<points[indices.back()].y(); ++i)
+	for (unsigned int i=points[indices[0]].y(); i<=points[indices.back()].y(); ++i)
 	{
 		// select active edges
 		active_edges.clear();
 		for (int j=0; j<edges.size(); ++j)
 		{
-			if ((edges[j].y_min <= i) && (i <= edges[j].y_max))
+			if ((edges[j].y_min <= i) && (i < edges[j].y_max))
 			{
 				active_edges.push_back(edges[j]);
 				active_edges.back().x = static_cast<double>(i-edges[j].y_min)*active_edges.back().dx_dy + edges[j].x;
@@ -115,8 +134,10 @@ void Painter::fillPolygon(const PointArray& points)
 		std::list<Edge>::const_iterator ci=active_edges.begin();
 		while (ci != active_edges.end())
 		{
-			img_.set(static_cast<int>((*ci).x),i, 0.0);
-				++ci;
+			int x1 = static_cast<int>((*ci).x); ++ci;
+			int x2 = static_cast<int>((*ci).x);
+			drawLineH(x1, x2, i);
+			if (ci != active_edges.end()) ++ci;
 		}
 
 	}
@@ -193,7 +214,7 @@ void Painter::qSortPointsY(const PointArray& points, IndexArray& indices, const 
 		while (true)
 		{
 			do ++i; while (points[indices[i]].y() < py);
-			do --j; while (points[indices[j]].y() > py);
+			do --j; while ((points[indices[j]].y() > py) && (j>0));
 			if (i<j)
 			{
 				unsigned int k = indices[i];

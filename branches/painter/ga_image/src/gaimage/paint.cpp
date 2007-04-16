@@ -57,8 +57,6 @@ int main(int argc, char** argv)
 	points.push_back(Ga::Point(180,280));
 	points.push_back(Ga::Point(100,260));
 
-	
-
 	// draw the filled polygon
 	painter.fillPolygon(points);
 
