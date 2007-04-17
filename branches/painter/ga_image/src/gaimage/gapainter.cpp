@@ -46,8 +46,18 @@ Painter::Painter(Image& img) : img_(img)
 ////////////////////////////////////////////////////////////////////////////////
 void Painter::drawLineH(const int& _x1, const int& _x2, const int& _y)
 {
-	for (int i=_x1; i<=_x2; ++i)
-		img_.set(i,_y, 0.0);
+	// clipping
+	if ((_y >= 0) && (_y < img_.sizeY()) &&
+		(_x1 < img_.sizeX()) && (_x2 >= 0))
+	{
+		int x1 = _x1;
+		int x2 = _x2;
+		if (x1 < 0) x1 = 0;
+		if (x2 >= img_.sizeX()) x2 = img_.sizeX()-1;
+
+		for (int i=x1; i<=x2; ++i)
+			img_.set(i,_y, 0.0);
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -75,11 +85,8 @@ void Painter::fillPolygon(const PointArray& points)
 	std::list<Edge>		active_edges;
 
 	// create index array
-	for (int i=0; i<points.size(); ++i)
-	{
-		indices.push_back(i);
-		img_.set(points[i].x(),points[i].y(), 0.0);
-	}
+	for (int i=0; i<points.size(); ++i) indices.push_back(i);
+
 	// sort points by their y coordinate
 	qSortPointsY(points, indices, 0, points.size()-1);
 

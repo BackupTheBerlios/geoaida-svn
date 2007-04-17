@@ -44,6 +44,7 @@ int main(int argc, char** argv)
 
 	Ga::PointArray	poly1;
 	Ga::PointArray	poly2;
+	Ga::PointArray	poly3;
 	Ga::Painter		painter(img);
 
 	// white image
@@ -67,9 +68,17 @@ int main(int argc, char** argv)
 	poly2.push_back(Ga::Point(300,410));
 	poly2.push_back(Ga::Point(150,420));
 
-	// draw the filled polygon
+	// define a third polygon, this one should be clipped
+	poly3.push_back(Ga::Point(450,450));
+	poly3.push_back(Ga::Point(470,460));
+	poly3.push_back(Ga::Point(530,470));
+	poly3.push_back(Ga::Point(480,550));
+	poly3.push_back(Ga::Point(460,480));
+
+	// draw the filled polygons
 	painter.fillPolygon(poly1);
 	painter.fillPolygon(poly2);
+	painter.fillPolygon(poly3);
 
 	// write file to disc
 	File=fopen("polytest.pnm","w"); 
