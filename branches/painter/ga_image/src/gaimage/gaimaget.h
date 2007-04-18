@@ -151,6 +151,7 @@ namespace Ga {
     double getFloat(int x, int y, int channel, double neutral=0) const;
     virtual double getFloat(const void *it) const;
     virtual void setFloat(void* it, double val);
+    virtual void fillRow(void *it, int startX, int endX, double val, int channel=0);
     virtual void* nextCol(const void*& ptr, int offset) const;
     virtual void* nextCol(const void*& ptr) const;
     virtual void* prevCol(const void*& ptr) const;

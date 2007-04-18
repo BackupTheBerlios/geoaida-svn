@@ -451,6 +451,17 @@ inline void ImageT<PixTyp>::setFloat(void* it, double val) {
 }
 
 template <class PixTyp>
+inline void ImageT<PixTyp>::fillRow(void *it, int startX, int endX, double val, int channel) {
+  PixTyp* ptr=(PixTyp*)it;
+  PixTyp* eptr=ptr+endX;
+  ptr+=startX;
+  PixTyp v=PixTyp(val);
+  for (;ptr<=eptr;ptr++) {
+    *ptr=v;
+  }
+}
+
+template <class PixTyp>
 inline void* ImageT<PixTyp>::nextCol(const void*& ptr, int offset) const {
   return ((PixTyp*)ptr)+offset;
 }
