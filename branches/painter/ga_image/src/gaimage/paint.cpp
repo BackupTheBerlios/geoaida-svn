@@ -75,10 +75,14 @@ int main(int argc, char** argv)
 	poly3.push_back(Ga::Point(480,550));
 	poly3.push_back(Ga::Point(460,480));
 
-	// draw the filled polygons
-	painter.fillPolygon(poly1);
-	painter.fillPolygon(poly2);
-	painter.fillPolygon(poly3);
+	// testing with 1000 fills of 3 polygons
+	for (int i=0; i<1000; ++i)
+	{
+		// draw the filled polygons
+		painter.fillPolygon(poly1);
+		painter.fillPolygon(poly2);
+		painter.fillPolygon(poly3);
+	}
 
 	// write file to disc
 	File=fopen("polytest.pnm","w"); 

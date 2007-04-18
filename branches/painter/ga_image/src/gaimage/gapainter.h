@@ -42,16 +42,15 @@ class Painter
 {
 	public:
 		//--- constructor/destructor -----------------------------------------//
-		Painter(Image& img);
+		Painter(Image& img, int channel=0);
 
 		//--- methods --------------------------------------------------------//
-		void drawLineH(const int&, const int&, const int&);
-
 		void drawPolygon(const PointArray& points);
 		void fillPolygon(const PointArray& points);
 
 	protected:
-		Image& img_;	///< image that is used for all operations
+		Image&	img_;		///< image that is used for all operations
+		int		channel_;	///< channel used for all operations on the image
 
 	private:
 

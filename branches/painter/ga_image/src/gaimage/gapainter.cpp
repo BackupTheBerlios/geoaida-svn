@@ -27,37 +27,8 @@ namespace Ga {
 /// \param img image that will be used for all drawing operations
 ///
 ////////////////////////////////////////////////////////////////////////////////
-Painter::Painter(Image& img) : img_(img)
+Painter::Painter(Image& img, int channel) : img_(img), channel_(channel)
 {
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-/// \brief method to draw a horizontal line
-///
-/// This method draws a horizontal line. Wether it is optimised, nor you can
-/// choose the colour, the channel or anything. It is just a placeholder for
-/// testing purposes.
-///
-/// \param _x1 left end of line
-/// \param _x2 right end of line
-/// \param _y y coordinate of line
-///
-////////////////////////////////////////////////////////////////////////////////
-void Painter::drawLineH(const int& _x1, const int& _x2, const int& _y)
-{
-	// clipping
-	if ((_y >= 0) && (_y < img_.sizeY()) &&
-		(_x1 < img_.sizeX()) && (_x2 >= 0))
-	{
-		int x1 = _x1;
-		int x2 = _x2;
-		if (x1 < 0) x1 = 0;
-		if (x2 >= img_.sizeX()) x2 = img_.sizeX()-1;
-
-		for (int i=x1; i<=x2; ++i)
-			img_.set(i,_y, 0.0);
-	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -143,7 +114,9 @@ void Painter::fillPolygon(const PointArray& points)
 		{
 			int x1 = static_cast<int>((*ci).x); ++ci;
 			int x2 = static_cast<int>((*ci).x);
-			drawLineH(x1, x2, i);
+
+			img_.fillRow(i, x1, x2, 0.0, 0, true);
+
 			if (ci != active_edges.end()) ++ci;
 		}
 
