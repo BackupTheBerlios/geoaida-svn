@@ -36,9 +36,10 @@ Painter::Painter(Image& img, int channel) : img_(img), channel_(channel)
 /// \brief method to draw a polygon, i.e. its outline
 ///
 /// \param points array of points defining the polygon
+/// \param val value for pixels of polygon edges
 ///
 ////////////////////////////////////////////////////////////////////////////////
-void Painter::drawPolygon(const PointArray& points)
+void Painter::drawPolygon(const PointArray& points, double val)
 {
 }
 
@@ -47,9 +48,10 @@ void Painter::drawPolygon(const PointArray& points)
 /// \brief method to draw a filled polygon
 ///
 /// \param points array of points defining the polygon
+/// \param val value for pixels of polygon
 ///
 ////////////////////////////////////////////////////////////////////////////////
-void Painter::fillPolygon(const PointArray& points)
+void Painter::fillPolygon(const PointArray& points, double val)
 {
 	IndexArray			indices;
 	std::vector<Edge>	edges;
@@ -115,7 +117,7 @@ void Painter::fillPolygon(const PointArray& points)
 			int x1 = static_cast<int>((*ci).x); ++ci;
 			int x2 = static_cast<int>((*ci).x);
 
-			img_.fillRow(i, x1, x2, 0.0, 0, true);
+			img_.fillRow(i, x1, x2, val, 0, true);
 
 			if (ci != active_edges.end()) ++ci;
 		}
@@ -183,7 +185,7 @@ bool EdgeSortX(const Painter::Edge& e1, const Painter::Edge& e2)
 /// \param indices array of indices for sorted point array
 ///
 ////////////////////////////////////////////////////////////////////////////////
-void Painter::qSortPointsY(const PointArray& points, IndexArray& indices, const int& min, const int& max) const
+void Painter::qSortPointsY(const PointArray& points, IndexArray& indices, int min, int max) const
 {
 	if (min < max)
 	{

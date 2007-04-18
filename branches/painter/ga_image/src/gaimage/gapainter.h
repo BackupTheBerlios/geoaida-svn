@@ -45,8 +45,11 @@ class Painter
 		Painter(Image& img, int channel=0);
 
 		//--- methods --------------------------------------------------------//
-		void drawPolygon(const PointArray& points);
-		void fillPolygon(const PointArray& points);
+		void drawPolygon(const PointArray&, double);
+		void fillPolygon(const PointArray&, double);
+
+		void setImage(Image&, int channel=0);
+		void setChannel(int);
 
 	protected:
 		Image&	img_;		///< image that is used for all operations
@@ -71,11 +74,41 @@ class Painter
 				
 		};
 
-		void qSortPointsY(const PointArray&, IndexArray&, const int&, const int&) const;
+		void qSortPointsY(const PointArray&, IndexArray&, int, int) const;
 
 		friend bool EdgeSortX(const Edge&, const Edge&);
 };
 
+//--- Implementation goes here for inline reasons ----------------------------//
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// \brief Tell the class which image to use, using channel 0 as default
+///
+/// \param img Image to be used by Painter class
+/// \param channel Channel of the image that is used by methods of painter class
+///
+////////////////////////////////////////////////////////////////////////////////
+inline void Painter::setImage(Image& img, int channel)
+{
+	img_ = img;
+	channel_ = channel;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// \brief Tell the class which channel of the image to use
+///
+/// \param channel Channel of the image to be used by methods of painter class
+///
+////////////////////////////////////////////////////////////////////////////////
+inline void Painter::setChannel(int channel)
+{
+	channel_ = channel;
+}
+
+
+//--- Global functions -------------------------------------------------------//
 bool EdgeSortX(const Painter::Edge&, const Painter::Edge&);
 
 

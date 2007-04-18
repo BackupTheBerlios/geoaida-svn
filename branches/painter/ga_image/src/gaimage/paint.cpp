@@ -79,9 +79,9 @@ int main(int argc, char** argv)
 	for (int i=0; i<1000; ++i)
 	{
 		// draw the filled polygons
-		painter.fillPolygon(poly1);
-		painter.fillPolygon(poly2);
-		painter.fillPolygon(poly3);
+		painter.fillPolygon(poly1, 150.0);
+		painter.fillPolygon(poly2, 0.0);
+		painter.fillPolygon(poly3, 78.4);
 	}
 
 	// write file to disc
