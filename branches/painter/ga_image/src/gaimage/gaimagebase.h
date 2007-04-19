@@ -174,7 +174,7 @@ public:
   virtual void* prevCol(const void*& ptr) const=0;
   virtual void* nextRow(const void*& ptr) const=0;
   virtual void* prevRow(const void*& ptr) const=0;
-  virtual void* operator [] (int y)=0;
+  //  virtual void* operator [] (int y)=0;
   virtual void setData(int x, int y, void* initvalues)=0;
   virtual bool eq(const ImageBase& rval)=0;
   virtual bool neq(const ImageBase& rval)=0;

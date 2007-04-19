@@ -300,12 +300,21 @@ inline typename ImageT<PixTyp>::Iterator ImageT<PixTyp>::data(int row, int chann
 }
 
 /** return pointer to the beginning of data
-    usage: \code Iterator dp = M.begin(row); \endcode */
+    usage: \code Iterator dp = M.dataArrayT(channel); \endcode */
 template <class PixTyp>
-inline PixTyp** ImageT<PixTyp>::dataArray(int channel) {
+inline PixTyp** ImageT<PixTyp>::dataArrayT(int channel) {
   assert(channel<noChannels_);
   assert(pChannel_[channel]!=0);
   return pChannel_[channel]->dataArray(pChannel_[channel]);
+}
+
+/** return pointer to the beginning of data
+    usage: \code Iterator dp = M.dataArray(channel); \endcode */
+template <class PixTyp>
+inline void* ImageT<PixTyp>::dataArray(int channel) {
+  assert(channel<noChannels_);
+  assert(pChannel_[channel]!=0);
+  return dataArrayT(channel);
 }
 
 template <class PixTyp>
@@ -1124,13 +1133,13 @@ inline double ImageT<PixTyp>::matrixAbsMax(int& x, int& y, int channel) {
   unsigned int e = 0;
 
   for(unsigned int i = 1; i < nSize_; i++) {
-    if (max < Abs(*index)) {
-      max = Abs(*index);
+    if (max < *index) {
+      max = *index;
       e = i;
     }
     ++ index;
   }
-
+  
   y = e / sizeX_;
   x = e % sizeX_;
 
