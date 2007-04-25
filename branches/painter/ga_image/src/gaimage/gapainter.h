@@ -3,6 +3,7 @@
 /// \file		gapainter.h
 /// \brief		prototype for class "Painter"
 ///
+/// \date		Jan. 2007
 /// \author		Torsten Büschenfeld (bfeld@tnt.uni-hannover.de)
 ///
 ////////////////////////////////////////////////////////////////////////////////
@@ -24,6 +25,7 @@
 #include <vector>
 
 //--- project header ---------------------------------------------------------//
+#include "gadraw.h"
 #include "gaimage.h"
 #include "gapoint.h"
 
@@ -45,6 +47,9 @@ class Painter
 		Painter(Image& img, int channel=0);
 
 		//--- methods --------------------------------------------------------//
+		void drawLine(Image&, int, int, int, int, double);
+		void drawGeoLine(Image&, double, double, double, double, double, double, bool);
+
 		void drawPolygon(const PointArray&, double);
 		void fillPolygon(const PointArray&, double);
 

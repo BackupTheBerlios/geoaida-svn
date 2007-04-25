@@ -3,6 +3,7 @@
 /// \file		gapainter.cpp
 /// \brief		implementation for class "Painter"
 ///
+/// \date		Jan. 2007
 /// \author		Torsten Büschenfeld (bfeld@tnt.uni-hannover.de)
 ///
 ////////////////////////////////////////////////////////////////////////////////
@@ -29,6 +30,38 @@ namespace Ga {
 ////////////////////////////////////////////////////////////////////////////////
 Painter::Painter(Image& img, int channel) : img_(img), channel_(channel)
 {
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// \brief Draws a line with the Bresenham-algorithm using pointers (fast!), with range-check
+///
+/// \param x1 x coordinate of the starting point
+/// \param y1 y coordinate of the starting point
+/// \param x2 x coordinate of the end point
+/// \param y2 y cooridnate of the end point
+/// \param c value of the line points
+///
+////////////////////////////////////////////////////////////////////////////////
+void Painter::drawLine(Image& img, int x1, int y1, int x2, int y2, double c)
+{
+	Ga::drawLine(img, x1, y1, x2, y2, c);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// \brief Draws a line with antialiasing and variable line-width (with range-check)
+/// \param gx1 x geo-coordinate of point 1
+/// \param gy2 y geo-coordinate of point 1
+/// \param gx2 x geo-coordinate of point 2
+/// \param gy2 y geo-coordinate of point 2
+/// \param c value of the line points
+/// \param antialias toggle antialiasing
+///
+////////////////////////////////////////////////////////////////////////////////
+void Painter::drawGeoLine(Image& img, double gx1, double gy1, double gx2, double gy2, double width, double c, bool antialias)
+{
+	Ga::drawGeoLine(img, gx1, gy1, gx2, gy2, width, c, antialias);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -139,43 +172,6 @@ bool EdgeSortX(const Painter::Edge& e1, const Painter::Edge& e2)
 {
   return e1.x < e2.x;
 }
-
-// ////////////////////////////////////////////////////////////////////////////////
-// ///
-// /// \brief method to sort points by their y position using quicksort
-// ///
-// /// \param points array of points to be sorted
-// /// \param indices array of indices for sorted point array
-// ///
-// ////////////////////////////////////////////////////////////////////////////////
-// void Painter::qSortPointsY(PointArray& points, IndexArray& indices, const int& min, const int& max)
-// {
-// 	if (min < max)
-// 	{
-// 		int py = points[max].y();
-// 
-// 		int i = min-1;
-// 		int j = max;
-// 		while (true)
-// 		{
-// 			do ++i; while (points[i].y()< py);
-// 			do --j; while (points[j].y()> py);
-// 			if (i<j)
-// 			{
-// 				Point p = points[i];
-// 				points[i] = points[j];
-// 				points[j] = p;
-// 			}
-// 			else break;
-// 		}
-// 		Point p = points[i];
-// 		points[i] = points[max];
-// 		points[max] = p;
-// 
-// 		qSortPointsY(points, indices, min, i-1);
-// 		qSortPointsY(points, indices, i+1, max);
-// 	}
-// }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///

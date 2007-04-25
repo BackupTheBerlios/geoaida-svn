@@ -82,6 +82,7 @@ int main(int argc, char** argv)
 		painter.fillPolygon(poly1, 150.0);
 		painter.fillPolygon(poly2, 0.0);
 		painter.fillPolygon(poly3, 78.4);
+		painter.drawLine(img, 10,30,420,320, 200.0);
 	}
 
 	// write file to disc
