@@ -21,7 +21,7 @@
 
 #include <cstddef>
 #include <cstdlib>
-#include <map>
+#include <list>
 #include <tr1/memory>
 
 namespace Ga 
@@ -30,116 +30,14 @@ namespace Ga
 	typedef std::size_t Size;
 	// Size type for sums of allocations.
 	typedef unsigned long long LargeSize;
-
-	class Block;
-
-	class BlockHandle
-	{
-		typedef std::tr1::shared_ptr<Block> Ptr;
-		Ptr ptr;
-		
-	public:
-		BlockHandle(const Ptr& ptr = Ptr())
-		: ptr(ptr)
-		{	
-		}
-		
-		const void* lockR()
-		{
-			return ptr->lockR();
-		}
-		
-		void* lockRW()
-		{
-			if (!ptr->isWritable())
-				; /* clone */
-			return ptr->lockRW();
-		}
-		
-		void unlock()
-		{
-			ptr->unlock();
-		}
-	};
 	
-	// Blatantly incomplete sketch.
-	class BlockFile
-	{
-		Size blockSize;
-		std::vector<Block> blocks;
+	// Cache metrics.
+	const LargeSize HEAP_USAGE = 512 * 1024*1024;
 
-	public:		
-		BlockFile(Size blockSize) 
-		: blockSize(blockSize)
-		{
-		}
-		
-		// BlockFiles may only be moved around before they are filled.
-		// This ensures that Cache doesn't do anything costly with them.
-		BlockFile(const BlockFile& other)
-		: blockSize(other.blockSize)
-		{
-			assert(other.total() == 0);
-		}
-		BlockFile& operator=(const BlockFile& other)
-		{
-			blockSize = other.blockSize;
-			assert(total() == 0);
-			assert(other.total() == 0);
-			return *this;
-		}
-		
-		LargeSize() size() const
-		{
-			return 0;
-		}
-	};
-	
-	class Cache
-	{
-		typedef std::map<Size, BlockFile> BlockFiles;
-		BlockFiles files;
-		
-		typedef std::list<std::tr1::weak_ptr<Block> > Blocks;
-		Blocks blocks;
-		
-		Cache()
-		{
-		}
-		
-	public:
-		static Cache& get() 
-		{
-			static Cache cache;
-			return cache;
-		}
-		
-		BlockHandle alloc(Size size)
-		{
-			std::tr1::shared_ptr<Block> newBlock(new Block(size));
-			blocks.push_back(Blocks::value_type(newBlock));
-			return BlockHandle(newBlock);
-		}
-		
-		LargeSize total()
-		{
-			TODO;
-		}
-		
-		LargeSize heap()
-		{
-			return TODO;
-		}
-
-		LargeSize disk()
-		{
-			return total() - heap();
-		}
-	};
-	
 	class Block
 	{
-		unsigned accessId;
+		unsigned lastAccess;
+		
 		Size size;
 		void* memory;
 		bool dirty;
@@ -148,20 +46,9 @@ namespace Ga
 		Block(const Block& other);
 		Block& operator=(const Block& other);
 		
-		void markAccess()
-		{
-			static unsigned accessCounter = 0;
-			
-			accessId = ++accessCounter;
-			
-			// TODO:
-			// Normalize access ids.
-			assert(accessCounter != 0);
-		}
-		
 	public:
-		Block(Size size)
-		: accessId(0), size(size), memory(0), dirty(false)
+		explicit Block(Size size)
+		: lastAccess(0), size(size), memory(0), dirty(false)
 		{
 			memory = malloc(size);
 		}
@@ -171,28 +58,136 @@ namespace Ga
 			free(memory);
 		}
 		
-		bool isWritable() const
+		Size getSize() const
 		{
-			return refCount == 1;
+			return size;
 		}
 		
-		const void* lockR() const
+		unsigned getLastAccess() const
 		{
-			markAccess();
-			return memory;
+			return lastAccess;
 		}
 		
-		void* lockRW()
+		void setLastAccess(unsigned val)
 		{
-			assert(refCount == 1);
-			markAccess();
-			return memory;
+			lastAccess = val;
 		}
+		
+		void markDirty()
+		{
+			dirty = true;
+		}
+		
+		void markClean()
+		{
+			dirty = false;
+		}
+		
+		bool isDirty() const
+		{
+			return dirty;
+		}
+		
+		void* lock();
+		// defined below due to order of declarations
 		
 		void unlock()
 		{
 		}
+		
+		bool isOnDisk() const
+		{
+			return memory == 0;
+		}
+		
+		void writeToDisk()
+		{
+			throw "nyi";
+		}
 	};
+
+	// Minimalistic wrapper around a Block pointer.
+	class BlockHandle
+	{
+		typedef std::tr1::shared_ptr<Block> Ptr;
+		Ptr ptr;
+		
+	public:
+		explicit BlockHandle(const Ptr& ptr = Ptr())
+		: ptr(ptr)
+		{	
+		}
+		
+		bool isEmpty() const
+		{
+			return !ptr;
+		}
+		
+		const void* lockR()
+		{
+			assert(!isEmpty());
+			return ptr->lock();
+		}
+		
+		void* lockRW()
+		{
+			assert(!isEmpty());
+			if (ptr.use_count() > 1)
+				; /* clone */
+			return ptr->lock();
+		}
+		
+		void unlock()
+		{
+			assert(!isEmpty());
+			ptr->unlock();
+		}
+	};
+	
+	class Cache
+	{
+		typedef std::list<std::tr1::weak_ptr<Block> > Blocks;
+		Blocks blocks;
+		
+		LargeSize heap, total;
+		
+		Cache()
+		: total(0), heap(0)
+		{
+		}
+		
+	public:
+		static Cache& get();
+		
+		BlockHandle alloc(Size size);
+		unsigned sortAndCountBlocks();
+		
+		LargeSize totalUsage()
+		{
+			return total;
+		}
+		
+		LargeSize heapUsage()
+		{
+			return heap;
+		}
+		
+		LargeSize diskUsage()
+		{
+			return total - heap;
+		}
+	};
+
+	inline void* Block::lock()
+	{
+		static unsigned accessCounter = 0;
+		lastAccess = ++accessCounter;
+		if (accessCounter = 0)
+			accessCounter = Cache::get().sortAndCountBlocks();
+
+		return memory;
+	}
+
 }
 
 #endif

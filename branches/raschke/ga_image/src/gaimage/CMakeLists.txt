@@ -43,6 +43,7 @@ set(sources gacanny.cpp
            gagradient.cpp
            gahough.cpp
            gaimage.cpp
+		   gacache.cpp
            garegion.cpp
            gavariance.cpp
 	   garegression.cpp
