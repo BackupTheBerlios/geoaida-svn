@@ -22,6 +22,8 @@ int main()
 	handle = BlockHandle();
 	
 	assert(Cache::get().totalUsage() == 0);
+	assert(Cache::get().heapUsage() == 0);
+	assert(Cache::get().diskUsage() == 0);
 	
 	// Image tests to follow.
 }

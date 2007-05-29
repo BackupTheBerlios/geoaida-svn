@@ -1,6 +1,6 @@
 /***************************************************************************
-                          gacache.cpp  -  caching system that uses both
-										  the heap and disk files.
+                          gacache.cpp  -  main access class for the
+                          				  caching system's users
                              -------------------
     begin                : 2007-05-28
     copyright            : (C) 2007 by Julian Raschke
@@ -17,7 +17,9 @@
  ***************************************************************************/
 
 #include "gacache.h"
+#include <stdexcept>
 #include <tr1/functional>
+using namespace std;
 
 Ga::Cache& Ga::Cache::get()
 {
@@ -27,9 +29,12 @@ Ga::Cache& Ga::Cache::get()
 
 namespace
 {
-	void deleteAndReduceUsage(Ga::Block* block, Ga::LargeSize* usage)
+	void deleteAndReduceUsage(Ga::Block* block, Ga::LargeSize* total,
+		Ga::LargeSize* heap)
 	{
-		(*usage) -= block->getSize();
+		(*total) -= block->getSize();
+		if (!block->isOnDisk())
+			(*heap) -= block->getSize();
 		delete block;
 	}
 }
@@ -39,13 +44,64 @@ Ga::BlockHandle Ga::Cache::alloc(Size size)
 	total += size;
 	heap += size;
 	
-	std::tr1::shared_ptr<Block> newBlock(new Block(size),
-		std::tr1::bind(deleteAndReduceUsage, std::tr1::placeholders::_1, &total));
+	tr1::shared_ptr<Block> newBlock(new Block(size),
+		tr1::bind(deleteAndReduceUsage, tr1::placeholders::_1,
+			&total, &heap));
 	blocks.push_back(Blocks::value_type(newBlock));
 	return BlockHandle(newBlock);
 }
 
+void Ga::Cache::requestDiskToHeap(Size size)
+{
+	if (heap + size > HEAP_USAGE)
+	{
+		// Things must be written to disk before this may happen.
+		sortAndCountBlocks();
+		Blocks::iterator iter = blocks.end();
+		--iter;
+		do 
+		{
+			tr1::shared_ptr<Block> block(*iter);
+			
+			if (block->isLocked())
+				throw std::runtime_error("Too many blocks locked at once - lock leak?");
+			
+			if (!block->isOnDisk())
+			{
+				block->writeToDisk();
+				heap -= block->getSize();
+			}
+		} while (heap + size > HEAP_USAGE && iter != blocks.begin());
+	}
+
+	heap += size;
+}
+
+namespace 
+{
+	bool isFirstBlockMoreImportant(tr1::weak_ptr<Ga::Block> first, tr1::weak_ptr<Ga::Block> second)
+	{
+		// Move expired blocks to the back.
+		if (second.expired())
+			return true;
+		if (first.expired())
+			return false;
+		tr1::shared_ptr<Ga::Block> realFirst(first);
+		tr1::shared_ptr<Ga::Block> realSecond(second);
+		// Move locked blocks to the front.
+		if (realFirst->isLocked())
+			return true;
+		if (realSecond->isLocked())
+			return false;
+		return realFirst->getLastAccess() > realSecond->getLastAccess();
+	}
+}
+
 unsigned Ga::Cache::sortAndCountBlocks()
 {
+	blocks.sort(isFirstBlockMoreImportant);
+	while (!blocks.empty() && blocks.back().expired())
+		blocks.pop_back();
+	// TODO: Renumber, but not in all cases. Oh no!
 	return blocks.size();
 }

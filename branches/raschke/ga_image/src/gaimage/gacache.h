@@ -22,9 +22,10 @@
 #include <cstddef>
 #include <cstdlib>
 #include <list>
+#include <vector>
 #include <tr1/memory>
 
-namespace Ga 
+namespace Ga
 {
 	// Size type for single allocations.
 	typedef std::size_t Size;
@@ -34,13 +35,39 @@ namespace Ga
 	// Cache metrics.
 	const LargeSize HEAP_USAGE = 512 * 1024*1024;
 
+	// Used by Block to store and recover chunks of memory.
+	class CacheFile
+	{
+		Size blockSize;
+		int fd;
+		std::vector<bool> marked;
+		
+		explicit CacheFile(Size blockSize);	
+		
+		// Copying forbidden.
+		CacheFile(const CacheFile&);
+		CacheFile& operator=(const CacheFile&);
+		
+	public:
+		static CacheFile& get(Size blockSize);
+		~CacheFile();
+		unsigned store(const void* buffer);
+		void recover(unsigned index, void* buffer);
+		void dismiss(unsigned index);
+	};
+
 	class Block
 	{
 		unsigned lastAccess;
 		
 		Size size;
-		void* memory;
+		unsigned lockCount;
 		bool dirty;
+		
+		// Invariant: Either memory points to allocated memory, or if it is null,
+		// fileIndex is a valid (not yet recovered) index into the cache file.
+		void* memory;
+		unsigned fileIndex;
 		
 		// Copying explicitly forbidden; handles would dangle.
 		Block(const Block& other);
@@ -48,14 +75,18 @@ namespace Ga
 		
 	public:
 		explicit Block(Size size)
-		: lastAccess(0), size(size), memory(0), dirty(false)
+		: lastAccess(0), lockCount(0), size(size), memory(0), dirty(false)
 		{
+			// Global memory management already knows about this.
 			memory = malloc(size);
 		}
 		
 		~Block()
 		{
-			free(memory);
+			if (memory)
+				free(memory);
+			else
+				CacheFile::get(size).dismiss(fileIndex);
 		}
 		
 		Size getSize() const
@@ -93,6 +124,13 @@ namespace Ga
 		
 		void unlock()
 		{
+			assert(lockCount > 0);
+			--lockCount;
+		}
+		
+		bool isLocked() const
+		{
+			return lockCount > 0;
 		}
 		
 		bool isOnDisk() const
@@ -102,7 +140,9 @@ namespace Ga
 		
 		void writeToDisk()
 		{
-			throw "nyi";
+			fileIndex = CacheFile::get(size).store(memory);
+			free(memory);
+			memory = 0;
 		}
 	};
 
@@ -134,6 +174,7 @@ namespace Ga
 			assert(!isEmpty());
 			if (ptr.use_count() > 1)
 				; /* clone */
+			ptr->markDirty();
 			return ptr->lock();
 		}
 		
@@ -160,6 +201,7 @@ namespace Ga
 		static Cache& get();
 		
 		BlockHandle alloc(Size size);
+		void requestDiskToHeap(Size size);
 		unsigned sortAndCountBlocks();
 		
 		LargeSize totalUsage()
@@ -181,13 +223,29 @@ namespace Ga
 	inline void* Block::lock()
 	{
 		static unsigned accessCounter = 0;
+		
+		// Mark as being accessed recently.
 		lastAccess = ++accessCounter;
-		if (accessCounter = 0)
+		
+		// Access counter overrun (VERY worst case):
+		// Normalize all blocks' last access time, start counting from there on.
+		if (accessCounter == 0)
 			accessCounter = Cache::get().sortAndCountBlocks();
+
+		// If on disk, load again.
+		if (!memory)
+		{
+			// Notify global memory management about our plans.
+			Cache::get().requestDiskToHeap(size);
+
+			memory = malloc(size);
+			CacheFile::get(size).recover(fileIndex, memory);
+		}	
+
+		++lockCount;
 
 		return memory;
 	}
-
 }
 
 #endif
