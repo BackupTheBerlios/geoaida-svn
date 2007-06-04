@@ -42,7 +42,8 @@ namespace
 Ga::BlockHandle Ga::Cache::alloc(Size size)
 {
 	total += size;
-	heap += size;
+	// Treat this like a file swapping back into memory.
+    requestDiskToHeap(size);
 	
 	tr1::shared_ptr<Block> newBlock(new Block(size),
 		tr1::bind(deleteAndReduceUsage, tr1::placeholders::_1,
@@ -60,9 +61,10 @@ void Ga::Cache::requestDiskToHeap(Size size)
 
 		// Things must be written to disk before this may happen.
 		Blocks::iterator iter = blocks.end();
-		--iter;
-		do 
+		while (heap + size > HEAP_USAGE && iter != blocks.begin())
 		{
+    		--iter;
+
 			tr1::shared_ptr<Block> block(*iter);
 			
 			if (block->isLocked())
@@ -73,13 +75,13 @@ void Ga::Cache::requestDiskToHeap(Size size)
 				block->writeToDisk();
 				heap -= block->getSize();
 			}
-		} while (heap + size > HEAP_USAGE && iter != blocks.begin());
+		} 
 	}
 
 	heap += size;
 }
 
-namespace 
+namespace
 {
 	bool isFirstBlockMoreImportant(tr1::weak_ptr<Ga::Block> first, tr1::weak_ptr<Ga::Block> second)
 	{
@@ -111,6 +113,6 @@ unsigned Ga::Cache::normalizeAndCountBlocks()
 	compactBlocks();
 	unsigned id = 0;
 	for (Blocks::iterator it = blocks.begin(); it != blocks.end(); ++it, ++id)
-		it->setLastAccess(id);
+		tr1::shared_ptr<Block>(*it)->setLastAccess(id);
 	return blocks.size();
 }

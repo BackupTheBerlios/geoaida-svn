@@ -28,17 +28,20 @@ using namespace std;
 Ga::CacheFile::CacheFile(Size blockSize)
 : blockSize(blockSize)
 {
-	ostringstream filename;
-	filename << "/tmp/gacachefile_" << blockSize << ".tmp";
+	ostringstream stream;
+	stream << "/tmp/gacachefile_" << blockSize << ".tmp";
+    filename = stream.str();
 	
-	fd = open(filename.str().c_str(), O_CREAT | O_TRUNC | O_RDWR, 0022);
+	fd = open(filename.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0600);
 	if (fd < 0)
-		throw runtime_error("Could not open ga_image cache file");
+		throw runtime_error("Could not open ga_image cache file: " + filename);
 }
 
 Ga::CacheFile::~CacheFile()
 {
+    assert(find(marked.begin(), marked.end(), true) == marked.end());
 	close(fd);
+    unlink(filename.c_str());
 }
 
 Ga::CacheFile& Ga::CacheFile::get(Size blockSize)

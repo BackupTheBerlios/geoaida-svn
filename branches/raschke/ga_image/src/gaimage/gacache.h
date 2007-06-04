@@ -22,6 +22,7 @@
 #include <cstddef>
 #include <cstdlib>
 #include <list>
+#include <string>
 #include <vector>
 #include <tr1/memory>
 
@@ -39,10 +40,11 @@ namespace Ga
 	class CacheFile
 	{
 		Size blockSize;
+        std::string filename;
 		int fd;
 		std::vector<bool> marked;
 		
-		explicit CacheFile(Size blockSize);	
+		explicit CacheFile(Size blockSize);
 		
 		// Copying forbidden.
 		CacheFile(const CacheFile&);
@@ -66,7 +68,7 @@ namespace Ga
 		
 		// Invariant: Either memory points to allocated memory, or if it is null,
 		// fileIndex is a valid (not yet recovered) index into the cache file.
-		void* memory;
+		char* memory;
 		unsigned fileIndex;
 		
 		// Copying explicitly forbidden; handles would dangle.
@@ -78,13 +80,16 @@ namespace Ga
 		: lastAccess(0), lockCount(0), size(size), memory(0), dirty(false)
 		{
 			// Global memory management already knows about this.
-			memory = malloc(size);
+			memory = new char[size];
 		}
 		
 		~Block()
 		{
+			// Unlocking properly is a critical priority.
+			assert(!isLocked());
+			
 			if (memory)
-				free(memory);
+				delete[] memory;
 			else
 				CacheFile::get(size).dismiss(fileIndex);
 		}
@@ -141,7 +146,7 @@ namespace Ga
 		void writeToDisk()
 		{
 			fileIndex = CacheFile::get(size).store(memory);
-			free(memory);
+			delete[] memory;
 			memory = 0;
 		}
 	};
@@ -243,7 +248,7 @@ namespace Ga
 			// Notify global memory management about our plans.
 			Cache::get().requestDiskToHeap(size);
 
-			memory = malloc(size);
+			memory = new char[size];
 			CacheFile::get(size).recover(fileIndex, memory);
 		}	
 
