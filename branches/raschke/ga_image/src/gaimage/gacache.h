@@ -202,7 +202,12 @@ namespace Ga
 		
 		BlockHandle alloc(Size size);
 		void requestDiskToHeap(Size size);
-		unsigned sortAndCountBlocks();
+		void compactBlocks();
+		
+		// Called by Block on access id wraparound:
+		// First calls compactBlocks, then sets each block's last access id to it's position
+		// in the list, and returns the number of blocks.
+		unsigned normalizeAndCountBlocks();
 		
 		LargeSize totalUsage()
 		{
@@ -230,7 +235,7 @@ namespace Ga
 		// Access counter overrun (VERY worst case):
 		// Normalize all blocks' last access time, start counting from there on.
 		if (accessCounter == 0)
-			accessCounter = Cache::get().sortAndCountBlocks();
+			accessCounter = Cache::get().normalizeAndCountBlocks();
 
 		// If on disk, load again.
 		if (!memory)

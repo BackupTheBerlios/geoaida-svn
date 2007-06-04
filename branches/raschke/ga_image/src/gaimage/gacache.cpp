@@ -55,8 +55,10 @@ void Ga::Cache::requestDiskToHeap(Size size)
 {
 	if (heap + size > HEAP_USAGE)
 	{
+		// Clean up for easier processing.
+		compactBlocks();
+
 		// Things must be written to disk before this may happen.
-		sortAndCountBlocks();
 		Blocks::iterator iter = blocks.end();
 		--iter;
 		do 
@@ -97,11 +99,18 @@ namespace
 	}
 }
 
-unsigned Ga::Cache::sortAndCountBlocks()
+void Ga::Cache::compactBlocks()
 {
 	blocks.sort(isFirstBlockMoreImportant);
 	while (!blocks.empty() && blocks.back().expired())
 		blocks.pop_back();
-	// TODO: Renumber, but not in all cases. Oh no!
+}
+
+unsigned Ga::Cache::normalizeAndCountBlocks()
+{
+	compactBlocks();
+	unsigned id = 0;
+	for (Blocks::iterator it = blocks.begin(); it != blocks.end(); ++it, ++id)
+		it->setLastAccess(id);
 	return blocks.size();
 }
