@@ -42,6 +42,20 @@ int main()
     beginTest("Overusing the heap.");
     handle2 = Cache::get().alloc(600 * MB);
 	assertCacheUsage(1000 * MB, 600 * MB, 400 * MB);
+	
+	beginTest("Reference sharing.");
+	handle3 = handle2 = handle;
+	assertCacheUsage(100 * MB, 0 * MB, 100 * MB);
+
+	beginTest("Copy-on-write from disk source.");
+	handle2.lockRW();
+	handle2.unlock();
+	assertCacheUsage(200 * MB, 200 * MB, 0 * MB);
+
+	beginTest("Copy-on-write from heap source.");
+	handle3.lockRW();
+	handle3.unlock();
+	assertCacheUsage(300 * MB, 300 * MB, 0 * MB);
 
     beginTest("Cleaning up.");
 	handle = handle2 = handle3 = BlockHandle();

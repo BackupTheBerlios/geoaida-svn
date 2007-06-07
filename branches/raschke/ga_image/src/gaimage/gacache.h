@@ -21,6 +21,7 @@
 
 #include <cstddef>
 #include <cstdlib>
+#include <cstring>
 #include <list>
 #include <string>
 #include <vector>
@@ -125,8 +126,8 @@ namespace Ga
 		}
 		
 		void* lock();
-		// defined below due to order of declarations
-		
+		// Defined below due to order of definitions.
+				
 		void unlock()
 		{
 			assert(lockCount > 0);
@@ -151,11 +152,15 @@ namespace Ga
 		}
 	};
 
-	// Minimalistic wrapper around a Block pointer.
+	// Minimalistic wrapper around a Block.
+	// Implements copy-on-write semantics.
 	class BlockHandle
 	{
 		typedef std::tr1::shared_ptr<Block> Ptr;
 		Ptr ptr;
+		
+		BlockHandle clone();
+		// Defined below due to order of definitions.
 		
 	public:
 		explicit BlockHandle(const Ptr& ptr = Ptr())
@@ -177,12 +182,15 @@ namespace Ga
 		void* lockRW()
 		{
 			assert(!isEmpty());
+			
 			if (ptr.use_count() > 1)
-				; /* clone */
+				// Need to clone the old block.
+				clone().ptr.swap(ptr);
+			
 			ptr->markDirty();
 			return ptr->lock();
-		}
-		
+		}		
+				
 		void unlock()
 		{
 			assert(!isEmpty());
@@ -255,6 +263,25 @@ namespace Ga
 		++lockCount;
 
 		return memory;
+	}
+	
+	inline BlockHandle BlockHandle::clone()
+	{
+		BlockHandle result = Cache::get().alloc(ptr->getSize());
+		void* cloneContents = result.lockRW();
+		try
+		{
+			const void* myContents = lockR();
+			std::memcpy(cloneContents, myContents, ptr->getSize());
+			unlock();								
+		}
+		catch (...)
+		{
+			result.unlock();
+			throw;
+		}
+		result.unlock();
+		return result;
 	}
 }
 
