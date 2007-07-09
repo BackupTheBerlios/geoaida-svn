@@ -48,7 +48,7 @@ class Painter
 
 		//--- methods --------------------------------------------------------//
 		void drawLine(Image&, int, int, int, int, double);
-		void drawGeoLine(Image&, double, double, double, double, double, double, bool);
+		//void drawGeoLine(Image&, double, double, double, double, double, double, bool);
 
 		void drawPolygon(const PointArray&, double);
 		void fillPolygon(const PointArray&, double);

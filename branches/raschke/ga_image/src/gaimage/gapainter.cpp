@@ -59,10 +59,10 @@ void Painter::drawLine(Image& img, int x1, int y1, int x2, int y2, double c)
 /// \param antialias toggle antialiasing
 ///
 ////////////////////////////////////////////////////////////////////////////////
-void Painter::drawGeoLine(Image& img, double gx1, double gy1, double gx2, double gy2, double width, double c, bool antialias)
-{
-	Ga::drawGeoLine(img, gx1, gy1, gx2, gy2, width, c, antialias);
-}
+//void Painter::drawGeoLine(Image& img, double gx1, double gy1, double gx2, double gy2, double width, double c, bool antialias)
+//{
+//	Ga::drawGeoLine(img, gx1, gy1, gx2, gy2, width, c, antialias);
+//}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///

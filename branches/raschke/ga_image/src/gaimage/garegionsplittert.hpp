@@ -430,13 +430,13 @@ void findNeighbours(LabelPic & lpic,
 #endif
       if (lpic.getInt(x, y) != region.id)
         continue;
-      //      if ((ox>0) && (oy>0) && (lpic.getPixel(ox-1,oy-1)!=region.id))
+      //      if ((ox>0) && (oy>0) && (lpic.getFloat(ox-1,oy-1)!=region.id))
       //        value=region.id;
-      //      if ((ox<sizeX()-1) && (oy>0) && (lpic.getPixel(ox+1,oy-1)!=region.id))
+      //      if ((ox<sizeX()-1) && (oy>0) && (lpic.getFloat(ox+1,oy-1)!=region.id))
       //        value=region.id;
-      //      if ((ox>0) && (oy<sizeY()-1) && (lpic.getPixel(ox-1,oy+1)!=region.id))
+      //      if ((ox>0) && (oy<sizeY()-1) && (lpic.getFloat(ox-1,oy+1)!=region.id))
       //        value=region.id;
-      //      if ((ox<sizeX()-1) && (oy<sizeY()-1) && (lpic.getPixel(ox+1,oy+1)!=region.id))
+      //      if ((ox<sizeX()-1) && (oy<sizeY()-1) && (lpic.getFloat(ox+1,oy+1)!=region.id))
       //        value=region.id;
       if ((x==0) || (y==0) || (x==lpic.sizeX()-1) || (y==lpic.sizeY()-1)) neighbour[num_regions]=true;
       if (x+1<lpic.sizeX())

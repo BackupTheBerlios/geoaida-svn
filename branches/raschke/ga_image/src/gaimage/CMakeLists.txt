@@ -1,7 +1,7 @@
 include_directories(.
         ${CMAKE_SOURCE_DIR}/pfm/libpfm)
 
-set(headers gaall.h
+set(headers gaalgo.h
            gaarray2dt.h
            gacanny.h
            gaconvert.h
@@ -37,7 +37,8 @@ set(templateheaders
            gavectorizet.hpp
 )
 
-set(sources gacanny.cpp
+set(sources gacalchistogram.cpp
+           gacanny.cpp
            gadraw.cpp 
            gagaussian.cpp
            gagradient.cpp
@@ -46,6 +47,9 @@ set(sources gacanny.cpp
 		   gacache.cpp
 		   gacachefile.cpp
            garegion.cpp
+           gatohsv.cpp
+           gatoluminance.cpp
+           gatondvi.cpp
            gavariance.cpp
 	   garegression.cpp
 
@@ -58,3 +62,10 @@ install(FILES ${headers} DESTINATION include)
 
 add_executable(painttest paint.cpp)
 target_link_libraries(painttest gaimage pfm pnm)
+
+add_executable(test_cache test_cache.cpp)
+target_link_libraries(test_cache gaimage pfm pnm)
+
+add_executable(test_image test_image.cpp)
+target_link_libraries(test_image gaimage pfm pnm)
+

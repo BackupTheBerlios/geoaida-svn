@@ -24,6 +24,7 @@
 #include <getopt.h>
 
 #include <gaimage.h>
+#include <gaalgo.h>
 #include <gaimaget.h>
 #include <gadraw.h>
 #include <garegiont.h>
@@ -84,7 +85,7 @@ int main(int argc, char *argv[])
   // calculate the histogram of the image ...
   if (verbose) cout << "histogram, " << endl;
 
-  Image histo = in.calcHistogram(in.matrixMin(), in.matrixMax(), 1000);
+  Image histo = calcHistogram(in, in.findMinValue(), in.findMaxValue(), 1000);
 
   // ... and the pixel value at x percent of the total distribution
   int sumpixel = 0, tindex = 0;
@@ -95,7 +96,7 @@ int main(int argc, char *argv[])
     }
 
   // memorize this value ...
-  threshold = tindex * (in.matrixMax() - in.matrixMin()) / 1000.0;
+  threshold = tindex * (in.findMaxValue() - in.findMinValue()) / 1000.0;
 
   if (verbose) cout << "histogram split: " << tindex << " " << threshold << ", " << endl;
 

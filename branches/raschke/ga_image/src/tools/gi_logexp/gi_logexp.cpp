@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
 	if (!mode)
 	{
 	  // calculate the minimum of the image ...
-		float offset = in.matrixMin();
+		float offset = in.findMinValue();
 		if (offset <= 0)
 			offset = -offset + 1.0;
 		else

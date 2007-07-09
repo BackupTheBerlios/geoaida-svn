@@ -17,6 +17,7 @@
 
 #include <getopt.h>
 #include <gaimage.h>
+#include <gaalgo.h>
 #include <gagradient.h>
 using namespace Ga;
 
@@ -71,7 +72,7 @@ int main(int argc, char **argv)
   Image result;
   if (im.noChannels()==3) {
     if (hsv) {
-      im=im.hsv();
+      im=toHSV(im);
       result=Ga::gradient2DhsvMax(im);
     }
     else

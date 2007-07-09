@@ -116,7 +116,7 @@ Image regression(const Image& imgIn,
    gsl_matrix_set(moments, 2, 1, ef12);
    
 
-   int classCount=(int) mask.maxValue();
+   int classCount=(int) mask.findMaxValue();
    
    // Streumatrix: Anzahl Merkmale x Anzahl Klassen
    gsl_matrix * mstreu = gsl_matrix_alloc (featureCount, classCount);

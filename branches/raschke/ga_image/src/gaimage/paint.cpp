@@ -48,7 +48,7 @@ int main(int argc, char** argv)
 	Ga::Painter		painter(img);
 
 	// white image
-	img=255;
+	img.fill(255);
 
 	// define the first polygon
 	poly1.push_back(Ga::Point(50,200));

@@ -78,10 +78,8 @@ template<class PixTyp> void calcBoundingBoxes(ImageT<int>& result, ImageBase &im
 
 Image calcBoundingBoxes(Image &img, int nlabels)
 {
-  Image im;
-  ImageT<int> *result=new ImageT<int>;
-  ForEachTypeDo(img.typeId(),calcBoundingBoxes,(*result,*(img.pImage()),nlabels));
-  im.pImage(result);
+  Image im(typeid(int));
+  ForEachTypeDo(img.typeId(),calcBoundingBoxes,(*static_cast<ImageT<int>*>(im.pImage()),*(img.pImage()),nlabels));
   return im;
 }
 

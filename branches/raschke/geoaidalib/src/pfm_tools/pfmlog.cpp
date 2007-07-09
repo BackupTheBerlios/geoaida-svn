@@ -39,8 +39,8 @@ int main(int argc, char **argv)
   if (src.isEmpty()) {
     fprintf(stderr,"Can't find %s\n",argv[1]);
   }
-  float min=src.matrixMin();
-  float max=src.matrixMax();
+  float min=src.findMinValue();
+  float max=src.findMaxValue();
   src.setMinValue(min);
   src.setMaxValue(max);
   Image result(typeid(float),src.sizeX(),src.sizeY());

@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 
   in.read(argv[optind]);
 	
-  double min = in.matrixMin(), max = in.matrixMax();
+  double min = in.findMinValue(), max = in.findMaxValue();
 //  double min = 0, max = 255;
   double slotwidth = (max - min) / slots;
 

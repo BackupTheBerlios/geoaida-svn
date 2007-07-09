@@ -1,39 +1,22 @@
-/* -*- mode:c++ -*- */
-//*******************************************************************
-//  Filename:   gacanny.cpp
-//  Ort:        TNT, Uni. - Hannover, Germany
-//
-//  Info:	Gaussian Image Blur
-//
-// Copyright (C) 2007 Julian Raschke
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
-// of the License, or (at your option) any later version.
-// 
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-// 
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-//
-//           --------      
-//          /     ^ /      
-//         /  ^^   /--     
-//        / ^  ^^/  /
-//        --------  /--
-//         /    * /+ /
-//         --------  /
-//          /   ~~  /
-//          --------
-//
-//*******************************************************************
+/****************************************************************************
+                          gacanny.cpp  -  GeoAIDA algorithm implementation
+                             -------------------
+    begin                : 2007
+    copyright            : (C) 2007 TNT, Uni Hannover
+    authors              : Julian Raschke
+    email                : raschke@tnt.uni-hannover.de
+ ***************************************************************************/
 
-#include "gacanny.h"
+/***************************************************************************
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ ***************************************************************************/
+
+#include "gaalgo.h"
 #include <vector>
 #include <cmath>
 #include <algorithm>
@@ -47,8 +30,8 @@ namespace {
         int sizeX = source.sizeX(), sizeY = source.sizeY();
         Image result(typeid(float), sizeX, sizeY);
 
-    	float min = source.minValue();
-    	float range = source.maxValue() - min;
+    	float min = source.findMinValue();
+    	float range = source.findMaxValue() - min;
 
         for (int x = 0; x < sizeX; ++x)
             for (int y = 0; y < sizeY; ++y) {
@@ -66,7 +49,7 @@ namespace {
 
     // Helper for convolution:
     // Adjust x/y when going over edge
-    float getPixel(const Image &source, int x, int y) {
+    float getFloat(const Image &source, int x, int y) {
         if (x < 0)
             x = 0;
         else if (x >= source.sizeX())
@@ -98,7 +81,7 @@ namespace {
                 for (int i = 0; i < 9; ++i) {
                     int relX = (i % 3) - 1;
                     int relY = (i / 3) - 1;
-                    accum += getPixel(source, x + relX, y + relY) * coefficients[i] * factor;
+                    accum += getFloat(source, x + relX, y + relY) * coefficients[i] * factor;
                 }
 
                 setPixel(result, x, y, accum);
@@ -228,24 +211,24 @@ namespace {
 }
 
 Ga::Image Ga::canny(const Image& img, double lowThreshold, double highThreshold) {
-    Image input = img;
+  Image input = img;
     
 	// The Canny algorithm is designed to work on grayscale images, so make sure we have one.
 	if (input.noChannels() != 1) {
-		input = input.convert2Luminance();
+		input = toLuminance(input);
 	}
 	
 	// Normalize the image so every pixel lies in 0..1.
 	input = normalizeImage(input);
     
-    Image sobelX = convolve(input, SOBEL_X, 1.0/4, 0.5);
-    Image sobelY = convolve(input, SOBEL_Y, 1.0/4, 0.5);
-    
-    Image intensities = combineIntensities(sobelX, sobelY);
-    Image angles = calcAngles(sobelX, sobelY);
+  Image sobelX = convolve(input, SOBEL_X, 1.0/4, 0.5);
+  Image sobelY = convolve(input, SOBEL_Y, 1.0/4, 0.5);
+  
+  Image intensities = combineIntensities(sobelX, sobelY);
+  Image angles = calcAngles(sobelX, sobelY);
 
-    Image localMaxs = findLocalMaxs(intensities, angles);
-    Image canny = applyHysteresis(localMaxs, angles, lowThreshold, highThreshold);
+  Image localMaxs = findLocalMaxs(intensities, angles);
+  Image canny = applyHysteresis(localMaxs, angles, lowThreshold, highThreshold);
 
-    return canny;
+  return canny;
 }

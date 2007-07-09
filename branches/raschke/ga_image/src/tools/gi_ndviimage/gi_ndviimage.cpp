@@ -1,10 +1,4 @@
-/***************************************************************************
-                          gi_regression  -  description
-                             -------------------
-    begin                : Tue Feb 27 2007
-    copyright            : (C) 2007 by christian becker
-    email                : becker@tnt.uni-hannover.de
- ***************************************************************************/
+/* TODO: header missing */
 
 /***************************************************************************
  *                                                                         *
@@ -17,6 +11,7 @@
 
 #include <getopt.h>
 #include <gaimage.h>
+#include <gaalgo.h>
 
 using namespace Ga;
 
@@ -71,7 +66,7 @@ int main(int argc, char **argv)
 
    
    Image result;
-   result=im.convert2ndvi();
+   result=toNDVI(im);
    
    result.write(out,0);
 

@@ -115,7 +115,7 @@ template<class PixTyp> void drawLine(ImageBase &im, int x1, int y1, int x2, int 
     }
   }
 }
-
+#if 0
 /** draws a line with antialiasing and variable line-width (with range-check)
   \param gx1 x geo-coordinate of point 1
   \param gy2 y geo-coordinate of point 1
@@ -204,6 +204,6 @@ template<class PixTyp> void drawGeoLine(ImageBase &im, double gx1, double gy1, d
     }
   }
 }
-
+#endif
 } // namespace Ga
 #endif

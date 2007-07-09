@@ -42,11 +42,13 @@ void drawLine(Image& img, int x1, int y1, int x2, int y2, double c)
   \param gy2 y geo-coordinate of point 2
   \param c value of the line points
   \param antialias toggle antialiasing */
+#if 0
 void drawGeoLine(Image& img, double gx1, double gy1, double gx2, double gy2, double width, double c, bool antialias)
 {
   ForEachTypeDo(img.typeId(),drawGeoLine,
                 (*(img.pImage()),gx1,gy1,gx2,gy2,width,c,antialias));
 }
+#endif
 
 } // namespace Ga
 
