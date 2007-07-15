@@ -38,15 +38,14 @@ typedef const void* ConstIterator;
 class Image 
 {
   ImageBase* pImage_;
-  void init(const class std::type_info& t, int x, int y, int noChannels=1);
+  IMGTYPE readImageType(FILE *fp,int* cols, int* rows);
 
 public:
-  // Create without ImageT representation.
-  // To be killed...
-  Image();
-  // Create with empty ImageT representation.
+  // Create with, maybe empty, ImageT representation.
   explicit Image(const class std::type_info& t, int x = 0, int y = 0, int noChannels=1);
-  // Clone other image's contents.
+  // Load from file.
+  explicit Image(const std::string& filename);
+
   Image(const Image& rhs);
   Image& operator=(const Image& rhs);
   ~Image();
@@ -65,9 +64,7 @@ public:
   const class std::type_info& typeId() const;
   IMGTYPE typeImage() const;
   void typeImage(IMGTYPE t);
-  IMGTYPE readImageType(FILE *fp,int* cols, int* rows);
   bool read(const char* filename);
-  bool read(FILE *fp);
   void write(const char* filename, int channel=0);
   void write(FILE *fp, int channnel=0);
 	
@@ -99,11 +96,6 @@ public:
   void nextCol(void*& ptr, int offset) const;
   void set(void *ptr, int val);
   int getInt(const void *ptr) const;
-
-protected:
-  /** initialization; common function for initialization; for internal use only
-      usage: \code Initialize( x, y ) \endcode \endcode */
-  void initialize( int x, int y, int noChannels=1 );
 };
 
 #define ForTypeDo(PixTyp,function,args) \

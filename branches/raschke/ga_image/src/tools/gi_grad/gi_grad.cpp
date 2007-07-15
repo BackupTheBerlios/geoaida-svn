@@ -63,24 +63,18 @@ int main(int argc, char **argv)
   const char* absfile=argv[optind++];
   const char* anglefile=argv[optind++];
 
-  Image im;
-  im.read(infile);
-  if (im.isEmpty()) {
-    fprintf(stderr,"Can't open %s\n",argv[1]);
-    return -1;
-  }
-  Image result;
+  Image im(infile);
   if (im.noChannels()==3) {
     if (hsv) {
       im=toHSV(im);
-      result=Ga::gradient2DhsvMax(im);
+      im=Ga::gradient2DhsvMax(im);
     }
     else
-      result=Ga::gradient2D3Channels(im);
+      im=Ga::gradient2D3Channels(im);
   }
   else
-    result=Ga::gradient2D(im);
+    im=Ga::gradient2D(im);
 
-  result.write(absfile,0);
-	result.write(anglefile,1);
+  im.write(absfile,0);
+	im.write(anglefile,1);
 }

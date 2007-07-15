@@ -51,15 +51,7 @@ int main(int argc, char **argv)
   sscanf(argv[optind+2],"%f",&multiply);
   sscanf(argv[optind+3],"%f",&divisor);
   double scale=multiply/divisor;
-  Image im;
-  if (!im.read(infile)) {
-    fprintf(stderr,"Can't open file %s\n",infile);
-    exit(1);
-  }
-  if (im.isEmpty()) {
-    fprintf(stderr,"Image %s is empty\n",infile);
-    exit(1);
-  }
+  Image im(infile);
   printf("Read %s\n",infile);
   printf("Scaling image by %f/%f = %f\n",
          multiply,divisor,scale);

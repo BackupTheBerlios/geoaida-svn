@@ -37,7 +37,7 @@ int main(int argc, char **argv)
   double sigma = atof(argv[2]);
   const char* outputfile=argv[3];
 
-  Image input;
+  Image input(inputfile);
   input.read(inputfile);
   if (input.isEmpty()) {
     fprintf(stderr,"Can't open inputfile %s\n", inputfile);

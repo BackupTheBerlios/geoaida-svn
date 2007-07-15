@@ -97,12 +97,10 @@ int main(int argc, char *argv[])
   if (optind + 2 > argc)
     usage();
 
-  Image in;
-
   // load the input image
   if (verbose) cout << "Loading image " << argv[optind] << ", " << endl;
 
-  in.read(argv[optind]);
+  Image in.read(argv[optind]);
 
   int M = in.sizeY();
   int N = in.sizeX() - 2;

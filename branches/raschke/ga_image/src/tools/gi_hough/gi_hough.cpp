@@ -76,15 +76,7 @@ int main(int argc, char **argv)
     sscanf(argv[optind++],"%lf",&angleStep);
   }
 
-  Image im;
-  if (!im.read(infile)) {
-    fprintf(stderr,"Can't open file %s\n",infile);
-    exit(1);
-  }
-  if (im.isEmpty()) {
-    fprintf(stderr,"Image %s is empty\n",infile);
-    exit(1);
-  }
+  Image im(infile);
   printf("Read %s\n",infile);
 
   Image result=houghMapLines(im,angleMin,angleMax,angleStep);

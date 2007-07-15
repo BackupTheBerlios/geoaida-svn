@@ -56,18 +56,7 @@ int main(int argc, char **argv)
    const char* infile=argv[optind++];
    const char* out=argv[optind++];
 
-   Image im;
-   im.read(infile);   
-   if (im.isEmpty()) {
-      fprintf(stderr,"Can't open %s\n",argv[1]);
-      return -1;
-   }
-   
-
-   
-   Image result;
-   result=toNDVI(im);
-   
+   Image im(infile);   
+   Image result=toNDVI(im);
    result.write(out,0);
-
 }

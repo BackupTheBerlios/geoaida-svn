@@ -63,38 +63,16 @@ int main(int argc, char **argv)
    const char* mask=argv[optind++];
    const char* learnfeature1=argv[optind++];
    const char* learnfeature2=argv[optind++];
-   Image im;
-   im.read(infile);   
-   if (im.isEmpty()) {
-      fprintf(stderr,"Can't open %s\n",argv[1]);
-      return -1;
-   }
-   Image immask;
-   im.read(mask);   
-   if (im.isEmpty()) {
-      fprintf(stderr,"Can't open %s\n",argv[1]);
-      return -1;
-   }
-   Image imfeat1;
-   im.read(learnfeature1);   
-   if (im.isEmpty()) {
-      fprintf(stderr,"Can't open %s\n",argv[1]);
-      return -1;
-   }
-   Image imfeat2;
-   im.read(learnfeature2);   
-   if (im.isEmpty()) {
-      fprintf(stderr,"Can't open %s\n",argv[1]);
-      return -1;
-   }
+   Image im(infile);
+   Image immask(mask);   
+   Image imfeat1(learnfeature1);   
+   Image imfeat2(learnfeature2);   
 
    
-   Image result;
-   result=Ga::regression(im, 
+   Image result = Ga::regression(im, 
 			 immask, 
 			 imfeat1, 
 			 imfeat2);
    
    result.write(out,0);
-
 }

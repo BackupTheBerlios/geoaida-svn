@@ -20,51 +20,80 @@
 #include <cassert>
 #include <algorithm>
 #include <stdexcept>
+#include <typeinfo>
 #include "gaimage.h"
 #include "gaimaget.h"
 #include "gaimagebase.h"
 
 namespace Ga {
-
-//--------------------------------- constructors ----------------------------
-#define GenClassesIf(classname,t,type,elsepart) \
-( t==typeid(type)            \
-  ? new classname<type>     \
-  : elsepart \
-  )
-#define GenClasses(classname,t,baseclass) \
-  GenClassesIf(classname, t, bool,  \
-  GenClassesIf(classname, t, char,  \
-  GenClassesIf(classname, t, signed char,  \
-  GenClassesIf(classname, t, unsigned char,  \
-  GenClassesIf(classname, t, short,   \
-  GenClassesIf(classname, t, signed short,   \
-  GenClassesIf(classname, t, unsigned short, \
-  GenClassesIf(classname, t, int,     \
-  GenClassesIf(classname, t, signed int,     \
-  GenClassesIf(classname, t, unsigned int,   \
-  GenClassesIf(classname, t, float,          \
-  (baseclass*)0 )))))))))))
-
-void Image::init(const class std::type_info& t, int x, int y, int noChannels)
-{
-  pImage_=GenClasses(ImageT,t,ImageBase);
-  pImage_->initialize(x,y,noChannels);
+  
+// File-local helper functions.
+namespace {
+  const std::type_info& pixTypeOfImgType(IMGTYPE type)
+  {
+    switch (type)
+    {
+      case _PFM_FLOAT:  return typeid(float);
+      case _PFM_UINT16: return typeid(unsigned short);
+      case _PFM_SINT16: return typeid(signed short);
+      case _PFM_UINT:   return typeid(unsigned);
+      case _PFM_SINT:   return typeid(signed);
+      case _PGM:        return typeid(unsigned char);
+      case _PPM:        return typeid(unsigned char);
+      case _PBM:        return typeid(bool);
+      default:          throw std::logic_error("Unsupported image type");
+    }
+  }
+  
+  int channelsOfImgType(IMGTYPE type)
+  {
+    if (type == _PPM)
+      return 3;
+    return 1;
+  }
 }
 
-Image::Image()
+Image::Image(const std::type_info& t, int x, int y, int noChannels)
 {
-  pImage_=0;
+  #define TRY_TYPE(type) \
+    if (t == typeid(type)) pImage_ = new ImageT<type>(x, y, noChannels);
+
+  TRY_TYPE(bool) else
+  TRY_TYPE(char) else
+  TRY_TYPE(signed char) else
+  TRY_TYPE(unsigned char) else
+  TRY_TYPE(signed short) else
+  TRY_TYPE(unsigned short) else
+  TRY_TYPE(signed int) else
+  TRY_TYPE(unsigned int) else
+  TRY_TYPE(float) else
+    throw std::logic_error(std::string("Unsupported type ") + t.name());
+  
+  #undef TRY_TYPE
 }
 
-Image::Image(const class std::type_info& t, int x, int y, int noChannels)
+Image::Image(const std::string& filename)
+: pImage_(0)
 {
-  pImage_=GenClasses(ImageT,t,ImageBase);
-  if (!pImage_)
-    throw std::logic_error(std::string("Unsupported type: ") + t.name());
-
-  if (x * y != 0)
-    pImage_->initialize(x,y,noChannels);
+  FILE *fp = fopen(filename.c_str(), "r");
+  if (!fp)
+    throw std::runtime_error("Cannot open file " + filename);
+  try
+  {  
+    int cols,rows;
+    IMGTYPE type=readImageType(fp,&cols,&rows);
+    // Use other constructor to create image representation    
+    Image(pixTypeOfImgType(type), cols, rows, channelsOfImgType(type)).swap(*this);
+  	if (!pImage()->read(fp))
+      throw std::runtime_error("Couldn't load image " + filename);
+    if (isEmpty())
+      throw std::runtime_error("Image " + filename + " is empty");
+  }
+  catch (...)
+  {
+    fclose(fp);
+    throw;
+  }
 }
 
 /** copy constructor: defining and initialize from a matrix
@@ -119,11 +148,13 @@ bool Image::isEmpty() const {
 }
 
 bool Image::read(const char* filename) {
-  FILE *fp=fopen(filename,"r");
-  if (!fp) return(false);
-  read(fp);
-  fclose(fp);
-	return(true);
+	try {
+    Image(filename).swap(*this);
+	}
+	catch (...) {
+    return false;
+	}
+  return true;
 }
 
 IMGTYPE Image::readImageType(FILE *fp,int* cols, int* rows) {
@@ -159,45 +190,6 @@ IMGTYPE Image::readImageType(FILE *fp,int* cols, int* rows) {
     if (cols) *cols=c;
     if (rows) *rows=r;
     return type;
-}
-
-bool Image::read(FILE *fp) {
-  if (!fp)
-		return(false);
-  if (!pImage_) {
-    int cols,rows;
-    IMGTYPE type=readImageType(fp,&cols,&rows);
-    switch (type) {
-    case _PFM_FLOAT:
-      init(typeid(float),cols,rows,1);
-      break;
-    case _PFM_UINT16:
-      init(typeid(unsigned short int),cols,rows,1);
-      break;
-    case _PFM_SINT16:
-      init(typeid(signed short int),cols,rows,1);
-      break;
-    case _PFM_UINT:
-      init(typeid(unsigned int),cols,rows,1);
-      break;
-    case _PFM_SINT:
-      init(typeid(signed int),cols,rows,1);
-      break;
-    case _PGM:
-      init(typeid(unsigned char),cols,rows,1);
-      break;
-    case _PPM:
-      init(typeid(unsigned char),cols,rows,3);
-      break;
-    case _PBM:
-      init(typeid(bool),cols,rows,1);
-      break;
-    default:
-      return(false);
-    }
-  }
-  assert(pImage_);
-	return(pImage()->read(fp));
 }
 
 void Image::write(const char* filename, int channel) {
@@ -253,8 +245,6 @@ int Image::noChannels() const {
   else return 0;
 }
 
-/** retrieve the value of an matrix element
-    usage: \code PixTyp x = A.GetElement( 3, 5 ); \endcode */
 double Image::getFloat(int x, int y, int channel) const
 {
   assert(pImage_!=0);
@@ -281,14 +271,6 @@ double Image::findMinValue(int channel)
 {
   int x, y;
   return pImage_->findMinValue(x, y, channel);
-}
-
-/** initialization; common function for initialization; for internal use only
-    usage: \code Initialize( x, y ) \endcode \endcode */
-void Image::initialize( int x, int y, int noChannels)
-{
-  assert(pImage_!=0);
-  pImage_->initialize(x,y,noChannels);
 }
 
 void Image::fill(double value) {

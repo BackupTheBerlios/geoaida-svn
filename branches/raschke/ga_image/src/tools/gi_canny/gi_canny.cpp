@@ -31,12 +31,6 @@ int main(int argc, char **argv)
     double lowTh = atof(argv[3]);
     double highTh = atof(argv[4]);
     
-    Image input;
-    input.read(inputfile);
-    if (input.isEmpty()) {
-        fprintf(stderr,"Can't open inputfile %s\n", inputfile);
-        return -1;
-    }
-
+    Image input(inputfile);
     canny(input, lowTh, highTh).write(outputfile, 0);
 }

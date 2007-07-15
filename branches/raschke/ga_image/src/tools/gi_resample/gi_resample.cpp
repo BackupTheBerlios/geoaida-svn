@@ -95,15 +95,7 @@ int main(int argc, char **argv)
     sscanf(argv[optind+2],"%d",&sizeX);
     sscanf(argv[optind+3],"%d",&sizeY);
   }
-  Image im;
-  if (!im.read(infile)) {
-    fprintf(stderr,"Can't open file %s\n",infile);
-    exit(1);
-  }
-  if (im.isEmpty()) {
-    fprintf(stderr,"Image %s is empty\n",infile);
-    exit(1);
-  }
+  Image im(infile);
   printf("Read %s\n",infile);
   if (scale) {
     sizeX=int(im.sizeX()*scaleX);
@@ -123,40 +115,40 @@ int main(int argc, char **argv)
     max=im.maxValue();
     printf("Orig  min/max: %f %f\n",min,max);
   }
-  Image result;
   switch(sampleFunc) {
     case 0:
-      result=im.resample(sizeX,sizeY);
+      im=im.resample(sizeX,sizeY);
       break;
     case 1:
-      result=im.resampleNN(sizeX,sizeY);
+      im=im.resampleNN(sizeX,sizeY);
       break;
     case 2:
-      result=im.resampleNNplus(sizeX,sizeY);
+      im=im.resampleNNplus(sizeX,sizeY);
       break;
   }
-  if (keepMinMax && result.noChannels()==1) {
-    result.storeMinValue();
-    result.storeMaxValue();
-    float newMin=result.minValue();
-    float newMax=result.maxValue();
+  if (keepMinMax && im.noChannels()==1) {
+    // TODO: Check what's going on with the max values.
+    im.storeMinValue();
+    im.storeMaxValue();
+    float newMin=im.minValue();
+    float newMax=im.maxValue();
     printf("New   min/max: %f %f\n",newMin,newMax);
     float f=(max-min)/(newMax-newMin);
-    void *ptr=result.begin();
-    int size=result.sizeImage();
+    void *ptr=im.begin();
+    int size=im.sizeImage();
     for (int i=0; i<size; i++) {
-      float v=result.getFloat(ptr);
+      float v=im.getFloat(ptr);
       v=(v-newMin)*f+min;
-      result.set(ptr,v);
-      result.nextCol(ptr);
+      im.set(ptr,v);
+      im.nextCol(ptr);
     }
-    result.storeMinValue();
-    result.storeMaxValue();
-    newMin=result.minValue();
-    newMax=result.maxValue();
+    im.storeMinValue();
+    im.storeMaxValue();
+    newMin=im.minValue();
+    newMax=im.maxValue();
     printf("Final min/max: %f %f\n",newMin,newMax);
   }
-  result.write(outfile);
+  im.write(outfile);
   return 0;
 }
 

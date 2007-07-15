@@ -1,5 +1,5 @@
 /***************************************************************************
-                          pfmvariance.cpp  -  description
+                          pfmvariance.cpp  -  description TODO: no.
                              -------------------
     begin                : Fri Oct 12 2001
     copyright            : (C) 2001 by jrgen bckner
@@ -37,8 +37,7 @@ int main(int argc, char **argv)
 	int numPics=argc-3;
 	int numRows=(numPics-1)/cols+1;
 	
-  Image im;
-  im.read(argv[3]);
+  Image im(argv[3]);
   
   int sizeX=im.sizeX();
   int sizeY=im.sizeY();

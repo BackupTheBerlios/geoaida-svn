@@ -14,7 +14,7 @@ void beginTest(const std::string& test)
 int main()
 {
   beginTest("Creating/assigning image of a specified size");
-  Image img;
+  Image //img;
   img = Image(typeid(float), 100, 200, 3);
   assert(img.sizeX() == 100);
   assert(img.sizeY() == 200);

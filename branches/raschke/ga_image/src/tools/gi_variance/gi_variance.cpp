@@ -64,26 +64,20 @@ int main(int argc, char **argv)
   int winSize=3;
   sscanf(argv[optind++],"%d",&winSize);
 
-  Image im;
-  im.read(infile);
-  if (im.isEmpty()) {
-    fprintf(stderr,"Can't open %s\n",argv[1]);
-    return -1;
-  }
-  Image result;
+  Image im(infile);
   if (circular)
-    result=Ga::variance(im,winSize,360);
+    im=Ga::variance(im,winSize,360);
   else
-    result=Ga::variance(im,winSize);
+    im=Ga::variance(im,winSize);
 
-  result.write(outfile);
+  im.write(outfile);
 
   //  calc mean variance
   float mvar=0.0;
-  for (int y = 1; y < result.sizeY()-1; y ++)
-    for (int x = 1; x < result.sizeX()-1; x ++)
-      if (result.getFloat(x,y,0) != 0.0)
-        mvar+=result.getFloat(x,y,0);
+  for (int y = 1; y < im.sizeY()-1; y ++)
+    for (int x = 1; x < im.sizeX()-1; x ++)
+      if (im.getFloat(x,y,0) != 0.0)
+        mvar+=im.getFloat(x,y,0);
   
   FILE *fp;
   if (!(fp = fopen(outvalues, "a")))
@@ -93,7 +87,7 @@ int main(int argc, char **argv)
       exit(-1);
     }
 
-   	fprintf(fp, "%f;", mvar/(result.sizeX()*result.sizeY()));
+   	fprintf(fp, "%f;", mvar/(im.sizeX()*im.sizeY()));
 
     fclose(fp);
   

@@ -58,8 +58,7 @@ int main(int argc, char *argv[])
 
    // read input image ---------------------------------------------------------------------------
   
-  Image im;
-  im.read(input_name);
+  Image im(input_name);
   x= im.sizeX();
   y= im.sizeY();  
   int old_class_1= im.getInt(5,5);
