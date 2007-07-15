@@ -101,16 +101,9 @@ public:
   int getInt(const void *ptr) const;
 
 protected:
-
-  /** allocation of memory and initialization of pointers, internal use only */
-  void alloc( int x, int y, int noChannels=1 );
-
   /** initialization; common function for initialization; for internal use only
       usage: \code Initialize( x, y ) \endcode \endcode */
   void initialize( int x, int y, int noChannels=1 );
-
-  /** deinitialization; common function for deinitialization (of pointer only !!) */
-  void deinitialize(void);
 };
 
 #define ForTypeDo(PixTyp,function,args) \

@@ -38,10 +38,10 @@ ImageT<unsigned long> * convert2rgb(ImageT<unsigned char> &red,
   pic->setGeoCoordinates(red.getGeoWest(), red.getGeoNorth(), red.getGeoEast(), red.getGeoSouth());
   pic->setGeoRes(red.getGeoRes());
   
-  unsigned long *elem = pic->data();
-  unsigned char *elem_red = red.data();
-  unsigned char *elem_green = green.data();
-  unsigned char *elem_blue = blue.data();
+  unsigned long *elem = pic->begin();
+  unsigned char *elem_red = red.begin();
+  unsigned char *elem_green = green.begin();
+  unsigned char *elem_blue = blue.begin();
   
   for (unsigned int i = 0; i < red.sizeImage(); ++i, ++elem, ++elem_red, ++elem_green, ++elem_blue) {
     *elem = (unsigned long)( *elem_red + *elem_green * 0x0100 + *elem_blue * 0x010000 );

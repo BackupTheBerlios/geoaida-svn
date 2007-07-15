@@ -19,6 +19,7 @@
 
 #include <cassert>
 #include <algorithm>
+#include <stdexcept>
 #include "gaimage.h"
 #include "gaimaget.h"
 #include "gaimagebase.h"
@@ -59,6 +60,9 @@ Image::Image()
 Image::Image(const class std::type_info& t, int x, int y, int noChannels)
 {
   pImage_=GenClasses(ImageT,t,ImageBase);
+  if (!pImage_)
+    throw std::logic_error(std::string("Unsupported type: ") + t.name());
+
   if (x * y != 0)
     pImage_->initialize(x,y,noChannels);
 }
@@ -254,36 +258,29 @@ int Image::noChannels() const {
 double Image::getFloat(int x, int y, int channel) const
 {
   assert(pImage_!=0);
-  return pImage_->getFloat(x,y,0,0);
+  return pImage_->getFloat(x,y,channel,0);
 }
 
 double Image::findMaxValue(int& x, int& y, int channel)
 {
-  return pImage_->matrixMax(x,y,channel);
+  return pImage_->findMaxValue(x,y,channel);
 }
 
 double Image::findMaxValue(int channel)
 {
   int x, y;
-  return pImage_->matrixMax(x,y,channel);
+  return pImage_->findMaxValue(x,y,channel);
 }
 
 double Image::findMinValue(int& x, int& y, int channel)
 {
-  return pImage_->matrixMin(x,y,channel);
+  return pImage_->findMinValue(x,y,channel);
 }
 
 double Image::findMinValue(int channel)
 {
   int x, y;
-  return pImage_->matrixMin(x, y, channel);
-}
-
-/** allocation of memory and initialization of pointers, internal use only */
-void Image::alloc( int x, int y, int noChannels)
-{
-  assert(pImage_!=0);
-  pImage_->alloc(x,y,noChannels);
+  return pImage_->findMinValue(x, y, channel);
 }
 
 /** initialization; common function for initialization; for internal use only
@@ -292,13 +289,6 @@ void Image::initialize( int x, int y, int noChannels)
 {
   assert(pImage_!=0);
   pImage_->initialize(x,y,noChannels);
-}
-
-/** deinitialization; common function for deinitialization (of pointer only !!) */
-void Image::deinitialize(void)
-{
-  assert(pImage_!=0);
-  pImage_->deinitialize();
 }
 
 void Image::fill(double value) {
@@ -391,8 +381,6 @@ void Image::nextCol(void*& ptr, int offset) const {
   pImage_->nextCol((const void*&)ptr,offset);
 }
 
-/** extracts one band from a rgb-color image to a new single-band image
-    \param band 0=red 1=green 2=blue, enum type can be used (e.g. Image<GA_NOTYPE>::red) */
 Image Image::getChannel(int channel)
 {
   Image result(typeId());

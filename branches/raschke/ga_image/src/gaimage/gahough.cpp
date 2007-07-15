@@ -55,7 +55,7 @@ void houghMapLines(ImageT<int>& result, const ImageBase& img,
 
   for (int h = 0; h < numAngles; h++)
     for (int k = 0; k < rmax2; k++)
-      imgOut[h][k] = 0;
+      imgOut(h,k) = 0;
 
   //Initialize a table of sine and cosine values
   for(int alpha=0; alpha<numAngles; alpha++ ) {
@@ -79,7 +79,7 @@ void houghMapLines(ImageT<int>& result, const ImageBase& img,
         double rr=(c-yc)*sarr[0]-(r-xc)*carr[0];
         int ra0=(rr<0.0?int(rr):int(rr+1));
 #endif
-        imgOut[0][ra0]++;
+        imgOut(0,ra0)++;
         for(int alpha=1; alpha<numAngles; alpha++ ) {
 #ifdef HESSE_NF
           int ra1=int(c*carr[alpha]+r*sarr[alpha])+rmax;
@@ -95,21 +95,21 @@ void houghMapLines(ImageT<int>& result, const ImageBase& img,
           if (ra1<ra0) {
             for (int rx=ra1; rx<=rahalf; rx++) {
               if (rx>=rmax2) continue;
-              imgOut[alpha][rx]++;
+              imgOut(alpha,rx)++;
             }
             for (int rx=rahalf; rx<ra0; rx++) {
               if (rx>=rmax2) continue;
-              imgOut[alpha-1][rx]++;
+              imgOut(alpha-1,rx)++;
             }
           }
           else {
             for (int rx=ra0+1; rx<=rahalf; rx++) {
               if (rx>=rmax2) continue;
-              imgOut[alpha-1][rx]++;
+              imgOut(alpha-1,rx)++;
             }
             for (int rx=rahalf; rx<=ra1; rx++) {
               if (rx>=rmax2) continue;
-              imgOut[alpha][rx]++;
+              imgOut(alpha,rx)++;
             }
           }
 #else
@@ -119,15 +119,15 @@ void houghMapLines(ImageT<int>& result, const ImageBase& img,
           if (ra1<ra0) {
             int x,y;
             for (int rx=ra1; rx<=rahalf; rx++)
-              imgOut[alpha][rmax+rx]++;
+              imgOut(alpha,rmax+rx)++;
             for (int rx=rahalf; rx<ra0; rx++) 
-              imgOut[alpha-1][rmax+rx]++;
+              imgOut(alpha-1,rmax+rx)++;
           }
           else {
             for (int rx=ra0+1; rx<=rahalf; rx++) 
-              imgOut[alpha-1][rmax+rx]++;
+              imgOut(alpha-1,rmax+rx)++;
             for (int rx=rahalf; rx<=ra1; rx++) 
-              imgOut[alpha][rmax+rx]++;
+              imgOut(alpha,rmax+rx)++;
           }
 #endif
           ra0=ra1;

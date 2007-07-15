@@ -21,8 +21,21 @@
 #define __GAIMAGEBASE_H
 
 #include <typeinfo>
-#include "gadefines.h"
-#include <assert.h>
+#include <cassert>
+#include <iostream>
+#include <string>
+#include <climits>
+
+// TODO: Change to new-style includes; involves work.
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <time.h>
+#include <errno.h>
+
+#ifndef NAN
+#define NAN sqrt(-1)
+#endif
 
 namespace Ga {
 
@@ -42,6 +55,10 @@ template <class PixType> class ImageT;
 
 class ImageBase
 {
+protected:
+  IMGTYPE imageType_;	
+  int sizeX_, sizeY_;
+
 public:
   ImageBase();
   virtual ~ImageBase() {}
@@ -49,17 +66,16 @@ public:
 
   int sizeX() const { return sizeX_; }
   int sizeY() const { return sizeY_; }
-  int sizeImage() const { return nSize_; }
+  int sizeImage() const { return sizeX_*sizeY_; }
   virtual int noChannels() const=0;
 
   // Hairy, kill
-  ImageBase(const ImageBase& rval);
 	IMGTYPE typeImage() const { return imageType_; }
 	void typeImage(IMGTYPE t) { imageType_ = t;}
   virtual const class std::type_info& typeId() const =0;
 
-  virtual double matrixMax(int& x, int& y, int ch=0) =0;
-  virtual double matrixMin(int& x, int& y, int ch=0) =0;
+  virtual double findMaxValue(int& x, int& y, int ch=0) =0;
+  virtual double findMinValue(int& x, int& y, int ch=0) =0;
 
   // Iterators
   virtual void* beginVoid(int row=0, int channel=0)=0;
@@ -80,9 +96,7 @@ public:
   virtual int getInt(int x, int y, int channel=0) const {return 0;}
   virtual int getInt(int x, int y, int channel, int neutral) const {return 0;}
 
-  virtual void alloc( int x, int y, int noChannels )=0;
   virtual void initialize( int x, int y, int noChannels )=0;
-  virtual void deinitialize(void)=0;
   virtual void resize(int rx, int ry, int noChannels=1)=0;
   virtual void fill(double value)=0;
   
@@ -91,27 +105,13 @@ public:
   virtual bool write(FILE *fp, int channel=0, const char* comment=0)=0;
   bool write(const char *filename, int channel=0);
   bool read(const char* filename);
-
-protected:
-	IMGTYPE imageType_;	
-  int sizeX_, sizeY_;
-  size_t nSize_;
 };
 
 inline ImageBase::ImageBase()
 {
   sizeX_=0;
   sizeY_=0;
-  nSize_=0;
   imageType_=_UNKNOWN;
-}
-
-inline ImageBase::ImageBase(const ImageBase& rval)
-{
-  sizeX_=rval.sizeX_;
-  sizeY_=rval.sizeY_;
-  nSize_=rval.nSize_;
-  imageType_=rval.imageType_;
 }
 
 inline bool ImageBase::write(const char* filename, int channel)

@@ -55,6 +55,24 @@ namespace Ga
   Image toNDVI(const Image& img);
   
 #if 0
+
+template <class PixTyp>
+void ImageT<PixTyp>::merge(ImageBase& image, double img_label, double new_label) {
+	ImageT<PixTyp>& img=(ImageT<PixTyp>&)image;
+	PixTyp label=(PixTyp)img_label;
+	PixTyp newLabel=(PixTyp)new_label;
+  PixTyp *p_img = img.begin();
+  PixTyp *p_data = this->begin();
+  int size = this->sizeImage();
+  if (size == img.sizeImage())
+    for (int i=0; i<=size; i++) {
+      if (*p_img == label) *p_data = newLabel;
+      p_img++;
+      p_data++;
+    }
+}
+
+
 /** resample the current image to size (x, y) */
 template <class PixTyp>
 inline void ImageT<PixTyp>::resample(ImageBase& resImg, int nx, int ny)
