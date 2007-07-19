@@ -87,9 +87,9 @@ int main(int argc, char *argv[])
 
   // ... and the pixel value at x percent of the total distribution
   int sumpixel = 0, tindex = 0;
-  while ((tindex < 1000) && (sumpixel < (int)(in.sizeImage() * threshold)))
+  while ((tindex < 1000) && (sumpixel < (int)(in.noPixels() * threshold)))
     {
-      sumpixel += histo.getInt(tindex, 0);
+      sumpixel += histo.getPixel(tindex, 0);
       tindex ++;
     }
 
@@ -106,10 +106,10 @@ int main(int argc, char *argv[])
   for (int y = 0; y < in.sizeY(); y ++)
     for (int x = 0; x < in.sizeX(); x ++)
     {
-			if (in.getFloat(x, y) < threshold)
-			  label.set(x, y, left ? 1 : 0);
+			if (in.getPixel(x, y) < threshold)
+			  label.setPixel(x, y, left ? 1 : 0);
 			else
-	  		label.set(x, y, left ? 0 : 1);
+	  		label.setPixel(x, y, left ? 0 : 1);
      }
 
   if (verbose) cout << "writing output image " << argv[optind + 1] << ", " << endl;

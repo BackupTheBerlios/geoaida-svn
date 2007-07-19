@@ -63,8 +63,8 @@ void ImageT<PixTyp>::merge(ImageBase& image, double img_label, double new_label)
 	PixTyp newLabel=(PixTyp)new_label;
   PixTyp *p_img = img.begin();
   PixTyp *p_data = this->begin();
-  int size = this->sizeImage();
-  if (size == img.sizeImage())
+  int size = this->noPixels();
+  if (size == img.noPixels())
     for (int i=0; i<=size; i++) {
       if (*p_img == label) *p_data = newLabel;
       p_img++;
@@ -79,7 +79,7 @@ inline void ImageT<PixTyp>::resample(ImageBase& resImg, int nx, int ny)
 {
   ImageT<PixTyp>& result=(ImageT<PixTyp>&)resImg;
   result.resize(nx, ny, noChannels());
-  result.typeImage(typeImage());
+  result.setFileType(fileType());
 
   int nc, nr;
   int x1, x2, y1, y2;
@@ -98,9 +98,9 @@ inline void ImageT<PixTyp>::resample(ImageBase& resImg, int nx, int ny)
 	x1 = (int)x; y1 = (int)y;
 	x2 = x1 + 1; y2 = y1 + 1;
 	
-	// range checking is done in getFloat() !
-	     p11 = getFloat(x1, y1, c); p12 = getFloat(x1, y2, c);
-	p21 = getFloat(x2, y1, c); p22 = getFloat(x2, y2, c);
+	// range checking is done in getPixel() !
+	     p11 = getPixel(x1, y1, c); p12 = getPixel(x1, y2, c);
+	p21 = getPixel(x2, y1, c); p22 = getPixel(x2, y2, c);
 	
 	if ((typeid(PixTyp)==typeid(float)) || (typeid(PixTyp)==typeid(float))) {		
 	  int nan=0;
@@ -138,7 +138,7 @@ inline void ImageT<PixTyp>::resampleNN(ImageBase& resImg, int nx, int ny)
 {
   ImageT<PixTyp>& result=(ImageT<PixTyp>&)resImg;
   result.resize(nx, ny, noChannels());
-  result.typeImage(typeImage());
+  result.setFileType(fileType());
 
   int x, y;
 
@@ -173,36 +173,36 @@ inline void ImageT<PixTyp>::blow(ImageBase &inImg, int la, int iterations) {
     if (ys>3) {//Y - Rand bearbeiten
       for (int y = 1; y < ys-1; y++)
         if (in.get(1, y) == label) {
-          tmp.set(1, y+1, label);
-          tmp.set(1, y-1, label);
+          tmp.setPixel(1, y+1, label);
+          tmp.setPixel(1, y-1, label);
         }
       if(xs>1)
       for (int y = 1; y < ys-1; y++)
         if (in.get(xs, y) == label) {
-          tmp.set(xs-1, y+1, label);
-          tmp.set(xs-1, y-1, label);
+          tmp.setPixel(xs-1, y+1, label);
+          tmp.setPixel(xs-1, y-1, label);
         }
     }
     if (xs>3) {//X - Rand bearbeiten
       for (int x = 1; x < xs-1; x++)
         if (in.get(x, 1) == label) {
-          tmp.set(x+1, 1, label);
-          tmp.set(x-1, 1, label);
+          tmp.setPixel(x+1, 1, label);
+          tmp.setPixel(x-1, 1, label);
         }
       if(ys>1)
       for (int x = 1; x < xs-1; x++)
         if (in.get(x, ys) == label) {
-          tmp.set(x+1, ys-1, label);
-          tmp.set(x-1, ys-1, label);
+          tmp.setPixel(x+1, ys-1, label);
+          tmp.setPixel(x-1, ys-1, label);
         }
     }
     for (int y = 1; y < ys-1; y ++) //restbild
       for (int x = 1; x < xs-1; x ++)
         if (in.get(x, y) == label) {
-          tmp.set(x-1, y, label);
-          tmp.set(x+1, y, label);
-          tmp.set(x, y+1, label);
-          tmp.set(x, y-1, label);
+          tmp.setPixel(x-1, y, label);
+          tmp.setPixel(x+1, y, label);
+          tmp.setPixel(x, y+1, label);
+          tmp.setPixel(x, y-1, label);
        }
     in = tmp;
   }
@@ -226,7 +226,7 @@ inline void ImageT<PixTyp>::resampleNNplus(ImageBase& resImg, int nx, int ny)
 
   // allocate the resized image
   result.resize(nx, ny, noChannels());
-  result.typeImage(typeImage());
+  result.setFileType(fileType());
 
   // allocate memory for xfac * yfac possible classes, 2.0 is for safety ;-)
   const int window_size=(int)(xfac * yfac * 2.0);

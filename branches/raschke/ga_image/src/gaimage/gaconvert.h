@@ -34,7 +34,7 @@ ImageT<unsigned long> * convert2rgb(ImageT<unsigned char> &red,
   assert(green.sizeY() == blue.sizeY());
   
   ImageT<unsigned long> *pic = new ImageT<unsigned long>(red.sizeX(), red.sizeY());
-  pic->typeImage(_PPM);
+  pic->setFileType(_PPM);
   pic->setGeoCoordinates(red.getGeoWest(), red.getGeoNorth(), red.getGeoEast(), red.getGeoSouth());
   pic->setGeoRes(red.getGeoRes());
   
@@ -43,7 +43,7 @@ ImageT<unsigned long> * convert2rgb(ImageT<unsigned char> &red,
   unsigned char *elem_green = green.begin();
   unsigned char *elem_blue = blue.begin();
   
-  for (unsigned int i = 0; i < red.sizeImage(); ++i, ++elem, ++elem_red, ++elem_green, ++elem_blue) {
+  for (unsigned int i = 0; i < red.noPixels(); ++i, ++elem, ++elem_red, ++elem_green, ++elem_blue) {
     *elem = (unsigned long)( *elem_red + *elem_green * 0x0100 + *elem_blue * 0x010000 );
   }
   return pic;

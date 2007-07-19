@@ -45,13 +45,8 @@ int main(int argc, char **argv)
 	int winSize;
 	sscanf(argv[3],"%d",&winSize);
 	
-	Image im;
-	im.read(argv[1]);
-  if (im.isEmpty()) {
-    fprintf(stderr,"Can't open %s\n",argv[1]);
-    return -1;
-  }
-  if (im.typeImage()!=_PPM) {
+	Image im(argv[1]);
+  if (im.fileType()!=_PPM) {
     fprintf(stderr,"Image not a PPM\n");
     return -1;
   }

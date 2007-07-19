@@ -84,30 +84,30 @@ int main(int argc, char *argv[])
   for (int y = 0; y < in.sizeY(); y ++)
     for (int x = 0; x < in.sizeX(); x ++)
     {
-			if (in.getFloat(x, y) < threshold)
-			  thres_image.set(x, y, 0.0);
+			if (in.getPixel(x, y) < threshold)
+			  thres_image.setPixel(x, y, 0.0);
       else
-        thres_image.set(x, y, in.getFloat(x, y));      
+        thres_image.setPixel(x, y, in.getPixel(x, y));      
      }
      
   ImageT<float> result(in.sizeX(), in.sizeY(), 1);
 
   //  look for local maxima
   for (int y = 1; y < in.sizeY()-1; y ++)
-    for (int x = 1; x < in.sizeX()-1; x ++)
-    { float ampl=thres_image.get (x , y);
-    //  take all 8 neighbours
-      if ((thres_image.get(x-1, y) < ampl) && (thres_image.get(x-1, y) != 0.0) &&
-          (thres_image.get(x, y-1) < ampl) && (thres_image.get(x, y-1) != 0.0) &&
-          (thres_image.get(x, y+1) < ampl) && (thres_image.get(x, y)+1 != 0.0) &&
-          (thres_image.get(x+1, y) < ampl) && (thres_image.get(x+1, y) != 0.0) &&
-          (thres_image.get(x+1, y+1) < ampl) && (thres_image.get(x+1, y+1) != 0.0) &&
-          (thres_image.get(x-1, y-1) < ampl) && (thres_image.get(x-1, y-1) != 0.0) &&
-          (thres_image.get(x+1, y-1) < ampl) && (thres_image.get(x+1, y-1) != 0.0) &&
-          (thres_image.get(x-1, y+1) < ampl) && (thres_image.get(x-1, y+1) != 0.0))
-        result.set(x, y, ampl);
+    for (int x = 1; x < in.sizeX()-1; x ++) {
+      float ampl=thres_image.getPixel(x , y);
+      //  take all 8 neighbours
+      if ((thres_image.getPixel(x-1, y) < ampl) && (thres_image.getPixel(x-1, y) != 0.0) &&
+          (thres_image.getPixel(x, y-1) < ampl) && (thres_image.getPixel(x, y-1) != 0.0) &&
+          (thres_image.getPixel(x, y+1) < ampl) && (thres_image.getPixel(x, y)+1 != 0.0) &&
+          (thres_image.getPixel(x+1, y) < ampl) && (thres_image.getPixel(x+1, y) != 0.0) &&
+          (thres_image.getPixel(x+1, y+1) < ampl) && (thres_image.getPixel(x+1, y+1) != 0.0) &&
+          (thres_image.getPixel(x-1, y-1) < ampl) && (thres_image.getPixel(x-1, y-1) != 0.0) &&
+          (thres_image.getPixel(x+1, y-1) < ampl) && (thres_image.getPixel(x+1, y-1) != 0.0) &&
+          (thres_image.getPixel(x-1, y+1) < ampl) && (thres_image.getPixel(x-1, y+1) != 0.0))
+        result.setPixel(x, y, ampl);
       else
-        result.set(x, y, 0.0);
+        result.setPixel(x, y, 0.0);
      }
 
   if (verbose) cout << "writing output image " << argv[optind + 1] << ", " << endl;
@@ -119,8 +119,8 @@ int main(int argc, char *argv[])
   float length=0.0;
   for (int y = 1; y < in.sizeY()-1; y ++)
     for (int x = 1; x < in.sizeX()-1; x ++)
-      if (result.get(x,y) != 0.0)
-        length+=result.get(x,y);
+      if (result.getPixel(x,y) != 0.0)
+        length+=result.getPixel(x,y);
         
     if (!(fp = fopen(argv[optind + 2], "a")))
     {

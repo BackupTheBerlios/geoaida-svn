@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
 
 	  for (int y = 0; y < in.sizeY(); y ++)
   	  for (int x = 0; x < in.sizeX(); x ++)
-	      *(data + y * (in.sizeX() + 2) + x) = in.getFloat(x, y, 0) * pow(-1.0, double(y));
+	      *(data + y * (in.sizeX() + 2) + x) = in.getPixel(x, y, 0) * pow(-1.0, double(y));
 
     rfftwnd_one_real_to_complex(fftp, data, NULL);
 
@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
 
     for (int y = 0; y < in.sizeY(); y ++)
 	    for (int x = 0; x < in.sizeX() + 2; x ++)
-  	    out.set(x, y, *(data + y * (in.sizeX() + 2) + x) / in.sizeX() / in.sizeY() , 0);
+  	    out.setPixel(x, y, *(data + y * (in.sizeX() + 2) + x) / in.sizeX() / in.sizeY() , 0);
 
   	if (verbose) cout << "writing output image " << argv[optind + 1] << ", " << endl;
   
@@ -145,8 +145,8 @@ int main(int argc, char *argv[])
 		for (int y = 0; y < M; y ++)
     	for (int x = 0; x < N21; x ++)
       {
-        (*(data + y * N21 + x)).re = in.getFloat( 2 * x, y, 0);
-        (*(data + y * N21 + x)).im = in.getFloat( 2 * x + 1, y, 0);
+        (*(data + y * N21 + x)).re = in.getPixel( 2 * x, y, 0);
+        (*(data + y * N21 + x)).im = in.getPixel( 2 * x + 1, y, 0);
       }
 
     rfftwnd_one_complex_to_real(fftp, data, NULL);
@@ -155,7 +155,7 @@ int main(int argc, char *argv[])
 
   	for (int y = 0; y < M; y ++)
     	for (int x = 0; x < N; x ++)
-      	out.set(x, y, *(result + y * (N + 2) + x) * pow(-1-0, float(y)) , 0);
+      	out.setPixel(x, y, *(result + y * (N + 2) + x) * pow(-1-0, float(y)) , 0);
 
   	if (verbose) cout << "writing output image " << argv[optind + 1] << ", " << endl;
   
@@ -180,8 +180,8 @@ int main(int argc, char *argv[])
       {
         scale = exp(-(pow((double)x / (double)N21, 2.0) + (pow((in.sizeY() / 2 - y) / ((double)M / 2.0), 2.0))) * wgauss);
 
-        in.set(2 * x, y, in.getFloat(2 * x, y, 0) * scale, 0);
-        in.set(2 * x + 1, y, in.getFloat(2 * x + 1, y, 0) * scale, 0);
+        in.setPixel(2 * x, y, in.getPixel(2 * x, y, 0) * scale, 0);
+        in.setPixel(2 * x + 1, y, in.getPixel(2 * x + 1, y, 0) * scale, 0);
       }
 
    	if (verbose) cout << "writing output image " << argv[optind + 1] << ", " << endl;
@@ -200,15 +200,15 @@ int main(int argc, char *argv[])
 				{
 					if (lowcut)
 					{
-		        in.set(2 * x, y, 0, 0);
-	        	in.set(2 * x + 1, y, 0, 0);
+		        in.setPixel(2 * x, y, 0, 0);
+	        	in.setPixel(2 * x + 1, y, 0, 0);
 					}
 				}
 				else 
 					if (!lowcut)
 					{
-					  in.set(2 * x, y, 0, 0);
-	        	in.set(2 * x + 1, y, 0, 0);
+					  in.setPixel(2 * x, y, 0, 0);
+	        	in.setPixel(2 * x + 1, y, 0, 0);
 					}
       }
 
@@ -228,15 +228,15 @@ int main(int argc, char *argv[])
 				{
 					if (lowcut)
 					{
-		        in.set(2 * x, y, 0, 0);
-	        	in.set(2 * x + 1, y, 0, 0);
+		        in.setPixel(2 * x, y, 0, 0);
+	        	in.setPixel(2 * x + 1, y, 0, 0);
 					}
 				}
 				else 
 					if (!lowcut)
 					{
-					  in.set(2 * x, y, 0, 0);
-	        	in.set(2 * x + 1, y, 0, 0);
+					  in.setPixel(2 * x, y, 0, 0);
+	        	in.setPixel(2 * x + 1, y, 0, 0);
 					}
       }
 
@@ -260,11 +260,11 @@ int main(int argc, char *argv[])
     for (int y = 0 ; y < M; y ++)
  	  	for (int x = 0; x < N21; x ++)
       {
-				re = in.getFloat(2 * x, y, 0);
-				im = in.getFloat(2 * x + 1, y, 0);
+				re = in.getPixel(2 * x, y, 0);
+				im = in.getPixel(2 * x + 1, y, 0);
 
-				in.set(2 * x, y, 0.5 * log(re*re+im*im), 0);
-				in.set(2 * x + 1, y, atan2(im, re), 0);
+				in.setPixel(2 * x, y, 0.5 * log(re*re+im*im), 0);
+				in.setPixel(2 * x + 1, y, atan2(im, re), 0);
       }
 
    	if (verbose) cout << "writing output image " << argv[optind + 1] << ", " << endl;
@@ -281,11 +281,11 @@ int main(int argc, char *argv[])
     for (int y = 0 ; y < M; y ++)
  	  	for (int x = 0; x < N21; x ++)
       {
-				re = in.getFloat(2 * x, y, 0);
-				im = in.getFloat(2 * x + 1, y, 0);
+				re = in.getPixel(2 * x, y, 0);
+				im = in.getPixel(2 * x + 1, y, 0);
 
-				in.set(2 * x, y, exp(re)*cos(im), 0);
-				in.set(2 * x + 1, y, exp(re)*sin(im), 0);
+				in.setPixel(2 * x, y, exp(re)*cos(im), 0);
+				in.setPixel(2 * x + 1, y, exp(re)*sin(im), 0);
       }
 
    	if (verbose) cout << "writing output image " << argv[optind + 1] << ", " << endl;

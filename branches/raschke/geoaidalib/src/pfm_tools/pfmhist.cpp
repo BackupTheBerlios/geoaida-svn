@@ -49,7 +49,7 @@ int main(int argc, char **argv)
   int error=0;
   for (y=y1; y<=y2; y++)
     for (x=x1; x<=x2; x++) {
-      float val=src.getFloat(x,y);
+      float val=src.getPixel(x,y);
       if (isnan(val)) { error++; continue;}
       if (val<min) { error++; continue;}
       if (val>max) { error++; continue;}

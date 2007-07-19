@@ -61,12 +61,12 @@ int main(int argc, char *argv[])
   Image im(input_name);
   x= im.sizeX();
   y= im.sizeY();  
-  int old_class_1= im.getInt(5,5);
+  int old_class_1= im.getPixel(5,5);
   int old_class_2, old_class_3, old_class_4;
   if ((75<x) && (75<y)){
-    old_class_2= im.getInt(75,5);
-    old_class_3= im.getInt(5,75);  
-    old_class_4= im.getInt(75,75);
+    old_class_2= im.getPixel(75,5);
+    old_class_3= im.getPixel(5,75);  
+    old_class_4= im.getPixel(75,75);
   }
   else{
     old_class_2= old_class_1;

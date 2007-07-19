@@ -26,12 +26,12 @@ using namespace std;
   DataPicT:
      int sizeX()
      int sizeY()
-     int|float getFloat(x,y)
+     int|float getPixel(x,y)
 
   LabelPicT:
      sizeX()
      sizeY()
-     set(x,y,value)
+     setPixel(x,y,value)
   TestClass:
      (const DataPicT&,const LabelPicT&,x_center,y_center,x_neighbour,y_neighbour)
      valid(const DataPicT,const LabelPicT,x,y)
@@ -74,9 +74,9 @@ class RegDesc
       };
     int setPixel(const DataPicT& dpic, LabelPicT& lpic, int x, int y, int val)
     {
-      lpic.set(x, y, val);
+      lpic.setPixel(x, y, val);
       size_++;
-      float v=dpic.getFloat(x,y);
+      float v=dpic.getPixel(x,y);
       if (!isnanf(v)) {
         sum_+=v;
         numValidValues_++;
@@ -117,8 +117,8 @@ class Difference
 	     int x_neighbour, int y_neighbour)
     {
       if (!valid(hpic,lpic,x_neighbour,y_neighbour)) return false;
-      float v=hpic.getFloat(x_center,y_center);
-      float vn=hpic.getFloat(x_neighbour,y_neighbour);
+      float v=hpic.getPixel(x_center,y_center);
+      float vn=hpic.getPixel(x_neighbour,y_neighbour);
       if (isnan(v) && isnan(vn)) return true;
       if (isnan(v) || isnan(vn)) return false;
       return fabs(v-vn)<level_;

@@ -92,9 +92,9 @@ int main(int argc, char **argv)
   histcount[s]=0.0;
   histvalue[s]=0.0;
   for (int x=0; x<result.sizeX(); x++){
-  		histcount[s]+= result.getFloat(x,s);
-  		histvalue[s]+= result.getFloat(x,s);
-   		sum+= result.getFloat(x,s);    
+  		histcount[s]+= result.getPixel(x,s);
+  		histvalue[s]+= result.getPixel(x,s);
+   		sum+= result.getPixel(x,s);    
       if (histcount[s] > peak)
         peak= histcount[s];
       }
@@ -224,8 +224,8 @@ int main(int argc, char **argv)
   if (threshhold<1) {
     int max=0;
     const void *p=result.constBegin();
-    for (int i=0; i<result.sizeImage(); i++) {
-      if (result.getInt(p)>max) max=result.getInt(p);
+    for (int i=0; i<result.noPixels(); i++) {
+      if (result.getPixel(p)>max) max=result.getPixel(p);
       result.nextCol(p);
     }
     threshhold*=max;
@@ -238,7 +238,7 @@ int main(int argc, char **argv)
   int sizeY2=im.sizeY()/2;
   for (int y=0; y<result.sizeY(); y++)
      for (int x=0; x<result.sizeX(); x++) {
-       if (result.getInt(x,y)>=threshhold) {
+       if (result.getPixel(x,y)>=threshhold) {
          double alpha=((y*angleStep)+angleMin)/180*M_PI;
          float r0=x;
          int xmin, ymin, xmax, ymax;

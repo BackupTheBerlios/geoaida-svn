@@ -491,7 +491,7 @@ qDebug("$#$merge gN_:%f gS_:%f gW_:%f gE_:%f sizeX_:%d sizeY_:%d xRes_:%f yRes_:
         else {
           for (int y=se->ury; y<=se->lly; y++)
             for (int x=se->llx; x<=se->urx; x++) {
-              if (outImage_.getInt(x,y)==oldID) {
+              if (outImage_.getPixel(x,y)==oldID) {
                 if(oldID != freeID) {
                   int newID=freeID;
                   label4(outImage_, y*outImage_.sizeX()+x, oldID,  newID);
@@ -535,31 +535,31 @@ qDebug("$#$merge gN_:%f gS_:%f gW_:%f gE_:%f sizeX_:%d sizeY_:%d xRes_:%f yRes_:
     Node *node=se->node();
 //    qDebug("id=%4d, bbox=%4d %4d %4d %4d",
 //    node->id(),
-//    bb.getInt(node->id(),0),
-//    bb.getInt(node->id(),1),
-//    bb.getInt(node->id(),2),
-//    bb.getInt(node->id(),3));
+//    bb.getPixel(node->id(),0),
+//    bb.getPixel(node->id(),1),
+//    bb.getPixel(node->id(),2),
+//    bb.getPixel(node->id(),3));
 #ifdef WIN32
     qDebug("nodelist.cpp 459:llx, llyl urx, ury");
 
 //Was denn??
   /** get a pixel */
-//  int getInt(int x, int y, int channel=0);
+//  int getPixel(int x, int y, int channel=0);
   /** get a pixel */
-//  int getInt(const void *ptr);
+//  int getPixel(const void *ptr);
 //Quelltyp konnte von keinem Konstruktor angenommen werden, oder die Ueberladungsaufloesung des Konstruktors ist mehrdeutig
-    node->replace("llx",&QString((float)(bb.getInt(node->id(),0))));
-    node->replace("lly",&QString((float)(bb.getInt(node->id(),1))));
-    node->replace("urx",&QString((float)(bb.getInt(node->id(),2))));
-    node->replace("ury",&QString((float)(bb.getInt(node->id(),3))));
+    node->replace("llx",&QString((float)(bb.getPixel(node->id(),0))));
+    node->replace("lly",&QString((float)(bb.getPixel(node->id(),1))));
+    node->replace("urx",&QString((float)(bb.getPixel(node->id(),2))));
+    node->replace("ury",&QString((float)(bb.getPixel(node->id(),3))));
 #else
-    node->replace("llx",bb.getInt(node->id(),0));
-    node->replace("lly",bb.getInt(node->id(),1));
-    node->replace("urx",bb.getInt(node->id(),2));
-    node->replace("ury",bb.getInt(node->id(),3));
+    node->replace("llx",bb.getPixel(node->id(),0));
+    node->replace("lly",bb.getPixel(node->id(),1));
+    node->replace("urx",bb.getPixel(node->id(),2));
+    node->replace("ury",bb.getPixel(node->id(),3));
 #endif
     // XXX Was ist mit voellig ueberdeckten regionen ??
-    if(bb.getInt(node->id(),1)==0 || bb.getInt(node->id(),2)==0)
+    if(bb.getPixel(node->id(),1)==0 || bb.getPixel(node->id(),2)==0)
       selected->remove(node->key());		
     node->update();
   }
@@ -664,7 +664,7 @@ qDebug("nodelist.cpp 546: Error C2661");
 	    outImage_.nextCol(ptr,llx);
 #endif
 	    for (int x=llx; x<=urx; x++) {
-	      int v=outImage_.getInt(ptr);
+	      int v=outImage_.getPixel(ptr);
 	      if (v==id) {
 	        groupImage_.set(x,y,groupIdCounter_);
 	      }

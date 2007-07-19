@@ -36,7 +36,7 @@ template <class PixTyp> ImageT<PixTyp>* Kirsch(ImageT<PixTyp>& imgIn)
   int nr = imgIn.sizeY();
   int nc = imgIn.sizeX();
   ImageT<PixTyp>* imgOut = new ImageT<PixTyp>(imgIn);
-        imgOut->typeImage(imgIn.typeImage());
+        imgOut->setFileType(imgIn.fileType());
   ImageT<double> tmp1(imgIn.sizeX(), imgIn.sizeY()) ;
 
   //.locate MAX and MIN for rescaling

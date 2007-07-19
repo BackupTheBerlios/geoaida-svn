@@ -53,9 +53,9 @@ template < class RegDescT,
 {
   return region_.setPixel(*hpic_,*lpic_,x,y,val);
 #if 0
-  lpic_->set(x, y, val);
+  lpic_->setPixel(x, y, val);
   region_.size++;
-  float v=hpic_->getFloat(x,y);
+  float v=hpic_->getPixel(x,y);
   if (!isnanf(v)) {
     region_.sum_+=v;
     region_.numValidValues_++;
@@ -86,12 +86,12 @@ template < class RegDescT,
   fprintf(stderr, "goWest (%05d,%05d,%05d,%05d)\n", x, y, value, rl);
 #endif
   if (x > 0) {
-    if (lpic_->getInt(x - 1, y) != def_val) {
+    if (lpic_->getPixel(x - 1, y) != def_val) {
       rl--;
       return;
     }
     if ((*tclass_) (*hpic_, *lpic_, x, y, x - 1, y)) {
-      //(fabs(hpic_->getFloat(x,y)-hpic_->getFloat(x-1,y))<level)
+      //(fabs(hpic_->getPixel(x,y)-hpic_->getPixel(x-1,y))<level)
       setPixel(x - 1, y, value);
     }
     else {
@@ -107,12 +107,12 @@ template < class RegDescT,
   int xstart = x;
   int xend = 0;
   for (x = xstart; x > 0; x--) {
-    if (lpic_->getInt(x - 1, y) != def_val) {
+    if (lpic_->getPixel(x - 1, y) != def_val) {
       xend = x;
       break;
     }
     if ((*tclass_) (*hpic_, *lpic_, x, y, x - 1, y)) {
-      // (fabs(hpic_->getFloat(x,y)-hpic_->getFloat(x-1,y))<level) {
+      // (fabs(hpic_->getPixel(x,y)-hpic_->getPixel(x-1,y))<level) {
       setPixel(x - 1, y, value);
     }
     else {
@@ -130,14 +130,14 @@ template < class RegDescT,
 #endif
 #else
   while (x > 0) {
-    if (lpic_->getInt(x - 1, y) != def_val) {
+    if (lpic_->getPixel(x - 1, y) != def_val) {
       goNorth(x, y, value, def_val);
       goSouth(x, y, value, def_val);
       rl--;
       return;
     }
     if ((*tclass_) (*hpic_, *lpic_, x, y, x - 1, y)) {
-      //    if (fabs(hpic_->getFloat(x,y)-hpic_->getFloat(x-1,y))<level) {
+      //    if (fabs(hpic_->getPixel(x,y)-hpic_->getPixel(x-1,y))<level) {
       setPixel(x - 1, y, value);
       goNorth(x, y, value, def_val);
       goSouth(x, y, value, def_val);
@@ -165,12 +165,12 @@ template < class RegDescT,
   fprintf(stderr, "goNorth(%05d,%05d,%05d,%05d)\n", x, y, value, rl);
 #endif
   if (y > 0) {
-    if (lpic_->getInt(x, y - 1) != def_val) {
+    if (lpic_->getPixel(x, y - 1) != def_val) {
       rl--;
       return;
     }
     if ((*tclass_) (*hpic_, *lpic_, x, y, x, y - 1)) {
-      //    if (fabs(hpic_->getFloat(x,y)-hpic_->getFloat(x,y-1))<level) {
+      //    if (fabs(hpic_->getPixel(x,y)-hpic_->getPixel(x,y-1))<level) {
       setPixel(x, y - 1, value);
     }
     else {
@@ -183,12 +183,12 @@ template < class RegDescT,
   int ystart = y;
   int yend = 0;
   for (y = ystart; y > 0; y--) {
-    if (lpic_->getInt(x, y - 1) != def_val) {
+    if (lpic_->getPixel(x, y - 1) != def_val) {
       yend = y;
       break;
     }
     if ((*tclass_) (*hpic_, *lpic_, x, y, x, y - 1)) {
-      //    if (fabs(hpic_->getFloat(x,y)-hpic_->getFloat(x,y-1))<level) {
+      //    if (fabs(hpic_->getPixel(x,y)-hpic_->getPixel(x,y-1))<level) {
       setPixel(x, y - 1, value);
     }
     else {
@@ -206,7 +206,7 @@ template < class RegDescT,
   rl--;
 #else
   while (x > 0) {
-    if (lpic_->getInt(x, y - 1) != def_val) {
+    if (lpic_->getPixel(x, y - 1) != def_val) {
       goEast(x, y, value, def_val);
       goSouth(x, y, value, def_val);
       goWest(x, y, value, def_val);
@@ -214,7 +214,7 @@ template < class RegDescT,
       return;
     }
     if ((*tclass_) (*hpic_, *lpic_, x, y, x, y - 1)) {
-      //    if (fabs(hpic_->getFloat(x,y)-hpic_->getFloat(x,y-1))<level) {
+      //    if (fabs(hpic_->getPixel(x,y)-hpic_->getPixel(x,y-1))<level) {
       setPixel(x, y - 1, value);
       goEast(x, y, value, def_val);
       //      goSouth(x,y,level,value,def_val);
@@ -243,12 +243,12 @@ template < class RegDescT,
   fprintf(stderr, "goEast (%05d,%05d,%05d,%05d)\n", x, y, value, rl);
 #endif
   if (x < lpic_->sizeX() - 1) {
-    if (lpic_->getInt(x + 1, y) != def_val) {
+    if (lpic_->getPixel(x + 1, y) != def_val) {
       rl--;
       return;
     }
     if ((*tclass_) (*hpic_, *lpic_, x, y, x + 1, y)) {
-      //    if (fabs(hpic_->getFloat(x,y)-hpic_->getFloat(x+1,y))<level) {
+      //    if (fabs(hpic_->getPixel(x,y)-hpic_->getPixel(x+1,y))<level) {
       setPixel(x + 1, y, value);
     }
     else {
@@ -261,12 +261,12 @@ template < class RegDescT,
   int xstart = x;
   int xend = lpic_->sizeX() - 1;
   for (x = xstart; x < lpic_->sizeX() - 1; x++) {
-    if (lpic_->getInt(x + 1, y) != def_val) {
+    if (lpic_->getPixel(x + 1, y) != def_val) {
       xend = x;
       break;
     }
     if ((*tclass_) (*hpic_, *lpic_, x, y, x + 1, y)) {
-      //    if (fabs(hpic_->getFloat(x,y)-hpic_->getFloat(x+1,y))<level) {
+      //    if (fabs(hpic_->getPixel(x,y)-hpic_->getPixel(x+1,y))<level) {
       setPixel(x + 1, y, value);
     }
     else {
@@ -281,7 +281,7 @@ template < class RegDescT,
   rl--;
 #else
   while (x < lpic_->sizeX() - 1) {
-    if (lpic_->getInt(x + 1, y) != def_val) {
+    if (lpic_->getPixel(x + 1, y) != def_val) {
       goSouth(x, y, value, def_val);
       goWest(x, y, value, def_val);
       goNorth(x, y, value, def_val);
@@ -289,7 +289,7 @@ template < class RegDescT,
       return;
     }
     if ((*tclass_) (*hpic_, *lpic_, x, y, x + 1, y)) {
-      //    if (fabs(hpic_->getFloat(x,y)-hpic_->getFloat(x+1,y))<level) {
+      //    if (fabs(hpic_->getPixel(x,y)-hpic_->getPixel(x+1,y))<level) {
       setPixel(x + 1, y, value);
       goSouth(x, y, value, def_val);
       goWest(x, y, value, def_val);
@@ -318,12 +318,12 @@ template < class RegDescT,
   fprintf(stderr, "goSouth(%05d,%05d,%05d,%05d)\n", x, y, value, rl);
 #endif
   if (y < lpic_->sizeY() - 1) {
-    if (lpic_->getInt(x, y + 1) != def_val) {
+    if (lpic_->getPixel(x, y + 1) != def_val) {
       rl--;
       return;
     }
     if ((*tclass_) (*hpic_, *lpic_, x, y, x, y + 1)) {
-      //    if (fabs(hpic_->getFloat(x,y)-hpic_->getFloat(x,y+1))<level) {
+      //    if (fabs(hpic_->getPixel(x,y)-hpic_->getPixel(x,y+1))<level) {
       setPixel(x, y + 1, value);
     }
     else {
@@ -336,12 +336,12 @@ template < class RegDescT,
   int ystart = y;
   int yend = lpic_->sizeY() - 1;
   for (y = ystart; y < lpic_->sizeY() - 1; y++) {
-    if (lpic_->getInt(x, y + 1) != def_val) {
+    if (lpic_->getPixel(x, y + 1) != def_val) {
       yend = y;
       break;
     }
     if ((*tclass_) (*hpic_, *lpic_, x, y, x, y + 1)) {
-      //    if (fabs(hpic_->getFloat(x,y)-hpic_->getFloat(x,y+1))<level) {
+      //    if (fabs(hpic_->getPixel(x,y)-hpic_->getPixel(x,y+1))<level) {
       setPixel(x, y + 1, value);
     }
     else {
@@ -356,7 +356,7 @@ template < class RegDescT,
   rl--;
 #else
   while (y < lpic_->sizeY() - 1) {
-    if (lpic_->getInt(x, y + 1) != def_val) {
+    if (lpic_->getPixel(x, y + 1) != def_val) {
       goWest(x, y, value, def_val);
       goNorth(x, y, value, def_val);
       goEast(x, y - 1, value);
@@ -364,7 +364,7 @@ template < class RegDescT,
       return;
     }
     if ((*tclass_) (*hpic_, *lpic_, x, y, x, y + 1)) {
-      //    if (fabs(hpic_->getFloat(x,y)-hpic_->getFloat(x,y+1))<level) {
+      //    if (fabs(hpic_->getPixel(x,y)-hpic_->getPixel(x,y+1))<level) {
       setPixel(x, y, value);
       goWest(x, y + 1, value);
       goNorth(x, y, value, def_val);
@@ -409,7 +409,7 @@ template < class RegDescT,
   for (y = 0; y < lpic_->sizeY(); y++) {
     //    printf("%05d %05d %05d\n",x,y,value);
     for (x = 0; x < lpic_->sizeX(); x++) {
-      if (lpic_->getInt(x, y) == 0 && tclass_->valid(*hpic_,*lpic_,x,y)) {
+      if (lpic_->getPixel(x, y) == 0 && tclass_->valid(*hpic_,*lpic_,x,y)) {
         value++;
         region_=RegDescT();
         region_.setId(value);
@@ -428,8 +428,8 @@ template < class RegDescT,
 #ifdef SMALL_REGIONS_TO_1
           v = 1;
 #else
-          if ((x > 0) && (lpic_->getInt(x - 1, y) != value)) {
-            v = lpic_->getInt(x - 1, y);
+          if ((x > 0) && (lpic_->getPixel(x - 1, y) != value)) {
+            v = lpic_->getPixel(x - 1, y);
             //      printf("%05d %05d classified (%d)\n",x,y,v);
           }
           else {
@@ -495,8 +495,8 @@ template < class RegDescT,
   }
   for (y = 0; y < lpic_->sizeY(); y++)
     for (x = 0; x < lpic_->sizeX(); x++)
-      if (lpic_->getInt(x, y) == -1)
-        lpic_->set(x, y, 0);
+      if (lpic_->getPixel(x, y) == -1)
+        lpic_->setPixel(x, y, 0);
 #ifdef DBG_MSG
   printf("%05d %05d %05d %05d %05d %05d\n",
          (*regionList_)[0].id,
@@ -530,11 +530,11 @@ void findNeighbours(LabelPic & lpic,
                     RegDescT &region,
                     int num_regions)
 {
-//  printf("%4d:(%4d,%4d)=%4d\n",region.id,x,y,lpic.getInt(x,y));
+//  printf("%4d:(%4d,%4d)=%4d\n",region.id,x,y,lpic.getPixel(x,y));
 #define setneighbour(x,y) {\
-  assert(lpic.getInt(x,y)>=0); \
-  assert(lpic.getInt(x,y)<num_regions); \
-  neighbour[lpic.getInt(x,y)]=true; \
+  assert(lpic.getPixel(x,y)>=0); \
+  assert(lpic.getPixel(x,y)<num_regions); \
+  neighbour[lpic.getPixel(x,y)]=true; \
   }
 //  printf("findNeighbours: num_regions=%d\n",num_regions);
   bool neighbour[num_regions+1];
@@ -550,15 +550,15 @@ void findNeighbours(LabelPic & lpic,
              region.ury,
              region.urx, region.lly, region.size, x, y);
 #endif
-      if (lpic.getInt(x, y) != region.id)
+      if (lpic.getPixel(x, y) != region.id)
         continue;
-      //      if ((ox>0) && (oy>0) && (lpic.getFloat(ox-1,oy-1)!=region.id))
+      //      if ((ox>0) && (oy>0) && (lpic.getPixel(ox-1,oy-1)!=region.id))
       //        value=region.id;
-      //      if ((ox<sizeX()-1) && (oy>0) && (lpic.getFloat(ox+1,oy-1)!=region.id))
+      //      if ((ox<sizeX()-1) && (oy>0) && (lpic.getPixel(ox+1,oy-1)!=region.id))
       //        value=region.id;
-      //      if ((ox>0) && (oy<sizeY()-1) && (lpic.getFloat(ox-1,oy+1)!=region.id))
+      //      if ((ox>0) && (oy<sizeY()-1) && (lpic.getPixel(ox-1,oy+1)!=region.id))
       //        value=region.id;
-      //      if ((ox<sizeX()-1) && (oy<sizeY()-1) && (lpic.getFloat(ox+1,oy+1)!=region.id))
+      //      if ((ox<sizeX()-1) && (oy<sizeY()-1) && (lpic.getPixel(ox+1,oy+1)!=region.id))
       //        value=region.id;
       if ((x==0) || (y==0) || (x==lpic.sizeX()-1) || (y==lpic.sizeY()-1)) neighbour[num_regions]=true;
       if (x+1<lpic.sizeX())

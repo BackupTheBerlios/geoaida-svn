@@ -39,10 +39,6 @@ int main(int argc, char **argv)
 
   Image input(inputfile);
   input.read(inputfile);
-  if (input.isEmpty()) {
-    fprintf(stderr,"Can't open inputfile %s\n", inputfile);
-    return -1;
-  }
 
   Image output = gaussianBlur(input, sigma);
   output.write(outputfile, 0);

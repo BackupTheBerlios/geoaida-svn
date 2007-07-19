@@ -40,7 +40,6 @@
 int main(int argc, char** argv)
 {
 	Ga::Image img(typeid(unsigned char),500, 500);
-	FILE* File;
 
 	Ga::PointArray	poly1;
 	Ga::PointArray	poly2;
@@ -86,9 +85,7 @@ int main(int argc, char** argv)
 	}
 
 	// write file to disc
-	File=fopen("polytest.pnm","w"); 
-	img.write(File);
-	fclose(File);
+	img.write("polytest.pnm");
 
 	return 0;
 }

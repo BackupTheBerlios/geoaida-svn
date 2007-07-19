@@ -34,11 +34,7 @@ int main(int argc, char **argv)
   if (argc<3) {
     Usage(argv[0]);
   }
-  Image src;
-  src.read(argv[1]);
-  if (src.isEmpty()) {
-    fprintf(stderr,"Can't find %s\n",argv[1]);
-  }
+  Image src(argv[1]);
   float min=src.findMinValue();
   float max=src.findMaxValue();
   src.setMinValue(min);
@@ -46,10 +42,10 @@ int main(int argc, char **argv)
   Image result(typeid(float),src.sizeX(),src.sizeY());
   const void* sit=src.constBegin();
   void* rit=result.begin();
-  int size=result.sizeImage();
+  int size=result.noPixels();
   float f=9/(max-min);
   for (int i=0; i<size; i++) {
-    float v=src.getFloat(sit);
+    float v=src.getPixel(sit);
     v=log10((v-min)*f+1);
     result.set(rit,v);
     src.nextCol(sit);

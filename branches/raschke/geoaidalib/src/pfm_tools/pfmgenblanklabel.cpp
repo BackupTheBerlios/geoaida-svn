@@ -1,5 +1,5 @@
 /***************************************************************************
-                          pfmthreshhold.cpp  -  description
+                          pfmthreshhold.cpp  -  description TODO: no.
                              -------------------
     begin                : Fri May 17 2002
     copyright            : (C) 2002 by Martin Pahl
@@ -35,14 +35,10 @@ int main(int argc, char **argv)
   if (argc<4) {
     Usage(argv[0]);
   }
-  Image image;
-  image.read(argv[1]);
-  if (image.isEmpty()) {
-    fprintf(stderr,"Can't find %s\n",argv[1]);
-  }
+  Image image(argv[1]);
   int id;
   sscanf(argv[3],"%d",&id);
   Image result(typeid(unsigned char),image.sizeX(),image.sizeY());
-  result=id;
+  result.fill(id);
   result.write(argv[2]);
 }

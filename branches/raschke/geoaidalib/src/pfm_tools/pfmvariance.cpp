@@ -55,9 +55,9 @@ int main(int argc, char **argv)
   if (sqrtMode) {
     printf("Sqrt-Mode\n");
     void* it=result.begin();
-    int size=result.sizeImage();
+    int size=result.noPixels();
     for (int i=0; i<size; i++) {
-      result.set(it,sqrt(result.getFloat(it)));
+      result.set(it,sqrt(result.getPixel(it)));
       result.nextCol(it);
     }
   }

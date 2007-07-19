@@ -38,12 +38,12 @@ void doWindow(ImageT<ResultPixTyp>& result,
               int winSize)
 {
   result.resize(imgIn.sizeX(), imgIn.sizeY());
-//  result.typeImage(imgIn.typeImage());
+//  result.setFileType(imgIn.fileType());
 
   //erzeugen eines Vektors mit Pointern zu den Bilddaten:
   //PixTyp* in_data = imgIn.Data();
   int vecSize=winSize*winSize;
-  PixTyp* vec[vecSize];
+  PixTyp* vec[vecSize]; // TODO: Will not compile on Windows, no ANSI C++ either.
   int offset=winSize/2;
 
   for (int y=0; y<imgIn.sizeY(); y++) {

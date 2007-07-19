@@ -1,9 +1,10 @@
 /***************************************************************************
-                          GaImageT.h  -  geoAIDA template image class
+                          gaimaget.h  -  GeoAIDA template image impl.
                              -------------------
     begin                : Thu Jan 11 2001
     copyright            : (C) 2001 TNT, Uni Hannover
-    authors              : Jürgen Bückner, Oliver Stahlhut, Martin Pahl
+    authors              : Jürgen Bückner, Oliver Stahlhut, Martin Pahl,
+                           Julian Raschke
     email                : bueckner@tnt.uni-hannover.de
  ***************************************************************************/
 
@@ -16,14 +17,6 @@
  *                                                                         *
  ***************************************************************************/
 
-/*
- * $Source: /data/cvs/ga_image/ga_image/gaimage/gaimaget.h,v $
- * $Revision: 1.14 $
- * $Date: 2003/05/28 06:35:02 $
- * $Author: pahl $
- * $Locker:  $
- */
-
 #ifndef __GA_IMAGET_H
 #define __GA_IMAGET_H
 
@@ -33,14 +26,11 @@
 #include <math.h>
 #include <limits.h>
 
-#ifdef GCC29
-#include <float.h>
-#endif
-
 extern "C" {
 #include <pnm.h>
 #include <pfm.h>
 }
+
 #define GA_MAX_CHANNELS 10
 #include <assert.h>
 #include "gadefines.h"
@@ -51,32 +41,52 @@ extern "C" {
 namespace Ga {
 
 /** \class ImageT
-    \brief defines an template class for operations between matrices and vectors
-    and for handling geo-related images
+    \brief TODO
     */
 
   template <class PixTyp>
   class ImageT : public ImageBase
   {
+  private:
+    // To be called from Image. Private to show that this is not supposed to be
+    // used when using ImageT directly.
+    double getPixelAsDouble(int x, int y, int channel, double neutral) const;
+    void setPixelToDouble(int x, int y, double val, int channel, bool clip);
+    
+  protected:
+    /** initialization; common function for initialization; for internal use only
+        usage: \code Initialize( x, y ) \endcode \endcode */
+    void initialize( int x, int y, int noChannels );
+    /** prepare assignments; Preparing an assignment by adjusting "this" */
+    Array2DT<PixTyp> *pChannel_[GA_MAX_CHANNELS];
+    int noChannels_;
+
   public:
     typedef PixTyp* Iterator;
     typedef const PixTyp* ConstIterator;
 
-    // Constructors + crap.
-    ImageT(int x = 0, int y = 0, int noChannels=1);
+    ImageT(int x, int y, int noChannels=1);
     ImageT(const ImageT<PixTyp>& rval);
     virtual ~ImageT(void);
     ImageT<PixTyp>& operator= (const ImageT<PixTyp>& rval);
     virtual ImageBase* copyObject();
-    
-    // Drawing primitives.
-    void fill(double value);
-    virtual void fillRow(void *it, int startX, int endX, double val, int channel=0);
-    virtual void partCopy(const ImageBase &rvalue, int x0, int y0, int width, int height);
-    
+
     // Metrics.
     virtual const class std::type_info& typeId() const;
     int noChannels() const;
+    
+    // I/O.
+    bool read(FILE *fp);
+    bool write(FILE *fp, int channel=0, const char* comment=0);
+    using ImageBase::read;
+    using ImageBase::write;
+
+    // Drawing primitives.
+    PixTyp getPixel(int x, int y, int channel=0, PixTyp neutral=0) const;
+    void setPixel(int x, int y, PixTyp val, int channel=0, bool clip=false);
+    void fill(double value);
+    virtual void fillRow(void *it, int startX, int endX, double val, int channel=0);
+    virtual void partCopy(const ImageBase &rvalue, int x0, int y0, int width, int height);
     
     /** return pointer to the beginning of data
 	usage: \code Iterator dp = M.begin(row); \endcode */
@@ -91,55 +101,34 @@ namespace Ga {
     const void* constBeginVoid(int row=0, int channel=0) const;
     /** retrieve the value of an matrix element
 	usage: \code PixTyp x = A.GetElement( 3, 5 ); \endcode */
-    PixTyp get(int x, int y, int channel=0, PixTyp neutral=0) const;
-    double getFloat(int x, int y, int channel, double neutral=0) const;
-    virtual double getFloat(const void *it) const;
     virtual void setFloat(void* it, double val);
     virtual void* nextCol(const void*& ptr, int offset) const;
     virtual void* nextCol(const void*& ptr) const;
 
     PixTyp& operator () (int x, int y, int channel=0);
 
-    /** Assign value to matrix element, check for legal row and column index
-	usage: \code  A.SetElement( 3, 4, 4444 );       \endcode
-	\param x x of element (column)
-	\param y y of element (row)
-	\param val value to set element to */
-    void set(int x, int y, PixTyp val, int channel=0, bool clip=false);
-    void setFloat(int x, int y, double val, int channel=0, bool clip=false);
     /* set data without copying. Ther must be noChannels data-pointer in the ellipse */
     void setData(int x, int y, int noChannels, ...);
     void setData(int x, int y, void* initvalues);
 
   //------------------------------------ Tool functions -----------------------
 
-  double findMaxValue(int& x, int& y, int channel=0);
-  double findMinValue(int& x, int& y, int channel=0);
-  int elemSize();
+  double findMaxValue(int channel=0);
+  double findMinValue(int channel=0);
   void resize(int rx, int ry, int noChannels=1);
 
-  /** set a pixel */
   void setInt(void *ptr, int val);
-  void setInt(int x, int y, int val, int channel=0);
 
-  /** set a pixel */
   int getInt(const void *ptr) const;
-  int getInt(int x, int y, int channel=0) const;
-  int getInt(int x, int y, int channel, int neutral) const;
 
   void getChannel(ImageBase& pic, int channel=0);
 
   void minValue(ImageBase &in, float value);
   void maxValue(ImageBase &in, float value);
 
-  bool read(FILE *fp);
-	bool read(const char *filename);
-  bool write(FILE *fp, int channel=0, const char* comment=0);
-	bool write(const char *filename, int channel=0, const char* comment=0);
-
   void swap(ImageT& other) {
     using std::swap;
-    swap(imageType_, other.imageType_);
+    swap(fileType_, other.fileType_);
     swap(sizeX_, other.sizeX_);
     swap(sizeY_, other.sizeY_);
     swap(sizeY_, other.sizeY_);
@@ -147,14 +136,6 @@ namespace Ga {
       swap(pChannel_[i], other.pChannel_[i]);
     swap(noChannels_, other.noChannels_);
   }
-
-protected:
-  /** initialization; common function for initialization; for internal use only
-      usage: \code Initialize( x, y ) \endcode \endcode */
-  void initialize( int x, int y, int noChannels );
-  /** prepare assignments; Preparing an assignment by adjusting "this" */
-  Array2DT<PixTyp> *pChannel_[GA_MAX_CHANNELS];
-  int noChannels_;
 };
 
 } // namespace Ga

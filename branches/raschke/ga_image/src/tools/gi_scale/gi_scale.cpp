@@ -55,11 +55,11 @@ int main(int argc, char **argv)
   printf("Read %s\n",infile);
   printf("Scaling image by %f/%f = %f\n",
          multiply,divisor,scale);
-  int size=im.sizeImage();
+  int size=im.noPixels();
   void* it=im.begin();
   for (int i=0; i<size; i++) {
-    im.set(it,im.getFloat(it)*scale);
-//    printf("%d: %f\n",i,im.getFloat(it));
+    im.set(it,im.getPixel(it)*scale);
+//    printf("%d: %f\n",i,im.getPixel(it));
     im.nextCol(it);
   }
   im.write(outfile);

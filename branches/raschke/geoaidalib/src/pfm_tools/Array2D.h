@@ -24,7 +24,6 @@ public:
   Array2D(const Array2D < Value > &labelPic);
   virtual ~Array2D();
   Value set(int x, int y, Value val);
-  Value getInt(int x, int y) const;
   Value get(int x, int y) const;
   int xsize() const
   {
@@ -62,15 +61,6 @@ template < class Value >
   assert(y < ysize_);
   data_[y * xsize_ + x] = val;
   return val;
-}
-
-template < class Value > inline Value Array2D < Value >::getInt(int x, int y) const
-{
-  assert(x >= 0);
-  assert(x < xsize_);
-  assert(y >= 0);
-  assert(y < ysize_);
-  return data_[y * xsize_ + x];
 }
 
 template < class Value > inline Value Array2D < Value >::get(int x, int y) const

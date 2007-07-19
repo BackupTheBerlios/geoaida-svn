@@ -34,11 +34,7 @@ int main(int argc, char **argv)
   if (argc<5) {
     Usage(argv[0]);
   }
-  Image image;
-  image.read(argv[1]);
-  if (image.isEmpty()) {
-    fprintf(stderr,"Can't find %s\n",argv[1]);
-  }
+  Image image(argv[1]);
   float min,max;
   sscanf(argv[3],"%f",&min);
   sscanf(argv[4],"%f",&max);
@@ -49,7 +45,7 @@ int main(int argc, char **argv)
       const void* sit=image.constBegin(y,c);
       void *dit=result.begin(y,c);
       for (int x=0; x<image.sizeX(); x++) {
-        float v=image.getFloat(sit);
+        float v=image.getPixel(sit);
         if (v<min || v>max) result.set(dit,0);
         else result.set(dit,1);
         image.nextCol(sit);

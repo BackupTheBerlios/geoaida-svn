@@ -44,7 +44,7 @@ int main(int argc, char **argv)
   int tSizeX=cols*sizeX;
   int tSizeY=numRows*sizeY;
 	Image result(im.typeId(),tSizeX,tSizeY,im.noChannels());
-  result.typeImage(im.typeImage());
+  result.setFileType(im.fileType());
 	int n=0;
 	for (int y=0; y<numRows; y++) {
 	  for (int x=0; x<cols; x++) {

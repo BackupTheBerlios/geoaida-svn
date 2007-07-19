@@ -73,8 +73,8 @@ Image regression(const Image& imgIn,
    for (int x=0; x < learnfeatureIn1.sizeX(); x++)
      for (int y=0; y < learnfeatureIn1.sizeY(); y++)
        {
-	  float f1=learnfeatureIn1.getFloat(x,y);
-	  float f2=learnfeatureIn2.getFloat(x,y);
+	  float f1=learnfeatureIn1.getPixel(x,y);
+	  float f2=learnfeatureIn2.getPixel(x,y);
 	  
 	  gsl_matrix_set(mf1, x, y, f1);
 	  gsl_matrix_set(mf2, x, y, f2);	 
@@ -130,7 +130,7 @@ Image regression(const Image& imgIn,
 	for (int x=0; x < mask.sizeX(); x++)
 	  for (int y=0; y < mask.sizeY(); y++)
 	    {
-	       int classIndex=mask.getInt(x,y);
+	       int classIndex=mask.getPixel(x,y);
 	       
 	       if (classIndex) //else Background
 		 {

@@ -28,7 +28,7 @@
   LabelPicT:
      sizeX()
      sizeY()
-     set(x,y,value)
+     setPixel(x,y,value)
  */
 
 template < class RegDescT, class PointT  >
@@ -54,7 +54,7 @@ class RegBorderDesc
       }
     int setPixel(Ga::Image& lpic, int x, int y, int val)
     {
-      lpic.set(x, y, val);
+      lpic.setPixel(x, y, val);
       size_++;
       if (x < llx_)
         llx_ = x;

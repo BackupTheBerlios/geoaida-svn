@@ -74,8 +74,8 @@ class HRegion
                     int x_center, int y_center,
                     int x_neighbour, int y_neighbour)
     {
-      if (mask_.getInt(x_center,y_center)!=mask_.getInt(x_neighbour,y_neighbour)) return false;
-      return (fabs(data_.getFloat(x_center,y_center)-data_.getFloat(x_neighbour,y_neighbour))<level_);
+      if (mask_.getPixel(x_center,y_center)!=mask_.getPixel(x_neighbour,y_neighbour)) return false;
+      return (fabs(data_.getPixel(x_center,y_center)-data_.getPixel(x_neighbour,y_neighbour))<level_);
     }
     bool valid(const Image &lpic,
                int x, int y)
@@ -97,8 +97,8 @@ class SRegion
                     int x_center, int y_center,
                     int x_neighbour, int y_neighbour)
     {
-      if (mask_.getInt(x_center,y_center)!=mask_.getInt(x_neighbour,y_neighbour)) return false;
-      return (fabs(data_.getFloat(x_center,y_center)-data_.getFloat(x_neighbour,y_neighbour))<level_);
+      if (mask_.getPixel(x_center,y_center)!=mask_.getPixel(x_neighbour,y_neighbour)) return false;
+      return (fabs(data_.getPixel(x_center,y_center)-data_.getPixel(x_neighbour,y_neighbour))<level_);
     }
     bool valid(const Image &lpic,
                int x, int y)
@@ -120,8 +120,8 @@ class VRegion
                     int x_center, int y_center,
                     int x_neighbour, int y_neighbour)
     {
-      if (mask_.getInt(x_center,y_center)!=mask_.getInt(x_neighbour,y_neighbour)) return false;
-      return (fabs(data_.getFloat(x_center,y_center)-data_.getFloat(x_neighbour,y_neighbour))<level_);
+      if (mask_.getPixel(x_center,y_center)!=mask_.getPixel(x_neighbour,y_neighbour)) return false;
+      return (fabs(data_.getPixel(x_center,y_center)-data_.getPixel(x_neighbour,y_neighbour))<level_);
     }
     bool valid(const Image &lpic,
                int x, int y)
@@ -153,13 +153,13 @@ void Filter(Image& im)
     for (int x=1; x<xsize-1; x++) {
       int pr[8],pg[8],pb[8];
       for (int r=0; r<8; r++) {
-        pr[r]=im.getInt(x+offset_x[r],y+offset_y[r],0);
-        pg[r]=im.getInt(x+offset_x[r],y+offset_y[r],1);
-        pb[r]=im.getInt(x+offset_x[r],y+offset_y[r],2);
+        pr[r]=im.getPixel(x+offset_x[r],y+offset_y[r],0);
+        pg[r]=im.getPixel(x+offset_x[r],y+offset_y[r],1);
+        pb[r]=im.getPixel(x+offset_x[r],y+offset_y[r],2);
       }
-      int cr=im.getInt(x,y,0);
-      int cg=im.getInt(x,y,1);
-      int cb=im.getInt(x,y,2);
+      int cr=im.getPixel(x,y,0);
+      int cg=im.getPixel(x,y,1);
+      int cb=im.getPixel(x,y,2);
       int v[4];
       v[0]=(distance(pr[0],pg[0],pb[0],cr,cg,cb)<distance(pr[4],pg[4],pb[4],cr,cg,cb) ? 0 : 4);
       v[1]=(distance(pr[1],pg[1],pb[1],cr,cg,cb)<distance(pr[5],pg[5],pb[5],cr,cg,cb) ? 1 : 5);
@@ -207,13 +207,7 @@ int main(int argc, char **argv)
   sscanf(argv[optind++],"%d",&minsize);
   int maxsize=INT_MAX;
   sscanf(argv[optind++],"%d",&maxsize);
-  Image src;
-
-  src.read(srcfile);
-  if (src.isEmpty()) {
-    cerr << "Couldn't read image " << srcfile << endl;
-    exit(1);
-  }
+  Image src(srcfile);
   if (src.noChannels()!=3) {
     cerr << "Source image isn't of type ppm" << endl;
     exit(1);
@@ -230,9 +224,9 @@ int main(int argc, char **argv)
     const void *vit=src.constBegin();
     void *hit=hue.begin();
     void *sit=sat.begin();
-    int size=src.sizeImage();
+    int size=src.noPixels();
     for (int i=0; i<size; i++) {
-      if (src.getFloat(vit)<minV) {
+      if (src.getPixel(vit)<minV) {
         hue.set(hit,-1);
         sat.set(sit,0);
       }

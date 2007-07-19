@@ -6,7 +6,7 @@ template <class RegDescT, class TestClassT>
 RegionSplitterT<RegDescT,TestClassT>::RegionSplitterT(vector<RegDescT>& regList, Ga::Image& labelImg, TestClassT& testClass, int minSize, int maxSize, int llx, int lly, int urx, int ury)
   : regionList_(regList), lpic_(labelImg), tclass_(testClass), minSize_(minSize), maxSize_(maxSize), llx_(llx), lly_(lly), urx_(urx), ury_(ury)
 {
-  if (maxSize==-1) maxSize_=lpic_.sizeImage();
+  if (maxSize==-1) maxSize_=lpic_.noPixels();
   if (llx==-1) llx_=0;
   if (lly==-1) lly_=lpic_.sizeY()-1;
   if (urx==-1) urx_=lpic_.sizeX()-1;
@@ -80,7 +80,7 @@ void RegionSplitterT<RegDescT,TestClassT>::goWest(int x, int y, int value, int d
   fprintf(stderr, "goWest (%05d,%05d,%05d,%05d)\n", x, y, value, rl_);
 #endif
   if (x > llx_) {
-    if (lpic_.getInt(x - 1, y) != def_val) {
+    if (lpic_.getPixel(x - 1, y) != def_val) {
       rl_--;
       return;
     }
@@ -100,7 +100,7 @@ void RegionSplitterT<RegDescT,TestClassT>::goWest(int x, int y, int value, int d
   int xstart = x;
   int xend = llx_;
   for (x = xstart; x > llx_; x--) {
-    if (lpic_.getInt(x - 1, y) != def_val) {
+    if (lpic_.getPixel(x - 1, y) != def_val) {
       xend = x;
       break;
     }
@@ -131,7 +131,7 @@ void RegionSplitterT<RegDescT,TestClassT>::goNorth(int x, int y, int value, int 
   fprintf(stderr, "goNorth(%05d,%05d,%05d,%05d)\n", x, y, value, rl_);
 #endif
   if (y > ury_) {
-    if (lpic_.getInt(x, y - 1) != def_val) {
+    if (lpic_.getPixel(x, y - 1) != def_val) {
       rl_--;
       return;
     }
@@ -147,7 +147,7 @@ void RegionSplitterT<RegDescT,TestClassT>::goNorth(int x, int y, int value, int 
   int ystart = y;
   int yend = ury_;
   for (y = ystart; y > ury_; y--) {
-    if (lpic_.getInt(x, y - 1) != def_val) {
+    if (lpic_.getPixel(x, y - 1) != def_val) {
       yend = y;
       break;
     }
@@ -178,7 +178,7 @@ void RegionSplitterT<RegDescT,TestClassT>::goEast(int x, int y, int value, int d
   fprintf(stderr, "goEast (%05d,%05d,%05d,%05d)\n", x, y, value, rl_);
 #endif
   if (x < urx_) {
-    if (lpic_.getInt(x + 1, y) != def_val) {
+    if (lpic_.getPixel(x + 1, y) != def_val) {
       rl_--;
       return;
     }
@@ -194,7 +194,7 @@ void RegionSplitterT<RegDescT,TestClassT>::goEast(int x, int y, int value, int d
   int xstart = x;
   int xend = urx_;
   for (x = xstart; x < urx_; x++) {
-    if (lpic_.getInt(x + 1, y) != def_val) {
+    if (lpic_.getPixel(x + 1, y) != def_val) {
       xend = x;
       break;
     }
@@ -222,7 +222,7 @@ void RegionSplitterT<RegDescT,TestClassT>::goSouth(int x, int y, int value, int 
   fprintf(stderr, "goSouth(%05d,%05d,%05d,%05d)\n", x, y, value, rl_);
 #endif
   if (y < lly_) {
-    if (lpic_.getInt(x, y + 1) != def_val) {
+    if (lpic_.getPixel(x, y + 1) != def_val) {
       rl_--;
       return;
     }
@@ -238,7 +238,7 @@ void RegionSplitterT<RegDescT,TestClassT>::goSouth(int x, int y, int value, int 
   int ystart = y;
   int yend = lly_;
   for (y = ystart; y < lly_; y++) {
-    if (lpic_.getInt(x, y + 1) != def_val) {
+    if (lpic_.getPixel(x, y + 1) != def_val) {
       yend = y;
       break;
     }
@@ -288,7 +288,7 @@ int RegionSplitterT<RegDescT,TestClassT>::split()
   for (y = ury_; y <= lly_; y++) {
     //    printf("%05d %05d %05d\n",x,y,value);
     for (x = llx_; x <= urx_; x++) {
-      if (lpic_.getInt(x, y) == bgId_ && tclass_.valid(lpic_,x,y)) {
+      if (lpic_.getPixel(x, y) == bgId_ && tclass_.valid(lpic_,x,y)) {
         value++;
         region_=RegDescT();
         region_.setId(value);
@@ -307,8 +307,8 @@ int RegionSplitterT<RegDescT,TestClassT>::split()
 #ifdef SMALL_REGIONS_TO_1
           v = smallRegionsId_;
 #else
-          if ((x > llx_) && (lpic_.getInt(x - 1, y) != value)) {
-            v = lpic_.getInt(x - 1, y);
+          if ((x > llx_) && (lpic_.getPixel(x - 1, y) != value)) {
+            v = lpic_.getPixel(x - 1, y);
             //      printf("%05d %05d classified (%d)\n",x,y,v);
           }
           else {
@@ -374,8 +374,8 @@ int RegionSplitterT<RegDescT,TestClassT>::split()
   }
   for (y = ury_; y <= lly_; y++)
     for (x = llx_; x <= urx_; x++)
-      if (lpic_.getInt(x, y) == -1)
-        lpic_.set(x, y, 0);
+      if (lpic_.getPixel(x, y) == -1)
+        lpic_.setPixel(x, y, 0);
 #ifdef DBG_MSG
   printf("%05d %05d %05d %05d %05d %05d\n",
          regionList_[0].id(),
@@ -408,11 +408,11 @@ void findNeighbours(LabelPic & lpic,
                     RegDescT &region,
                     int num_regions)
 {
-//  printf("%4d:(%4d,%4d)=%4d\n",region.id,x,y,lpic.getInt(x,y));
+//  printf("%4d:(%4d,%4d)=%4d\n",region.id,x,y,lpic.getPixel(x,y));
 #define setneighbour(x,y) {\
-  assert(lpic.getInt(x,y)>=0); \
-  assert(lpic.getInt(x,y)<num_regions); \
-  neighbour[lpic.getInt(x,y)]=true; \
+  assert(lpic.getPixel(x,y)>=0); \
+  assert(lpic.getPixel(x,y)<num_regions); \
+  neighbour[lpic.getPixel(x,y)]=true; \
   }
 //  printf("findNeighbours: num_regions=%d\n",num_regions);
   bool neighbour[num_regions+1];
@@ -428,15 +428,15 @@ void findNeighbours(LabelPic & lpic,
              region.ury,
              region.urx, region.lly, region.size, x, y);
 #endif
-      if (lpic.getInt(x, y) != region.id)
+      if (lpic.getPixel(x, y) != region.id)
         continue;
-      //      if ((ox>0) && (oy>0) && (lpic.getFloat(ox-1,oy-1)!=region.id))
+      //      if ((ox>0) && (oy>0) && (lpic.getPixel(ox-1,oy-1)!=region.id))
       //        value=region.id;
-      //      if ((ox<sizeX()-1) && (oy>0) && (lpic.getFloat(ox+1,oy-1)!=region.id))
+      //      if ((ox<sizeX()-1) && (oy>0) && (lpic.getPixel(ox+1,oy-1)!=region.id))
       //        value=region.id;
-      //      if ((ox>0) && (oy<sizeY()-1) && (lpic.getFloat(ox-1,oy+1)!=region.id))
+      //      if ((ox>0) && (oy<sizeY()-1) && (lpic.getPixel(ox-1,oy+1)!=region.id))
       //        value=region.id;
-      //      if ((ox<sizeX()-1) && (oy<sizeY()-1) && (lpic.getFloat(ox+1,oy+1)!=region.id))
+      //      if ((ox<sizeX()-1) && (oy<sizeY()-1) && (lpic.getPixel(ox+1,oy+1)!=region.id))
       //        value=region.id;
       if ((x==0) || (y==0) || (x==lpic.sizeX()-1) || (y==lpic.sizeY()-1)) neighbour[num_regions]=true;
       if (x+1<lpic.sizeX())

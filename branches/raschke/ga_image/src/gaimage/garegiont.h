@@ -30,7 +30,7 @@ namespace Ga {
 template<class PixTyp> void labelBin(ImageT<PixTyp> &img, PixTyp label_val)
 { //J.B. 01/01
   PixTyp *pix = img.begin();
-  for (int j = 0; j < img.sizeImage(); ++j) {
+  for (int j = 0; j < img.noPixels(); ++j) {
     if (*pix == label_val) *pix = (PixTyp)0;
     else *pix = (PixTyp)1;
     pix++;
@@ -47,7 +47,7 @@ template<class PixTyp> PixTyp labelImage(ImageT<PixTyp> &img)
   PixTyp *pix = img.begin();
   PixTyp label_set = 2;
 
-  for ( int i = 0; i < (int)(img.sizeImage()); ++i, ++pix )
+  for ( int i = 0; i < (int)(img.noPixels()); ++i, ++pix )
   {
     if (!(*pix))
     {
@@ -195,7 +195,7 @@ template<class PixTyp> void despeckle(ImageT<PixTyp> &in, int size, PixTyp label
   PixTyp *pix = in.begin();
   unsigned int labelsize;
 
-  for (int i = 0; i < (int)(in.sizeImage()); ++i, ++pix)
+  for (int i = 0; i < (int)(in.noPixels()); ++i, ++pix)
   {
     if (*pix == label_val)
     {
@@ -207,7 +207,7 @@ template<class PixTyp> void despeckle(ImageT<PixTyp> &in, int size, PixTyp label
 
   // restore original label values
   pix = in.begin();
-  for (int i = (int)(in.sizeImage()); i; --i, ++pix)
+  for (int i = (int)(in.noPixels()); i; --i, ++pix)
   {
     if (*pix == (PixTyp)-1)
       *pix = label_val;
@@ -344,12 +344,12 @@ template<class PixTyp> void blowshrink(ImageT<PixTyp> &in, int blow)
     {
       for (int y = 0; y < in.sizeY(); y ++)
 				for (int x = 0; x < in.sizeX(); x ++)
-      	  if (!(in.get(x, y) ^ mode))
+      	  if (!(in.getPixel(x, y) ^ mode))
       	    {
-      	      tmp.set(x - 1, y, mode, 0, true);
-      	      tmp.set(x + 1, y, mode, 0, true);
-      	      tmp.set(x, y + 1, mode, 0, true);
-      	      tmp.set(x, y - 1, mode, 0, true);
+      	      tmp.setPixel(x - 1, y, mode, 0, true);
+      	      tmp.setPixel(x + 1, y, mode, 0, true);
+      	      tmp.setPixel(x, y + 1, mode, 0, true);
+      	      tmp.setPixel(x, y - 1, mode, 0, true);
       	    }
       in = tmp;
     }
@@ -366,11 +366,11 @@ template<class PixTyp> void blow(ImageT<PixTyp> &in, PixTyp label, int iteration
   while (iterations --) {
     for (int y = 0; y < in.sizeY(); y ++)
       for (int x = 0; x < in.sizeX(); x ++)
-        if (in.get(x, y) == label) {
-          tmp.set(x - 1, y, label, 0, true);
-          tmp.set(x + 1, y, label, 0, true);
-          tmp.set(x, y + 1, label, 0, true);
-          tmp.set(x, y - 1, label, 0, true);
+        if (in.getPixel(x, y) == label) {
+          tmp.setPixel(x - 1, y, label, 0, true);
+          tmp.setPixel(x + 1, y, label, 0, true);
+          tmp.setPixel(x, y + 1, label, 0, true);
+          tmp.setPixel(x, y - 1, label, 0, true);
         }
     in = tmp;
   }
@@ -402,13 +402,13 @@ template<class PixTyp> void denoise(ImageT<PixTyp> &im)
       for (int x=1; x<xsize-1; x++) {
         int pr[8],pg[8],pb[8];
         for (int r=0; r<8; r++) {
-          pr[r]=im.getInt(x+offset_x[r],y+offset_y[r],0);
-          pg[r]=im.getInt(x+offset_x[r],y+offset_y[r],1);
-          pb[r]=im.getInt(x+offset_x[r],y+offset_y[r],2);
+          pr[r]=im.getPixel(x+offset_x[r],y+offset_y[r],0);
+          pg[r]=im.getPixel(x+offset_x[r],y+offset_y[r],1);
+          pb[r]=im.getPixel(x+offset_x[r],y+offset_y[r],2);
         }
-        int cr=im.getInt(x,y,0);
-        int cg=im.getInt(x,y,1);
-        int cb=im.getInt(x,y,2);
+        int cr=im.getPixel(x,y,0);
+        int cg=im.getPixel(x,y,1);
+        int cb=im.getPixel(x,y,2);
         int v[4];
         v[0]=(distance(pr[0],pg[0],pb[0],cr,cg,cb)<distance(pr[4],pg[4],pb[4],cr,cg,cb) ? 0 : 4);
         v[1]=(distance(pr[1],pg[1],pb[1],cr,cg,cb)<distance(pr[5],pg[5],pb[5],cr,cg,cb) ? 1 : 5);
@@ -417,9 +417,9 @@ template<class PixTyp> void denoise(ImageT<PixTyp> &im)
         cr=(pr[v[0]]+pr[v[1]]+pr[v[2]]+pr[v[3]])/4;
         cg=(pg[v[0]]+pg[v[1]]+pg[v[2]]+pg[v[3]])/4;
         cb=(pb[v[0]]+pb[v[1]]+pb[v[2]]+pb[v[3]])/4;
-        dest.set(x,y,cr,0);
-        dest.set(x,y,cg,1);
-        dest.set(x,y,cb,2);
+        dest.setPixel(x,y,cr,0);
+        dest.setPixel(x,y,cg,1);
+        dest.setPixel(x,y,cb,2);
       }
   }
   else {
@@ -428,16 +428,16 @@ template<class PixTyp> void denoise(ImageT<PixTyp> &im)
         for (int x=1; x<xsize-1; x++) {
           int p[8];
           for (int r=0; r<8; r++) {
-            p[r]=im.getInt(x+offset_x[r],y+offset_y[r],ch);
+            p[r]=im.getPixel(x+offset_x[r],y+offset_y[r],ch);
           }
-          int c=im.getInt(x,y,ch);
+          int c=im.getPixel(x,y,ch);
           int v[4];
         v[0]=(distance(p[0],c)<distance(p[4],c) ? 0 : 4);
         v[1]=(distance(p[1],c)<distance(p[5],c) ? 1 : 5);
         v[2]=(distance(p[2],c)<distance(p[6],c) ? 2 : 6);
         v[3]=(distance(p[3],c)<distance(p[7],c) ? 3 : 7);
         c=(p[v[0]]+p[v[1]]+p[v[2]]+p[v[3]])/4;
-        dest.set(x,y,c,ch);
+        dest.setPixel(x,y,c,ch);
       }
   }
   im=dest;

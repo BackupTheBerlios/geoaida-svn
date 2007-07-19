@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
   for (int y = 0; y < in.sizeY(); y++)
     for (int x = 0; x < in.sizeX(); x++)
 		{
-      val = in.getFloat(x, y);
+      val = in.getPixel(x, y);
       if (isnan(val)) { nan ++; continue; }
 			histcount[(int)((val - min) / slotwidth)] ++;
     }
@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
 	  fprintf(fp, "#\n");
     }
 
-  long num_points = in.sizeImage() - nan;
+  long num_points = in.noPixels() - nan;
 	double histpart, histpartsum = 0.0;
   float quota=0.0;
   max=0;
@@ -144,20 +144,20 @@ int main(int argc, char *argv[])
   bool swit=false;
     
   for (int x = 0; x < histo_image.sizeX(); x++){
- 	 histpart = (float)histcount[x] / num_points;             
-   // scale histogram
-   histpart= (histpart/max)*histo_image.sizeY();
-   for (int y = 0; y < histo_image.sizeY(); y++)
-      if (histo_image.sizeY()-(int)histpart < y){
+ 	  histpart = (float)histcount[x] / num_points;             
+    // scale histogram
+    histpart= (histpart/max)*histo_image.sizeY();
+    for (int y = 0; y < histo_image.sizeY(); y++)
+      if (histo_image.sizeY()-(int)histpart < y) {
         if (swit)
-          histo_image.set (x,y,0);
+          histo_image.setPixel(x,y,0);
         else
-          histo_image.set (x,y,125);
-        }  
+          histo_image.setPixel(x,y,125);
+      }  
       else
-        histo_image.set (x,y,255);
+        histo_image.setPixel(x,y,255);
       swit=!swit;      
-     }  
+  }  
 
   if (verbose) cout << "Writing histogram image " <<argv[optind + 2]<< endl;
   histo_image.write (argv[optind + 2]);

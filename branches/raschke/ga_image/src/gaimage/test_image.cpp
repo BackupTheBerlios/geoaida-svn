@@ -19,10 +19,13 @@ int main()
   assert(img.sizeX() == 100);
   assert(img.sizeY() == 200);
   beginTest("Setting pixels on different channels");
-  img.set(0, 0, 0.0, 0);
-  img.set(0, 0, 1.0, 1);
-  img.set(0, 0, 2.0, 2);
-  assert(img.getFloat(0, 0, 0) == 0.0);
-  assert(img.getFloat(0, 0, 1) == 1.0);
-  assert(img.getFloat(0, 0, 2) == 2.0);
+  img.setPixel(0, 0, 0.0, 0);
+  img.setPixel(0, 0, 1.0, 1);
+  img.setPixel(0, 0, 2.0, 2);
+  assert(img.getPixel(0, 0, 0) == 0.0);
+  assert(img.getPixel(0, 0, 1) == 1.0);
+  assert(img.getPixel(0, 0, 2) == 2.0);
+  beginTest("Using iterators");
+  *img.begin() = 5;
+  assert(*img.begin() == 5);
 }

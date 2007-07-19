@@ -153,10 +153,10 @@ bool processRegion(ArgDict & args, GaMaskImage & mask, int mask_x, int mask_y,
   lly -= labelImage->offset_y;
   urx -= labelImage->offset_x;
   ury -= labelImage->offset_y;
-  if (mask.getFloat(llx, lly, 0, false)
-      && mask.getFloat(llx, ury, 0, false)
-      && mask.getFloat(urx, ury, 0, false)
-      && mask.getFloat(urx, lly, 0, false)) { //BBox NEU SETZEN
+  if (mask.getPixel(llx, lly, 0, false)
+      && mask.getPixel(llx, ury, 0, false)
+      && mask.getPixel(urx, ury, 0, false)
+      && mask.getPixel(urx, lly, 0, false)) { //BBox NEU SETZEN
     args.replace("llx", llx);
     args.replace("lly", lly);
     args.replace("urx", urx);
@@ -180,7 +180,7 @@ bool processRegion(ArgDict & args, GaMaskImage & mask, int mask_x, int mask_y,
   bool found = false;
   for (int y = ury; y <= lly; y++) {
     for (int x = llx; x <= urx; x++) {
-      if (labelImage->image.getFloat(x, y, 0, 0.0) == id) {
+      if (labelImage->image.getPixel(x, y, 0, 0.0) == id) {
         found = true;
         if (x < nllx)
           nllx = x;

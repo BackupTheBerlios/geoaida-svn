@@ -155,7 +155,7 @@ template<class PixTyp> void drawGeoLine(ImageBase &im, double gx1, double gy1, d
     {
       for (double w = -wmax; w <= wmax; w += 0.5)
       {
-        img.set( (int)(img.geo2ImageX_double(x + dxs * w) + 0.5),
+        img.setPixel( (int)(img.geo2ImageX_double(x + dxs * w) + 0.5),
                  (int)(img.geo2ImageY_double(y + dys * w) + 0.5), c, 0, 1 );
       }
       x += dx; y += dy;
@@ -174,30 +174,30 @@ template<class PixTyp> void drawGeoLine(ImageBase &im, double gx1, double gy1, d
         rety = img.geo2ImageY_double(y + dys * w);
 
        if (fabs(w) != wmax)
-          img.set((int)(retx + 0.5), (int)(rety + 0.5), c);
+          img.setPixel((int)(retx + 0.5), (int)(rety + 0.5), c);
         else
         {
           xfract = retx - floor(retx); retx = floor(retx);
           yfract = rety - floor(rety); rety = floor(rety);
 
           col = (int)((1.0 - xfract) * (1.0 - yfract) * (double)c);
-          if (img.getInt(int(retx), int(rety)) < col)
-            img.set(int(retx), int(rety), col);
+          if (img.getPixel(int(retx), int(rety)) < col)
+            img.setPixel(int(retx), int(rety), col);
 
           ++retx;
           col = (int)((xfract) * (1.0 - yfract) * (double)c);
-          if (img.getInt(int(retx), int(rety)) < col)
-            img.set(int(retx), int(rety), col);
+          if (img.getPixel(int(retx), int(rety)) < col)
+            img.setPixel(int(retx), int(rety), col);
 
           --retx; ++rety;
           col = (int)((1.0 - xfract) * (yfract) * (double)c);
-          if (img.getInt(int(retx), int(rety)) < col)
-            img.set(int(retx), int(rety), col);
+          if (img.getPixel(int(retx), int(rety)) < col)
+            img.setPixel(int(retx), int(rety), col);
 
           ++retx;
           col = (int)((xfract) * (yfract) * (double)c);
-          if (img.getInt(int(retx), int(rety)) < col)
-            img.set(int(retx), int(rety), col);
+          if (img.getPixel(int(retx), int(rety)) < col)
+            img.setPixel(int(retx), int(rety), col);
         }
       }
       x += dx; y += dy;

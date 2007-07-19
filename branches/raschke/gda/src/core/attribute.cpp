@@ -204,8 +204,8 @@ Attribute::set(ArgDict & attribs)
     break;
   case IMAGE:
     {
-      im_.imageType_ = new QString();
-      MLParser::setString(*(im_.imageType_), &attribs, "imagetype");
+      im_.fileType_ = new QString();
+      MLParser::setString(*(im_.fileType_), &attribs, "imagetype");
     }
     break;
   }
@@ -268,7 +268,7 @@ QString
 Attribute::imageType()
 {
   if (type_ == IMAGE)
-    return *(im_.imageType_);
+    return *(im_.fileType_);
   else
     return "";
 }

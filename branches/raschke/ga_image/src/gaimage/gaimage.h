@@ -30,18 +30,52 @@ class ImageBase;
 
 /** \class Image
     \brief Class for handling arbitrarily large image files.
+    
+    The Image class provides a type-agnostic wrapper around any ImageT<> instance.
     */
 
-typedef void* Iterator;
-typedef const void* ConstIterator;
+template<typename Img, typename Pix>
+struct IteratorT
+{
+  Img* img;
+  unsigned ch, elem;
+  
+  class Proxy {
+    Img& img;
+    unsigned ch, elem;
+    
+  public:
+    Proxy(Img& img, unsigned ch, unsigned elem) : img(img), ch(ch), elem(elem) {}
+    operator Pix() const { return img.getPixel(elem % img.sizeX(), elem / img.sizeY(), ch); }
+    Proxy& operator=(Pix val) { img.setPixel(elem % img.sizeX(), elem / img.sizeY(), val, ch); return *this; }
+  };
+  
+  IteratorT() : img(0) {}
+  explicit IteratorT(Img& img, unsigned ch, unsigned elem) : img(&img), ch(ch), elem(elem) {}
+  IteratorT& operator++() { ++elem; return *this; }
+  IteratorT operator++(int) { IteratorT old = *this; ++*this; return old; }
+  Proxy operator*() const { return Proxy(*img, ch, elem); }
+  
+  template<typename OtherImg>
+  bool operator==(IteratorT<OtherImg, Pix> rhs) {
+    return img == rhs.img && ch == rhs.ch && elem == rhs.elem;
+  }
+
+  template<typename OtherImg>
+  bool operator!=(IteratorT<OtherImg, Pix> rhs) {
+    return img != rhs.img || ch != rhs.ch || elem != rhs.elem;
+  }
+};
 
 class Image 
 {
   ImageBase* pImage_;
-  IMGTYPE readImageType(FILE *fp,int* cols, int* rows);
 
 public:
-  // Create with, maybe empty, ImageT representation.
+  typedef IteratorT<Image, double> Iterator;
+  typedef IteratorT<const Image, double> ConstIterator;
+
+  // Create wih ImageT representation of the given type, and given metrics.
   explicit Image(const class std::type_info& t, int x = 0, int y = 0, int noChannels=1);
   // Load from file.
   explicit Image(const std::string& filename);
@@ -50,52 +84,39 @@ public:
   Image& operator=(const Image& rhs);
   ~Image();
   void swap(Image& other);
+  
+  // Access to the wrapped object.
   ImageBase* pImage() const;
   
-  bool isEmpty() const;
-
   // Geometry
+  const class std::type_info& typeId() const;
   int sizeX() const;
   int sizeY() const;
-  int sizeImage() const; 
+  int noPixels() const; 
   int noChannels() const;
   Image getChannel(int channel=0);
 
-  const class std::type_info& typeId() const;
-  IMGTYPE typeImage() const;
-  void typeImage(IMGTYPE t);
+  // I/O
+  IMGTYPE fileType() const;
+  void setFileType(IMGTYPE t);
   bool read(const char* filename);
   void write(const char* filename, int channel=0);
-  void write(FILE *fp, int channnel=0);
 	
   // Drawing primitives
-  double getFloat(int x, int y, int channel = 0) const;
-  void set(int x, int y, double val, int channel=0, bool clip=false);
+  double getPixel(int x, int y, int channel = 0) const;
+  void setPixel(int x, int y, double val, int channel = 0, bool clip = false);
   void fillRow(int row, int startX, int endX, double val, int channel=0, bool clip=false);
   void fill(double value);
-  void set(int x, int y, int val, int channel=0);
-  int getInt(int x, int y, int channel=0) const;
-  int getInt(int x, int y, int channel, int neutral) const;
   
   // Auslagern usw.
-  /*o*/ double findMinValue(int channel=0);
-  /*o*/ double findMinValue(int& x, int& y, int channel=0);
-  /*o*/ double findMaxValue(int channel=0);
-  /*o*/ double findMaxValue(int& x, int& y, int channel=0);
+  /*o*/ double findMinValue(int channel=0) const;
+  /*o*/ double findMaxValue(int channel=0) const;
 
-  // -> Iterator
-  void* begin(int row=0, int channel=0);
-  const void* constBegin(int row=0, int channel=0) const;
-  const void* end(int row, int channel=0) const;
-  const void* end() const;
-  double getFloat(const void *it) const;
-  void set(void* it, double val);
-  void nextCol(const void*& ptr) const;
-  void nextCol(void*& ptr) const;
-  void nextCol(const void*& ptr, int offset) const;
-  void nextCol(void*& ptr, int offset) const;
-  void set(void *ptr, int val);
-  int getInt(const void *ptr) const;
+  // Iterators
+  Iterator begin(int row=0, int channel=0);
+  ConstIterator constBegin(int row=0, int channel=0) const;
+  ConstIterator end(int row, int channel=0) const;
+  ConstIterator end() const;
 };
 
 #define ForTypeDo(PixTyp,function,args) \

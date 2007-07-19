@@ -294,7 +294,7 @@ qDebug("ga_bu_settlement p= %f",p);
   //for (ConstIterator pix = out_img.constBegin(); pix != out_img.end(); out_img.nextCol(pix)) {
   for (y=0;y<newY;y++)//calculate the new values of the label
     for (x=0;x<newX;x++) {
-    val = out_img.getInt(pix);
+    val = out_img.getPixel(pix);
     if(val>0) {
       (infolist[val])->add(x,y);
     }
@@ -378,7 +378,7 @@ cout <<", i:"<< i<<", helplabel:"<<helplabel <<", nl->size():"<<nl->size() <<end
 
   {
     for (Iterator pix = out_img.begin(); pix != out_img.end(); out_img.nextCol(pix)) {
-      if (out_img.getInt(pix))
+      if (out_img.getPixel(pix))
       out_img.set(pix,vec[1]);
     }
     out_img.write(argv[4]);

@@ -81,7 +81,7 @@ void MapViewer::set(GNode * node, Image * map)
   minId_=0;
   {
     const void* it=map->constBegin();
-    int size=map->sizeImage();
+    int size=map->noPixels();
     for (int i=0; i<size; i++) {
       int id=map->getInt(it);
       if (id>maxId) maxId=id;
@@ -125,10 +125,10 @@ void MapViewer::generateMapImage()
       case 3:
         for (y = 0; y < map_->sizeY(); y++)
           for (x = 0; x < map_->sizeX(); x++) {
-            uint c = colorTable_[map_->getInt(x, y)-minId_];
-            int r = dataImage_->getInt(int (x * xscale), int (y * yscale),0);
-            int g = dataImage_->getInt(int (x * xscale), int (y * yscale),1);
-            int b = dataImage_->getInt(int (x * xscale), int (y * yscale),2);
+            uint c = colorTable_[map_->getPixel(x, y)-minId_];
+            int r = dataImage_->getPixel(int (x * xscale), int (y * yscale),0);
+            int g = dataImage_->getPixel(int (x * xscale), int (y * yscale),1);
+            int b = dataImage_->getPixel(int (x * xscale), int (y * yscale),2);
             c = qRgb(int (qRed(c) * alpha_ + r * invalpha),
                      int (qGreen(c) * alpha_ + g * invalpha),
                      int (qBlue(c) * alpha_ + b* invalpha));
@@ -138,8 +138,8 @@ void MapViewer::generateMapImage()
       default:
         for (y = 0; y < map_->sizeY(); y++)
           for (x = 0; x < map_->sizeX(); x++) {
-            uint c = colorTable_[map_->getInt(x, y)-minId_];
-            uint v = dataImage_->getInt(int (x * xscale), int (y * yscale));
+            uint c = colorTable_[map_->getPixel(x, y)-minId_];
+            uint v = dataImage_->getPixel(int (x * xscale), int (y * yscale));
             c = qRgb(int (qRed(c) * alpha_ + v * invalpha),
                      int (qGreen(c) * alpha_ + v * invalpha),
                      int (qBlue(c) * alpha_ + v * invalpha));
@@ -154,10 +154,10 @@ void MapViewer::generateMapImage()
       case 3:
         for (y = 0; y < map_->sizeY(); y++)
           for (x = 0; x < map_->sizeX(); x++) {
-            uint c = colorTable_[map_->getInt(x, y)-minId_];
-            int r = dataImage_->getInt(x,y,0);
-            int g = dataImage_->getInt(x,y,1);
-            int b = dataImage_->getInt(x,y,2);
+            uint c = colorTable_[map_->getPixel(x, y)-minId_];
+            int r = dataImage_->getPixel(x,y,0);
+            int g = dataImage_->getPixel(x,y,1);
+            int b = dataImage_->getPixel(x,y,2);
             c = qRgb(int (qRed(c) * alpha_ + r * invalpha),
                      int (qGreen(c) * alpha_ + g * invalpha),
                      int (qBlue(c) * alpha_ + b* invalpha));
@@ -167,8 +167,8 @@ void MapViewer::generateMapImage()
       default:
         for (y = 0; y < map_->sizeY(); y++)
           for (x = 0; x < map_->sizeX(); x++) {
-            uint c = colorTable_[map_->getInt(x, y)-minId_];
-            uint v = dataImage_->getInt(x,y);
+            uint c = colorTable_[map_->getPixel(x, y)-minId_];
+            uint v = dataImage_->getPixel(x,y);
             c = qRgb(int (qRed(c) * alpha_ + v * invalpha),
                      int (qGreen(c) * alpha_ + v * invalpha),
                      int (qBlue(c) * alpha_ + v * invalpha));
@@ -181,7 +181,7 @@ void MapViewer::generateMapImage()
   else {
     for (y = 0; y < map_->sizeY(); y++)
       for (x = 0; x < map_->sizeX(); x++) {
-        image_->setPixel(x, y, colorTable_[map_->getInt(x, y)-minId_]);
+        image_->setPixel(x, y, colorTable_[map_->getPixel(x, y)-minId_]);
       }
   }
   zoom(zoom_);
@@ -286,11 +286,11 @@ void MapViewer::mouseMoveEvent(QMouseEvent * ev)
     float gY=map_->image2GeoY(my);
     if (!root_) {
 			QString msg;
-   		msg.sprintf("pic: (%d,%d) val: %f",mx,my,map_->getFloat(mx,my));
+   		msg.sprintf("pic: (%d,%d) val: %f",mx,my,map_->getPixel(mx,my));
 	    emit info(msg);
       return;
     }
-    int id = map_->getInt(mx, my);
+    int id = map_->getPixel(mx, my);
     if (id-minId_<0 || id-minId_>=colorTableSize_) currentNode_=0;
     else currentNode_ = iNodeTable_[id-minId_];
     QString msg;

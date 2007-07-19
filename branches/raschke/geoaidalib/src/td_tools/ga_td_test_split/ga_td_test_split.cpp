@@ -48,8 +48,8 @@ calc_ortslage(Image& vis_h, Image& ir_h, Image& out_im, int sizeX, int sizeY) {
  Iterator ir = ir_h.begin();
  unsigned char val;
  for (int i=0; i<sizeX*sizeY; i++) {
-  float vis_v = vis_h.getFloat(vis);
-  float ir_v  = ir_h.getFloat(ir);
+  float vis_v = vis_h.getPixel(vis);
+  float ir_v  = ir_h.getPixel(ir);
   if (vis_v<50) val=1; else val=0;
   if (ir_v > 10 && ir_v < 136) val++;
 
@@ -77,9 +77,9 @@ calc_forest(Image& vis_h, Image& ir_h, Image& laser1_im, Image& laser2_im,
  Iterator laser = laser_d_im.begin();
  unsigned char val;
  for (int i=0; i<sizeX*sizeY; i++) {
-  float vis_v = vis_h.getFloat(vis);
-  float ir_v  = ir_h.getFloat(ir);
-  float laser_v  = laser_d_im.getFloat(laser);
+  float vis_v = vis_h.getPixel(vis);
+  float ir_v  = ir_h.getPixel(ir);
+  float laser_v  = laser_d_im.getPixel(laser);
   if ((vis_v>50)&&(ir_v < 10 || ir_v > 136)&&(laser_v > 10))
    val=1; else val=0;
 
@@ -108,9 +108,9 @@ calc_greenland(Image& vis_h, Image& ir_h, Image& laser1_im, Image& laser2_im,
  Iterator laser = laser_d_im.begin();
  unsigned char val;
  for (int i=0; i<sizeX*sizeY; i++) {
-  float vis_v = vis_h.getFloat(vis);
-  float ir_v  = ir_h.getFloat(ir);
-  float laser_v  = laser_d_im.getFloat(laser);
+  float vis_v = vis_h.getPixel(vis);
+  float ir_v  = ir_h.getPixel(ir);
+  float laser_v  = laser_d_im.getPixel(laser);
   if ((vis_v>50)&&(ir_v < 10 || ir_v > 136)&&(laser_v < 10))
    val=1; else val=0;
 
@@ -138,9 +138,9 @@ calc_wirtschaftsflaeche(Image& vis_h, Image& ir_h, Image& laser1_im, Image& lase
  Iterator laser = laser_d_im.begin();
  unsigned char val;
  for (int i=0; i<sizeX*sizeY; i++) {
-  float vis_v = vis_h.getFloat(vis);
-  float ir_v  = ir_h.getFloat(ir);
-  float laser_v  = laser_d_im.getFloat(laser);
+  float vis_v = vis_h.getPixel(vis);
+  float ir_v  = ir_h.getPixel(ir);
+  float laser_v  = laser_d_im.getPixel(laser);
   if (vis_v<50) val=0; else val=1;
   if (ir_v < 10 || ir_v > 136) val++;
   if (laser_v > 10) val++;
@@ -171,10 +171,10 @@ calc_water(Image& vis_v, Image& ir_h, Image& ir_v, Image& laser1_im, Image& lase
  Iterator laser = laser_d_im.begin();
  unsigned char val;
  for (int i=0; i<sizeX*sizeY; i++) {
-  float vvis = vis_v.getFloat(vis);
-  float hir  = ir_h.getFloat(irh);
-  float vir  = ir_v.getFloat(irv);
-  float laser_v  = laser_d_im.getFloat(laser);
+  float vvis = vis_v.getPixel(vis);
+  float hir  = ir_h.getPixel(irh);
+  float vir  = ir_v.getPixel(irv);
+  float laser_v  = laser_d_im.getPixel(laser);
   if (isnan(laser_v) || ((laser_v * laser_v) < 0.06)) {
     if ((vvis>60 && vvis<120) && (hir>25 && hir<300)) val=1;
     else val=0;
@@ -280,8 +280,8 @@ class SameRegion
                     int x_center, int y_center,
                     int x_neighbour, int y_neighbour)
     {
-      if(dpic.getFloat(x_center,y_center) == 0) return false;
-      return (dpic.getFloat(x_center,y_center) ==dpic.getFloat(x_neighbour,y_neighbour));
+      if(dpic.getPixel(x_center,y_center) == 0) return false;
+      return (dpic.getPixel(x_center,y_center) ==dpic.getPixel(x_neighbour,y_neighbour));
     }
     bool valid(const Image &dpic,
                const Image &lpic,
@@ -331,8 +331,8 @@ if (!haus){
 	
 	for (int y=0; y<sizeY; y++)
 		for (int x=0; x<sizeX; x++){
-			if ( ((int) vis_im.getFloat(x,y,0) > 185) && ((int) vis_im.getFloat(x,y,0) < 195) ||
-				 ((int) vis_im.getFloat(x,y,0) > 200) && ((int) vis_im.getFloat(x,y,0) < 210)   )
+			if ( ((int) vis_im.getPixel(x,y,0) > 185) && ((int) vis_im.getPixel(x,y,0) < 195) ||
+				 ((int) vis_im.getPixel(x,y,0) > 200) && ((int) vis_im.getPixel(x,y,0) < 210)   )
 				labelimg.set(x, y,1);                                                                                  																																							
 														}
 
@@ -354,7 +354,7 @@ if (!haus){
 	
 	for (int y=0; y<sizeY; y++)
 		for (int x=0; x<sizeX; x++){
-			if ( ((int) vis_im.getFloat(x,y,0) > 155) && ((int) vis_im.getFloat(x,y,0) < 165))
+			if ( ((int) vis_im.getPixel(x,y,0) > 155) && ((int) vis_im.getPixel(x,y,0) < 165))
 				labelimg2.set(x, y,1);
 														}
 
@@ -375,7 +375,7 @@ if (!haus){
 	
 	for (int y=0; y<sizeY; y++)
 		for (int x=0; x<sizeX; x++){
-				if ( (int) vis_im.getFloat(x,y,1) >= 180 )
+				if ( (int) vis_im.getPixel(x,y,1) >= 180 )
 				labelimg3.set(x, y,1);
 														}
 
@@ -397,7 +397,7 @@ else{
 
 		for (int y=0; y<sizeY; y++)
 		for (int x=0; x<sizeX; x++){
-			if ( ((int) vis_im.getFloat(x,y,0) > 200) && ((int) vis_im.getFloat(x,y,0) < 210))
+			if ( ((int) vis_im.getPixel(x,y,0) > 200) && ((int) vis_im.getPixel(x,y,0) < 210))
 				labelimg.set(x, y,1);                                                                                  																																							
 														}
 

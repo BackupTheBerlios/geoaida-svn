@@ -76,8 +76,8 @@ int main(int argc, char **argv)
   float mvar=0.0;
   for (int y = 1; y < im.sizeY()-1; y ++)
     for (int x = 1; x < im.sizeX()-1; x ++)
-      if (im.getFloat(x,y,0) != 0.0)
-        mvar+=im.getFloat(x,y,0);
+      if (im.getPixel(x,y,0) != 0.0)
+        mvar+=im.getPixel(x,y,0);
   
   FILE *fp;
   if (!(fp = fopen(outvalues, "a")))

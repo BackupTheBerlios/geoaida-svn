@@ -34,7 +34,7 @@ namespace Ga
     typename ImageT<PixType>::ConstIterator pChR=img.constBegin(0,0);
     typename ImageT<PixType>::ConstIterator pChG=img.constBegin(0,1);
     typename ImageT<PixType>::ConstIterator pChB=img.constBegin(0,2);
-    for (int i = 0; i < img.sizeImage(); ++i, ++pChH, ++pChS, ++pChV, ++pChR, ++pChG, ++pChB) {
+    for (int i = 0; i < img.noPixels(); ++i, ++pChH, ++pChS, ++pChV, ++pChR, ++pChG, ++pChB) {
       double r = *pChR;
       double g = *pChG;
       double b = *pChB;

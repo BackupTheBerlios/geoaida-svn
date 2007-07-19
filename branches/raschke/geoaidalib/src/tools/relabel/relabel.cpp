@@ -22,7 +22,7 @@ ImageT<int> *relabelOutput (Image &Img, char *labelname, char *descr)
   Image hist = Img.calcHistogram(0, 256, 256);
   int max = 255;
 
-  while (hist.getInt (max, 0, 0) == 0 && max > 0)
+  while (hist.getPixel (max, 0, 0) == 0 && max > 0)
     max--;
 
   if (!max) {
@@ -33,10 +33,10 @@ ImageT<int> *relabelOutput (Image &Img, char *labelname, char *descr)
     cout << "identified " << max << " texture classes in segmentation result" << endl;
 
   ImageT<int> *result_img = new ImageT<int>(Img.sizeX (), Img.sizeY ());
-  result_img->typeImage(_PFM_SINT);
+  result_img->setFileType(_PFM_SINT);
 
   ImageT<int> tmp_img(Img.sizeX(), Img.sizeY());
-  tmp_img.typeImage(_PFM_SINT);
+  tmp_img.setFileType(_PFM_SINT);
 
   cout << "neue Bilder angelegt" << endl;
 
@@ -59,7 +59,7 @@ ImageT<int> *relabelOutput (Image &Img, char *labelname, char *descr)
   cout << "Schleife über i" << endl;
 
     // extract one class and prepare it for labelling
-    for (int j = 0; j < Img.sizeImage (); ++j, ++dest, ++orig)
+    for (int j = 0; j < Img.noPixels (); ++j, ++dest, ++orig)
       if (*orig == i)
         *dest = 0;
       else
@@ -75,7 +75,7 @@ ImageT<int> *relabelOutput (Image &Img, char *labelname, char *descr)
     // shift the labels, so that they are unique (fusion)
     source = tmp_img.data();
     dest = result_img->data();
-    for (int j = 0; j < tmp_img.sizeImage(); ++j, ++dest, ++source) {
+    for (int j = 0; j < tmp_img.noPixels(); ++j, ++dest, ++source) {
       // if the label is not background or border (-2), add it to the result
       if (*source > 1)
         *dest = *source - 2 + sumlabel[i - 1];
@@ -139,14 +139,14 @@ int combine (Image *in, Image &mask, char* eval_name, char* path)
 	 {
 	   for (int x = 0; x < sx; x ++)
 	     {
-	       c = mask.getInt(x, y, 0);
+	       c = mask.getPixel(x, y, 0);
 	       if (c)
 		 {
 		   refclasses[c] ++;
-		   if (in[l].getInt(x, y, 0) == c)
+		   if (in[l].getPixel(x, y, 0) == c)
 		     classes[c] ++;
 		   else
-		     falseclasses[in[l].getInt(x, y, 0)] ++;
+		     falseclasses[in[l].getPixel(x, y, 0)] ++;
 		 }
 	     }
 	 }
@@ -196,8 +196,8 @@ int combine (Image *in, Image &mask, char* eval_name, char* path)
      {
        memset(classes_f, 0, sizeof(float) * (CLASSES + 1));
        for (int l = 0; l < MAX_LEVEL; l ++)
-	 classes_f[in[l].getInt(x, y, 0)] += class_level_weight[in[l].getInt(x, y, 0)][l];
-       //	 classes_f[in[l].getInt(x, y, 0)] += 1.0;
+	 classes_f[in[l].getPixel(x, y, 0)] += class_level_weight[in[l].getPixel(x, y, 0)][l];
+       //	 classes_f[in[l].getPixel(x, y, 0)] += 1.0;
 	
        max = 0;
        imax = 0;
@@ -223,7 +223,7 @@ int combine (Image *in, Image &mask, char* eval_name, char* path)
    for (int y = 0; y < out.sizeY(); y ++)
      for (int x = 0; x < out.sizeX(); x ++)
      {
-       label.set(x, y, out.getInt(x, y, 0));
+       label.set(x, y, out.getPixel(x, y, 0));
      }
 
    cout << "despeckle, " << endl;
@@ -241,7 +241,7 @@ int combine (Image *in, Image &mask, char* eval_name, char* path)
    for (int y = 0; y < label.sizeY(); y ++)
      for (int x = 0; x < label.sizeX(); x ++)
      {
-     valf= label.getFloat(x, y, 0);
+     valf= label.getPixel(x, y, 0);
      if (valf)
 	  labelf.set(x, y, valf);
         else
@@ -292,8 +292,8 @@ int compose_result (Image *in, char* eval_name, char* regdes_name, char *outimg_
      {
        memset(classes_f, 0, sizeof(float) * (CLASSES + 1));
        for (int l = 0; l < MAX_LEVEL; l ++)
-	    classes_f[in[l].getInt(x, y, 0)] += class_level_weight[in[l].getInt(x, y, 0)][l];
-       //	 classes_f[in[l].getInt(x, y, 0)] += 1.0;
+	    classes_f[in[l].getPixel(x, y, 0)] += class_level_weight[in[l].getPixel(x, y, 0)][l];
+       //	 classes_f[in[l].getPixel(x, y, 0)] += 1.0;
 	
        max = 0;
        imax = 0;
@@ -319,7 +319,7 @@ int compose_result (Image *in, char* eval_name, char* regdes_name, char *outimg_
    for (int y = 0; y < out.sizeY(); y ++)
      for (int x = 0; x < out.sizeX(); x ++)
      {
-       label.set(x, y, out.getInt(x, y, 0));
+       label.set(x, y, out.getPixel(x, y, 0));
      }
 
    cout << "despeckle, " << endl;
@@ -332,7 +332,7 @@ int compose_result (Image *in, char* eval_name, char* regdes_name, char *outimg_
    for (int y = 0; y < label.sizeY(); y ++)
      for (int x = 0; x < label.sizeX(); x ++)
      {
-       valf = label.getFloat(x, y, 0);
+       valf = label.getPixel(x, y, 0);
        if (valf)
 	 labelf.set(x, y, valf);
        else

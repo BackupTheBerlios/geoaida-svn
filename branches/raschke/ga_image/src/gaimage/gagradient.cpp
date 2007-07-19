@@ -51,29 +51,29 @@ Image gradient2D(const Image &pic, int channel)
 
   for (int y=0; y<sizey-1; y++)
     for (int x=0; x<sizex-1; x++) {
-      float p11=pic.getFloat(x,y);
-      float p21=pic.getFloat(x+1,y);
-      float p12=pic.getFloat(x,y+1);
-      float p22=pic.getFloat(x+1,y+1);
+      float p11=pic.getPixel(x,y);
+      float p21=pic.getPixel(x+1,y);
+      float p12=pic.getPixel(x,y+1);
+      float p22=pic.getPixel(x+1,y+1);
       if (isnan(p11) || isnan(p21) || isnan(p12) || isnan(p22)) {
-        result.set(x,y,NAN);
+        result.setPixel(x,y,NAN);
         continue;
       }
       double l1=p22-p11;
       double l2=p21-p12;
-      result.set(x,y,hypot(l1,l2),0);
+      result.setPixel(x,y,hypot(l1,l2),0);
       double angle=atan2(l1,l2);
       angle-=M_PI_4;
       if (angle<-M_PI) angle+=2*M_PI;
-      result.set(x,y,angle,1);
+      result.setPixel(x,y,angle,1);
     }
   for (int x=0; x<sizex; x++) {
-    result.set(x,sizey-1,NAN,0);
-    result.set(x,sizey-1,NAN,1);
+    result.setPixel(x,sizey-1,NAN,0);
+    result.setPixel(x,sizey-1,NAN,1);
   }
   for (int y=0; y<sizey; y++) {
-    result.set(sizex-1,y,NAN,0);
-    result.set(sizex-1,y,NAN,1);
+    result.setPixel(sizex-1,y,NAN,0);
+    result.setPixel(sizex-1,y,NAN,1);
   }
   return result;
 }
@@ -87,35 +87,35 @@ Image gradient2D3Channels(const Image &pic)
 
   for (int x=0; x<sizex-1; x++)
     for (int y=0; y<sizey; y++) {
-      float p11r=pic.getFloat(x  ,y  ,0);
-      float p12r=pic.getFloat(x  ,y+1,0);
-      float p21r=pic.getFloat(x+1,y  ,0);
-      float p22r=pic.getFloat(x+1,y+1,0);
-      float p11g=pic.getFloat(x  ,y  ,1);
-      float p12g=pic.getFloat(x  ,y+1,1);
-      float p21g=pic.getFloat(x+1,y  ,1);
-      float p22g=pic.getFloat(x+1,y+1,1);
-      float p11b=pic.getFloat(x  ,y  ,2);
-      float p12b=pic.getFloat(x  ,y+1,2);
-      float p21b=pic.getFloat(x+1,y  ,2);
-      float p22b=pic.getFloat(x+1,y+1,2);
+      float p11r=pic.getPixel(x  ,y  ,0);
+      float p12r=pic.getPixel(x  ,y+1,0);
+      float p21r=pic.getPixel(x+1,y  ,0);
+      float p22r=pic.getPixel(x+1,y+1,0);
+      float p11g=pic.getPixel(x  ,y  ,1);
+      float p12g=pic.getPixel(x  ,y+1,1);
+      float p21g=pic.getPixel(x+1,y  ,1);
+      float p22g=pic.getPixel(x+1,y+1,1);
+      float p11b=pic.getPixel(x  ,y  ,2);
+      float p12b=pic.getPixel(x  ,y+1,2);
+      float p21b=pic.getPixel(x+1,y  ,2);
+      float p22b=pic.getPixel(x+1,y+1,2);
 
       float l1=sqrt(sqr(p22r-p11r)+sqr(p22g-p11g)+sqr(p22b-p11b));
       float l2=sqrt(sqr(p21r-p12r)+sqr(p21g-p12g)+sqr(p21b-p12b));
-      result.set(x,y,hypot(l1,l2),0);
+      result.setPixel(x,y,hypot(l1,l2),0);
       float angle=atan2(l1,l2);
       angle-=M_PI_4;
       if (angle<-M_PI) angle+=2*M_PI;
-      result.set(x,y,angle,1);
+      result.setPixel(x,y,angle,1);
 
     }
   for (int x=0; x<sizex; x++) {
-    result.set(x,sizey-1,NAN,0);
-    result.set(x,sizey-1,NAN,1);
+    result.setPixel(x,sizey-1,NAN,0);
+    result.setPixel(x,sizey-1,NAN,1);
   }
   for (int y=0; y<sizey; y++) {
-    result.set(sizex-1,y,NAN,0);
-    result.set(sizex-1,y,NAN,1);
+    result.setPixel(sizex-1,y,NAN,0);
+    result.setPixel(sizex-1,y,NAN,1);
   }
   return result;
 #undef sqr
@@ -130,18 +130,18 @@ Image gradient2DhsvMax(const Image &pic)
 
   for (int x=0; x<sizex-1; x++)
     for (int y=0; y<sizey; y++) {
-      float p11h=pic.getFloat(x  ,y  ,0);
-      float p12h=pic.getFloat(x  ,y+1,0);
-      float p21h=pic.getFloat(x+1,y  ,0);
-      float p22h=pic.getFloat(x+1,y+1,0);
-      float p11s=pic.getFloat(x  ,y  ,1);
-      float p12s=pic.getFloat(x  ,y+1,1);
-      float p21s=pic.getFloat(x+1,y  ,1);
-      float p22s=pic.getFloat(x+1,y+1,1);
-      float p11v=pic.getFloat(x  ,y  ,2);
-      float p12v=pic.getFloat(x  ,y+1,2);
-      float p21v=pic.getFloat(x+1,y  ,2);
-      float p22v=pic.getFloat(x+1,y+1,2);
+      float p11h=pic.getPixel(x  ,y  ,0);
+      float p12h=pic.getPixel(x  ,y+1,0);
+      float p21h=pic.getPixel(x+1,y  ,0);
+      float p22h=pic.getPixel(x+1,y+1,0);
+      float p11s=pic.getPixel(x  ,y  ,1);
+      float p12s=pic.getPixel(x  ,y+1,1);
+      float p21s=pic.getPixel(x+1,y  ,1);
+      float p22s=pic.getPixel(x+1,y+1,1);
+      float p11v=pic.getPixel(x  ,y  ,2);
+      float p12v=pic.getPixel(x  ,y+1,2);
+      float p21v=pic.getPixel(x+1,y  ,2);
+      float p22v=pic.getPixel(x+1,y+1,2);
 
       double l1=p22h-p11h;
       double l2=p21h-p12h;
@@ -175,19 +175,19 @@ Image gradient2DhsvMax(const Image &pic)
         vabs=sabs;
         vangle=sangle;
       }
-      result.set(x,y,vabs,0);
+      result.setPixel(x,y,vabs,0);
       vangle-=M_PI_4;
       if (vangle<-M_PI) vangle+=2*M_PI;
-      result.set(x,y,vangle,1);
+      result.setPixel(x,y,vangle,1);
 
     }
   for (int x=0; x<sizex; x++) {
-    result.set(x,sizey-1,NAN,0);
-    result.set(x,sizey-1,NAN,1);
+    result.setPixel(x,sizey-1,NAN,0);
+    result.setPixel(x,sizey-1,NAN,1);
   }
   for (int y=0; y<sizey; y++) {
-    result.set(sizex-1,y,NAN,0);
-    result.set(sizex-1,y,NAN,1);
+    result.setPixel(sizex-1,y,NAN,0);
+    result.setPixel(sizex-1,y,NAN,1);
   }
   return result;
 #undef sqr

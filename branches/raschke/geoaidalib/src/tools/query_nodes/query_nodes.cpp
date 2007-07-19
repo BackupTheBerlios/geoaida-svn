@@ -44,7 +44,7 @@ void maskLabelImage(Image& im, GaMaskImage mask) {
 		GaMaskImage::ConstIterator mitEnd=mask.end();
 		void* it=im.begin();
 		for (; mit!=mitEnd; mask.nextCol(mit), im.nextCol(it)) {
-			if (!mask.getInt(mit)) {
+			if (!mask.getPixel(mit)) {
 				im.set(it,0.0);
 			}
 		}
@@ -72,10 +72,10 @@ bool processRegion(ArgDict& args, GaMaskImage& mask) {
 	DefInt(lly);
 	DefInt(urx);
 	DefInt(ury);
-	if (mask.getFloat(llx,lly,0,false)
-		&& mask.getFloat(llx,ury,0,false)
-		&& mask.getFloat(urx,ury,0,false)
-		&& mask.getFloat(urx,lly,0,false))
+	if (mask.getPixel(llx,lly,0,false)
+		&& mask.getPixel(llx,ury,0,false)
+		&& mask.getPixel(urx,ury,0,false)
+		&& mask.getPixel(urx,lly,0,false))
 		return true;; // Boundingbox is within mask
 
 	// adjust boundingbox to mask
@@ -91,7 +91,7 @@ bool processRegion(ArgDict& args, GaMaskImage& mask) {
 	bool found=false;					
 	for (int y=ury; y<=lly; y++) {
 		for (int x=llx; x<=urx; x++) {
-			if (labelImage->getFloat(x,y,0,0.0)==id) {
+			if (labelImage->getPixel(x,y,0,0.0)==id) {
 				found=true;
 				if (x<nllx) nllx=x;
 				if (x>nurx) nurx=x;

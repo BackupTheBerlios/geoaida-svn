@@ -133,7 +133,7 @@ protected:                     // Protected attributes
     o_;
     struct
     {
-      QString *imageType_;
+      QString *fileType_;
     }
     im_;
   };

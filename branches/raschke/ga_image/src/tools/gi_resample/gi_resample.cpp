@@ -135,9 +135,9 @@ int main(int argc, char **argv)
     printf("New   min/max: %f %f\n",newMin,newMax);
     float f=(max-min)/(newMax-newMin);
     void *ptr=im.begin();
-    int size=im.sizeImage();
+    int size=im.noPixels();
     for (int i=0; i<size; i++) {
-      float v=im.getFloat(ptr);
+      float v=im.getPixel(ptr);
       v=(v-newMin)*f+min;
       im.set(ptr,v);
       im.nextCol(ptr);

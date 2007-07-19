@@ -27,7 +27,7 @@
 
 namespace Ga {
   
-// File-local helper functions.
+// File-local helper functions regarding IMGTYPEs.
 namespace {
   const std::type_info& pixTypeOfImgType(IMGTYPE type)
   {
@@ -50,6 +50,41 @@ namespace {
     if (type == _PPM)
       return 3;
     return 1;
+  }
+
+  IMGTYPE readImageType(FILE *fp,int* cols, int* rows) {
+      int pxmtype;
+      IMGTYPE type=_UNKNOWN;
+      int c, r;
+      float minval,maxval;
+      long pos=ftell(fp);
+      if (pfm_readpfm_header(fp, &c, &r, &minval, &maxval, &pxmtype))
+  	type=(IMGTYPE)pxmtype;
+      fseek(fp,pos,SEEK_SET);
+      if (type==_UNKNOWN) {
+  	xelval max_x;
+  	pnm_readpnminit(fp, &c, &r, &max_x, &pxmtype);
+  	fseek(fp,pos,SEEK_SET);
+  	if (pxmtype == PBM_FORMAT || pxmtype == RPBM_FORMAT ||
+  	    pxmtype == PPM_FORMAT || pxmtype == RPPM_FORMAT ) {
+  	    switch(pxmtype) {
+  		case PBM_FORMAT:
+  		case RPBM_FORMAT:
+  		    type=_PBM;
+  		    break;
+  		case PGM_FORMAT:
+  		case RPGM_FORMAT:
+  		    type=_PGM;
+  		    break;
+  		case PPM_FORMAT:
+  		case RPPM_FORMAT:
+  		    type=_PPM;
+  	    }
+    	}
+      }
+      if (cols) *cols=c;
+      if (rows) *rows=r;
+      return type;
   }
 }
 
@@ -82,28 +117,26 @@ Image::Image(const std::string& filename)
   {  
     int cols,rows;
     IMGTYPE type=readImageType(fp,&cols,&rows);
-    // Use other constructor to create image representation    
+    // Use other constructor to create image representation.
+    // (This looks strange, but if you think about it, swap() is a great tool. -- jlnr)
     Image(pixTypeOfImgType(type), cols, rows, channelsOfImgType(type)).swap(*this);
   	if (!pImage()->read(fp))
       throw std::runtime_error("Couldn't load image " + filename);
-    if (isEmpty())
+    // I've seen all the gi_ tools check for empty images, so I just moved this here. -- jlnr
+    if (sizeX() == 0 || sizeY() == 0)
       throw std::runtime_error("Image " + filename + " is empty");
   }
   catch (...)
   {
     fclose(fp);
+    delete pImage_;
     throw;
   }
 }
 
-/** copy constructor: defining and initialize from a matrix
-    usage: \code Image A = B; Image A = B + 2 * C; return A \endcode */
 Image::Image(const Image& rhs)
 {
-  if (rhs.pImage_)
-    pImage_ = rhs.pImage_->copyObject();
-  else
-    pImage_=0;
+  pImage_ = rhs.pImage_->copyObject();
 }
 
 Image& Image::operator=(const Image& rhs)
@@ -123,28 +156,47 @@ void Image::swap(Image& other)
   std::swap(pImage_, other.pImage_);
 }
 
+ImageBase* Image::pImage() const {
+  return pImage_;
+}
+
 const class std::type_info& Image::typeId() const {
-  assert(pImage_!=0);
   return pImage_->typeId();
 }
 
-IMGTYPE Image::typeImage() const {
-  assert(pImage_!=0);
-  return pImage_->typeImage();
+int Image::sizeX() const {
+  if (pImage_) return pImage_->sizeX();
+  else return 0;
 }
 
-void Image::typeImage(IMGTYPE t) {
-  assert(pImage_);
-  pImage_->typeImage(t);
+int Image::sizeY() const {
+  if (pImage_) return pImage_->sizeY();
+  else return 0;
 }
 
-#undef GenClasses
-#undef GenClassesIf
+int Image::noPixels() const {
+  if (pImage_) return pImage_->noPixels();
+  return 0;
+}
+	
+int Image::noChannels() const {
+  if (pImage_) return pImage_->noChannels();
+  else return 0;
+}
 
-bool Image::isEmpty() const {
-  if (pImage_==0) return true;
-  if (sizeX()==0 || sizeY()==0) return true;
-  return false;
+Image Image::getChannel(int channel)
+{
+  Image result(typeId());
+  pImage()->getChannel(*result.pImage(),channel);
+  return result;
+}
+
+IMGTYPE Image::fileType() const {
+  return pImage_->fileType();
+}
+
+void Image::setFileType(IMGTYPE t) {
+  pImage_->setFileType(t);
 }
 
 bool Image::read(const char* filename) {
@@ -157,65 +209,30 @@ bool Image::read(const char* filename) {
   return true;
 }
 
-IMGTYPE Image::readImageType(FILE *fp,int* cols, int* rows) {
-    int pxmtype;
-    IMGTYPE type=_UNKNOWN;
-    int c, r;
-    float minval,maxval;
-    long pos=ftell(fp);
-    if (pfm_readpfm_header(fp, &c, &r, &minval, &maxval, &pxmtype))
-	type=(IMGTYPE)pxmtype;
-    fseek(fp,pos,SEEK_SET);
-    if (type==_UNKNOWN) {
-	xelval max_x;
-	pnm_readpnminit(fp, &c, &r, &max_x, &pxmtype);
-	fseek(fp,pos,SEEK_SET);
-	if (pxmtype == PBM_FORMAT || pxmtype == RPBM_FORMAT ||
-	    pxmtype == PPM_FORMAT || pxmtype == RPPM_FORMAT ) {
-	    switch(pxmtype) {
-		case PBM_FORMAT:
-		case RPBM_FORMAT:
-		    type=_PBM;
-		    break;
-		case PGM_FORMAT:
-		case RPGM_FORMAT:
-		    type=_PGM;
-		    break;
-		case PPM_FORMAT:
-		case RPPM_FORMAT:
-		    type=_PPM;
-	    }
-  	}
-    }
-    if (cols) *cols=c;
-    if (rows) *rows=r;
-    return type;
-}
-
 void Image::write(const char* filename, int channel) {
   FILE *fp=fopen(filename,"w");
-  assert(fp);	
-  write(fp, channel);
+  if (!fp)
+    throw std::runtime_error(std::string("Couldn't write to file ") + filename);
+  pImage()->write(fp, channel, 0);
   fclose(fp);
 }
 
-void Image::write(FILE *fp, int channel) {
-  assert(pImage_);
-  assert(fp);
-  pImage()->write(fp, channel, 0);
+double Image::getPixel(int x, int y, int channel) const
+{
+  return pImage_->getPixelAsDouble(x,y,channel);
 }
 
-void Image::set(int x, int y, double val, int channel, bool clip) {
-  assert(pImage_);
-  return pImage_->setFloat(x,y,val,channel,clip);
-};
+void Image::setPixel(int x, int y, double val, int channel, bool clip) {
+  return pImage_->setPixelToDouble(x, y, val, channel, clip);
+}
 
+void Image::fill(double value) {
+  pImage_->fill(value);
+}
 
 void Image::fillRow(int row, int startX, int endX, double val, int channel, bool clip)
 {
-  throw "NYI";
-  /*assert(pImage_);
-  assert(channel<noChannels());
+  /* TODO
   if (clip) {
     if ((row<0) || (row>=sizeY())) return;
     if (startX<=0) startX=0;
@@ -224,155 +241,36 @@ void Image::fillRow(int row, int startX, int endX, double val, int channel, bool
   pImage_->fillRow(begin(row,channel),startX,endX,val);*/
 }
 
-//------------------------------ Access of matrix data ----------------------
-int Image::sizeX() const {
-  if (pImage_) return pImage_->sizeX();
-  else return 0;
-}
 
-int Image::sizeY() const {
-  if (pImage_) return pImage_->sizeY();
-  else return 0;
-}
 
-int Image::sizeImage() const {
-  if (pImage_) return pImage_->sizeImage();
-  return 0;
-}
-	
-int Image::noChannels() const {
-  if (pImage_) return pImage_->noChannels();
-  else return 0;
-}
 
-double Image::getFloat(int x, int y, int channel) const
+
+
+double Image::findMaxValue(int channel) const
 {
-  assert(pImage_!=0);
-  return pImage_->getFloat(x,y,channel,0);
+  return pImage_->findMaxValue(channel);
 }
 
-double Image::findMaxValue(int& x, int& y, int channel)
+double Image::findMinValue(int channel) const
 {
-  return pImage_->findMaxValue(x,y,channel);
+  return pImage_->findMinValue(channel);
 }
 
-double Image::findMaxValue(int channel)
-{
-  int x, y;
-  return pImage_->findMaxValue(x,y,channel);
-}
-
-double Image::findMinValue(int& x, int& y, int channel)
-{
-  return pImage_->findMinValue(x,y,channel);
-}
-
-double Image::findMinValue(int channel)
-{
-  int x, y;
-  return pImage_->findMinValue(x, y, channel);
-}
-
-void Image::fill(double value) {
-  assert(pImage_!=0);
-  pImage_->fill(value);
-}
-
-/** set a pixel */
-void Image::set(int x, int y, int val, int channel) {
-  assert(pImage_!=0);
-  pImage()->setInt(x,y,val,channel);
-}
-
-/** set a pixel */
-void Image::set(void *ptr, int val) {
-  assert(pImage_!=0);
-  pImage()->setInt(ptr,val);
-}
-
-/** get a pixel */
-int Image::getInt(int x, int y, int channel) const {
-  assert(pImage_!=0);
-  return pImage()->getInt(x,y,channel);
-}
-
-/** get a pixel */
-int Image::getInt(int x, int y, int channel, int neutral) const {
-  assert(pImage_!=0);
-  return pImage()->getInt(x,y,channel,neutral);
-}
-
-/** get a pixel */
-int Image::getInt(const void *ptr) const {
-  assert(pImage_!=0);
-  return pImage()->getInt(ptr);
-}
-
-//------------------------------ Iterators ----------------------
-void* Image::begin(int row, int channel)  {
-  assert(pImage_);
-  return pImage_->beginVoid(row,channel);
+Image::Iterator Image::begin(int row, int channel)  {
+  return Iterator(*this, channel, row * sizeX());
 };
 
-const void* Image::constBegin(int row, int channel) const {
-  assert(pImage_);
-  return pImage_->constBeginVoid(row,channel);
+Image::ConstIterator Image::constBegin(int row, int channel) const {
+  return ConstIterator(*this, channel, row * sizeX());
 };
 
-const void* Image::end(int row, int channel) const {
-  assert(pImage_);
-  return pImage_->endVoid(row,channel);
+Image::ConstIterator Image::end(int row, int channel) const {
+  return constBegin(row + 1, channel);
 };
 
-
-const void* Image::end() const {
-  assert(pImage_);
-  return pImage_->endVoid();
+Image::ConstIterator Image::end() const {
+  return constBegin(sizeY(), 0);
 };
-
-
-double Image::getFloat(const void *it) const {
-  assert(pImage_);
-  return pImage_->getFloat(it);
-};
-
-
-void Image::set(void* it, double val) {
-  assert(pImage_);
-  return pImage_->setFloat(it,val);
-};
-
-
-void Image::nextCol(const void*& ptr) const {
-  assert(pImage_);
-  pImage_->nextCol(ptr);
-}
-
-void Image::nextCol(void*& ptr) const {
-  assert(pImage_);
-  pImage_->nextCol((const void*&)ptr);
-}
-
-void Image::nextCol(const void*& ptr, int offset) const {
-  assert(pImage_);
-  pImage_->nextCol(ptr,offset);
-}
-
-void Image::nextCol(void*& ptr, int offset) const {
-  assert(pImage_);
-  pImage_->nextCol((const void*&)ptr,offset);
-}
-
-Image Image::getChannel(int channel)
-{
-  Image result(typeId());
-  pImage()->getChannel(*result.pImage(),channel);
-  return result;
-}
-
-ImageBase* Image::pImage() const {
-  return pImage_;
-}
 
 } // namespace Ga
 

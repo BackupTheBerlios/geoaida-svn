@@ -248,7 +248,7 @@ int main(int argc, char *argv[])
   //for (ConstIterator pix = out_img.constBegin(); pix != out_img.end(); out_img.nextCol(pix)) {
   for (y=0;y<newY;y++)//calculate the new values of the label
     for (x=0;x<newX;x++) {
-    val = out_img.getInt(pix);
+    val = out_img.getPixel(pix);
     if(val>0) {
       (infolist[val])->add(x,y);
     }
@@ -317,9 +317,9 @@ int main(int argc, char *argv[])
 
   {
     for (Iterator pix = out_img.begin(); pix != out_img.end(); out_img.nextCol(pix)) {
-      if (out_img.getInt(pix))
+      if (out_img.getPixel(pix))
       out_img.set(pix,vec[1]);
-      //out_img.set(pix,vec[out_img.getInt(pix)]);
+      //out_img.set(pix,vec[out_img.getPixel(pix)]);
     }
     out_img.write(outgimg);
   }

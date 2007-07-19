@@ -1,9 +1,10 @@
 /***************************************************************************
-                          GaImageT.hpp  -  geoAIDA template image class
+                          gaimaget.hpp  -  GeoAIDA template impl.
                              -------------------
     begin                : Thu Jan 11 2001
     copyright            : (C) 2001 TNT, Uni Hannover
-    authors              : Jürgen Bückner, Oliver Stahlhut, Martin Pahl
+    authors              : Jürgen Bückner, Oliver Stahlhut, Martin Pahl,
+                           Julian Raschke
     email                : bueckner@tnt.uni-hannover.de
  ***************************************************************************/
 
@@ -17,61 +18,52 @@
  ***************************************************************************/
 
 #include <stdarg.h>
+
 namespace Ga {
-  template <class PixTyp>
-  ImageT<PixTyp>::ImageT (const ImageT<PixTyp>& rval) 
-    : ImageBase(rval) {
-    noChannels_=rval.noChannels_;
-    for (int c=0; c<noChannels_; c++) {
-      pChannel_[c]=rval.pChannel_[c]->shallowCopy();
-    }
-    typeImage(rval.typeImage());
-  }
+template <class PixTyp>
+double ImageT<PixTyp>::getPixelAsDouble(int x, int y, int channel, double neutral) const {
+  return getPixel(x, y, channel, neutral);
+}
 
-  template <class PixTyp>
-  ImageT<PixTyp>::ImageT(int x, int y, int noChannels) : ImageBase() {
-    std::fill(pChannel_, pChannel_ + GA_MAX_CHANNELS, (Array2DT<PixTyp>*) 0);
-    initialize( x, y, noChannels );
-  }
+template <class PixTyp>
+void ImageT<PixTyp>::setPixelToDouble(int x, int y, double val, int channel, bool clip) {
+  setPixel(x, y, val, channel, clip);
+}
 
-  /** destructor */
-  template <class PixTyp>
-  ImageT<PixTyp>::~ImageT(void)
-  {
-    for (int c=0; c<noChannels_; c++)
-      if (pChannel_[c]) pChannel_[c]=pChannel_[c]->unlink();
-  }
+template <class PixTyp>
+ImageT<PixTyp>::ImageT(int x, int y, int noChannels) : ImageBase() {
+  std::fill(pChannel_, pChannel_ + GA_MAX_CHANNELS, (Array2DT<PixTyp>*) 0);
+  initialize( x, y, noChannels );
+}
 
-  template <class PixTyp>
-  ImageT<PixTyp>& ImageT<PixTyp>::operator= (const ImageT<PixTyp>& rval) {
-    if (this == &rval)
-      return *this;
-    ImageT<PixTyp>(rval).swap(*this);
+template <class PixTyp>
+ImageT<PixTyp>::ImageT (const ImageT<PixTyp>& rval) 
+  : ImageBase(rval) {
+  noChannels_=rval.noChannels_;
+  for (int c=0; c<noChannels_; c++) {
+    pChannel_[c]=rval.pChannel_[c]->shallowCopy();
+  }
+  setFileType(rval.fileType());
+}
+
+template <class PixTyp>
+ImageT<PixTyp>::~ImageT()
+{
+  for (int c=0; c<noChannels(); c++)
+    if (pChannel_[c]) pChannel_[c]=pChannel_[c]->unlink();
+}
+
+template <class PixTyp>
+ImageT<PixTyp>& ImageT<PixTyp>::operator= (const ImageT<PixTyp>& rval) {
+  if (this == &rval)
     return *this;
-  }
+  ImageT<PixTyp>(rval).swap(*this);
+  return *this;
+}
 	
 template <class PixTyp>
 ImageBase* ImageT<PixTyp>::copyObject() {
   return new ImageT(*this);
-}
-
-template <class PixTyp>
-void ImageT<PixTyp>::partCopy(const ImageBase &rvalue, int x0, int y0, int width, int height) {
-  const ImageT& rval=(const ImageT&)rvalue;
-  assert(width >= 0);
-  assert(width < rval.sizeX_ - x0);
-  assert(height >= 0);
-  assert(height < rval.sizeY_ - y0);
-  assert(x0 >= 0);
-  assert(x0 < rval.sizeX_);
-  assert(y0 >= 0);
-  assert(y0 < rval.sizeY_);
-  
-  resize(width, height, rval.noChannels());
-  typeImage(rval.typeImage());
-  for (int c=0; c<noChannels_; c++)
-    for( int row = 0; row < sizeY_; row++ )
-      memcpy( begin(row,c), rval.constBegin(row + y0,c) + x0, sizeX_ * sizeof(PixTyp) );
 }
 
 template <class PixTyp>
@@ -87,6 +79,43 @@ template <class PixTyp>
 int ImageT<PixTyp>::noChannels() const {
   return noChannels_;
 }
+
+template <class PixTyp>
+PixTyp ImageT<PixTyp>::getPixel(int x, int y, int channel, PixTyp neutral) const {
+  assert(channel>=0);
+  assert(channel<noChannels_);
+  assert(pChannel_[channel]!=0);
+  if ((x>=0) && (x<sizeX_) && (y>=0) && (y<sizeY_))
+    return constBegin(y,channel)[x];
+  else return neutral;
+}
+
+template <class PixTyp>
+void ImageT<PixTyp>::partCopy(const ImageBase &rvalue, int x0, int y0, int width, int height) {
+  const ImageT& rval=(const ImageT&)rvalue;
+  assert(width >= 0);
+  assert(width < rval.sizeX_ - x0);
+  assert(height >= 0);
+  assert(height < rval.sizeY_ - y0);
+  assert(x0 >= 0);
+  assert(x0 < rval.sizeX_);
+  assert(y0 >= 0);
+  assert(y0 < rval.sizeY_);
+  
+  resize(width, height, rval.noChannels());
+  setFileType(rval.fileType());
+  for (int c=0; c<noChannels_; c++)
+    for( int row = 0; row < sizeY_; row++ )
+      memcpy( begin(row,c), rval.constBegin(row + y0,c) + x0, sizeX_ * sizeof(PixTyp) );
+}
+
+
+
+
+
+
+
+
 
 /** return pointer to the beginning of data
     usage: \code Iterator dp = M.begin(row); \endcode */
@@ -146,23 +175,6 @@ const void* ImageT<PixTyp>::constBeginVoid(int row, int channel) const {
 	
 	
 	
-/** retrieve the value of an matrix element
-    usage: \code PixTyp x = A.getFloat( 3, 5 ); \endcode */
-template <class PixTyp>
-PixTyp ImageT<PixTyp>::get(int x, int y, int channel, PixTyp neutral) const {
-  assert(channel>=0);
-  assert(channel<noChannels_);
-  assert(pChannel_[channel]!=0);
-  if ((x>=0) && (x<sizeX_) && (y>=0) && (y<sizeY_))
-    return constBegin(y,channel)[x];
-  else return neutral;
-}
-
-template <class PixTyp>
-double ImageT<PixTyp>::getFloat(int x, int y, int channel, double neutral) const {
-  return get(x,y,channel,PixTyp(neutral));
-}
-	
 
 /** assign and retrieve matrix values
     usage: \code PixTyp x = A( 1, 5 ); A( 3, 7 ) = 5; \endcode */
@@ -184,7 +196,7 @@ PixTyp& ImageT<PixTyp>::operator () (int x, int y, int channel) {
     \param y y of element (row)
     \param val value to set element to */
 template <class PixTyp>
-void ImageT<PixTyp>::set(int x, int y, PixTyp val, int channel, bool clip) {
+void ImageT<PixTyp>::setPixel(int x, int y, PixTyp val, int channel, bool clip) {
   	assert(channel>=0);
   	assert(channel<noChannels_);
   	assert(pChannel_[channel]!=0);
@@ -203,16 +215,6 @@ void ImageT<PixTyp>::set(int x, int y, PixTyp val, int channel, bool clip) {
     	assert(y<sizeY_);
       begin(y,channel)[x] = val;
     }
-}
-
-template <class PixTyp>
-void ImageT<PixTyp>::setFloat(int x, int y, double val, int channel, bool clip) {
-  set(x,y,PixTyp(val),channel,clip);
-}
-
-template <class PixTyp>
-double ImageT<PixTyp>::getFloat(const void *it) const {
-	return (double)(*(PixTyp*)it);
 }
 
 template <class PixTyp>
@@ -247,12 +249,12 @@ void* ImageT<PixTyp>::nextCol(const void*& ptr) const {
 /** Maximum element value of a ImageT
     usage: \code  PixTyp xmax = A.Max( channel=0 ); PixTyp xmax = A.Max( x, y, channel=0 ); \endcode */
 template <class PixTyp>
-double ImageT<PixTyp>::findMaxValue(int& x, int& y, int channel) {
+double ImageT<PixTyp>::findMaxValue(int channel) {
   ConstIterator index = constBegin(0, channel);
   PixTyp max = *index;
   unsigned int e = 0;
 
-  for(unsigned int i = 1; i < sizeImage(); i++) {
+  for(unsigned int i = 1; i < noPixels(); i++) {
     if (max < *index) {
       max = *index;
       e = i;
@@ -260,16 +262,13 @@ double ImageT<PixTyp>::findMaxValue(int& x, int& y, int channel) {
     ++ index;
   }
 
-  y = e / sizeX_;
-  x = e % sizeX_;
-
   return max;
 }
 
 /** Minimum of a ImageT
     usage: \code PixTyp xmin = A.Min( channel=0 ); \endcode */
 template <class PixTyp>
-double ImageT<PixTyp>::findMinValue(int& x, int& y, int channel) {
+double ImageT<PixTyp>::findMinValue(int channel) {
 #if 0
   if(nSize_ < 0)
     return *(begin());
@@ -279,16 +278,13 @@ double ImageT<PixTyp>::findMinValue(int& x, int& y, int channel) {
   PixTyp min = *index;
   unsigned int e = 0;
 
-  for(unsigned int i = 1; i < sizeImage(); i++) {
+  for(unsigned int i = 1; i < noPixels(); i++) {
     if (min > *index) {
       min = *index;
       e = i;
     }
     ++ index;
   }
-
-  y = e / sizeX_;
-  x = e % sizeX_;
 
   return min;
   }
@@ -311,7 +307,7 @@ void ImageT<PixTyp>::initialize( int x, int y, int noChannels ) {
     }
     pChannel_[c]=new Array2DT<PixTyp>(sizeX_, sizeY_);
   }
-  imageType_ = _UNKNOWN;
+  setFileType(_UNKNOWN);
 }
 
 /** prepare assignments; Preparing an assignment by adjusting "this" */
@@ -325,17 +321,10 @@ void ImageT<PixTyp>::fill(double value) {
   for (int c=0; c<noChannels_; c++) {
     assert(pChannel_[c]!=0);
     Iterator w=begin(0,c);
-    for(unsigned int i = sizeImage() - 1; i; i--, w ++)
+    for(unsigned int i = noPixels() - 1; i; i--, w ++)
       *w = value;
     *w = value;
   }	
-}
-
-/** Returns the size of one element */
-template <class PixTyp>
-int ImageT<PixTyp>::elemSize()
-{
-  return sizeof(PixTyp);
 }
 
 /** set a pixel  */
@@ -347,28 +336,9 @@ void ImageT<PixTyp>::setInt(void *ptr, int val) {
 
 /** set a pixel  */
 template <class PixTyp>
-void ImageT<PixTyp>::setInt(int x, int y, int val, int channel) {
-  Iterator p=begin(y,channel)+x;
-  setInt(p,val);
-}
-
-/** set a pixel  */
-template <class PixTyp>
 int ImageT<PixTyp>::getInt(const void *ptr) const {
   PixTyp *p=(PixTyp*)ptr;
   return int(*p);
-}
-
-/** set a pixel  */
-template <class PixTyp>
-int ImageT<PixTyp>::getInt(int x, int y, int channel) const {
-  ConstIterator p=constBegin(y,channel)+x;
-  return getInt(p);
-}
-
-template <class PixTyp>
-int ImageT<PixTyp>::getInt(int x, int y, int channel, int neutral) const {
-  return int(get(x,y,channel,neutral));
 }
 
 template <class PixTyp>
@@ -393,8 +363,6 @@ void ImageT<PixTyp>::maxValue(ImageBase &inImg, float value) {
     }
 }
 
-/**
-*/
 template <class PixTyp>
 void ImageT<PixTyp>::minValue(ImageBase &inImg, float value) {
   ImageT<PixTyp>& in=(ImageT<PixTyp>&)inImg;
@@ -406,15 +374,6 @@ void ImageT<PixTyp>::minValue(ImageBase &inImg, float value) {
      if(*elem < val) *elem = val;
       elem++;
     }
-}
-
-template <class PixTyp>
-bool ImageT<PixTyp>::read(const char *filename) {
-	FILE *fp=fopen(filename,"r");
-  if (!fp) return(false);
-  read(fp);
-  fclose(fp);
-	return(true);
 }
 
 template <class PixTyp>
@@ -470,7 +429,7 @@ bool ImageT<PixTyp>::read(FILE *fp) {
   if (noChannels()==3 && storageType==PFM_BYTE) { // PPM
   	type=_PPM;
   }
-	typeImage(type);
+	setFileType(type);
   switch (type) {
   case _PPM: {
   	int cols, rows;
@@ -592,16 +551,7 @@ void ImageT<PixTyp>::setData(int x, int y, void* initvalues) {
 
   PixTyp *w = begin();
   if( sizeY_ != 0 )
-    memcpy( w, initvalues, ( sizeImage() ) * sizeof( PixTyp ) );
-}
-
-template <class PixTyp>
-bool ImageT<PixTyp>::write(const char *filename, int channel, const char* comment) {
-	FILE *fp=fopen(filename,"w");
-  if (!fp) return(false);	
-  write(fp, channel, comment);
-  fclose(fp);
-	return(true);
+    memcpy( w, initvalues, ( noPixels() ) * sizeof( PixTyp ) );
 }
 
 template <class PixTyp>
@@ -633,7 +583,7 @@ bool ImageT<PixTyp>::write(FILE *fp, int channel, const char* comment) {
 	}
 	else fprintf(stderr,"Warning: Unsupport data type\n");
 	
-	switch (typeImage()) {
+	switch (fileType()) {
 		case _PPM: {
 		  PFM3Byte ppmbuffer;
 		  ppmbuffer.r=(unsigned char*)constBegin(0,0);

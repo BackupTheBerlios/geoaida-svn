@@ -34,9 +34,9 @@ void Array2DClose<Value>::close() {
       found=false;
       for (y=ysize()-1; y>=0; y--)
         for (x=0; x<xsize(); x++)
-	        if (isnan(getInt(x,y))) {
+	        if (isnan(get(x,y))) {
             interpolate(x,y);
-  	        if (!isnan(getInt(x,y)))
+  	        if (!isnan(get(x,y)))
   	          fillHole(x,y,0);
             else
               found=true;
@@ -65,11 +65,11 @@ void Array2DClose<Value>::interpolate(int x, int y) {
       int ny=y+offset_y[dir];
       
       if (checkBounds(nx,ny,0,0,xsize()-1,ysize()-1))
-	      if (!isnan(getInt(nx,ny)))
+	      if (!isnan(get(nx,ny)))
 				{
 					if (label_)
 					{
-						int tmpc = (int)getInt(nx,ny);
+						int tmpc = (int)get(nx,ny);
 						for (c = 0; c < cmax; c ++) 
             	if (c_val[c] == tmpc)
 							{
@@ -126,7 +126,7 @@ bool Array2DClose<Value>::nextPoint(int& x,
     int nx=x+offset_x[dir];
     int ny=y+offset_y[dir];
     if (checkBounds(nx,ny,0,0,xsize()-1,ysize()-1))
-      if (isnan(getInt(nx,ny))) {
+      if (isnan(get(nx,ny))) {
 	      x=nx;
 	      y=ny;
 	      return true;;

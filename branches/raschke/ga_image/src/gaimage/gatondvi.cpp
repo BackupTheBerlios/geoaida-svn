@@ -29,13 +29,13 @@ namespace Ga
     const ImageT<PixType>& pic = dynamic_cast<const ImageT<PixType>&>(in);
     
     // TODO: How comes the result image's type is only set in this case...?!
-    if (pic.typeImage()==_PPM)
-      out.typeImage(_PGM);
+    if (pic.fileType()==_PPM)
+      out.setFileType(_PGM);
 
     ImageT<float>::Iterator elem = out.begin();
     typename ImageT<PixType>::ConstIterator pChIR = static_cast<const PixType*>(in.constBeginVoid(0,0));
     typename ImageT<PixType>::ConstIterator pChR = static_cast<const PixType*>(in.constBeginVoid(0,1));
-    for (int i = 0; i < in.sizeImage(); ++i, ++elem, ++pChIR, ++pChR) {
+    for (int i = 0; i < in.noPixels(); ++i, ++elem, ++pChIR, ++pChR) {
       *elem = (float) ( (double)((double) *pChIR - (double) *pChR)/
 			  ((double) *pChIR + (double) * pChR) );
     }

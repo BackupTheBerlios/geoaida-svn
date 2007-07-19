@@ -98,9 +98,9 @@ Ga::Image Ga::gaussianBlur(const Image &source, double sigma)
                 {
                     // Capture scanner inside image bounds.
                     int curX = std::max(std::min(x + i, sizeX - 1), 0);
-                    accum += source.getFloat(curX, y, ch) * mask[i + mirroredPortion];
+                    accum += source.getPixel(curX, y, ch) * mask[i + mirroredPortion];
                 }
-                intermediate.set(x, y, accum, ch);
+                intermediate.setPixel(x, y, accum, ch);
             }
             
     // Vertical convolution.
@@ -114,9 +114,9 @@ Ga::Image Ga::gaussianBlur(const Image &source, double sigma)
                 {
                     // Capture scanner inside image bounds.
                     int curY = std::max(std::min(y + i, sizeY - 1), 0);
-                    accum += intermediate.getFloat(x, curY, ch) * mask[i + mirroredPortion];
+                    accum += intermediate.getPixel(x, curY, ch) * mask[i + mirroredPortion];
                 }
-                result.set(x, y, accum, ch);
+                result.setPixel(x, y, accum, ch);
             }
             
     return result;

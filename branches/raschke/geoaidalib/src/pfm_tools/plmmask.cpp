@@ -54,7 +54,7 @@ int main(int argc, char **argv)
 		const void *it2=im2.constBegin();
  		const void* endIt2=im2.end();
 		for (;it2!=endIt2; im2.nextCol(it2), im1.nextCol(oit1)) {
-			if (im2.getFloat(it2)==0.0) {
+			if (im2.getPixel(it2)==0.0) {
 				im1.set(oit1,0.0);
 			}			
 		}

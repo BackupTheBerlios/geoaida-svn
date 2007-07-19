@@ -22,29 +22,29 @@
 namespace Ga
 {
   template<typename PixType>
-  void toLuminanceT(const ImageBase& in, ImageT<double>& out)
+  void toLuminanceT(const ImageBase& in, ImageT<float>& out)
   {
     assert(in.noChannels()==3);
   
     const ImageT<PixType>& pic = dynamic_cast<const ImageT<PixType>&>(in);
 
     // TODO: How comes the result image's type is only set in this case...?!
-    if (pic.typeImage()==_PPM)
-      out.typeImage(_PGM);
+    if (pic.fileType()==_PPM)
+      out.setFileType(_PGM);
 
-    ImageT<double>::Iterator elem = out.begin();
+    ImageT<float>::Iterator elem = out.begin();
     typename ImageT<PixType>::ConstIterator pChR=pic.constBegin(0,0);
     typename ImageT<PixType>::ConstIterator pChG=pic.constBegin(0,1);
     typename ImageT<PixType>::ConstIterator pChB=pic.constBegin(0,2);
-    for (int i = 0; i < pic.sizeImage(); ++i, ++elem, ++pChR, ++pChG, ++pChB) {
+    for (int i = 0; i < pic.noPixels(); ++i, ++elem, ++pChR, ++pChG, ++pChB) {
       *elem = (*pChR * 0.3 + *pChG * 0.59 + *pChB * 0.11 + 0.5);
     }
   }
 
   Image toLuminance(const Image& img)
   {
-    Image result(typeid(double), img.sizeX(), img.sizeY());
-    ForEachTypeDo(img.typeId(), toLuminanceT, (*img.pImage(), *static_cast<ImageT<double>*>(result.pImage())));
+    Image result(typeid(float), img.sizeX(), img.sizeY());
+    ForEachTypeDo(img.typeId(), toLuminanceT, (*img.pImage(), *static_cast<ImageT<float>*>(result.pImage())));
     return result;
   }
 }

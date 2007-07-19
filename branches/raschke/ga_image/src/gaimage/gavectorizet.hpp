@@ -151,27 +151,27 @@ static Image genLabelPic(const Ga::Image& lpic, const RegDescT &reg, int id)
 #endif
       int ox = x + reg.llx();
       int oy = y + reg.ury();
-      if (lpic.getInt(ox, oy)!=id)
-        pic.set(x, y, 0);
+      if (lpic.getPixel(ox, oy)!=id)
+        pic.setPixel(x, y, 0);
       else {
         int value = 0;
-        //      if ((ox>0) && (oy>0) && (lpic.getInt(ox-1,oy-1)!=region))
+        //      if ((ox>0) && (oy>0) && (lpic.getPixel(ox-1,oy-1)!=region))
         //        value=region;
-        //      if ((ox<sizeX()-1) && (oy>0) && (lpic.getInt(ox+1,oy-1)!=region))
+        //      if ((ox<sizeX()-1) && (oy>0) && (lpic.getPixel(ox+1,oy-1)!=region))
         //        value=region;
-        //      if ((ox>0) && (oy<sizeY()-1) && (lpic.getInt(ox-1,oy+1)!=region))
+        //      if ((ox>0) && (oy<sizeY()-1) && (lpic.getPixel(ox-1,oy+1)!=region))
         //        value=region;
-        //      if ((ox<sizeX()-1) && (oy<sizeY()-1) && (lpic.getInt(ox+1,oy+1)!=region))
+        //      if ((ox<sizeX()-1) && (oy<sizeY()-1) && (lpic.getPixel(ox+1,oy+1)!=region))
         //        value=region;
-        if ((ox == 0) || (lpic.getInt(ox - 1, oy) != id))
+        if ((ox == 0) || (lpic.getPixel(ox - 1, oy) != id))
           value = 1;
-        if ((ox == lpic.sizeX() - 1) || (lpic.getInt(ox + 1, oy) != id))
+        if ((ox == lpic.sizeX() - 1) || (lpic.getPixel(ox + 1, oy) != id))
           value = 1;
-        if ((oy == 0) || (lpic.getInt(ox, oy - 1) != id))
+        if ((oy == 0) || (lpic.getPixel(ox, oy - 1) != id))
           value = 1;
-        if ((oy == lpic.sizeY() - 1) || (lpic.getInt(ox, oy + 1) != id))
+        if ((oy == lpic.sizeY() - 1) || (lpic.getPixel(ox, oy + 1) != id))
           value = 1;
-        pic.set(x, y, value);
+        pic.setPixel(x, y, value);
       }
     }
   return pic;
@@ -182,8 +182,8 @@ static Image genLabelPic(const Ga::Image& lpic, const RegDescT &reg, int id)
 static void setPointIfNull(Ga::Image &pic, int x, int y, int val)
 {
   if (checkBounds(x, y, 0, 0, pic.sizeX()-1, pic.sizeY()-1))
-    if (!pic.getInt(x, y))
-      pic.set(x, y, val);
+    if (!pic.getPixel(x, y))
+      pic.setPixel(x, y, val);
 }
 #endif
 
@@ -199,12 +199,12 @@ static void nextPoint(Ga::Image &pic, int &x, int &y, int &dir)
     int nx = x + offset_x[dir];
     int ny = y + offset_y[dir];
     if (checkBounds(nx, ny, 0, 0, pic.sizeX() - 1, pic.sizeY() - 1)) {
-      int pixVal = pic.getInt(nx, ny);
+      int pixVal = pic.getPixel(nx, ny);
       if (pixVal != 0) {
         x = nx;
         y = ny;
         if (pixVal > 0)
-          pic.set(x, y, -pixVal);
+          pic.setPixel(x, y, -pixVal);
         return;
       }
     }
@@ -223,7 +223,7 @@ template < class PointT >
 
   for (y = pic.sizeY() - 1; y >= 0; y--) {
     for (x = 0; x < pic.sizeX(); x++) {
-      if (pic.getInt(x, y) > 0) {
+      if (pic.getPixel(x, y) > 0) {
 #ifdef DEBUG_MSG
         printf("Start point (%d,%d) pic(%d,%d)\n",
                x,y,pic.sizeX(),pic.sizeY());

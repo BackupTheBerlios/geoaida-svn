@@ -29,7 +29,7 @@ namespace Ga
   	ImageT<int>::Iterator pResult=result.begin();
   	double f=1/(max-min);
 
-  	for (int i = 0; i < img.sizeImage(); ++i, ++elem) {
+  	for (int i = 0; i < img.noPixels(); ++i, ++elem) {
   	 	int index=int((*elem-min)*f*n);
     	if (index<0 || index>=n) 
     	  continue;
@@ -40,7 +40,7 @@ namespace Ga
   Image calcHistogram(const Image& img, double min, double max, int n, int channel)
   {
     Image result(typeid(int), n, 1);
-    result.pImage()->typeImage(_PFM_SINT);
+    result.pImage()->setFileType(_PFM_SINT);
     ForEachTypeDo(img.typeId(), calcHistogramT, (*img.pImage(), *static_cast<ImageT<int>*>(result.pImage()),
                                                  min, max, n, channel));
     return result;

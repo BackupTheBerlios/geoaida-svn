@@ -30,7 +30,7 @@ namespace Ga {
 template <class PixTyp> void gradient(ImageT<PixTyp>& result, ImageT<PixTyp>& imgIn)
 {
   result.resize(imgIn.sizeX(), imgIn.sizeY());
-  result.typeImage(imgIn.typeImage());
+  result.setFileType(imgIn.fileType());
 
   int i, j ,k ,l, n, m;
 

@@ -85,13 +85,13 @@ int main(int argc, char *argv[])
   
 	  for (int y = 0; y < in.sizeY(); y ++)
    	 for (int x = 0; x < in.sizeX(); x ++)
- 		  in.set(x, y, log(in.getFloat(x, y) + offset), 0);
+ 		  in.setPixel(x, y, log(in.getPixel(x, y) + offset), 0);
 	}
 	else
 	{
     for (int y = 0; y < in.sizeY(); y ++)
    	 for (int x = 0; x < in.sizeX(); x ++)
- 		  in.set(x, y, exp(in.getFloat(x, y)) - 1.0, 0);
+ 		  in.setPixel(x, y, exp(in.getPixel(x, y)) - 1.0, 0);
   }
 
   if (verbose) cout << "writing output image " << argv[optind + 1] << ", " << endl;

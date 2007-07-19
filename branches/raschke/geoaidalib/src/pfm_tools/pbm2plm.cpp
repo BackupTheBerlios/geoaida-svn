@@ -42,17 +42,17 @@ int main(int argc, char *argv[])
 	Image im;
 	if (id>255) {
 		im.init(typeid(int),bitmap.sizeX(),bitmap.sizeY(),1);
-		im.typeImage(_PGM);
+		im.setFileType(_PGM);
 	}
 	else {
 		im.init(typeid(unsigned char),bitmap.sizeX(),bitmap.sizeY(),1);
-		im.typeImage(_PFM_SINT);
+		im.setFileType(_PFM_SINT);
 	}
 	ConstIterator bit=bitmap.constBegin();
 	ConstIterator bitEnd=bitmap.end();
 	void *it=im.begin();
 	while (bit!=bitEnd) {
-		if (bitmap.getFloat(bit)) {
+		if (bitmap.getPixel(bit)) {
 			im.set(it,id);
 //			printf("found bit setting to %d\n",id);
 		}

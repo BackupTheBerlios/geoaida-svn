@@ -114,7 +114,7 @@ void Array2D<Value>::write(FILE *fp) const
     unsigned char buf[xsize()];
     for (y=0; y<ysize(); y++) {
       for (x=0; x<xsize(); x++) {
-        int val=getInt(x,y);
+        int val=get(x,y);
         switch (val) {
       	case -1:
       	case 0:

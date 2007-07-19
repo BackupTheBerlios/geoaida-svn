@@ -73,7 +73,7 @@ class SameRegion
                     int x_center, int y_center,
                     int x_neighbour, int y_neighbour)
     {
-      return (dpic.getFloat(x_center,y_center) ==dpic.getFloat(x_neighbour,y_neighbour));
+      return (dpic.getPixel(x_center,y_center) ==dpic.getPixel(x_neighbour,y_neighbour));
     }
     bool valid(const Image &dpic,
                const Image &lpic,
@@ -100,12 +100,7 @@ int main(int argc, char **argv)
   if (argc>6) {
     resultClass=argv[6];
   }
-  Image src;
-  src.read(srcname);
-  if (src.isEmpty()) {
-    cerr << "Couldn't read image " << srcname << endl;
-    exit(1);
-  }
+  Image src(srcname);
   Image labelimg(typeid(int),src.sizeX(),src.sizeY());
   vector<RegDesc>* regList=splitIntoRegions<RegDesc>(src,labelimg,SameRegion(),minsize,maxsize);
   labelimg.write(labelname);
