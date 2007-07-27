@@ -96,7 +96,7 @@ class Painter
 ////////////////////////////////////////////////////////////////////////////////
 inline void Painter::setImage(Image& img, int channel)
 {
-	img_ = img;
+	img_ = img; // TODO: This is buggy.
 	channel_ = channel;
 }
 

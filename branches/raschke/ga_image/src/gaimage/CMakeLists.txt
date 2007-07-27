@@ -60,7 +60,7 @@ add_library(gaimage STATIC ${sources})
 install(TARGETS gaimage DESTINATION lib)
 install(FILES ${headers} DESTINATION include)
 
-add_executable(painttest paint.cpp)
+add_executable(painttest test_painter.cpp)
 target_link_libraries(painttest gaimage pfm pnm)
 
 add_executable(test_cache test_cache.cpp)

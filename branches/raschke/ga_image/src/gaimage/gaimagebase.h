@@ -73,7 +73,7 @@ public:
   virtual void getChannel(ImageBase& pic, int channel=0) = 0;
   virtual void resize(int rx, int ry, int noChannels=1)=0; // TODO: KILL!
 
-	IMGTYPE fileType() const { return fileType_; }
+  IMGTYPE fileType() const { return fileType_; }
 	void setFileType(IMGTYPE t) { fileType_ = t;}
   bool read(const char* filename);
   bool write(const char *filename, int channel=0);

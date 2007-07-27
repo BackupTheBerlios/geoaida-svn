@@ -16,7 +16,7 @@
  ***************************************************************************/
 
 #include <gaimage.h>
-#include <gacanny.h>
+#include <gaalgo.h>
 using namespace Ga;
 
 int main(int argc, char **argv)

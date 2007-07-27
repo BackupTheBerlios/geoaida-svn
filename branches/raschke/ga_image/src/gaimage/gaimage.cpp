@@ -53,38 +53,38 @@ namespace {
   }
 
   IMGTYPE readImageType(FILE *fp,int* cols, int* rows) {
-      int pxmtype;
-      IMGTYPE type=_UNKNOWN;
-      int c, r;
-      float minval,maxval;
-      long pos=ftell(fp);
-      if (pfm_readpfm_header(fp, &c, &r, &minval, &maxval, &pxmtype))
-  	type=(IMGTYPE)pxmtype;
-      fseek(fp,pos,SEEK_SET);
-      if (type==_UNKNOWN) {
-  	xelval max_x;
-  	pnm_readpnminit(fp, &c, &r, &max_x, &pxmtype);
-  	fseek(fp,pos,SEEK_SET);
-  	if (pxmtype == PBM_FORMAT || pxmtype == RPBM_FORMAT ||
-  	    pxmtype == PPM_FORMAT || pxmtype == RPPM_FORMAT ) {
-  	    switch(pxmtype) {
-  		case PBM_FORMAT:
-  		case RPBM_FORMAT:
-  		    type=_PBM;
-  		    break;
-  		case PGM_FORMAT:
-  		case RPGM_FORMAT:
-  		    type=_PGM;
-  		    break;
-  		case PPM_FORMAT:
-  		case RPPM_FORMAT:
-  		    type=_PPM;
-  	    }
-    	}
+    int pxmtype;
+    IMGTYPE type=_UNKNOWN;
+    int c, r;
+    float minval,maxval;
+    long pos=ftell(fp);
+    if (pfm_readpfm_header(fp, &c, &r, &minval, &maxval, &pxmtype))
+  	  type=(IMGTYPE)pxmtype;
+    fseek(fp,pos,SEEK_SET);
+    if (type==_UNKNOWN) {
+  	  xelval max_x;
+    	pnm_readpnminit(fp, &c, &r, &max_x, &pxmtype);
+    	fseek(fp,pos,SEEK_SET);
+    	if (pxmtype == PBM_FORMAT || pxmtype == RPBM_FORMAT ||
+    	    pxmtype == PPM_FORMAT || pxmtype == RPPM_FORMAT ) {
+    	    switch(pxmtype) {
+      		case PBM_FORMAT:
+      		case RPBM_FORMAT:
+      		    type=_PBM;
+      		    break;
+      		case PGM_FORMAT:
+      		case RPGM_FORMAT:
+      		    type=_PGM;
+      		    break;
+      		case PPM_FORMAT:
+      		case RPPM_FORMAT:
+      		    type=_PPM;
+    	    }
       }
-      if (cols) *cols=c;
-      if (rows) *rows=r;
-      return type;
+    }
+    if (cols) *cols=c;
+    if (rows) *rows=r;
+    return type;
   }
 }
 
@@ -210,11 +210,7 @@ bool Image::read(const char* filename) {
 }
 
 void Image::write(const char* filename, int channel) {
-  FILE *fp=fopen(filename,"w");
-  if (!fp)
-    throw std::runtime_error(std::string("Couldn't write to file ") + filename);
-  pImage()->write(fp, channel, 0);
-  fclose(fp);
+  pImage()->write(filename, channel);
 }
 
 double Image::getPixel(int x, int y, int channel) const
