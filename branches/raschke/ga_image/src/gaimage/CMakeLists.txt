@@ -26,7 +26,6 @@ set(headers gaalgo.h
            gaimaget.hpp
            gavariance.h
            gavectorizet.h
-	   garegression.h
 	   
 	   gapainter.h
 )
@@ -51,7 +50,6 @@ set(sources gacalchistogram.cpp
            gatoluminance.cpp
            gatondvi.cpp
            gavariance.cpp
-	   garegression.cpp
 
 	   gapainter.cpp
 )

@@ -26,14 +26,14 @@ namespace Ga
   {
     const ImageT<PixType>& img = dynamic_cast<const ImageT<PixType>&>(in);
   	typename ImageT<PixType>::ConstIterator elem = img.constBegin(0,channel);
-  	ImageT<int>::Iterator pResult=result.begin();
   	double f=1/(max-min);
 
   	for (int i = 0; i < img.noPixels(); ++i, ++elem) {
-  	 	int index=int((*elem-min)*f*n);
+      PixType val = *elem;
+  	 	int index = (val - min) * f * n;
     	if (index<0 || index>=n) 
     	  continue;
-      pResult[index] ++;
+      result.setPixel(index, 0, result.getPixel(index, 0) + 1);
     }
   }
 

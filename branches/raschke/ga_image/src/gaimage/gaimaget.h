@@ -62,6 +62,8 @@ namespace Ga {
     int noChannels_;
 
   public:
+    //typedef IteratorT<ImageT<PixTyp>, PixTyp> Iterator;
+    //typedef IteratorT<const ImageT<PixTyp>, PixTyp> ConstIterator;
     typedef PixTyp* Iterator;
     typedef const PixTyp* ConstIterator;
 
@@ -92,13 +94,9 @@ namespace Ga {
 	usage: \code Iterator dp = M.begin(row); \endcode */
     Iterator begin(int row=0, int channel=0);
     ConstIterator constBegin(int row=0, int channel=0) const;
-    void* beginVoid(int row=0, int channel=0);
     ConstIterator end(int row, int channel=0) const;
     ConstIterator end() const;
     ConstIterator endChannel(int channel) const;
-    const void* endVoid(int row, int channel=0) const;
-    const void* endVoid() const;
-    const void* constBeginVoid(int row=0, int channel=0) const;
     /** retrieve the value of an matrix element
 	usage: \code PixTyp x = A.GetElement( 3, 5 ); \endcode */
     virtual void setFloat(void* it, double val);

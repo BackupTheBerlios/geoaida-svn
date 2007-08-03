@@ -33,8 +33,8 @@ namespace Ga
       out.setFileType(_PGM);
 
     ImageT<float>::Iterator elem = out.begin();
-    typename ImageT<PixType>::ConstIterator pChIR = static_cast<const PixType*>(in.constBeginVoid(0,0));
-    typename ImageT<PixType>::ConstIterator pChR = static_cast<const PixType*>(in.constBeginVoid(0,1));
+    typename ImageT<PixType>::ConstIterator pChIR = pic.constBegin(0,0);
+    typename ImageT<PixType>::ConstIterator pChR = pic.constBegin(0,1);
     for (int i = 0; i < in.noPixels(); ++i, ++elem, ++pChIR, ++pChR) {
       *elem = (float) ( (double)((double) *pChIR - (double) *pChR)/
 			  ((double) *pChIR + (double) * pChR) );

@@ -12,7 +12,6 @@ add_subdirectory(gi_logexp)
 #add_subdirectory(gi_resample) broken by jlnr
 add_subdirectory(gi_hough)
 add_subdirectory(gi_canny)
-add_subdirectory(gi_regression)
 add_subdirectory(gi_ndviimage)	
 add_subdirectory(gi_gaussian)
 #         add_subdirectory(gi_fft)

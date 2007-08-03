@@ -39,6 +39,39 @@
 
 namespace Ga {
 
+template<typename Img, typename Pix>
+struct IteratorT
+{
+  Img* img;
+  unsigned ch, elem;
+  
+  class Proxy {
+    Img& img;
+    unsigned ch, elem;
+    
+  public:
+    Proxy(Img& img, unsigned ch, unsigned elem) : img(img), ch(ch), elem(elem) {}
+    operator Pix() const { return img.getPixel(elem % img.sizeX(), elem / img.sizeY(), ch); }
+    Proxy& operator=(Pix val) { img.setPixel(elem % img.sizeX(), elem / img.sizeY(), val, ch); return *this; }
+  };
+  
+  IteratorT() : img(0) {}
+  explicit IteratorT(Img& img, unsigned ch, unsigned elem) : img(&img), ch(ch), elem(elem) {}
+  IteratorT& operator++() { ++elem; return *this; }
+  IteratorT operator++(int) { IteratorT old = *this; ++*this; return old; }
+  Proxy operator*() const { return Proxy(*img, ch, elem); }
+  
+  template<typename OtherImg>
+  bool operator==(IteratorT<OtherImg, Pix> rhs) {
+    return img == rhs.img && ch == rhs.ch && elem == rhs.elem;
+  }
+
+  template<typename OtherImg>
+  bool operator!=(IteratorT<OtherImg, Pix> rhs) {
+    return img != rhs.img || ch != rhs.ch || elem != rhs.elem;
+  }
+};
+
 enum IMGTYPE {
     _PFM_FLOAT=0,
     _PFM_SINT,
@@ -91,10 +124,6 @@ public:
   virtual double findMinValue(int ch=0) =0;
 
   // Iterators
-  virtual void* beginVoid(int row=0, int channel=0)=0;
-  virtual const void* constBeginVoid(int row=0, int channel=0) const =0;
-  virtual const void* endVoid(int row, int channel=0) const =0;
-  virtual const void* endVoid() const =0;
   virtual void setFloat(void* it, double val)=0;
   virtual void* nextCol(const void*& ptr) const=0;
   virtual void* nextCol(const void*& ptr, int offset) const=0;

@@ -124,6 +124,7 @@ typename ImageT<PixTyp>::Iterator ImageT<PixTyp>::begin(int row, int channel) {
   assert(channel<noChannels_);
   assert(pChannel_[channel]!=0);
   return pChannel_[channel]->begin(pChannel_[channel],row);
+  //return Iterator(*this, channel, row * sizeX());
 }
 
 template <class PixTyp>
@@ -131,11 +132,7 @@ typename ImageT<PixTyp>::ConstIterator ImageT<PixTyp>::constBegin(int row, int c
   assert(channel<noChannels_);
   assert(pChannel_[channel]!=0);
   return (pChannel_[channel]->constBegin(row));
-}
-
-template <class PixTyp>
-void* ImageT<PixTyp>::beginVoid(int row, int channel) {
-  return begin(row,channel);
+  //return ConstIterator(*this, channel, row * sizeX());
 }
 
 template <class PixTyp>
@@ -158,23 +155,6 @@ typename ImageT<PixTyp>::ConstIterator ImageT<PixTyp>::endChannel(int channel) c
   return (pChannel_[channel]->end());
 }
 
-template <class PixTyp>
-const void* ImageT<PixTyp>::endVoid(int row, int channel) const {
-  return end(row,channel);
-}
-	
-template <class PixTyp>
-const void* ImageT<PixTyp>::endVoid() const {
-  return end();
-}
-	
-template <class PixTyp>
-const void* ImageT<PixTyp>::constBeginVoid(int row, int channel) const {
-  return constBegin(row,channel);
-}
-	
-	
-	
 
 /** assign and retrieve matrix values
     usage: \code PixTyp x = A( 1, 5 ); A( 3, 7 ) = 5; \endcode */

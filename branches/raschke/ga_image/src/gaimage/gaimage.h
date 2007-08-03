@@ -34,39 +34,6 @@ class ImageBase;
     The Image class provides a type-agnostic wrapper around any ImageT<> instance.
     */
 
-template<typename Img, typename Pix>
-struct IteratorT
-{
-  Img* img;
-  unsigned ch, elem;
-  
-  class Proxy {
-    Img& img;
-    unsigned ch, elem;
-    
-  public:
-    Proxy(Img& img, unsigned ch, unsigned elem) : img(img), ch(ch), elem(elem) {}
-    operator Pix() const { return img.getPixel(elem % img.sizeX(), elem / img.sizeY(), ch); }
-    Proxy& operator=(Pix val) { img.setPixel(elem % img.sizeX(), elem / img.sizeY(), val, ch); return *this; }
-  };
-  
-  IteratorT() : img(0) {}
-  explicit IteratorT(Img& img, unsigned ch, unsigned elem) : img(&img), ch(ch), elem(elem) {}
-  IteratorT& operator++() { ++elem; return *this; }
-  IteratorT operator++(int) { IteratorT old = *this; ++*this; return old; }
-  Proxy operator*() const { return Proxy(*img, ch, elem); }
-  
-  template<typename OtherImg>
-  bool operator==(IteratorT<OtherImg, Pix> rhs) {
-    return img == rhs.img && ch == rhs.ch && elem == rhs.elem;
-  }
-
-  template<typename OtherImg>
-  bool operator!=(IteratorT<OtherImg, Pix> rhs) {
-    return img != rhs.img || ch != rhs.ch || elem != rhs.elem;
-  }
-};
-
 class Image 
 {
   ImageBase* pImage_;
