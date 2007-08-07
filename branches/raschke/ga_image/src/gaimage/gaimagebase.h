@@ -116,18 +116,12 @@ public:
   // Drawing primitives
   virtual double getPixelAsDouble(int x, int y, int channel=0, double neutral=0) const=0;
   virtual void setPixelToDouble(int x, int y, double val, int channel=0, bool clip=false)=0;
-  virtual void fillRow(void *it, int startX, int endX, double val, int channel=0) =0;
+  virtual void fillRow(int row, int startX, int endX, double val, int channel = 0) =0;
   virtual void fill(double value)=0;
 
   // -> Auslagern
   virtual double findMaxValue(int ch=0) =0;
   virtual double findMinValue(int ch=0) =0;
-
-  // Iterators
-  virtual void setFloat(void* it, double val)=0;
-  virtual void* nextCol(const void*& ptr) const=0;
-  virtual void* nextCol(const void*& ptr, int offset) const=0;
-  virtual void setInt(void *ptr, int val) {return;}
 };
 
 inline ImageBase::ImageBase()

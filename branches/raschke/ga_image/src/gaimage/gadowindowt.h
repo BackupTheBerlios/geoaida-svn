@@ -111,16 +111,16 @@ void calcCoWinValT(const ImageT<PixTyp1>&  img1,int channel1,
   if (end2X>img2.sizeX()) { end1X-=end2X-img2.sizeX(); end2X-=img2.sizeX();}
   if (end1Y>img1.sizeY()) { end2Y-=end1Y-img1.sizeY(); end1Y-=img1.sizeY();}
   if (end2Y>img2.sizeY()) { end1Y-=end2Y-img2.sizeY(); end2Y-=img2.sizeY();}
-  const PixTyp1* start1ptr=img1.constBegin(start1Y,channel1)+start1X;
-  const PixTyp2* start2ptr=img2.constBegin(start2Y,channel2)+start2X;
+  typename ImageT<PixTyp1>::ConstIterator start1ptr=img1.constBegin(start1Y,channel1)+start1X;
+  typename ImageT<PixTyp2>::ConstIterator start2ptr=img2.constBegin(start2Y,channel2)+start2X;
   winFunc.init(img1,channel1,start1X,start1Y,end1X,end1Y,
                img2,channel2,start2X,start2Y,end2X,end2Y);
   int y1,y2;
   for (y1=start1Y, y2=start2Y;
        y1<end1Y;
        start1ptr+=img1.sizeX(), start2ptr+=img2.sizeX(), y1++,y2++) {
-    const PixTyp1* ptr1=start1ptr;
-    const PixTyp2* ptr2=start2ptr;
+    typename ImageT<PixTyp1>::ConstIterator ptr1=start1ptr;
+    typename ImageT<PixTyp2>::ConstIterator ptr2=start2ptr;
     int x1=start1X;
     int x2=start1X;
     for (;

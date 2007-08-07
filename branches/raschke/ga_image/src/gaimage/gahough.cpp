@@ -67,7 +67,7 @@ void houghMapLines(ImageT<int>& result, const ImageBase& img,
   //Transform each pixel into Hough coordinate (r,alpha) if
   //it has a value <=T, increment all Hough pixels that correspond
   for(int r=0; r<ny; r++ ) {
-    const PixTyp* row=imgIn.constBegin(r);
+    typename ImageT<PixTyp>::ConstIterator row=imgIn.constBegin(r);
     for(int c=0; c<nx; c++ ) {
       if (row[c]) {
 #ifdef HESSE_NF

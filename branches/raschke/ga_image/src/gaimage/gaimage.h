@@ -72,7 +72,7 @@ public:
   // Drawing primitives
   double getPixel(int x, int y, int channel = 0) const;
   void setPixel(int x, int y, double val, int channel = 0, bool clip = false);
-  void fillRow(int row, int startX, int endX, double val, int channel=0, bool clip=false);
+  void fillRow(int row, int startX, int endX, double val, int channel=0);
   void fill(double value);
   
   // Auslagern usw.

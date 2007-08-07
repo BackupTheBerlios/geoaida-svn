@@ -41,7 +41,7 @@ namespace Ga
 	class CacheFile
 	{
 		Size blockSize;
-        std::string filename;
+    std::string filename;
 		int fd;
 		std::vector<bool> marked;
 		
@@ -168,6 +168,11 @@ namespace Ga
 		{	
 		}
 		
+		void swap(BlockHandle& other)
+		{
+      ptr.swap(other.ptr);
+		}
+		
 		bool isEmpty() const
 		{
 			return !ptr;
@@ -178,6 +183,8 @@ namespace Ga
 			assert(!isEmpty());
 			return ptr->lock();
 		}
+		
+		# Need to think this through - seems to be broken by means of test_image :(
 		
 		void* lockRW()
 		{
@@ -273,7 +280,7 @@ namespace Ga
 		{
 			const void* myContents = lockR();
 			std::memcpy(cloneContents, myContents, ptr->getSize());
-			unlock();								
+			unlock();
 		}
 		catch (...)
 		{

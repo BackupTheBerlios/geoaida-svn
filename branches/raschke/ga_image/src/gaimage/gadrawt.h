@@ -78,7 +78,7 @@ template<class PixTyp> void drawLine(ImageBase &im, int x1, int y1, int x2, int 
   int d = 2 * dy - dx;
   int x = x1, y = y1;
 
-  PixTyp *pix = img.begin();
+  typename ImageT<PixTyp>::Iterator pix = img.begin();
   if (!mirror)
     pix += y * size_x + x;
   else

@@ -403,9 +403,11 @@ int main(int argc, char *argv[])
  for (int i=0; i<=secure; i++)
    out_im.blow(i, smooth);
 out_im.write("out1");
- printf("maxValue\n");
-  out_im.maxValue(1);
-out_im.write("out2");
+  printf("maxValue\n");
+  for (ImageT<unsigned char>::Iterator it = out_im.begin(); it != out_im.end(); ++it)
+    if (*it >= 1)
+      *it = 1;
+    out_im.write("out2");
 //out_im.write(label_name);
 
  printf("labelimg\n");

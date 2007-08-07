@@ -29,7 +29,7 @@ namespace Ga {
 /** this is the cool and fasted version than possible ;) */
 template<class PixTyp> void labelBin(ImageT<PixTyp> &img, PixTyp label_val)
 { //J.B. 01/01
-  PixTyp *pix = img.begin();
+  typename ImageT<PixTyp>::Iterator pix = img.begin();
   for (int j = 0; j < img.noPixels(); ++j) {
     if (*pix == label_val) *pix = (PixTyp)0;
     else *pix = (PixTyp)1;
@@ -44,14 +44,14 @@ template<class PixTyp> PixTyp labelImage(ImageT<PixTyp> &img)
 {
   // written by O. Stahlhut 01/01
 
-  PixTyp *pix = img.begin();
+  typename ImageT<PixTyp>::Iterator pix = img.begin();
   PixTyp label_set = 2;
 
   for ( int i = 0; i < (int)(img.noPixels()); ++i, ++pix )
   {
     if (!(*pix))
     {
-      label4((PixTyp*)img.begin(),img.sizeX(),img.sizeY(), i, (PixTyp)0, label_set);
+      label4(img.begin(),img.sizeX(),img.sizeY(), i, (PixTyp)0, label_set);
       label_set += 1;
     }
   }
@@ -66,16 +66,16 @@ template<class PixTyp> PixTyp labelImage(ImageT<PixTyp> &img)
     set them to colour "label_set". returns the number of pixels in the new label.
 */
 
-template<class PixTyp> unsigned int label4(PixTyp* begin, int size_x, int size_y, int index, PixTyp label_val, PixTyp label_set)
+template<class PixTyp> unsigned int label4(typename ImageT<PixTyp>::Iterator begin, int size_x, int size_y, int index, PixTyp label_val, PixTyp label_set)
 {
 	unsigned int labelsize = 0;
 	
-  PixTyp* pix = begin+index;
+  typename ImageT<PixTyp>::Iterator pix = begin+index;
   int x = index % size_x;
   int y = index / size_x;
 
   // store the point left to the start position for the second sweep
-  PixTyp *left = pix; --left;
+  typename ImageT<PixTyp>::Iterator left = pix; --left;
   int xl = x; --xl;
 
   // 1. sweep: fill one horizontal line to the right
@@ -104,8 +104,8 @@ template<class PixTyp> unsigned int label4(PixTyp* begin, int size_x, int size_y
 
   int check_next = (y + 1) < size_y;
   int check_prev = 0 <= (y - 1);
-  PixTyp *next = pix + size_x;
-  PixTyp *prev = pix - size_x;
+  typename ImageT<PixTyp>::Iterator next = pix + size_x;
+  typename ImageT<PixTyp>::Iterator prev = pix - size_x;
 
   // 3. sweep: move over the horizontal line and check if there is more do to above or below (recursion)
   while (((*pix > 1)||(*pix==label_set)) && (x < size_x)) //XXX ??? warum >1 (jb)
@@ -192,7 +192,7 @@ template<class PixTyp> void despeckle(ImageT<PixTyp> &in, int size, PixTyp label
 {
   // written by O. Stahlhut 10/01
 
-  PixTyp *pix = in.begin();
+  typename ImageT<PixTyp>::Iterator pix = in.begin();
   unsigned int labelsize;
 
   for (int i = 0; i < (int)(in.noPixels()); ++i, ++pix)
@@ -222,16 +222,16 @@ template<class PixTyp> void despeckle(ImageT<PixTyp> &in, int size, PixTyp label
     set them to colour "label_set". returns the number of pixels in the new label.
 */
 
-template<class PixTyp>unsigned int label8(PixTyp* begin, int size_x, int size_y, int index, PixTyp label_val, PixTyp label_set)
+template<class PixTyp>unsigned int label8(typename ImageT<PixTyp>::Iterator begin, int size_x, int size_y, int index, PixTyp label_val, PixTyp label_set)
 {
   unsigned int labelsize = 0;
 
-  PixTyp *pix = begin + index;
+  typename ImageT<PixTyp>::Iterator pix = begin + index;
   int x = index % size_x;
   int y = index / size_x;
 
   // store the point left to the start position for the second sweep
-  PixTyp *left = pix; --left;
+  typename ImageT<PixTyp>::Iterator left = pix; --left;
   int xr, xl = x; --xl;
 
   // 1. sweep: fill one horizontal line to the right
@@ -268,8 +268,8 @@ template<class PixTyp>unsigned int label8(PixTyp* begin, int size_x, int size_y,
 
   int check_next = (y + 1) < size_y;
   int check_prev = 0 <= (y - 1);
-  PixTyp *next = pix + size_x;
-  PixTyp *prev = pix - size_x;
+  typename ImageT<PixTyp>::Iterator next = pix + size_x;
+  typename ImageT<PixTyp>::Iterator prev = pix - size_x;
 
   // 3. sweep: move over the horizontal line and check if there is more do to above or below (recursion)
   while (xl <= x && x <= xr)
@@ -296,10 +296,10 @@ template<class PixTyp> void calcBoundingBoxes(ImageT<int>& result, ImageT<PixTyp
   if (!nlabels) return;
   result.resize(nlabels,4,1);
 
-  int* llx=result.begin(0);
-  int* lly=result.begin(1);
-  int* urx=result.begin(2);
-  int* ury=result.begin(3);
+  ImageT<int>::Iterator llx=result.begin(0);
+  ImageT<int>::Iterator lly=result.begin(1);
+  ImageT<int>::Iterator urx=result.begin(2);
+  ImageT<int>::Iterator ury=result.begin(3);
   for (int i = 0; i < nlabels; i ++) {
     llx[i] = INT_MAX;
     ury[i] = INT_MAX;

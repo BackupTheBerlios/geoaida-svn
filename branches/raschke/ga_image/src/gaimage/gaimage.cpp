@@ -226,21 +226,10 @@ void Image::fill(double value) {
   pImage_->fill(value);
 }
 
-void Image::fillRow(int row, int startX, int endX, double val, int channel, bool clip)
+void Image::fillRow(int row, int startX, int endX, double val, int channel)
 {
-  /* TODO
-  if (clip) {
-    if ((row<0) || (row>=sizeY())) return;
-    if (startX<=0) startX=0;
-    if (endX>=sizeX()) endX=sizeX()-1;
-  }
-  pImage_->fillRow(begin(row,channel),startX,endX,val);*/
+  pImage_->fillRow(row, startX, endX, val, channel);
 }
-
-
-
-
-
 
 double Image::findMaxValue(int channel) const
 {

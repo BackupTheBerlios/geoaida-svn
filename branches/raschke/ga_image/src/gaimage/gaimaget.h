@@ -31,46 +31,172 @@ extern "C" {
 #include <pfm.h>
 }
 
-#define GA_MAX_CHANNELS 10
 #include <assert.h>
 #include "gadefines.h"
 #include "gaimagebase.h"
 #include "gaarray2dt.h"
+#include "gacache.h"
 #include <algorithm>
+#include <vector>
 
 namespace Ga {
 
 /** \class ImageT
     \brief TODO
     */
+  
+  template<typename Pix, bool Mutable>
+  class Iterator
+  {
+    BlockHandle handle;
+    Pix* ptr;
+    unsigned elem;
+    
+  public:
+    Iterator(const BlockHandle& handle, unsigned elem)
+    : handle(handle), elem(elem)
+    {
+      if (Mutable)
+        ptr = static_cast<Pix*>(this->handle.lockRW());
+      else
+        ptr = const_cast<Pix*>(static_cast<const Pix*>(this->handle.lockR()));
 
+      printf("CrtLock on elem %d in block %d; ptr %d\n", elem, &this->handle, ptr);
+    }
+    
+    Iterator(const Iterator& other)
+    {
+      handle = other.handle;
+      if (Mutable)
+        ptr = static_cast<Pix*>(handle.lockRW());
+      else
+        ptr = const_cast<Pix*>(static_cast<const Pix*>(handle.lockR()));
+      elem = other.elem;
+
+      printf("CopyLock on elem %d in block %d; ptr %d\n", elem, &handle, ptr);
+    }
+    
+    Iterator& operator=(const Iterator& other)
+    {
+      Iterator(other).swap(*this);
+      return *this;
+    }
+    
+    ~Iterator()
+    {
+      handle.unlock();
+      printf("Unlock on elem %d\n", elem);
+    }
+    
+    void swap(Iterator& other)
+    {
+      handle.swap(handle);
+      std::swap(ptr, other.ptr);
+      std::swap(elem, other.elem);
+    }
+    
+    Pix& operator*() const
+    {
+      return ptr[elem];
+    }
+    
+    Pix& operator[](std::size_t index) const
+    {
+      return ptr[elem + index];
+    }
+    
+    Iterator& operator+=(std::ptrdiff_t offset)
+    {
+      elem += offset;
+      return *this;
+    }
+    
+    Iterator operator+(std::ptrdiff_t offset) const
+    {
+      return Iterator(*this) += offset;
+    }
+    
+    Iterator& operator++()
+    {
+      ++elem;
+      return *this;
+    }
+    
+    Iterator operator++(int)
+    {
+      Iterator temp(*this);
+      ++*this;
+      return temp;
+    }
+  
+    Iterator& operator-=(std::ptrdiff_t offset)
+    {
+      elem -= offset;
+      return *this;
+    }
+    
+    Iterator operator-(std::ptrdiff_t offset) const
+    {
+      return Iterator(*this) -= offset;
+    }
+    
+    Iterator& operator--()
+    {
+      --elem;
+      return *this;
+    }
+    
+    Iterator operator--(int)
+    {
+      Iterator temp(*this);
+      --*this;
+      return temp;
+    }
+    
+    std::ptrdiff_t operator-(Iterator other) const
+    {
+      return elem - other.elem;
+    }
+    
+    bool operator==(Iterator other) const
+    {
+      return elem == other.elem;
+    }
+    
+    bool operator!=(Iterator other) const
+    {
+      return elem != other.elem;
+    }
+  };
+}
+ 
+namespace std
+{ 
+  template<typename Pix, bool Mutable>
+  struct iterator_traits<Ga::Iterator<Pix, Mutable> > : std::iterator_traits<Pix*>
+  {
+  };
+}
+
+namespace Ga
+{
   template <class PixTyp>
   class ImageT : public ImageBase
   {
   private:
-    // To be called from Image. Private to show that this is not supposed to be
+    // To be called from Image. private to show that this is not supposed to be
     // used when using ImageT directly.
     double getPixelAsDouble(int x, int y, int channel, double neutral) const;
     void setPixelToDouble(int x, int y, double val, int channel, bool clip);
+    std::vector<BlockHandle> channels;
     
-  protected:
-    /** initialization; common function for initialization; for internal use only
-        usage: \code Initialize( x, y ) \endcode \endcode */
-    void initialize( int x, int y, int noChannels );
-    /** prepare assignments; Preparing an assignment by adjusting "this" */
-    Array2DT<PixTyp> *pChannel_[GA_MAX_CHANNELS];
-    int noChannels_;
-
   public:
     //typedef IteratorT<ImageT<PixTyp>, PixTyp> Iterator;
     //typedef IteratorT<const ImageT<PixTyp>, PixTyp> ConstIterator;
-    typedef PixTyp* Iterator;
-    typedef const PixTyp* ConstIterator;
+    typedef Ga::Iterator<PixTyp, true> Iterator;
+    typedef Ga::Iterator<const PixTyp, false> ConstIterator;
 
     ImageT(int x, int y, int noChannels=1);
-    ImageT(const ImageT<PixTyp>& rval);
-    virtual ~ImageT(void);
-    ImageT<PixTyp>& operator= (const ImageT<PixTyp>& rval);
     virtual ImageBase* copyObject();
 
     // Metrics.
@@ -87,23 +213,20 @@ namespace Ga {
     PixTyp getPixel(int x, int y, int channel=0, PixTyp neutral=0) const;
     void setPixel(int x, int y, PixTyp val, int channel=0, bool clip=false);
     void fill(double value);
-    virtual void fillRow(void *it, int startX, int endX, double val, int channel=0);
+    virtual void fillRow(int row, int startX, int endX, double val, int channel = 0);
     virtual void partCopy(const ImageBase &rvalue, int x0, int y0, int width, int height);
     
-    /** return pointer to the beginning of data
-	usage: \code Iterator dp = M.begin(row); \endcode */
     Iterator begin(int row=0, int channel=0);
-    ConstIterator constBegin(int row=0, int channel=0) const;
-    ConstIterator end(int row, int channel=0) const;
-    ConstIterator end() const;
-    ConstIterator endChannel(int channel) const;
-    /** retrieve the value of an matrix element
-	usage: \code PixTyp x = A.GetElement( 3, 5 ); \endcode */
-    virtual void setFloat(void* it, double val);
-    virtual void* nextCol(const void*& ptr, int offset) const;
-    virtual void* nextCol(const void*& ptr) const;
+    Iterator end(int row, int channel=0);
+    Iterator end();
+    Iterator endChannel(int channel);
 
-    PixTyp& operator () (int x, int y, int channel=0);
+    ConstIterator constBegin(int row=0, int channel=0) const;
+    ConstIterator constEnd(int row, int channel=0) const;
+    ConstIterator constEnd() const;
+    ConstIterator constEndChannel(int channel) const;
+
+    PixTyp& operator() (int x, int y, int channel=0);
 
     /* set data without copying. Ther must be noChannels data-pointer in the ellipse */
     void setData(int x, int y, int noChannels, ...);
@@ -121,18 +244,12 @@ namespace Ga {
 
   void getChannel(ImageBase& pic, int channel=0);
 
-  void minValue(ImageBase &in, float value);
-  void maxValue(ImageBase &in, float value);
-
   void swap(ImageT& other) {
     using std::swap;
     swap(fileType_, other.fileType_);
     swap(sizeX_, other.sizeX_);
     swap(sizeY_, other.sizeY_);
-    swap(sizeY_, other.sizeY_);
-    for (unsigned i = 0; i < GA_MAX_CHANNELS; ++i)
-      swap(pChannel_[i], other.pChannel_[i]);
-    swap(noChannels_, other.noChannels_);
+    swap(channels, other.channels);
   }
 };
 

@@ -150,7 +150,7 @@ void Painter::fillPolygon(const PointArray& points, double val)
 			int x1 = static_cast<int>((*ci).x); ++ci;
 			int x2 = static_cast<int>((*ci).x);
 
-			img_.fillRow(i, x1, x2, val, 0, true);
+			img_.fillRow(i, x1, x2, val, 0);
 
 			if (ci != active_edges.end()) ++ci;
 		}
