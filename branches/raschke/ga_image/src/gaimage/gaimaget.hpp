@@ -69,6 +69,7 @@ int ImageT<PixTyp>::noChannels() const {
 
 template <class PixTyp>
 PixTyp ImageT<PixTyp>::getPixel(int x, int y, int channel, PixTyp neutral) const {
+  printf("getPixel\n");
   assert(channel>=0);
   assert(channel<noChannels());
   if (x>=0 && x<sizeX() && y>=0 && y<sizeY())
@@ -144,6 +145,7 @@ PixTyp& ImageT<PixTyp>::operator() (int x, int y, int channel) {
 
 template <class PixTyp>
 void ImageT<PixTyp>::setPixel(int x, int y, PixTyp val, int channel, bool clip) {
+  printf("setPixel\n");
 	assert(channel>=0);
 	assert(channel<noChannels());
   if (!clip || x >= 0 && x < sizeX() && y >= 0 && y < sizeY())
@@ -337,16 +339,18 @@ void ImageT<PixTyp>::setData(int x, int y, int noChannels, ...) {
   va_start(argPtr, noChannels);
   
   for (int c=0; c<noChannels; c++) {
-    sizeX_ = x;
-    sizeY_ = y;
     PixTyp* data = static_cast<PixTyp*>(va_arg(argPtr,void*));
     // TODO: Integer overflow danger!
-    std::copy(data, data + x*y, newImage.begin(0, c));
+    //std::copy(data, data + x*y, newImage.begin(0, c)); // TODO: WHY DOES THIS CAUSE CLONING???
+    typename ImageT<PixTyp>::Iterator it = newImage.begin(0, c);
+    for (PixTyp* in = data; in != data + x*y; ++in, ++it)
+      *it = *in;
+    puts("EOF setData");
   }
-
   va_end(argPtr);
   
   newImage.swap(*this);
+  puts("Real EOF setData");
 }
 
 template <class PixTyp>

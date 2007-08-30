@@ -211,10 +211,13 @@ namespace {
 }
 
 Ga::Image Ga::canny(const Image& img, double lowThreshold, double highThreshold) {
+  puts("Initing canny");
+  
   Image input = img;
     
 	// The Canny algorithm is designed to work on grayscale images, so make sure we have one.
 	if (input.noChannels() != 1) {
+    puts("toLuminance");
 		input = toLuminance(input);
 	}
 	

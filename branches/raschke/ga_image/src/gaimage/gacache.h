@@ -130,6 +130,8 @@ namespace Ga
 				
 		void unlock()
 		{
+      printf("BLOCKUNLOCK: %d\n", this);
+
 			assert(lockCount > 0);
 			--lockCount;
 		}
@@ -166,7 +168,26 @@ namespace Ga
 		explicit BlockHandle(const Ptr& ptr = Ptr())
 		: ptr(ptr)
 		{	
+      //printf("-- BlockHandle@%d created, use count now %d\n", this, ptr.use_count());
 		}
+		
+    /*BlockHandle(const BlockHandle& other)
+    : ptr(other.ptr)
+    {
+      printf("-- BlockHandle@%d copied, use count now %d\n", this, ptr.use_count());
+    }
+    
+    BlockHandle& operator=(const BlockHandle& other)
+    {
+      ptr = other.ptr;
+      printf("-- BlockHandle@%d assigned, use count now %d\n", this, ptr.use_count());
+    }
+    
+    ~BlockHandle()
+    {
+      printf("-- BlockHandle destroyed, use count now %d\n", ptr.use_count() - 1);
+      ptr.reset();
+    }*/
 		
 		void swap(BlockHandle& other)
 		{
@@ -184,15 +205,13 @@ namespace Ga
 			return ptr->lock();
 		}
 		
-		# Need to think this through - seems to be broken by means of test_image :(
-		
 		void* lockRW()
 		{
 			assert(!isEmpty());
 			
 			if (ptr.use_count() > 1)
 				// Need to clone the old block.
-				clone().ptr.swap(ptr);
+        ptr = clone().ptr;
 			
 			ptr->markDirty();
 			return ptr->lock();
@@ -247,6 +266,8 @@ namespace Ga
 
 	inline void* Block::lock()
 	{
+    printf("BLOCKLOCK: %d\n", this);
+	  
 		static unsigned accessCounter = 0;
 		
 		// Mark as being accessed recently.
@@ -274,6 +295,7 @@ namespace Ga
 	
 	inline BlockHandle BlockHandle::clone()
 	{
+    puts("BLOCKHANDLECLONE");
 		BlockHandle result = Cache::get().alloc(ptr->getSize());
 		void* cloneContents = result.lockRW();
 		try

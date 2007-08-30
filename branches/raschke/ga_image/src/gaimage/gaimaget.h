@@ -48,32 +48,30 @@ namespace Ga {
   template<typename Pix, bool Mutable>
   class Iterator
   {
-    BlockHandle handle;
+    BlockHandle* handle;
     Pix* ptr;
     unsigned elem;
     
   public:
-    Iterator(const BlockHandle& handle, unsigned elem)
-    : handle(handle), elem(elem)
+    Iterator(BlockHandle& handle, unsigned elem)
+    : handle(&handle), elem(elem)
     {
-      if (Mutable)
-        ptr = static_cast<Pix*>(this->handle.lockRW());
-      else
-        ptr = const_cast<Pix*>(static_cast<const Pix*>(this->handle.lockR()));
-
-      printf("CrtLock on elem %d in block %d; ptr %d\n", elem, &this->handle, ptr);
-    }
-    
-    Iterator(const Iterator& other)
-    {
-      handle = other.handle;
+      printf("Locking %d, Iterator ctor\n", this->handle);
       if (Mutable)
         ptr = static_cast<Pix*>(handle.lockRW());
       else
         ptr = const_cast<Pix*>(static_cast<const Pix*>(handle.lockR()));
+    }
+    
+    Iterator(const Iterator& other)
+    {
+      printf("Locking %d, Iterator cctor\n", other.handle);
+      handle = other.handle;
+      if (Mutable)
+        ptr = static_cast<Pix*>(handle->lockRW());
+      else
+        ptr = const_cast<Pix*>(static_cast<const Pix*>(handle->lockR()));
       elem = other.elem;
-
-      printf("CopyLock on elem %d in block %d; ptr %d\n", elem, &handle, ptr);
     }
     
     Iterator& operator=(const Iterator& other)
@@ -84,13 +82,13 @@ namespace Ga {
     
     ~Iterator()
     {
-      handle.unlock();
-      printf("Unlock on elem %d\n", elem);
+      printf("Unlocking %d, Iterator dtor\n", this->handle);
+      handle->unlock();
     }
     
     void swap(Iterator& other)
     {
-      handle.swap(handle);
+      std::swap(handle, other.handle);
       std::swap(ptr, other.ptr);
       std::swap(elem, other.elem);
     }
@@ -188,7 +186,8 @@ namespace Ga
     // used when using ImageT directly.
     double getPixelAsDouble(int x, int y, int channel, double neutral) const;
     void setPixelToDouble(int x, int y, double val, int channel, bool clip);
-    std::vector<BlockHandle> channels;
+    // mutable: ConstIterator needs a non-const BlockHandle to lock/unlock it.
+    mutable std::vector<BlockHandle> channels;
     
   public:
     //typedef IteratorT<ImageT<PixTyp>, PixTyp> Iterator;
