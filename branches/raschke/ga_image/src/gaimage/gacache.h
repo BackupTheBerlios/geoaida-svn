@@ -160,38 +160,40 @@ namespace Ga
 	{
 		typedef std::tr1::shared_ptr<Block> Ptr;
 		Ptr ptr;
+		// Locks on the pointee from THIS very handle
+    unsigned lockCount;
+    // Memory, if locked
+    void* data;
 		
-		BlockHandle clone();
+		void clonePointee();
 		// Defined below due to order of definitions.
 		
 	public:
 		explicit BlockHandle(const Ptr& ptr = Ptr())
-		: ptr(ptr)
-		{	
-      //printf("-- BlockHandle@%d created, use count now %d\n", this, ptr.use_count());
+		: ptr(ptr), lockCount(0)
+		{
 		}
 		
-    /*BlockHandle(const BlockHandle& other)
-    : ptr(other.ptr)
+    BlockHandle(const BlockHandle& other)
+    : ptr(other.ptr), lockCount(0)
     {
-      printf("-- BlockHandle@%d copied, use count now %d\n", this, ptr.use_count());
     }
     
     BlockHandle& operator=(const BlockHandle& other)
     {
-      ptr = other.ptr;
-      printf("-- BlockHandle@%d assigned, use count now %d\n", this, ptr.use_count());
+      BlockHandle(other).swap(*this);
     }
     
     ~BlockHandle()
     {
-      printf("-- BlockHandle destroyed, use count now %d\n", ptr.use_count() - 1);
-      ptr.reset();
-    }*/
+      assert(lockCount == 0);
+    }
 		
 		void swap(BlockHandle& other)
 		{
       ptr.swap(other.ptr);
+      std::swap(lockCount, other.lockCount);
+      std::swap(data, other.data);
 		}
 		
 		bool isEmpty() const
@@ -199,28 +201,40 @@ namespace Ga
 			return !ptr;
 		}
 		
-		const void* lockR()
+		void lockR()
 		{
 			assert(!isEmpty());
-			return ptr->lock();
+
+      lockCount += 1;
+			data = ptr->lock();
 		}
 		
-		void* lockRW()
+		void lockRW()
 		{
 			assert(!isEmpty());
 			
 			if (ptr.use_count() > 1)
 				// Need to clone the old block.
-        ptr = clone().ptr;
+        clonePointee();
 			
 			ptr->markDirty();
-			return ptr->lock();
-		}		
+      lockCount += 1;
+			data = ptr->lock();
+		}
 				
 		void unlock()
 		{
 			assert(!isEmpty());
+      assert(lockCount > 0);
 			ptr->unlock();
+      lockCount -= 1;
+		}
+		
+		void* getData() const
+		{
+      assert(!isEmpty());
+      assert(lockCount > 0);
+      return data;
 		}
 	};
 	
@@ -293,24 +307,24 @@ namespace Ga
 		return memory;
 	}
 	
-	inline BlockHandle BlockHandle::clone()
+	inline void BlockHandle::clonePointee()
 	{
     puts("BLOCKHANDLECLONE");
-		BlockHandle result = Cache::get().alloc(ptr->getSize());
-		void* cloneContents = result.lockRW();
+		BlockHandle clone = Cache::get().alloc(ptr->getSize());
+		clone.lockRW();
 		try
 		{
-			const void* myContents = lockR();
-			std::memcpy(cloneContents, myContents, ptr->getSize());
+      lockR();
+			std::memcpy(clone.getData(), getData(), ptr->getSize());
 			unlock();
 		}
 		catch (...)
 		{
-			result.unlock();
+			clone.unlock();
 			throw;
 		}
-		result.unlock();
-		return result;
+		clone.unlock();
+    ptr = clone.ptr;
 	}
 }
 

@@ -49,7 +49,6 @@ namespace Ga {
   class Iterator
   {
     BlockHandle* handle;
-    Pix* ptr;
     unsigned elem;
     
   public:
@@ -58,9 +57,9 @@ namespace Ga {
     {
       printf("Locking %d, Iterator ctor\n", this->handle);
       if (Mutable)
-        ptr = static_cast<Pix*>(handle.lockRW());
+        handle.lockRW();
       else
-        ptr = const_cast<Pix*>(static_cast<const Pix*>(handle.lockR()));
+        handle.lockR();
     }
     
     Iterator(const Iterator& other)
@@ -68,9 +67,9 @@ namespace Ga {
       printf("Locking %d, Iterator cctor\n", other.handle);
       handle = other.handle;
       if (Mutable)
-        ptr = static_cast<Pix*>(handle->lockRW());
+        handle->lockRW();
       else
-        ptr = const_cast<Pix*>(static_cast<const Pix*>(handle->lockR()));
+        handle->lockR();
       elem = other.elem;
     }
     
@@ -89,18 +88,18 @@ namespace Ga {
     void swap(Iterator& other)
     {
       std::swap(handle, other.handle);
-      std::swap(ptr, other.ptr);
       std::swap(elem, other.elem);
     }
     
     Pix& operator*() const
     {
-      return ptr[elem];
+      return (*this)[0];
     }
     
     Pix& operator[](std::size_t index) const
     {
-      return ptr[elem + index];
+      Pix* data = static_cast<Pix*>(handle->getData());
+      return data[elem + index];
     }
     
     Iterator& operator+=(std::ptrdiff_t offset)

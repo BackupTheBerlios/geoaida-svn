@@ -40,10 +40,10 @@ int main()
   assertCacheUsage(700 * MB, 400 * MB, 300 * MB);
   
   beginTest("Random scribbling.");
-  int* x1 = (int*)handle.lockRW(); *x1 = 0; handle.unlock();
-  int* x2 = (int*)handle2.lockRW(); *x2 = 1; handle2.unlock();
-  const int* y1 = (const int*)handle.lockR(); assert(*y1 == 0); handle.unlock();
-  const int* y2 = (const int*)handle2.lockR(); assert(*y2 == 1); handle2.unlock();
+  handle.lockRW(); *(int*)handle.getData() = 0; handle.unlock();
+  handle2.lockRW(); *(int*)handle2.getData() = 1; handle2.unlock();
+  handle.lockR(); assert(*(int*)handle.getData() == 0); handle.unlock();
+  handle2.lockR(); assert(*(int*)handle2.getData() == 1); handle2.unlock();
 	
   beginTest("Overusing the heap.");
   handle2 = Cache::get().alloc(600 * MB);

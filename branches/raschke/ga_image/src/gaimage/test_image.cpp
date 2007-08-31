@@ -14,8 +14,11 @@ void beginTest(const std::string& test)
 
 int main()
 {
+  beginTest("Loading a PPM file from disk");
+  Image img("/Users/jlnr/Projekte/GeoAIDA test/Input.ppm");
+  
   beginTest("Creating/assigning image of a specified size");
-  Image img(typeid(float), 100, 200, 3);
+  img = Image(typeid(float), 100, 200, 3);
   assert(img.sizeX() == 100);
   assert(img.sizeY() == 200);
   
