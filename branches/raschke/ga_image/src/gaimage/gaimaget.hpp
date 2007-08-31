@@ -338,8 +338,8 @@ void ImageT<PixTyp>::setData(int x, int y, int noChannels, ...) {
   
   for (int c=0; c<noChannels; c++) {
     PixTyp* data = static_cast<PixTyp*>(va_arg(argPtr,void*));
-    // TODO: Integer overflow danger!
     puts("*** Copying pixels");
+    // TODO: Integer overflow danger!
     std::copy(data, data + x*y, newImage.begin(0, c));
     puts("*** Before destroying it");
   }

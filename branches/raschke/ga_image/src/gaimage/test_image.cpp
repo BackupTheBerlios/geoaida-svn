@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <sstream>
+#include <algorithm>
 
 using namespace Ga;
 
@@ -13,14 +14,24 @@ void beginTest(const std::string& test)
 }
 
 int main()
-{
-  beginTest("Loading a PPM file from disk");
-  Image img("/Users/jlnr/Projekte/GeoAIDA test/Input.ppm");
-  
+{  
   beginTest("Creating/assigning image of a specified size");
-  img = Image(typeid(float), 100, 200, 3);
+  Image img(typeid(float), 100, 200, 3);
   assert(img.sizeX() == 100);
   assert(img.sizeY() == 200);
+  
+  beginTest("Using ImageT iterators");
+  ImageT<float>& imgT = dynamic_cast<ImageT<float>&>(*img.pImage());
+  {
+    float pixels[100 * 200];
+    std::copy(pixels, pixels + 100*200, imgT.begin(0, 0));
+  //ImageT<float>::Iterator it1 = imgT.begin(0, 0);
+  //ImageT<float>::Iterator it2 = it1 + 2; //imgT.begin(0, 0);
+  //ImageT<float>::Iterator it3 = it1 + 6; //imgT.begin(0, 0);
+  }
+  
+  /*beginTest("Loading a PPM file from disk");
+  img.read("/Users/jlnr/Projekte/GeoAIDA test/Input.ppm");
   
   beginTest("Setting pixels on different channels");
   img.setPixel(0, 0, 0.5, 0);
@@ -33,5 +44,5 @@ int main()
   
   beginTest("Using Image iterators");
   *img.begin() = 5;
-  assert(*img.begin() == 5);
+  assert(*img.begin() == 5);*/
 }

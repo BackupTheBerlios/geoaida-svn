@@ -36,6 +36,7 @@ namespace
 		if (!block->isOnDisk())
 			(*heap) -= block->getSize();
 		delete block;
+    puts("dARU");
 	}
 }
 

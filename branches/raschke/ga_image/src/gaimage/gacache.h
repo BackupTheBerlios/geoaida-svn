@@ -300,7 +300,7 @@ namespace Ga
 
 			memory = new char[size];
 			CacheFile::get(size).recover(fileIndex, memory);
-		}	
+		}
 
 		++lockCount;
 
@@ -309,6 +309,10 @@ namespace Ga
 	
 	inline void BlockHandle::clonePointee()
 	{
+	  // First, unlock the old pointee.
+    for (unsigned i = 0; i < lockCount; ++i)
+      ptr->unlock();
+	  
     puts("BLOCKHANDLECLONE");
 		BlockHandle clone = Cache::get().alloc(ptr->getSize());
 		clone.lockRW();
@@ -325,6 +329,11 @@ namespace Ga
 		}
 		clone.unlock();
     ptr = clone.ptr;
+    
+    // Now start with locking the new client again, to
+    // retain validity of previous lockR calls.
+    for (unsigned i = 0; i < lockCount; ++i)
+      data = ptr->lock();
 	}
 }
 
