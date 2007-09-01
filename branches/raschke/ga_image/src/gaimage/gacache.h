@@ -191,9 +191,9 @@ namespace Ga
 		
 		void swap(BlockHandle& other)
 		{
+      assert(lockCount == 0);
+      assert(other.lockCount == 0);
       ptr.swap(other.ptr);
-      std::swap(lockCount, other.lockCount);
-      std::swap(data, other.data);
 		}
 		
 		bool isEmpty() const

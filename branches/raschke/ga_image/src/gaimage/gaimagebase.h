@@ -61,14 +61,12 @@ struct IteratorT
   IteratorT operator++(int) { IteratorT old = *this; ++*this; return old; }
   Proxy operator*() const { return Proxy(*img, ch, elem); }
   
-  template<typename OtherImg>
-  bool operator==(IteratorT<OtherImg, Pix> rhs) {
+  bool operator==(const IteratorT& rhs) const {
     return img == rhs.img && ch == rhs.ch && elem == rhs.elem;
   }
 
-  template<typename OtherImg>
-  bool operator!=(IteratorT<OtherImg, Pix> rhs) {
-    return img != rhs.img || ch != rhs.ch || elem != rhs.elem;
+  bool operator!=(const IteratorT& rhs) const {
+    return !(*this == rhs);
   }
 };
 

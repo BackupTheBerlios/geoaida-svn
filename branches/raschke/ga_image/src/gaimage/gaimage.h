@@ -80,10 +80,12 @@ public:
   /*o*/ double findMaxValue(int channel=0) const;
 
   // Iterators
-  Iterator begin(int row=0, int channel=0);
   ConstIterator constBegin(int row=0, int channel=0) const;
-  ConstIterator end(int row, int channel=0) const;
-  ConstIterator end() const;
+  ConstIterator constEnd(int row, int channel=0) const;
+  ConstIterator constEnd() const;
+  Iterator begin(int row=0, int channel=0);
+  Iterator end(int row, int channel=0) const;
+  Iterator end() const;
 };
 
 #define ForTypeDo(PixTyp,function,args) \

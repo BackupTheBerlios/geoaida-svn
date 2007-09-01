@@ -241,20 +241,28 @@ double Image::findMinValue(int channel) const
   return pImage_->findMinValue(channel);
 }
 
-Image::Iterator Image::begin(int row, int channel)  {
-  return Iterator(*this, channel, row * sizeX());
-};
-
 Image::ConstIterator Image::constBegin(int row, int channel) const {
   return ConstIterator(*this, channel, row * sizeX());
 };
 
-Image::ConstIterator Image::end(int row, int channel) const {
+Image::ConstIterator Image::constEnd(int row, int channel) const {
   return constBegin(row + 1, channel);
 };
 
-Image::ConstIterator Image::end() const {
+Image::ConstIterator Image::constEnd() const {
   return constBegin(sizeY(), 0);
+};
+
+Image::Iterator Image::begin(int row, int channel)  {
+  return Iterator(*this, channel, row * sizeX());
+};
+
+Image::ConstIterator Image::end(int row, int channel) const {
+  return begin(row + 1, channel);
+};
+
+Image::ConstIterator Image::end() const {
+  return begin(sizeY(), 0);
 };
 
 } // namespace Ga
