@@ -51,8 +51,8 @@ struct IteratorT
     
   public:
     Proxy(Img& img, unsigned ch, unsigned elem) : img(img), ch(ch), elem(elem) {}
-    operator Pix() const { return img.getPixel(elem % img.sizeX(), elem / img.sizeY(), ch); }
-    Proxy& operator=(Pix val) { img.setPixel(elem % img.sizeX(), elem / img.sizeY(), val, ch); return *this; }
+    operator Pix() const { return img.getPixel(elem % img.sizeX(), elem / img.sizeX(), ch); }
+    Proxy& operator=(Pix val) { img.setPixel(elem % img.sizeX(), elem / img.sizeX(), val, ch); return *this; }
   };
   
   IteratorT() : img(0) {}

@@ -84,8 +84,8 @@ public:
   ConstIterator constEnd(int row, int channel=0) const;
   ConstIterator constEnd() const;
   Iterator begin(int row=0, int channel=0);
-  Iterator end(int row, int channel=0) const;
-  Iterator end() const;
+  Iterator end(int row, int channel=0);
+  Iterator end();
 };
 
 #define ForTypeDo(PixTyp,function,args) \

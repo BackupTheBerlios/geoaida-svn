@@ -78,7 +78,7 @@ namespace Ga
 		
 	public:
 		explicit Block(Size size)
-		: lastAccess(0), lockCount(0), size(size), memory(0), dirty(false)
+		: lastAccess(0), lockCount(0), size(size), dirty(false)
 		{
 			// Global memory management already knows about this.
 			memory = new char[size];
@@ -130,8 +130,6 @@ namespace Ga
 				
 		void unlock()
 		{
-      printf("BLOCKUNLOCK: %d\n", this);
-
 			assert(lockCount > 0);
 			--lockCount;
 		}
@@ -252,6 +250,7 @@ namespace Ga
 		
 	public:
 		static Cache& get();
+    ~Cache();
 		
 		BlockHandle alloc(Size size);
 		void requestDiskToHeap(Size size);
@@ -280,8 +279,6 @@ namespace Ga
 
 	inline void* Block::lock()
 	{
-    printf("BLOCKLOCK: %d\n", this);
-	  
 		static unsigned accessCounter = 0;
 		
 		// Mark as being accessed recently.
@@ -313,7 +310,6 @@ namespace Ga
     for (unsigned i = 0; i < lockCount; ++i)
       ptr->unlock();
 	  
-    puts("BLOCKHANDLECLONE");
 		BlockHandle clone = Cache::get().alloc(ptr->getSize());
 		clone.lockRW();
 		try

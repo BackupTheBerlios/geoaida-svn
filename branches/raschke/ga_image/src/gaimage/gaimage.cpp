@@ -165,23 +165,19 @@ const class std::type_info& Image::typeId() const {
 }
 
 int Image::sizeX() const {
-  if (pImage_) return pImage_->sizeX();
-  else return 0;
+  return pImage_->sizeX();
 }
 
 int Image::sizeY() const {
-  if (pImage_) return pImage_->sizeY();
-  else return 0;
+  return pImage_->sizeY();
 }
 
 int Image::noPixels() const {
-  if (pImage_) return pImage_->noPixels();
-  return 0;
+  return pImage_->noPixels();
 }
 	
 int Image::noChannels() const {
-  if (pImage_) return pImage_->noChannels();
-  else return 0;
+  return pImage_->noChannels();
 }
 
 Image Image::getChannel(int channel)
@@ -257,11 +253,11 @@ Image::Iterator Image::begin(int row, int channel)  {
   return Iterator(*this, channel, row * sizeX());
 };
 
-Image::ConstIterator Image::end(int row, int channel) const {
+Image::Iterator Image::end(int row, int channel) {
   return begin(row + 1, channel);
 };
 
-Image::ConstIterator Image::end() const {
+Image::Iterator Image::end() {
   return begin(sizeY(), 0);
 };
 

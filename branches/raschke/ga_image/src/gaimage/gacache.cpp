@@ -27,6 +27,12 @@ Ga::Cache& Ga::Cache::get()
 	return cache;
 }
 
+Ga::Cache::~Cache()
+{
+  // All blocks should be unused now! (use_count() == 0)
+  assert(find_if(blocks.begin(), blocks.end(), tr1::mem_fn(&tr1::weak_ptr<Block>::use_count)) == blocks.end());
+}
+
 namespace
 {
 	void deleteAndReduceUsage(Ga::Block* block, Ga::LargeSize* total,
@@ -36,7 +42,6 @@ namespace
 		if (!block->isOnDisk())
 			(*heap) -= block->getSize();
 		delete block;
-    puts("dARU");
 	}
 }
 
@@ -44,7 +49,7 @@ Ga::BlockHandle Ga::Cache::alloc(Size size)
 {
 	total += size;
 	// Treat this like a file swapping back into memory.
-    requestDiskToHeap(size);
+  requestDiskToHeap(size);
 	
 	tr1::shared_ptr<Block> newBlock(new Block(size),
 		tr1::bind(deleteAndReduceUsage, tr1::placeholders::_1,
@@ -64,7 +69,7 @@ void Ga::Cache::requestDiskToHeap(Size size)
 		Blocks::iterator iter = blocks.end();
 		while (heap + size > HEAP_USAGE && iter != blocks.begin())
 		{
-    		--iter;
+    	--iter;
 
 			tr1::shared_ptr<Block> block(*iter);
 			

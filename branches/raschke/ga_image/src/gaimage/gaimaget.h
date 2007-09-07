@@ -55,7 +55,6 @@ namespace Ga {
     Iterator(BlockHandle& handle, unsigned elem)
     : handle(&handle), elem(elem)
     {
-      printf("Locking %d, Iterator ctor\n", this->handle);
       if (Mutable)
         handle.lockRW();
       else
@@ -64,7 +63,6 @@ namespace Ga {
     
     Iterator(const Iterator& other)
     {
-      printf("Locking %d, Iterator cctor\n", other.handle);
       handle = other.handle;
       if (Mutable)
         handle->lockRW();
@@ -81,7 +79,6 @@ namespace Ga {
     
     ~Iterator()
     {
-      printf("Unlocking %d, Iterator dtor\n", this->handle);
       handle->unlock();
     }
     

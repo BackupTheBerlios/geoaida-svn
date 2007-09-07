@@ -26,22 +26,26 @@
 namespace {
   using namespace Ga;
 
-  Image normalizeImage(const Image &source) {
+  Image normalizeImage(const Image& source) {
     int sizeX = source.sizeX(), sizeY = source.sizeY();
     Image result(typeid(float), sizeX, sizeY);
-
+    
   	double min = source.findMinValue();
   	double range = source.findMaxValue() - min;
-  	  
-    Image::ConstIterator in;
+  	
+    unsigned num = 0;
+  	
+    Image::ConstIterator in = source.constBegin();
+    Image::ConstIterator end = source.constEnd();
     Image::Iterator out;
-    for (in = source.constBegin(), out = result.begin(); in != source.end(); ++in, ++out) {
+    for (out = result.begin(); in != end; ++in, ++out) {
       double pix = *in;
       pix -= min;
       pix /= range;
       *out = pix;
+      ++num;
     }
-
+    
   	return result;
   }
 
@@ -211,19 +215,16 @@ namespace {
 }
 
 Ga::Image Ga::canny(const Image& img, double lowThreshold, double highThreshold) {
-  puts("Initing canny");
-  
   Image input = img;
     
 	// The Canny algorithm is designed to work on grayscale images, so make sure we have one.
 	if (input.noChannels() != 1) {
-    puts("toLuminance");
 		input = toLuminance(input);
 	}
 	
 	// Normalize the image so every pixel lies in 0..1.
 	input = normalizeImage(input);
-    
+	
   Image sobelX = convolve(input, SOBEL_X, 1.0/4, 0.5);
   Image sobelY = convolve(input, SOBEL_Y, 1.0/4, 0.5);
   

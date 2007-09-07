@@ -25,7 +25,7 @@ void assertCacheUsage(LargeSize total, LargeSize heap, LargeSize disk)
 
 int main()
 {
-	const LargeSize MB = 1024*1024;
+  const LargeSize MB = 1024*1024;
 	
   beginTest("Cache empty on startup?");
   assertCacheUsage(0, 0, 0);

@@ -44,7 +44,8 @@ ImageT<PixTyp>::ImageT(int x, int y, int noChannels) : ImageBase() {
   
   // Protection against integer overflows.
   LargeSize size = x;
-  y *= x;
+  size *= y;
+  size *= sizeof(PixTyp);
   // Actual allocation.
   for (int i = 0; i < noChannels; ++i)
     channels[i] = Cache::get().alloc(size);
@@ -338,12 +339,9 @@ void ImageT<PixTyp>::setData(int x, int y, int noChannels, ...) {
   
   for (int c=0; c<noChannels; c++) {
     PixTyp* data = static_cast<PixTyp*>(va_arg(argPtr,void*));
-    puts("*** Copying pixels");
     // TODO: Integer overflow danger!
     std::copy(data, data + x*y, newImage.begin(0, c));
-    puts("*** Before destroying it");
   }
-  puts("*** After destroying it");
   va_end(argPtr);
   newImage.swap(*this);
 }
