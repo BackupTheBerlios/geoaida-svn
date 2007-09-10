@@ -25,6 +25,7 @@
 #include <iostream>
 #include <string>
 #include <climits>
+#include <stdexcept>
 
 // TODO: Change to new-style includes; involves work.
 #include <stdio.h>
@@ -38,37 +39,6 @@
 #endif
 
 namespace Ga {
-
-template<typename Img, typename Pix>
-struct IteratorT
-{
-  Img* img;
-  unsigned ch, elem;
-  
-  class Proxy {
-    Img& img;
-    unsigned ch, elem;
-    
-  public:
-    Proxy(Img& img, unsigned ch, unsigned elem) : img(img), ch(ch), elem(elem) {}
-    operator Pix() const { return img.getPixel(elem % img.sizeX(), elem / img.sizeX(), ch); }
-    Proxy& operator=(Pix val) { img.setPixel(elem % img.sizeX(), elem / img.sizeX(), val, ch); return *this; }
-  };
-  
-  IteratorT() : img(0) {}
-  explicit IteratorT(Img& img, unsigned ch, unsigned elem) : img(&img), ch(ch), elem(elem) {}
-  IteratorT& operator++() { ++elem; return *this; }
-  IteratorT operator++(int) { IteratorT old = *this; ++*this; return old; }
-  Proxy operator*() const { return Proxy(*img, ch, elem); }
-  
-  bool operator==(const IteratorT& rhs) const {
-    return img == rhs.img && ch == rhs.ch && elem == rhs.elem;
-  }
-
-  bool operator!=(const IteratorT& rhs) const {
-    return !(*this == rhs);
-  }
-};
 
 enum IMGTYPE {
     _PFM_FLOAT=0,
@@ -106,9 +76,9 @@ public:
 
   IMGTYPE fileType() const { return fileType_; }
 	void setFileType(IMGTYPE t) { fileType_ = t;}
-  bool read(const char* filename);
+  void read(const char* filename);
   bool write(const char *filename, int channel=0);
-  virtual bool read(FILE *fp) = 0;
+  virtual void read(FILE *fp) = 0;
   virtual bool write(FILE *fp, int channel=0, const char* comment=0) = 0;
 
   // Drawing primitives
@@ -137,11 +107,12 @@ inline bool ImageBase::write(const char* filename, int channel)
   return write(fp,channel);
 }
 
-inline bool ImageBase::read(const char* filename)
+inline void ImageBase::read(const char* filename)
 {
   FILE *fp;
   fp=fopen(filename,"r");
-  if (!fp) return false;
+  if (!fp)
+    throw std::runtime_error(std::string("Could not open file ") + filename);
   return read(fp);
 }
 } // namespace Ga

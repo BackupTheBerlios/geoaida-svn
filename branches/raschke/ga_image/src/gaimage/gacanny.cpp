@@ -27,6 +27,9 @@ namespace {
   using namespace Ga;
 
   Image normalizeImage(const Image& source) {
+    // Uses Image::Iterator just because it's there.
+    // Should be optimized.
+    
     int sizeX = source.sizeX(), sizeY = source.sizeY();
     Image result(typeid(float), sizeX, sizeY);
     
@@ -37,8 +40,7 @@ namespace {
   	
     Image::ConstIterator in = source.constBegin();
     Image::ConstIterator end = source.constEnd();
-    Image::Iterator out;
-    for (out = result.begin(); in != end; ++in, ++out) {
+    for (Image::Iterator out = result.begin(); in != end; ++in, ++out) {
       double pix = *in;
       pix -= min;
       pix /= range;

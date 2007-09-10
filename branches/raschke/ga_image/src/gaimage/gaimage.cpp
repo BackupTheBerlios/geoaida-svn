@@ -120,8 +120,8 @@ Image::Image(const std::string& filename)
     // Use other constructor to create image representation.
     // (This looks strange, but if you think about it, swap() is a great tool. -- jlnr)
     Image(pixTypeOfImgType(type), cols, rows, channelsOfImgType(type)).swap(*this);
-  	if (!pImage()->read(fp))
-      throw std::runtime_error("Couldn't load image " + filename);
+    // Read image, will throw an exception on failure.
+    pImage()->read(fp);
     // I've seen all the gi_ tools check for empty images, so I just moved this here. -- jlnr
     if (sizeX() == 0 || sizeY() == 0)
       throw std::runtime_error("Image " + filename + " is empty");
@@ -262,5 +262,3 @@ Image::Iterator Image::end() {
 };
 
 } // namespace Ga
-
-

@@ -28,19 +28,46 @@ namespace Ga {
 
 class ImageBase;
 
-/** \class Image
-    \brief Class for handling arbitrarily large image files.
+// Simple Forward-Iterator that uses getPixel and setPixel to access the contents of its Image.
+// (Just as slow as calling getPixel/setPixel yourself, so you may want to avoid it.)
+// (Maybe it should leave altogether, as iterators suggest reasonable performance.)
+template<typename Img>
+struct SimpleIterator
+{
+  Img* img;
+  unsigned ch, elem;
+  
+  class Proxy {
+    Img& img;
+    unsigned ch, elem;
     
-    The Image class provides a type-agnostic wrapper around any ImageT<> instance.
-    */
+  public:
+    Proxy(Img& img, unsigned ch, unsigned elem) : img(img), ch(ch), elem(elem) {}
+    operator double() const { return img.getPixel(elem % img.sizeX(), elem / img.sizeX(), ch); }
+    Proxy& operator=(double val) { img.setPixel(elem % img.sizeX(), elem / img.sizeX(), val, ch); return *this; }
+  };
+  
+  explicit SimpleIterator(Img& img, unsigned ch, unsigned elem) : img(&img), ch(ch), elem(elem) {}
+  SimpleIterator& operator++() { ++elem; return *this; }
+  SimpleIterator operator++(int) { SimpleIterator old = *this; ++*this; return old; }
+  Proxy operator*() const { return Proxy(*img, ch, elem); }
+  
+  bool operator==(const SimpleIterator& rhs) const {
+    return img == rhs.img && ch == rhs.ch && elem == rhs.elem;
+  }
+
+  bool operator!=(const SimpleIterator& rhs) const {
+    return !(*this == rhs);
+  }
+};
 
 class Image 
 {
   ImageBase* pImage_;
 
 public:
-  typedef IteratorT<Image, double> Iterator;
-  typedef IteratorT<const Image, double> ConstIterator;
+  typedef SimpleIterator<Image> Iterator;
+  typedef SimpleIterator<const Image> ConstIterator;
 
   // Create wih ImageT representation of the given type, and given metrics.
   explicit Image(const class std::type_info& t, int x = 0, int y = 0, int noChannels=1);

@@ -18,6 +18,7 @@
  ***************************************************************************/
 
 #include <algorithm>
+#include <stdexcept>
 #include <stdarg.h>
 
 namespace Ga {
@@ -188,7 +189,7 @@ void ImageT<PixTyp>::getChannel(ImageBase& resultImg, int channel)
 }
 
 template <class PixTyp>
-bool ImageT<PixTyp>::read(FILE *fp) {
+void ImageT<PixTyp>::read(FILE *fp) {
 	int storageType=PFM_LAST;
 	IMGTYPE type = _UNKNOWN;
  	if (typeid(PixTyp)==typeid(float)) {
@@ -235,120 +236,80 @@ bool ImageT<PixTyp>::read(FILE *fp) {
 		storageType=PFM_BIT;
 		type=_PBM;
 	}
-	else fprintf(stderr,"Warning: Unsupport data type\n");
+	else throw std::runtime_error("Unsupported data type");
 
   if (noChannels()==3 && storageType==PFM_BYTE) { // PPM
   	type=_PPM;
   }
 	setFileType(type);
+	
   switch (type) {
   case _PPM: {
+    // Special case - this is read via PFM library, but uses 3 channels.
+    
+    // Get metrics and data via PFM library
   	int cols, rows;
-  	float minval, maxval;
-    PFM3Byte *ppmbuffer=(PFM3Byte*)pfm_readpfm_type(fp, &cols, &rows, &minval, &maxval,PFM_3BYTE,0);
-    {
-      double gW,gN,gE,gS;
-      //if (pfm_geo_get(&gW,&gN,&gE,&gS)) setGeoCoordinates(gW,gN,gE,gS);
-    }
+  	float min, max;
+    PFM3Byte *ppmbuffer =
+      static_cast<PFM3Byte*>(pfm_readpfm_type(fp, &cols, &rows, &min, &max, PFM_3BYTE, 0));
+      
+    // Copy values into this object - ought to be proper size already
+    assert(cols == sizeX());
+    assert(rows == sizeY());
+    assert(noChannels() == 3);
+    std::copy(ppmbuffer->r, ppmbuffer->r + cols * rows, begin(0, 0));
+    std::copy(ppmbuffer->g, ppmbuffer->g + cols * rows, begin(0, 1));
+    std::copy(ppmbuffer->b, ppmbuffer->b + cols * rows, begin(0, 2));
 
-		setData(cols,rows,3,ppmbuffer->r,ppmbuffer->g,ppmbuffer->b);
 	  free(ppmbuffer);
   	break;
-#if 0  		
- 	  pixval maxval;
- 	  int format;
- 	  int cols, rows;
-  	ppm_readppminit(fp, &cols, &rows, &maxval, &format);
-
-   	resize(cols,rows,3);
-   	
-   	int sizeX_ = cols, sizeY_ = rows;
-   	pixel *row = (pixel *)new pixel[sizeX_];
-   		
-    for (int y = 0; y < sizeY_; ++y) {
- 		  Iterator pChR = begin(y,0);
- 		  Iterator pChG = begin(y,1);
-		  Iterator pChB = begin(y,2);
-		  assert(pChR);
-		  assert(pChG);
-		  assert(pChB);
-	   	pixel *elem_pix = row;
-       		
-   		ppm_readppmrow(fp, row, sizeX_, maxval, format);
-       		
- 		  for (int x = 0; x < sizeX_; ++x, ++elem_pix, ++pChR, ++pChG, ++pChB) {
- 		  	*pChR=PPM_GETR(*elem_pix);
- 		  	*pChG=PPM_GETG(*elem_pix);
- 		  	*pChB=PPM_GETB(*elem_pix);
- 		  }
- 	  }
-		delete row;				    	
- 		break;
-#endif
  		}
+ 		
   case _PBM: {
- 	  int format;
+    // Special case - this is read via libpbm.
+    
+    // Start reading via PBM library.
  	  int cols, rows;
+ 	  int format;
   	pbm_readpbminit(fp, &cols, &rows, &format);
 
-   	resize(cols,rows,3);
+    assert(cols == sizeX());
+    assert(rows == sizeY());
+    assert(noChannels() == 1); // <- This was 3 in earlier version; why?!
    	
-   	int sizeX_ = cols, sizeY_ = rows;
-   	bit *row = (bit*)new bit[sizeX_];
+    std::vector<bit> row(sizeX());
    		
-    for (int y = 0; y < sizeY_; ++y) {
- 		  Iterator pBit = begin(y,0);
-	   	bit *elem_pix = row;
-       		
-   		pbm_readpbmrow(fp, row, sizeX_, format);
-       		
- 		  for (int x = 0; x < sizeX_; ++x, ++elem_pix, ++pBit) {
- 		  	*pBit=(*elem_pix!=0);
- 		  }
+    for (int y = 0; y < sizeY(); ++y) {
+   		pbm_readpbmrow(fp, &row[0], sizeX(), format);
+
+      Iterator it = begin(y, 0);
+      for (int x = 0; x < sizeX(); ++x, ++it)
+        *it = row[x];
  	  }
-		delete[] row;				    	
  		break;
  		}
+ 		
  	case _UNKNOWN:
-		fprintf(stderr,"##  (ERROR) unknown image type!");
- 		break;  	
+    throw std::runtime_error("Unknown image type");
+    
   default: {
+    // Usual case - one channel that is read via PFM library.
+    
   	int cols, rows;
-  	float minval, maxval;
-		void* data=pfm_readpfm_type(fp, &cols, &rows, &minval, &maxval,storageType,0);
-    {
-      double gW,gN,gE,gS;
-      //if (pfm_geo_get(&gW,&gN,&gE,&gS)) setGeoCoordinates(gW,gN,gE,gS);
-    }
-		setData(cols,rows,data);
+  	float min, max;
+  	
+    // HERE it gets ugly. This assumes this image has the right typeId()!
+    // typeId() and fileType() were supposed to be independent.
+    // TODO!
+		PixTyp* data =
+		  static_cast<PixTyp*>(pfm_readpfm_type(fp, &cols, &rows, &min, &max, storageType, 0));
+    //if (pfm_geo_get(&gW,&gN,&gE,&gS)) setGeoCoordinates(gW,gN,gE,gS);
+    
+    std::copy(data, data + cols*rows, begin());
 	  free(data);
   	break;
   	}
   }
-  return true;
-}
-
-/* set data without copying. There must be noChannels data-pointer in the ellipse */
-template <class PixTyp>
-void ImageT<PixTyp>::setData(int x, int y, int noChannels, ...) {
-  va_list argPtr;
-
-  ImageT<PixTyp> newImage(x, y, noChannels);
-
-  va_start(argPtr, noChannels);
-  
-  for (int c=0; c<noChannels; c++) {
-    PixTyp* data = static_cast<PixTyp*>(va_arg(argPtr,void*));
-    // TODO: Integer overflow danger!
-    std::copy(data, data + x*y, newImage.begin(0, c));
-  }
-  va_end(argPtr);
-  newImage.swap(*this);
-}
-
-template <class PixTyp>
-void ImageT<PixTyp>::setData(int x, int y, void* initvalues) {
-  setData(x, y, 1, initvalues);
 }
 
 template <class PixTyp>

@@ -40,11 +40,6 @@ extern "C" {
 #include <vector>
 
 namespace Ga {
-
-/** \class ImageT
-    \brief TODO
-    */
-  
   template<typename Pix, bool Mutable>
   class Iterator
   {
@@ -159,11 +154,11 @@ namespace Ga {
     
     bool operator!=(Iterator other) const
     {
-      return elem != other.elem;
+      return !(*this == other);
     }
   };
 }
- 
+
 namespace std
 { 
   template<typename Pix, bool Mutable>
@@ -182,12 +177,11 @@ namespace Ga
     // used when using ImageT directly.
     double getPixelAsDouble(int x, int y, int channel, double neutral) const;
     void setPixelToDouble(int x, int y, double val, int channel, bool clip);
+    
     // mutable: ConstIterator needs a non-const BlockHandle to lock/unlock it.
     mutable std::vector<BlockHandle> channels;
     
   public:
-    //typedef IteratorT<ImageT<PixTyp>, PixTyp> Iterator;
-    //typedef IteratorT<const ImageT<PixTyp>, PixTyp> ConstIterator;
     typedef Ga::Iterator<PixTyp, true> Iterator;
     typedef Ga::Iterator<const PixTyp, false> ConstIterator;
 
@@ -199,7 +193,7 @@ namespace Ga
     int noChannels() const;
     
     // I/O.
-    bool read(FILE *fp);
+    void read(FILE *fp);
     bool write(FILE *fp, int channel=0, const char* comment=0);
     using ImageBase::read;
     using ImageBase::write;
@@ -222,10 +216,6 @@ namespace Ga
     ConstIterator constEndChannel(int channel) const;
 
     PixTyp& operator() (int x, int y, int channel=0);
-
-    /* set data without copying. Ther must be noChannels data-pointer in the ellipse */
-    void setData(int x, int y, int noChannels, ...);
-    void setData(int x, int y, void* initvalues);
 
   //------------------------------------ Tool functions -----------------------
 
