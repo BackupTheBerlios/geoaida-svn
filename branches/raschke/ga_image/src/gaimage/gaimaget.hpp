@@ -189,7 +189,7 @@ void ImageT<PixTyp>::getChannel(ImageBase& resultImg, int channel)
 }
 
 template <class PixTyp>
-void ImageT<PixTyp>::read(FILE *fp) {
+void ImageT<PixTyp>::read(ImageIO& io) {
 	int storageType=PFM_LAST;
 	IMGTYPE type = _UNKNOWN;
  	if (typeid(PixTyp)==typeid(float)) {
@@ -251,7 +251,7 @@ void ImageT<PixTyp>::read(FILE *fp) {
   	int cols, rows;
   	float min, max;
     PFM3Byte *ppmbuffer =
-      static_cast<PFM3Byte*>(pfm_readpfm_type(fp, &cols, &rows, &min, &max, PFM_3BYTE, 0));
+      static_cast<PFM3Byte*>(pfm_readpfm_type(io.__fp__(), &cols, &rows, &min, &max, PFM_3BYTE, 0));
       
     // Copy values into this object - ought to be proper size already
     assert(cols == sizeX());
@@ -271,7 +271,7 @@ void ImageT<PixTyp>::read(FILE *fp) {
     // Start reading via PBM library.
  	  int cols, rows;
  	  int format;
-  	pbm_readpbminit(fp, &cols, &rows, &format);
+  	pbm_readpbminit(io.__fp__(), &cols, &rows, &format);
 
     assert(cols == sizeX());
     assert(rows == sizeY());
@@ -280,7 +280,7 @@ void ImageT<PixTyp>::read(FILE *fp) {
     std::vector<bit> row(sizeX());
    		
     for (int y = 0; y < sizeY(); ++y) {
-   		pbm_readpbmrow(fp, &row[0], sizeX(), format);
+   		pbm_readpbmrow(io.__fp__(), &row[0], sizeX(), format);
 
       Iterator it = begin(y, 0);
       for (int x = 0; x < sizeX(); ++x, ++it)
@@ -302,7 +302,7 @@ void ImageT<PixTyp>::read(FILE *fp) {
     // typeId() and fileType() were supposed to be independent.
     // TODO!
 		PixTyp* data =
-		  static_cast<PixTyp*>(pfm_readpfm_type(fp, &cols, &rows, &min, &max, storageType, 0));
+		  static_cast<PixTyp*>(pfm_readpfm_type(io.__fp__(), &cols, &rows, &min, &max, storageType, 0));
     //if (pfm_geo_get(&gW,&gN,&gE,&gS)) setGeoCoordinates(gW,gN,gE,gS);
     
     std::copy(data, data + cols*rows, begin());
@@ -313,7 +313,7 @@ void ImageT<PixTyp>::read(FILE *fp) {
 }
 
 template <class PixTyp>
-bool ImageT<PixTyp>::write(FILE *fp, int channel, const char* comment) {
+void ImageT<PixTyp>::write(ImageIO& io, int channel, const char* comment) {
 	int storageType=PFM_LAST;
  	if (typeid(PixTyp)==typeid(float)) {
 		storageType=PFM_FLOAT;
@@ -348,14 +348,14 @@ bool ImageT<PixTyp>::write(FILE *fp, int channel, const char* comment) {
 		  ppmbuffer.r=(unsigned char*)&*constBegin(0,0);
  	 		ppmbuffer.g=(unsigned char*)&*constBegin(0,1);
 			ppmbuffer.b=(unsigned char*)&*constBegin(0,2);
-  		pfm_writepfm_type(fp,&ppmbuffer,sizeX(),sizeY(),1,-1,PFM_3BYTE);
+  		pfm_writepfm_type(io.__fp__(),&ppmbuffer,sizeX(),sizeY(),1,-1,PFM_3BYTE);
   		}
 			break;
 		case _PBM: {
  	    int sizeX_ = sizeX(), sizeY_ = sizeY();
       std::vector<bit> row(sizeX_);
    		
-   		pbm_writepbminit(fp, sizeX_, sizeY_, 0);
+   		pbm_writepbminit(io.__fp__(), sizeX_, sizeY_, 0);
      		
    		for (int y = 0; y < sizeY_; ++y) {
    			ConstIterator pBit=constBegin(y,channel);
@@ -364,14 +364,13 @@ bool ImageT<PixTyp>::write(FILE *fp, int channel, const char* comment) {
    		  for (int x = 0; x < sizeX_; ++x, ++elem_pix, ++pBit) {
            *elem_pix=(*pBit ? 1 : 0);
    		  }
-   		  pbm_writepbmrow(fp, &row[0], sizeX_, 0);
+   		  pbm_writepbmrow(io.__fp__(), &row[0], sizeX_, 0);
   	  }
   		}
 			break;
 		default:
-  		pfm_writepfm_type(fp,&*constBegin(0,channel),sizeX(),sizeY(),1,-1,storageType);
+  		pfm_writepfm_type(io.__fp__(),&*constBegin(0,channel),sizeX(),sizeY(),1,-1,storageType);
 	}
-	return true;
 }
 
 } // namespace Ga

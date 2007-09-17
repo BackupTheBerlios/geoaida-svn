@@ -193,8 +193,8 @@ namespace Ga
     int noChannels() const;
     
     // I/O.
-    void read(FILE *fp);
-    bool write(FILE *fp, int channel=0, const char* comment=0);
+    void read(ImageIO& io);
+    void write(ImageIO& io, int channel=0, const char* comment=0);
     using ImageBase::read;
     using ImageBase::write;
 
@@ -217,25 +217,23 @@ namespace Ga
 
     PixTyp& operator() (int x, int y, int channel=0);
 
-  //------------------------------------ Tool functions -----------------------
+    double findMaxValue(int channel=0);
+    double findMinValue(int channel=0);
+    void resize(int rx, int ry, int noChannels=1);
 
-  double findMaxValue(int channel=0);
-  double findMinValue(int channel=0);
-  void resize(int rx, int ry, int noChannels=1);
+    void setInt(void *ptr, int val);
 
-  void setInt(void *ptr, int val);
+    int getInt(const void *ptr) const;
 
-  int getInt(const void *ptr) const;
+    void getChannel(ImageBase& pic, int channel=0);
 
-  void getChannel(ImageBase& pic, int channel=0);
-
-  void swap(ImageT& other) {
-    using std::swap;
-    swap(fileType_, other.fileType_);
-    swap(sizeX_, other.sizeX_);
-    swap(sizeY_, other.sizeY_);
-    swap(channels, other.channels);
-  }
+    void swap(ImageT& other) {
+      using std::swap;
+      swap(fileType_, other.fileType_);
+      swap(sizeX_, other.sizeX_);
+      swap(sizeY_, other.sizeY_);
+      swap(channels, other.channels);
+    }
 };
 
 } // namespace Ga

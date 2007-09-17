@@ -24,69 +24,10 @@
 #include "gaimage.h"
 #include "gaimaget.h"
 #include "gaimagebase.h"
+#include "gaimageio.h"
 
-namespace Ga {
-  
-// File-local helper functions regarding IMGTYPEs.
-namespace {
-  const std::type_info& pixTypeOfImgType(IMGTYPE type)
-  {
-    switch (type)
-    {
-      case _PFM_FLOAT:  return typeid(float);
-      case _PFM_UINT16: return typeid(unsigned short);
-      case _PFM_SINT16: return typeid(signed short);
-      case _PFM_UINT:   return typeid(unsigned);
-      case _PFM_SINT:   return typeid(signed);
-      case _PGM:        return typeid(unsigned char);
-      case _PPM:        return typeid(unsigned char);
-      case _PBM:        return typeid(bool);
-      default:          throw std::logic_error("Unsupported image type");
-    }
-  }
-  
-  int channelsOfImgType(IMGTYPE type)
-  {
-    if (type == _PPM)
-      return 3;
-    return 1;
-  }
-
-  IMGTYPE readImageType(FILE *fp,int* cols, int* rows) {
-    int pxmtype;
-    IMGTYPE type=_UNKNOWN;
-    int c, r;
-    float minval,maxval;
-    long pos=ftell(fp);
-    if (pfm_readpfm_header(fp, &c, &r, &minval, &maxval, &pxmtype))
-  	  type=(IMGTYPE)pxmtype;
-    fseek(fp,pos,SEEK_SET);
-    if (type==_UNKNOWN) {
-  	  xelval max_x;
-    	pnm_readpnminit(fp, &c, &r, &max_x, &pxmtype);
-    	fseek(fp,pos,SEEK_SET);
-    	if (pxmtype == PBM_FORMAT || pxmtype == RPBM_FORMAT ||
-    	    pxmtype == PPM_FORMAT || pxmtype == RPPM_FORMAT ) {
-    	    switch(pxmtype) {
-      		case PBM_FORMAT:
-      		case RPBM_FORMAT:
-      		    type=_PBM;
-      		    break;
-      		case PGM_FORMAT:
-      		case RPGM_FORMAT:
-      		    type=_PGM;
-      		    break;
-      		case PPM_FORMAT:
-      		case RPPM_FORMAT:
-      		    type=_PPM;
-    	    }
-      }
-    }
-    if (cols) *cols=c;
-    if (rows) *rows=r;
-    return type;
-  }
-}
+namespace Ga
+{
 
 Image::Image(const std::type_info& t, int x, int y, int noChannels)
 {
@@ -109,26 +50,25 @@ Image::Image(const std::type_info& t, int x, int y, int noChannels)
 
 Image::Image(const std::string& filename)
 : pImage_(0)
-{
-  FILE *fp = fopen(filename.c_str(), "r");
-  if (!fp)
-    throw std::runtime_error("Cannot open file " + filename);
+{ 
+  ImageIO io(filename);
+  
+  // Use other constructor to create image representation, then throw the
+  // temporary Image away.
+  // This looks strange, but if you think about it, swap() is a great tool. -- jlnr
+  Image(io.pixType(), io.sizeX(), io.sizeY(), io.channels()).swap(*this);
+  
   try
   {  
-    int cols,rows;
-    IMGTYPE type=readImageType(fp,&cols,&rows);
-    // Use other constructor to create image representation.
-    // (This looks strange, but if you think about it, swap() is a great tool. -- jlnr)
-    Image(pixTypeOfImgType(type), cols, rows, channelsOfImgType(type)).swap(*this);
     // Read image, will throw an exception on failure.
-    pImage()->read(fp);
-    // I've seen all the gi_ tools check for empty images, so I just moved this here. -- jlnr
+    pImage()->read(io);
+    // I've seen all the gi_ tools check for empty images, so I added this
+    // check. -- jlnr
     if (sizeX() == 0 || sizeY() == 0)
       throw std::runtime_error("Image " + filename + " is empty");
   }
   catch (...)
   {
-    fclose(fp);
     delete pImage_;
     throw;
   }
@@ -141,6 +81,7 @@ Image::Image(const Image& rhs)
 
 Image& Image::operator=(const Image& rhs)
 {
+  // Temporary Image & swap; same trick as above. -- jlnr
   if (this != &rhs)
     Image(rhs).swap(*this);
   return *this;

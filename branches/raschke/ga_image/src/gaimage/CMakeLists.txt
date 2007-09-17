@@ -15,6 +15,7 @@ set(headers gaalgo.h
            gahough.h
            gaimage.h
            gaimagebase.h
+           gaimageio.h
            gaimaget.h
            gakirsch.h
            garegion.h
@@ -43,8 +44,9 @@ set(sources gacalchistogram.cpp
            gagradient.cpp
            gahough.cpp
            gaimage.cpp
-		   gacache.cpp
-		   gacachefile.cpp
+           gaimageio.cpp
+           gacache.cpp
+		       gacachefile.cpp
            garegion.cpp
            gatohsv.cpp
            gatoluminance.cpp

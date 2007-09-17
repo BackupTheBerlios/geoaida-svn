@@ -114,8 +114,7 @@ int main(int argc, char *argv[])
 
   if (verbose) cout << "writing output image " << argv[optind + 1] << ", " << endl;
   
-  assert(fp = fopen(argv[optind + 1], "w"));
-  label.write(fp);
+  label.write(argv[optind + 1]);
   
   if (verbose) cout << "ready." << endl;
 

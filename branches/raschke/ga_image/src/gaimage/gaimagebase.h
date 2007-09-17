@@ -20,6 +20,8 @@
 #ifndef __GAIMAGEBASE_H
 #define __GAIMAGEBASE_H
 
+#include "gaimageio.h"
+
 #include <typeinfo>
 #include <cassert>
 #include <iostream>
@@ -39,18 +41,6 @@
 #endif
 
 namespace Ga {
-
-enum IMGTYPE {
-    _PFM_FLOAT=0,
-    _PFM_SINT,
-    _PFM_UINT,
-    _PFM_SINT16,
-    _PFM_UINT16,
-		_PGM,
-		_PBM,
-		_PPM,	
-		_UNKNOWN
-};
 
 template <class PixType> class ImageT;
 
@@ -77,9 +67,9 @@ public:
   IMGTYPE fileType() const { return fileType_; }
 	void setFileType(IMGTYPE t) { fileType_ = t;}
   void read(const char* filename);
-  bool write(const char *filename, int channel=0);
-  virtual void read(FILE *fp) = 0;
-  virtual bool write(FILE *fp, int channel=0, const char* comment=0) = 0;
+  void write(const char *filename, int channel=0);
+  virtual void read(ImageIO&) = 0;
+  virtual void write(ImageIO&, int channel=0, const char* comment=0) = 0;
 
   // Drawing primitives
   virtual double getPixelAsDouble(int x, int y, int channel=0, double neutral=0) const=0;
@@ -99,22 +89,18 @@ inline ImageBase::ImageBase()
   fileType_=_UNKNOWN;
 }
 
-inline bool ImageBase::write(const char* filename, int channel)
-{
-  FILE *fp;
-  fp=fopen(filename,"w");
-  if (!fp) return false;
-  return write(fp,channel);
-}
-
 inline void ImageBase::read(const char* filename)
 {
-  FILE *fp;
-  fp=fopen(filename,"r");
-  if (!fp)
-    throw std::runtime_error(std::string("Could not open file ") + filename);
-  return read(fp);
+  ImageIO io(filename);
+  return read(io);
 }
+
+inline void ImageBase::write(const char* filename, int channel)
+{
+  ImageIO io(filename);
+  return write(io, channel);
+}
+
 } // namespace Ga
 
 #endif        // __GA_IMAGEBASE_H
