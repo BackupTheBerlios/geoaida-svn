@@ -97,7 +97,7 @@ inline void ImageBase::read(const char* filename)
 
 inline void ImageBase::write(const char* filename, int channel)
 {
-  ImageIO io(filename);
+  ImageIO io(filename, fileType(), sizeX(), sizeY());
   return write(io, channel);
 }
 

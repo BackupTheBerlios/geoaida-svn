@@ -51,7 +51,15 @@ ImageT<PixTyp>::ImageT(int x, int y, int noChannels) : ImageBase() {
   for (int i = 0; i < noChannels; ++i)
     channels[i] = Cache::get().alloc(size);
   
+  // Try to guess the filetype.
   setFileType(_UNKNOWN);
+  if (noChannels == 3 && typeid(PixTyp) == typeid(unsigned char))
+    setFileType(_PPM);
+  if (noChannels == 1 && typeid(PixTyp) == typeid(unsigned char))
+    setFileType(_PFM_FLOAT);
+  if (noChannels == 1 && typeid(PixTyp) == typeid(float))
+    setFileType(_PGM);
+  // TODO: etc.
 }
 
 template <class PixTyp>
