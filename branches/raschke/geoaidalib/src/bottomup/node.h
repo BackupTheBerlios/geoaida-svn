@@ -59,7 +59,7 @@ public:
 	~Node();
 
 protected: // Protected attributes
-	enum IMGTYPE {
+	enum FileType {
     PFM_FLOAT=0,
     PFM_SINT,
     PFM_UINT,
@@ -194,7 +194,7 @@ protected: // Protected attributes
  	
 private:	 // Private attributes
   /** test the consistent of the image date */
-  bool testSize(int cols, int rows, IMGTYPE type);
+  bool testSize(int cols, int rows, FileType type);
   /** geo position to image position */
   int geo2pic(float x, float y, int *rx, int *ry);
   /** stack for bottom-up operator */

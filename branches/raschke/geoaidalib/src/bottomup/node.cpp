@@ -76,7 +76,7 @@ void Node::p(float f) {
 #if 0
 /** set data typ */
 void Node::dataTyp(int t) {
-	type_ = (IMGTYPE)t;
+	type_ = (FileType)t;
 	QString *s = new QString;
 	s->setNum(type_);
 	replace("type",s);
@@ -162,7 +162,7 @@ void Node::load(NodeList& nodeList) {
   float minval_, maxval_;
 
   if (pfm_readpfm_header(fp, &cols_, &rows_, &minval_, &maxval_, &pxmtype))
-    type_ = (IMGTYPE)pxmtype; //0 = FALSE, 1 = TRUE
+    type_ = (FileType)pxmtype; //0 = FALSE, 1 = TRUE
   else { /* now check for all the other fucking p?m-formats */
   	xelval maxx;
     pnm_readpnminit(fp, &cols_, &rows_, &maxx, &pxmtype);
@@ -222,7 +222,7 @@ Ga::Image* Node::data() {
 #endif
 }
 
-bool Node::testSize(int cols, int rows, IMGTYPE type) {
+bool Node::testSize(int cols, int rows, FileType type) {
   if (cols!=cols_ || rows!=rows_) {
 #if 0
     qDebug("##  (ERROR) inconsistent image data!");

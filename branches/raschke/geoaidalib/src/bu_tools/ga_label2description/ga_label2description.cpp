@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
 
   RegionSensor *rs = new RegionSensor(inImgName);
   int classCount;
-  IMGTYPE type_ = rs->type();
+  FileType type_ = rs->type();
 	switch (type_) { //label is need for template function
 		case _PFM_SINT: {
 		  ImageT<int>* img = (ImageT<int>*)(rs->image());

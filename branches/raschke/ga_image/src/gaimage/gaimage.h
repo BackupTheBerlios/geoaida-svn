@@ -91,8 +91,8 @@ public:
   Image getChannel(int channel=0);
 
   // I/O
-  IMGTYPE fileType() const;
-  void setFileType(IMGTYPE t);
+  FileType fileType() const;
+  void setFileType(FileType t);
   bool read(const char* filename);
   void write(const char* filename, int channel=0);
 	

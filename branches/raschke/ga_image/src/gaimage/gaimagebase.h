@@ -47,7 +47,7 @@ template <class PixType> class ImageT;
 class ImageBase
 {
 protected:
-  IMGTYPE fileType_;
+  FileType fileType_;
   int sizeX_, sizeY_;
 
   ImageBase();
@@ -64,8 +64,8 @@ public:
   virtual void getChannel(ImageBase& pic, int channel=0) = 0;
   virtual void resize(int rx, int ry, int noChannels=1)=0; // TODO: KILL!
 
-  IMGTYPE fileType() const { return fileType_; }
-	void setFileType(IMGTYPE t) { fileType_ = t;}
+  FileType fileType() const { return fileType_; }
+	void setFileType(FileType t) { fileType_ = t;}
   void read(const char* filename);
   void write(const char *filename, int channel=0);
   virtual void read(ImageIO&) = 0;

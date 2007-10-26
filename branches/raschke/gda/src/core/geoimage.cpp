@@ -220,7 +220,7 @@ void GeoImage::load()
   float minval_, maxval_;
 
   if (pfm_readpfm_header(fp, &cols_, &rows_, &minval_, &maxval_, &pxmtype))
-    type_ = (IMGTYPE) pxmtype;  //0 = FALSE, 1 = TRUE
+    type_ = (FileType) pxmtype;  //0 = FALSE, 1 = TRUE
   else {                        /* now check for all the other fucking p?m-formats */
     pnm_readpnminit(fp, &cols_, &rows_, &max_x, &pxmtype);
     rewind(fp);
@@ -381,7 +381,7 @@ void GeoImage::freeData()
   }
 }
 
-bool GeoImage::testSize(int cols, int rows, IMGTYPE)
+bool GeoImage::testSize(int cols, int rows, FileType)
 {
   if (cols != cols_ || rows != rows_) {
     qDebug("##  (ERROR) inconsistent image data!");

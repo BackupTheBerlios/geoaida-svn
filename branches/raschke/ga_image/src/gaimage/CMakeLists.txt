@@ -45,6 +45,8 @@ set(sources gacalchistogram.cpp
            gahough.cpp
            gaimage.cpp
            gaimageio.cpp
+           gaimageio_libnetpbm.cpp
+           gaimageio_libpfm.cpp
            gacache.cpp
 		       gacachefile.cpp
            garegion.cpp

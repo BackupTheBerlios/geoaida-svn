@@ -240,7 +240,7 @@ public:
   /** frees the data */
   void freeData();
 
-  enum IMGTYPE
+  enum FileType
   {
     PFMStorageTypeDefine,
     PBM = PFM_LAST,
@@ -252,7 +252,7 @@ public:
 protected:                     // Protected attributes
   void *data_;
   int dataSize_;
-  IMGTYPE type_;
+  FileType type_;
   int cols_, rows_;
   float geoNorth_, geoSouth_, geoEast_, geoWest_;
   float minval_, maxval_;
@@ -260,7 +260,7 @@ protected:                     // Protected attributes
   static GeoImageCache cache_;
 private:
   /** test the consistent of the image date */
-  bool testSize(int cols, int rows, IMGTYPE type);
+  bool testSize(int cols, int rows, FileType type);
 
 };
 

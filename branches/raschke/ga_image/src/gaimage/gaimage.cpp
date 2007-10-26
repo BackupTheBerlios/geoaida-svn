@@ -128,11 +128,11 @@ Image Image::getChannel(int channel)
   return result;
 }
 
-IMGTYPE Image::fileType() const {
+FileType Image::fileType() const {
   return pImage_->fileType();
 }
 
-void Image::setFileType(IMGTYPE t) {
+void Image::setFileType(FileType t) {
   pImage_->setFileType(t);
 }
 
