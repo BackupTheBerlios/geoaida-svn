@@ -32,9 +32,7 @@ extern "C" {
 }
 
 #include <assert.h>
-#include "gadefines.h"
 #include "gaimagebase.h"
-#include "gaarray2dt.h"
 #include "gacache.h"
 #include <algorithm>
 #include <vector>

@@ -91,14 +91,14 @@ inline ImageBase::ImageBase()
 
 inline void ImageBase::read(const char* filename)
 {
-  ImageIO io(filename);
-  return read(io);
+  std::auto_ptr<ImageIO> io = ImageIO::reopen(filename);
+  return read(*io);
 }
 
 inline void ImageBase::write(const char* filename, int channel)
 {
-  ImageIO io(filename, fileType(), sizeX(), sizeY());
-  return write(io, channel);
+  std::auto_ptr<ImageIO> io = ImageIO::create(filename, fileType(), sizeX(), sizeY(), noChannels());
+  return write(*io, channel);
 }
 
 } // namespace Ga

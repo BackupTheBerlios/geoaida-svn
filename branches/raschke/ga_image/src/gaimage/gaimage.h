@@ -21,7 +21,6 @@
 #define __GAIMAGE_H
 
 #include <typeinfo>
-#include "gadefines.h"
 #include "gaimagebase.h"
 
 namespace Ga {

@@ -16,9 +16,11 @@
  *                                                                         *
  ***************************************************************************/
 
+#ifndef __GAIMAGEIO_H
+#define __GAIMAGEIO_H
+
 #include <string>
 #include <typeinfo>
-#include "gafileformat.h"
 
 namespace Ga
 {
@@ -37,6 +39,10 @@ namespace Ga
   
   class ImageIO
   { 
+  private:
+    ImageIO(const ImageIO& other);
+    ImageIO& operator=(const ImageIO& other);
+
   public:
     static std::auto_ptr<ImageIO> create(const std::string& filename,
       FileType filetype, int sizeX, int sizeY, int channels);
@@ -49,12 +55,7 @@ namespace Ga
     virtual int sizeY() const = 0;
     virtual int channels() const = 0;
     virtual const std::type_info& pixType() const = 0;
-    
-  private:
-    ImageIO(const ImageIO& other);
-    ImageIO& operator=(const ImageIO& other);
 
-  protected:
     #define DECLARE_IO_METHODS(Type) \
     virtual void readRect(int channel, int x, int y, int width, int height, \
       Type* buffer) = 0; \
@@ -65,6 +66,8 @@ namespace Ga
     DECLARE_IO_METHODS(char)
     DECLARE_IO_METHODS(signed char)
     DECLARE_IO_METHODS(unsigned char)
+    DECLARE_IO_METHODS(signed short)
+    DECLARE_IO_METHODS(unsigned short)
     DECLARE_IO_METHODS(signed int)
     DECLARE_IO_METHODS(unsigned int)
     DECLARE_IO_METHODS(float)
@@ -88,6 +91,8 @@ namespace Ga
     IMPLEMENT_IO_METHODS(char)
     IMPLEMENT_IO_METHODS(signed char)
     IMPLEMENT_IO_METHODS(unsigned char)
+    IMPLEMENT_IO_METHODS(signed short)
+    IMPLEMENT_IO_METHODS(unsigned short)
     IMPLEMENT_IO_METHODS(signed int)
     IMPLEMENT_IO_METHODS(unsigned int)
     IMPLEMENT_IO_METHODS(float)
@@ -106,3 +111,5 @@ namespace Ga
     }
   };
 }
+
+#endif

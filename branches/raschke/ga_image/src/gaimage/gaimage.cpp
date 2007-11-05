@@ -51,17 +51,17 @@ Image::Image(const std::type_info& t, int x, int y, int noChannels)
 Image::Image(const std::string& filename)
 : pImage_(0)
 { 
-  ImageIO io(filename);
+  std::auto_ptr<ImageIO> io = ImageIO::reopen(filename);
   
   // Use other constructor to create image representation, then throw the
   // temporary Image away.
   // This looks strange, but if you think about it, swap() is a great tool. -- jlnr
-  Image(io.pixType(), io.sizeX(), io.sizeY(), io.channels()).swap(*this);
+  Image(io->pixType(), io->sizeX(), io->sizeY(), io->channels()).swap(*this);
   
   try
   {  
     // Read image, will throw an exception on failure.
-    pImage()->read(io);
+    pImage()->read(*io);
     // I've seen all the gi_ tools check for empty images, so I added this
     // check. -- jlnr
     if (sizeX() == 0 || sizeY() == 0)

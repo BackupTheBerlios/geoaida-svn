@@ -48,7 +48,7 @@ set(sources gacalchistogram.cpp
            gaimageio_libnetpbm.cpp
            gaimageio_libpfm.cpp
            gacache.cpp
-		       gacachefile.cpp
+           gacachefile.cpp
            garegion.cpp
            gatohsv.cpp
            gatoluminance.cpp
@@ -63,11 +63,11 @@ install(TARGETS gaimage DESTINATION lib)
 install(FILES ${headers} DESTINATION include)
 
 add_executable(painttest test_painter.cpp)
-target_link_libraries(painttest gaimage pfm pnm)
+target_link_libraries(painttest gaimage pfm netpbm)
 
 add_executable(test_cache test_cache.cpp)
-target_link_libraries(test_cache gaimage pfm pnm)
+target_link_libraries(test_cache gaimage pfm netpbm)
 
 add_executable(test_image test_image.cpp)
-target_link_libraries(test_image gaimage pfm pnm)
+target_link_libraries(test_image gaimage pfm netpbm)
 
