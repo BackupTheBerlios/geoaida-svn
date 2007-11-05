@@ -55,39 +55,21 @@ namespace Ga
     ImageIO& operator=(const ImageIO& other);
 
   protected:
-    virtual void readRect(int channel, int x, int y, int width, int height,
-      bool* buffer) = 0;                                                   
-    virtual void readRect(int channel, int x, int y, int width, int height,
-      char* buffer) = 0;                                                   
-    virtual void readRect(int channel, int x, int y, int width, int height,
-      signed char* buffer) = 0;                                            
-    virtual void readRect(int channel, int x, int y, int width, int height,
-      unsigned char* buffer) = 0;                                          
-    virtual void readRect(int channel, int x, int y, int width, int height,
-      signed int* buffer) = 0;                                             
-    virtual void readRect(int channel, int x, int y, int width, int height,
-      unsigned int* buffer) = 0;                                           
-    virtual void readRect(int channel, int x, int y, int width, int height,
-      float* buffer) = 0;                                                  
-    virtual void readRect(int channel, int x, int y, int width, int height,
-      double* buffer) = 0;
-
-    virtual void replaceRect(int channel, int x, int y, int width, int height,
-      const bool* buffer) = 0;                                                
-    virtual void replaceRect(int channel, int x, int y, int width, int height,
-      const char* buffer) = 0;                                                
-    virtual void replaceRect(int channel, int x, int y, int width, int height,
-      const signed char* buffer) = 0;                                         
-    virtual void replaceRect(int channel, int x, int y, int width, int height,
-      const unsigned char* buffer) = 0;                                       
-    virtual void replaceRect(int channel, int x, int y, int width, int height,
-      const signed int* buffer) = 0;                                          
-    virtual void replaceRect(int channel, int x, int y, int width, int height,
-      const unsigned int* buffer) = 0;                                        
-    virtual void replaceRect(int channel, int x, int y, int width, int height,
-      const float* buffer) = 0;                                               
-    virtual void replaceRect(int channel, int x, int y, int width, int height,
-      const double* buffer) = 0;
+    #define DECLARE_IO_METHODS(Type) \
+    virtual void readRect(int channel, int x, int y, int width, int height, \
+      Type* buffer) = 0; \
+    virtual void replaceRect(int channel, int x, int y, int width, int height, \
+      const Type* buffer) = 0;
+      
+    DECLARE_IO_METHODS(bool)
+    DECLARE_IO_METHODS(char)
+    DECLARE_IO_METHODS(signed char)
+    DECLARE_IO_METHODS(unsigned char)
+    DECLARE_IO_METHODS(signed int)
+    DECLARE_IO_METHODS(unsigned int)
+    DECLARE_IO_METHODS(float)
+    DECLARE_IO_METHODS(double)
+    #undef DECLARE_IO_METHODS
   };
   
   template<typename Impl>
@@ -96,16 +78,26 @@ namespace Ga
     Impl* impl;
     
   protected:
-    void readRect(int channel, int x, int y, int width, int height,
-      bool* buffer) { impl->readRect(channel, x, y, width, height, buffer); }
-    void readRect(int channel, int x, int y, int width, int height,
-      char* buffer) { impl->readRect(channel, x, y, width, height, buffer); }
-    // ...
+    #define IMPLEMENT_IO_METHODS(Type) \
+    void readRect(int channel, int x, int y, int width, int height, \
+      Type* buffer) { impl->readRect(channel, x, y, width, height, buffer); } \
+    void replaceRect(int channel, int x, int y, int width, int height, \
+      const Type* buffer) { impl->replaceRect(channel, x, y, width, height, buffer); }
+    
+    IMPLEMENT_IO_METHODS(bool)
+    IMPLEMENT_IO_METHODS(char)
+    IMPLEMENT_IO_METHODS(signed char)
+    IMPLEMENT_IO_METHODS(unsigned char)
+    IMPLEMENT_IO_METHODS(signed int)
+    IMPLEMENT_IO_METHODS(unsigned int)
+    IMPLEMENT_IO_METHODS(float)
+    IMPLEMENT_IO_METHODS(double)
+    #undef IMPLEMENT_IO_METHODS
     
   public:
     ImageIOAdapter(FILE* fp)
     : impl(new Impl(fp))
-    {
+    { 
     }
     
     ~ImageIOAdapter()
