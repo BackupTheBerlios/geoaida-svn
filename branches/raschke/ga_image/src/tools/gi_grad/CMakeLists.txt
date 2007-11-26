@@ -9,7 +9,7 @@ set(data gi_grad.mod)
 
 add_executable(gi_grad ${sources})
 
-target_link_libraries(gi_grad gaimage pfm pnm)
+target_link_libraries(gi_grad gaimage pfm netpbm)
 
 install(TARGETS gi_grad DESTINATION bin)
 install(FILES ${data} DESTINATION share/data/modules)

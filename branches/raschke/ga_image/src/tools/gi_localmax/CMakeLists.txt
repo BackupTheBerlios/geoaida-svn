@@ -9,7 +9,7 @@ set(data gi_localmax.mod)
 
 add_executable(gi_localmax ${sources})
 
-target_link_libraries(gi_localmax gaimage pfm pnm)
+target_link_libraries(gi_localmax gaimage pfm netpbm)
 
 install(TARGETS gi_localmax DESTINATION bin)
 install(FILES ${data} DESTINATION share/data/modules)

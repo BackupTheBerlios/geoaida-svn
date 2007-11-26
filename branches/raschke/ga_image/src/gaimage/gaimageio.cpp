@@ -17,3 +17,18 @@
  ***************************************************************************/
 
 #include "gaimageio.h"
+
+std::auto_ptr<Ga::ImageIO> Ga::ImageIO::create(const std::string& filename,
+  FileType filetype, int sizeX, int sizeY, int channels)
+{
+  return std::auto_ptr<Ga::ImageIO>();
+}
+
+std::auto_ptr<Ga::ImageIO> Ga::ImageIO::reopen(const std::string& filename)
+{
+  return std::auto_ptr<Ga::ImageIO>();
+}
+
+Ga::ImageIO::~ImageIO()
+{
+}

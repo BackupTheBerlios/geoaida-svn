@@ -9,7 +9,7 @@ set(data gi_despeckle.mod)
 
 add_executable(gi_despeckle ${sources})
 
-target_link_libraries(gi_despeckle gaimage pfm pnm)
+target_link_libraries(gi_despeckle gaimage pfm netpbm)
 
 install(TARGETS gi_despeckle DESTINATION bin)
 install(FILES ${data} DESTINATION share/data/modules)

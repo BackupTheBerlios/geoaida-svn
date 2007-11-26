@@ -9,7 +9,7 @@ set(data gi_pick_color.mod)
 
 add_executable(gi_pick_color ${sources})
 
-target_link_libraries(gi_pick_color gaimage pfm pnm)
+target_link_libraries(gi_pick_color gaimage pfm netpbm)
 
 install(TARGETS gi_pick_color DESTINATION bin)
 #install(FILES ${data} DESTINATION share/data/modules)

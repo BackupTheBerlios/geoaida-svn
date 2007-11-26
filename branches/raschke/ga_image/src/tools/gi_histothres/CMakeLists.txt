@@ -9,7 +9,7 @@ set(data gi_histothres.mod)
 
 add_executable(gi_histothres ${sources})
 
-target_link_libraries(gi_histothres gaimage pfm pnm)
+target_link_libraries(gi_histothres gaimage pfm netpbm)
 
 install(TARGETS gi_histothres DESTINATION bin)
 install(FILES ${data} DESTINATION share/data/modules)

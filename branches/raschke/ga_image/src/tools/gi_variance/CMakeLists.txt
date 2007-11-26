@@ -9,7 +9,7 @@ set(data gi_variance.mod)
 
 add_executable(gi_variance ${sources})
 
-target_link_libraries(gi_variance gaimage pfm pnm)
+target_link_libraries(gi_variance gaimage pfm netpbm)
 
 install(TARGETS gi_variance DESTINATION bin)
 install(FILES ${data} DESTINATION share/data/modules)

@@ -9,7 +9,7 @@ set(data gi_scale.mod)
 
 add_executable(gi_scale ${sources})
 
-target_link_libraries(gi_scale gaimage pfm pnm)
+target_link_libraries(gi_scale gaimage pfm netpbm)
 
 install(TARGETS gi_scale DESTINATION bin)
 install(FILES ${data} DESTINATION share/data/modules)

@@ -9,7 +9,7 @@ set(data gi_canny.mod)
 
 add_executable(gi_canny ${sources})
 
-target_link_libraries(gi_canny gaimage pfm pnm)
+target_link_libraries(gi_canny gaimage pfm netpbm)
 
 install(TARGETS gi_canny DESTINATION bin)
 install(FILES ${data} DESTINATION share/data/modules)

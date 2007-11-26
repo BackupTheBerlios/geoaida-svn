@@ -9,7 +9,7 @@ set(data gi_histogram.mod)
 
 add_executable(gi_histogram ${sources})
 
-target_link_libraries(gi_histogram gaimage pfm pnm)
+target_link_libraries(gi_histogram gaimage pfm netpbm)
 
 install(TARGETS gi_histogram DESTINATION bin)
 install(FILES ${data} DESTINATION share/data/modules)

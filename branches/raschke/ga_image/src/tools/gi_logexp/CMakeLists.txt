@@ -9,7 +9,7 @@ set(data gi_logexp.mod)
 
 add_executable(gi_logexp ${sources})
 
-target_link_libraries(gi_logexp gaimage pfm pnm)
+target_link_libraries(gi_logexp gaimage pfm netpbm)
 
 install(TARGETS gi_logexp DESTINATION bin)
 install(FILES ${data} DESTINATION share/data/modules)

@@ -98,17 +98,6 @@ namespace Ga
     IMPLEMENT_IO_METHODS(float)
     IMPLEMENT_IO_METHODS(double)
     #undef IMPLEMENT_IO_METHODS
-    
-  public:
-    ImageIOAdapter(FILE* fp)
-    : impl(new Impl(fp))
-    { 
-    }
-    
-    ~ImageIOAdapter()
-    {
-      delete impl;
-    }
   };
 }
 

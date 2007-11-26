@@ -9,7 +9,7 @@ set(data gi_resample.mod)
 
 add_executable(gi_resample ${sources})
 
-target_link_libraries(gi_resample gaimage pfm pnm)
+target_link_libraries(gi_resample gaimage pfm netpbm)
 
 install(TARGETS gi_resample DESTINATION bin)
 install(FILES ${data} DESTINATION share/data/modules)

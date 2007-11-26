@@ -9,7 +9,7 @@ set(data gi_denoise.mod)
 
 add_executable(gi_denoise ${sources})
 
-target_link_libraries(gi_denoise gaimage pfm pnm)
+target_link_libraries(gi_denoise gaimage pfm netpbm)
 
 install(TARGETS gi_denoise DESTINATION bin)
 install(FILES ${data} DESTINATION share/data/modules)

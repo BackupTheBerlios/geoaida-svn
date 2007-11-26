@@ -9,7 +9,7 @@ set(sources gi_merge.cpp)
 
 add_executable(gi_merge ${sources})
 
-target_link_libraries(gi_merge gaimage pfm pnm)
+target_link_libraries(gi_merge gaimage pfm netpbm)
 
 install(TARGETS gi_merge DESTINATION bin)
 #install(FILES ${data} DESTINATION share/data/modules)
