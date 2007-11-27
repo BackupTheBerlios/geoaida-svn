@@ -201,7 +201,7 @@ namespace {
   Image applyHysteresis(const Image &intensities, const Image &angles,
       double low, double high) {
     int sizeX = intensities.sizeX(), sizeY = intensities.sizeY();
-    Image result(typeid(unsigned char), sizeX, sizeY);
+    Image result(typeid(unsigned char), sizeX, sizeY, 3); // <- TODO
 
     for (int x = 0; x < sizeX; ++x)
       for (int y = 0; y < sizeY; ++y)
@@ -235,6 +235,7 @@ Ga::Image Ga::canny(const Image& img, double lowThreshold, double highThreshold)
 
   Image localMaxs = findLocalMaxs(intensities, angles);
   Image canny = applyHysteresis(localMaxs, angles, lowThreshold, highThreshold);
-
+  // TODO
+  canny.setFileType(_PPM);
   return canny;
 }

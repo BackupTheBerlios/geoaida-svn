@@ -43,9 +43,12 @@ namespace Ga
     ImageIO(const ImageIO& other);
     ImageIO& operator=(const ImageIO& other);
 
+  protected:
+    ImageIO() {}
+
   public:
     static std::auto_ptr<ImageIO> create(const std::string& filename,
-      FileType filetype, int sizeX, int sizeY, int channels);
+      FileType fileType, int sizeX, int sizeY, int channels);
     static std::auto_ptr<ImageIO> reopen(const std::string& filename);
 
     virtual ~ImageIO();
@@ -61,7 +64,7 @@ namespace Ga
       Type* buffer) = 0; \
     virtual void replaceRect(int channel, int x, int y, int width, int height, \
       const Type* buffer) = 0;
-      
+    
     DECLARE_IO_METHODS(bool)
     DECLARE_IO_METHODS(char)
     DECLARE_IO_METHODS(signed char)
@@ -73,31 +76,6 @@ namespace Ga
     DECLARE_IO_METHODS(float)
     DECLARE_IO_METHODS(double)
     #undef DECLARE_IO_METHODS
-  };
-  
-  template<typename Impl>
-  class ImageIOAdapter
-  {
-    Impl* impl;
-    
-  protected:
-    #define IMPLEMENT_IO_METHODS(Type) \
-    void readRect(int channel, int x, int y, int width, int height, \
-      Type* buffer) { impl->readRect(channel, x, y, width, height, buffer); } \
-    void replaceRect(int channel, int x, int y, int width, int height, \
-      const Type* buffer) { impl->replaceRect(channel, x, y, width, height, buffer); }
-    
-    IMPLEMENT_IO_METHODS(bool)
-    IMPLEMENT_IO_METHODS(char)
-    IMPLEMENT_IO_METHODS(signed char)
-    IMPLEMENT_IO_METHODS(unsigned char)
-    IMPLEMENT_IO_METHODS(signed short)
-    IMPLEMENT_IO_METHODS(unsigned short)
-    IMPLEMENT_IO_METHODS(signed int)
-    IMPLEMENT_IO_METHODS(unsigned int)
-    IMPLEMENT_IO_METHODS(float)
-    IMPLEMENT_IO_METHODS(double)
-    #undef IMPLEMENT_IO_METHODS
   };
 }
 

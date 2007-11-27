@@ -58,6 +58,12 @@ struct SimpleIterator
   bool operator!=(const SimpleIterator& rhs) const {
     return !(*this == rhs);
   }
+  
+  typedef std::input_iterator_tag iterator_category;
+  typedef double value_type;
+  typedef std::size_t difference_type;
+  typedef Proxy* pointer;
+  typedef Proxy reference;
 };
 
 class Image 
