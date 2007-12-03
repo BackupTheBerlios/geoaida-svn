@@ -137,12 +137,8 @@ void Image::setFileType(FileType t) {
 }
 
 bool Image::read(const char* filename) {
-	try {
-    Image(filename).swap(*this);
-	}
-	catch (...) {
-    return false;
-	}
+  Image(filename).swap(*this);
+  // Exception used for error handling.
   return true;
 }
 

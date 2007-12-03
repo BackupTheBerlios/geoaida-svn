@@ -198,12 +198,14 @@ void ImageT<PixTyp>::getChannel(ImageBase& resultImg, int channel)
 
 template <class PixTyp>
 void ImageT<PixTyp>::read(ImageIO& io) {
-  io.readRect(0, 0, 0, io.sizeX(), io.sizeY(), &*begin(0, 0));
+  for (int c = 0; c < noChannels(); ++c)
+    io.readRect(c, 0, 0, io.sizeX(), io.sizeY(), &*begin(0, c));
 }
 
 template <class PixTyp>
 void ImageT<PixTyp>::write(ImageIO& io, int channel, const char* comment) {
-  io.replaceRect(0, 0, 0, sizeX(), sizeY(), &*begin(0, 0));
+  for (int c = 0; c < noChannels(); ++c)
+    io.replaceRect(c, 0, 0, sizeX(), sizeY(), &*begin(0, c));
 }
 
 } // namespace Ga

@@ -24,31 +24,29 @@ int main()
   ImageT<float>& imgT = dynamic_cast<ImageT<float>&>(*img.pImage());
   {
     float pixels[100 * 200];
-    //std::copy(pixels, pixels + 100, imgT.begin(0, 0));
-    ImageT<float>::Iterator it1 = imgT.begin(0, 0);
-    /*ImageT<float>::Iterator it2(it1);
-    ImageT<float>::Iterator it3(it2);
-    ImageT<float>::Iterator it4(it3);
-    ImageT<float>::Iterator it5(it4);*/
-    for (int i = 0; i < 100*200; ++i)
-      { *it1 = pixels[i]; ++it1; }
+    std::copy(pixels, pixels + 100, imgT.begin(0, 0));
     beginTest("Leaving one scope");
   }
   beginTest("Leaving another scope");
   
-  /*beginTest("Loading a PPM file from disk");
+  beginTest("Loading a PPM file from disk");
   img.read("/Users/jlnr/Projekte/GeoAIDA test/Input.ppm");
+  printf("Random pixel: %lf %lf %lf\n",
+    img.getPixel(0, 1, 0),
+    img.getPixel(0, 1, 1),
+    img.getPixel(0, 1, 2));
+  img.write("/Users/jlnr/Projekte/GeoAIDA test/Input Duplicate.ppm");
   
   beginTest("Setting pixels on different channels");
-  img.setPixel(0, 0, 0.5, 0);
-  img.setPixel(0, 0, 1.0, 1);
-  img.setPixel(0, 0, 2.0, 2);
+  img.setPixel(0, 0, 10, 0);
+  img.setPixel(0, 0, 20, 1);
+  img.setPixel(0, 0, 30, 2);
   
-  assert(img.getPixel(0, 0, 0) == 0.5);
-  assert(img.getPixel(0, 0, 1) == 1.0);
-  assert(img.getPixel(0, 0, 2) == 2.0);
+  assert(img.getPixel(0, 0, 0) == 10);
+  assert(img.getPixel(0, 0, 1) == 20);
+  assert(img.getPixel(0, 0, 2) == 30);
   
   beginTest("Using Image iterators");
   *img.begin() = 5;
-  assert(*img.begin() == 5);*/
+  assert(*img.begin() == 5);
 }

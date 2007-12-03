@@ -77,9 +77,11 @@ namespace Ga
       fileContent(typeIdFromFileType(fileType), sizeX, sizeY,
                   channelsFromFileType(fileType))
     {
+      fseek(fp, 0, SEEK_END);
       if (ftell(fp) == 0)
         // Empty file; just created; leave as is
         return;
+      fseek(fp, 0, SEEK_SET);
         
       // Otherwise, header has been read, read rest of file
       
@@ -90,11 +92,12 @@ namespace Ga
         	float min, max;
           PFM3Byte *ppmbuffer =
             static_cast<PFM3Byte*>(pfm_readpfm_type(fp, &sizeX, &sizeY, &min, &max, PFM_3BYTE, 0));
+
           std::copy(ppmbuffer->r, ppmbuffer->r + sizeX * sizeY, fileContent.begin(0, 0));
           std::copy(ppmbuffer->g, ppmbuffer->g + sizeX * sizeY, fileContent.begin(0, 1));
           std::copy(ppmbuffer->b, ppmbuffer->b + sizeX * sizeY, fileContent.begin(0, 2));
           
-          printf("Got PPM file (%dx%d)\n", sizeX, sizeY);
+          break;
       	}
       	
       	default:
@@ -108,8 +111,12 @@ namespace Ga
       Dest* buffer)
     {
       assert(x == 0 && y == 0 && width == sizeX() && height == sizeY());
+
+      printf("rR pix 1: %lf\n", (double)*fileContent.begin(1, channel));
       
-      std::copy(fileContent.constBegin(0, channel), fileContent.constEnd(0, channel), buffer);
+      std::copy(fileContent.constBegin(0, channel), fileContent.constBegin(height, channel), buffer);
+      
+      printf("rR pix 2: %d\n", buffer[width]);
     }
       
     template<typename Src>
@@ -127,9 +134,9 @@ namespace Ga
     		case _PPM:
     		{
           std::vector<unsigned char> r(width*height), g(width*height), b(width*height);
-          std::copy(fileContent.begin(0, 0), fileContent.end(0, 0), r.begin());
-          std::copy(fileContent.begin(0, 1), fileContent.end(0, 1), g.begin());
-          std::copy(fileContent.begin(0, 2), fileContent.end(0, 2), b.begin());
+          std::copy(fileContent.begin(0, 0), fileContent.begin(height, 0), r.begin());
+          std::copy(fileContent.begin(0, 1), fileContent.begin(height, 1), g.begin());
+          std::copy(fileContent.begin(0, 2), fileContent.begin(height, 2), b.begin());
     		  PFM3Byte ppmbuffer;
           ppmbuffer.r=&r[0];
      	 		ppmbuffer.g=&g[0];
