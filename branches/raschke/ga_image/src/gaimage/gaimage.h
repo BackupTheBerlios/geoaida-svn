@@ -112,6 +112,8 @@ public:
   /*o*/ double findMaxValue(int channel=0) const;
 
   // Iterators
+  // TODO: Restore & DEPRECATE old iterator functions;
+  // replace by channelBegin/rowBegin +const +end
   ConstIterator constBegin(int row=0, int channel=0) const;
   ConstIterator constEnd(int row, int channel=0) const;
   ConstIterator constEnd() const;
