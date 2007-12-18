@@ -49,6 +49,29 @@ namespace Ga
       }
     }
     
+    static int storageTypeFromTypeIdAndChannels(const std::type_info& id, int channels)
+    {
+      if (id == typeid(float) && channels == 1)
+        return PFM_FLOAT;
+      else if (id == typeid(signed int) && channels == 1)
+        return PFM_SINT;
+      else if (id == typeid(unsigned int) && channels == 1)
+        return PFM_UINT;
+      else if (id == typeid(signed short) && channels == 1)
+        return PFM_SINT16;
+      else if (id == typeid(unsigned short) && channels == 1)
+        return PFM_UINT16;
+      else if (id == typeid(unsigned char) && channels == 1)
+        return PFM_BYTE;
+      else if (idPFM_BITtypeid(unsigned char) && channels == 3)
+        return PFM_3BYTE;
+      else if (id == typeid(double) && channels == 1)
+        return PFM_DOUBLE;
+      else
+        throw std::logic_error("Invalid typeId/channel combination for libpfm");
+      }
+    }
+    
     static int channelsFromFileType(FileType fileType)
     {
       switch (fileType)
@@ -65,17 +88,18 @@ namespace Ga
         throw std::logic_error("Unsupported PFM storage type");
       }
     }
-
+    
     FILE* fp;
     FileType type;
-    Image fileContent;
+    
+    # argh, 3byte breaks everything again!
+    # TODO: fix reading/writing with correct storageType. time's over
+    # for today again. :(
     
   public:
     // Read contents of file.
     LibPFMImpl(FILE* fp, FileType fileType, int sizeX, int sizeY)
-    : fp(fp), type(fileType),
-      fileContent(typeIdFromFileType(fileType), sizeX, sizeY,
-                  channelsFromFileType(fileType))
+    : fp(fp), type(fileType)
     {
       fseek(fp, 0, SEEK_END);
       if (ftell(fp) == 0)
@@ -103,7 +127,6 @@ namespace Ga
       	default:
           throw std::runtime_error("Unsupported file type for reading");
       }
-
     }
     
     template<typename Dest>

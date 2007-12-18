@@ -235,7 +235,5 @@ Ga::Image Ga::canny(const Image& img, double lowThreshold, double highThreshold)
 
   Image localMaxs = findLocalMaxs(intensities, angles);
   Image canny = applyHysteresis(localMaxs, angles, lowThreshold, highThreshold);
-  // TODO
-  canny.setFileType(_PPM);
   return canny;
 }

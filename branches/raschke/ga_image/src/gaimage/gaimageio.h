@@ -50,7 +50,7 @@ namespace Ga
     static std::auto_ptr<ImageIO> create(const std::string& filename,
       FileType fileType, int sizeX, int sizeY, int channels);
     static std::auto_ptr<ImageIO> reopen(const std::string& filename);
-
+    
     virtual ~ImageIO();
     
     virtual FileType fileType() const = 0;
@@ -58,7 +58,7 @@ namespace Ga
     virtual int sizeY() const = 0;
     virtual int channels() const = 0;
     virtual const std::type_info& pixType() const = 0;
-
+    
     #define DECLARE_IO_METHODS(Type) \
     virtual void readRect(int channel, int x, int y, int width, int height, \
       Type* buffer) = 0; \
