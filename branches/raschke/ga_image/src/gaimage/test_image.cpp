@@ -30,12 +30,11 @@ int main()
   beginTest("Leaving another scope");
   
   beginTest("Loading a PPM file from disk");
-  img.read("/Users/jlnr/Projekte/GeoAIDA test/input.ppm");
+  img.read("../tests/fixtures/face.ppm");
   printf("Random pixel: %lf %lf %lf\n",
     img.getPixel(0, 1, 0),
     img.getPixel(0, 1, 1),
     img.getPixel(0, 1, 2));
-  img.write("/Users/jlnr/Projekte/GeoAIDA test/input_dup.ppm");
   
   beginTest("Setting pixels on different channels");
   img.setPixel(0, 0, 10, 0);

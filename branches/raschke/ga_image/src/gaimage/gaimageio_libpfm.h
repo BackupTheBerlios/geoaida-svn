@@ -112,11 +112,7 @@ namespace Ga
     {
       assert(x == 0 && y == 0 && width == sizeX() && height == sizeY());
 
-      printf("rR pix 1: %lf\n", (double)*fileContent.begin(1, channel));
-      
       std::copy(fileContent.constBegin(0, channel), fileContent.constBegin(height, channel), buffer);
-      
-      printf("rR pix 2: %d\n", buffer[width]);
     }
       
     template<typename Src>

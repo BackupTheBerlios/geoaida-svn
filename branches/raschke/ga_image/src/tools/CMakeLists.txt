@@ -1,3 +1,4 @@
+add_subdirectory(gi_testhelper)
 add_subdirectory(gi_denoise)
 add_subdirectory(gi_grad)
 #add_subdirectory(gi_merge) broken by jlnr
