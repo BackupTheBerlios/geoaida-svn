@@ -32,6 +32,7 @@ namespace Ga
     LibPFMImpl(const LibPFMImpl&);    
     LibPFMImpl& operator=(const LibPFMImpl&);
 
+    // TODO: Superfluous?
     static const std::type_info& typeIdFromFileType(FileType fileType)
     {
       switch (fileType)
@@ -49,27 +50,26 @@ namespace Ga
       }
     }
     
-    static int storageTypeFromTypeIdAndChannels(const std::type_info& id, int channels)
+    static int storageTypeFromTypeId(const std::type_info& id)
     {
-      if (id == typeid(float) && channels == 1)
+      if (id == typeid(float))
         return PFM_FLOAT;
-      else if (id == typeid(signed int) && channels == 1)
+      else if (id == typeid(signed int))
         return PFM_SINT;
-      else if (id == typeid(unsigned int) && channels == 1)
+      else if (id == typeid(unsigned int))
         return PFM_UINT;
-      else if (id == typeid(signed short) && channels == 1)
+      else if (id == typeid(signed short))
         return PFM_SINT16;
-      else if (id == typeid(unsigned short) && channels == 1)
+      else if (id == typeid(unsigned short))
         return PFM_UINT16;
-      else if (id == typeid(unsigned char) && channels == 1)
+      else if (id == typeid(unsigned char))
         return PFM_BYTE;
-      else if (idPFM_BITtypeid(unsigned char) && channels == 3)
+      else if (id == typeid(unsigned char))
         return PFM_3BYTE;
-      else if (id == typeid(double) && channels == 1)
+      else if (id == typeid(double))
         return PFM_DOUBLE;
       else
-        throw std::logic_error("Invalid typeId/channel combination for libpfm");
-      }
+        throw std::logic_error("No storage type for typeId");
     }
     
     static int channelsFromFileType(FileType fileType)
@@ -91,42 +91,17 @@ namespace Ga
     
     FILE* fp;
     FileType type;
-    
-    # argh, 3byte breaks everything again!
-    # TODO: fix reading/writing with correct storageType. time's over
-    # for today again. :(
+    int sizeX_, sizeY_;
     
   public:
     // Read contents of file.
     LibPFMImpl(FILE* fp, FileType fileType, int sizeX, int sizeY)
-    : fp(fp), type(fileType)
+    : fp(fp), type(fileType), sizeX_(sizeX), sizeY_(sizeY)
     {
       fseek(fp, 0, SEEK_END);
       if (ftell(fp) == 0)
-        // Empty file; just created; leave as is
+        // Empty file, just created; leave as is
         return;
-      fseek(fp, 0, SEEK_SET);
-        
-      // Otherwise, header has been read, read rest of file
-      
-      switch (fileType)
-      {
-        case _PPM:
-        {
-        	float min, max;
-          PFM3Byte *ppmbuffer =
-            static_cast<PFM3Byte*>(pfm_readpfm_type(fp, &sizeX, &sizeY, &min, &max, PFM_3BYTE, 0));
-
-          std::copy(ppmbuffer->r, ppmbuffer->r + sizeX * sizeY, fileContent.begin(0, 0));
-          std::copy(ppmbuffer->g, ppmbuffer->g + sizeX * sizeY, fileContent.begin(0, 1));
-          std::copy(ppmbuffer->b, ppmbuffer->b + sizeX * sizeY, fileContent.begin(0, 2));
-          
-          break;
-      	}
-      	
-      	default:
-          throw std::runtime_error("Unsupported file type for reading");
-      }
     }
     
     template<typename Dest>
@@ -135,7 +110,43 @@ namespace Ga
     {
       assert(x == 0 && y == 0 && width == sizeX() && height == sizeY());
 
-      std::copy(fileContent.constBegin(0, channel), fileContent.constBegin(height, channel), buffer);
+      fseek(fp, 0, SEEK_SET);
+
+      if (fileType() != _PPM)
+      {
+        float min, max;
+        
+        Dest* storageBuffer = static_cast<Dest*>(pfm_readpfm_type(fp, &sizeX_, &sizeY_,
+          &min, &max, storageTypeFromTypeId(typeid(Dest)), 0));
+        
+        free(storageBuffer);
+      }
+      else
+      {
+      	float min, max;
+        PFM3Byte *ppmbuffer = static_cast<PFM3Byte*>(pfm_readpfm_type(fp, &sizeX_, &sizeY_,
+          &min, &max, PFM_3BYTE, 0));
+        
+        switch(channel)
+        {
+          case 0:
+            std::copy(ppmbuffer->r, ppmbuffer->r + sizeX_ * sizeY_, buffer);
+            break;
+          case 1:
+            std::copy(ppmbuffer->g, ppmbuffer->g + sizeX_ * sizeY_, buffer);
+            break;
+          case 2:
+            std::copy(ppmbuffer->b, ppmbuffer->b + sizeX_ * sizeY_, buffer);
+            break;
+          default:
+            assert(!"Invalid channel for LibPFMImpl::readRect");
+        }
+        
+        free(ppmbuffer->r);
+        free(ppmbuffer->g);
+        free(ppmbuffer->b);
+        free(ppmbuffer);
+      }
     }
       
     template<typename Src>
@@ -144,30 +155,26 @@ namespace Ga
     {
       assert(x == 0 && y == 0 && width == sizeX() && height == sizeY());
       
-      std::copy(buffer, buffer + width * height, fileContent.begin(0, channel));
       fseek(fp, 0, SEEK_SET);
       ftruncate(fileno(fp), 0);
       
-      switch (fileType())
+      if (fileType() != _PPM)
       {
-    		case _PPM:
-    		{
-          std::vector<unsigned char> r(width*height), g(width*height), b(width*height);
-          std::copy(fileContent.begin(0, 0), fileContent.begin(height, 0), r.begin());
-          std::copy(fileContent.begin(0, 1), fileContent.begin(height, 1), g.begin());
-          std::copy(fileContent.begin(0, 2), fileContent.begin(height, 2), b.begin());
-    		  PFM3Byte ppmbuffer;
-          ppmbuffer.r=&r[0];
-     	 		ppmbuffer.g=&g[0];
-    			ppmbuffer.b=&b[0];
-      		pfm_writepfm_type(fp, &ppmbuffer, sizeX(),sizeY(),1,-1,PFM_3BYTE);
-          break;
-      	}
-      	default:
-          char buf[100];
-          sprintf(buf, "Unsupported file type for writing: %d", fileType());
-          throw std::runtime_error(buf);
+        pfm_writepfm_type(fp, buffer, sizeX(), sizeY(), -10000, 10000, storageTypeFromTypeId(typeid(Src)));
       }
+      else
+  		{
+        assert(!"replaceRect will not work until 3bytes are joined into one struct");
+        //         std::vector<unsigned char> r(width*height), g(width*height), b(width*height);
+        //         std::copy(fileContent.begin(0, 0), fileContent.begin(height, 0), r.begin());
+        //         std::copy(fileContent.begin(0, 1), fileContent.begin(height, 1), g.begin());
+        //         std::copy(fileContent.begin(0, 2), fileContent.begin(height, 2), b.begin());
+        //        PFM3Byte ppmbuffer;
+        //         ppmbuffer.r=&r[0];
+        //          ppmbuffer.g=&g[0];
+        // ppmbuffer.b=&b[0];
+        //        pfm_writepfm_type(fp, &ppmbuffer, sizeX(), sizeY(), 1, -1, PFM_3BYTE);
+    	}
     }
     
     FileType fileType() const
@@ -177,22 +184,22 @@ namespace Ga
     
     int sizeX() const
     {
-      return fileContent.sizeX();
+      return sizeX_;
     }
     
     int sizeY() const
     {
-      return fileContent.sizeY();
+      return sizeY_;
     }
     
     int channels() const
     {
-      return fileContent.noChannels();
+      return fileType() == _PPM ? 3 : 1;
     }
     
     const std::type_info& pixType() const
     {
-      return fileContent.typeId();
+      return typeIdFromFileType(fileType());
     }
   };
 }

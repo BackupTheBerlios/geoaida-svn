@@ -27,7 +27,11 @@ class ToolsTest < Test::Unit::TestCase
     assert_equal_images(output, reference)
   end
   
-  def test_sanity
+  def test_sanity_pgm
+    assert_equal_images("fixtures/face.pgm", "fixtures/face.pgm")
+  end
+  
+  def test_sanity_ppm
     assert_equal_images("fixtures/face.ppm", "fixtures/face.ppm")
   end
   
@@ -35,7 +39,12 @@ class ToolsTest < Test::Unit::TestCase
     assert_exec("../gaimage/test_image")
   end
   
-  def test_copy
+  def test_copy_pgm
+    assert_tool_works("#{gi 'testhelper'} --copy %s %s",
+                      "face.pgm")
+  end
+  
+  def test_copy_ppm
     assert_tool_works("#{gi 'testhelper'} --copy %s %s",
                       "face.ppm")
   end
