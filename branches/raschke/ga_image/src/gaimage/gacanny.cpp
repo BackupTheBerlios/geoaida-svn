@@ -201,7 +201,7 @@ namespace {
   Image applyHysteresis(const Image &intensities, const Image &angles,
       double low, double high) {
     int sizeX = intensities.sizeX(), sizeY = intensities.sizeY();
-    Image result(typeid(unsigned char), sizeX, sizeY, 3); // <- TODO
+    Image result(typeid(unsigned char), sizeX, sizeY, 1);
 
     for (int x = 0; x < sizeX; ++x)
       for (int y = 0; y < sizeY; ++y)

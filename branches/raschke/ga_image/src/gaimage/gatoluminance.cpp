@@ -32,9 +32,7 @@ namespace Ga
     if (pic.fileType()==_PPM)
       out.setFileType(_PGM);
 
-    printf("Iterator\n");
     ImageT<float>::Iterator elem = out.begin();
-    printf("ConstIteratorzzz\n");
     typename ImageT<PixType>::ConstIterator pChR=pic.constBegin(0,0);
     typename ImageT<PixType>::ConstIterator pChG=pic.constBegin(0,1);
     typename ImageT<PixType>::ConstIterator pChB=pic.constBegin(0,2);

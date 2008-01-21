@@ -124,7 +124,7 @@ namespace Ga
       else
       {
       	float min, max;
-        PFM3Byte *ppmbuffer = static_cast<PFM3Byte*>(pfm_readpfm_type(fp, &sizeX_, &sizeY_,
+        PFM3Byte* ppmbuffer = static_cast<PFM3Byte*>(pfm_readpfm_type(fp, &sizeX_, &sizeY_,
           &min, &max, PFM_3BYTE, 0));
         
         switch(channel)
@@ -148,32 +148,73 @@ namespace Ga
         free(ppmbuffer);
       }
     }
-      
+    
     template<typename Src>
     void replaceRect(int channel, int x, int y, int width, int height,
       const Src* buffer)
     {
+      assert(buffer != 0);
       assert(x == 0 && y == 0 && width == sizeX() && height == sizeY());
-      
-      fseek(fp, 0, SEEK_SET);
-      ftruncate(fileno(fp), 0);
       
       if (fileType() != _PPM)
       {
-        pfm_writepfm_type(fp, buffer, sizeX(), sizeY(), -10000, 10000, storageTypeFromTypeId(typeid(Src)));
+        assert(channel == 0);
+        fseek(fp, 0, SEEK_SET);
+        ftruncate(fileno(fp), 0);
+        pfm_writepfm_type(fp, buffer, sizeX(), sizeY(),
+          *std::min_element(buffer, buffer + width * height),
+          *std::max_element(buffer, buffer + width * height),
+          storageTypeFromTypeId(typeid(Src)));
       }
       else
   		{
-        assert(!"replaceRect will not work until 3bytes are joined into one struct");
-        //         std::vector<unsigned char> r(width*height), g(width*height), b(width*height);
-        //         std::copy(fileContent.begin(0, 0), fileContent.begin(height, 0), r.begin());
-        //         std::copy(fileContent.begin(0, 1), fileContent.begin(height, 1), g.begin());
-        //         std::copy(fileContent.begin(0, 2), fileContent.begin(height, 2), b.begin());
-        //        PFM3Byte ppmbuffer;
-        //         ppmbuffer.r=&r[0];
-        //          ppmbuffer.g=&g[0];
-        // ppmbuffer.b=&b[0];
-        //        pfm_writepfm_type(fp, &ppmbuffer, sizeX(), sizeY(), 1, -1, PFM_3BYTE);
+  		  // Writing PPMs is a bit awkward. Each time a channel is written, the other channels are read
+  		  // and written again, unless the image is empty. If it is empty, the missing channels are filled
+  		  // with fake data.
+        
+        PFM3Byte *ppmbuffer;
+  		  
+        fseek(fp, 0, SEEK_END);
+  		  if (ftell(fp) == 0)
+  		  {
+          puts("Writing new PPM file");
+          fflush(0);
+          
+          ppmbuffer = (PFM3Byte*)malloc(sizeof ppmbuffer);
+          ppmbuffer->r = (unsigned char*)malloc(width * height);
+          ppmbuffer->g = (unsigned char*)malloc(width * height);
+          ppmbuffer->b = (unsigned char*)malloc(width * height);
+  		  }
+  		  else
+  		  {
+          puts("Extending old PPM file");
+          fflush(0);
+          
+          int w, h;
+          float min, max;
+          fseek(fp, 0, SEEK_SET);
+  		    ppmbuffer = static_cast<PFM3Byte*>(pfm_readpfm_type(fp, &w, &h, &min, &max, PFM_3BYTE, 0));
+          assert(w == width && h == height && "Overwriting PPM files of different size not handled!");
+        }
+        
+        switch(channel)
+        {
+          case 0:
+            std::copy(buffer, buffer + width * height, ppmbuffer->r);
+            break;
+          case 1:
+            std::copy(buffer, buffer + width * height, ppmbuffer->g);
+            break;
+          case 2:
+            std::copy(buffer, buffer + width * height, ppmbuffer->b);
+            break;
+          default:
+            assert(!"Invalid channel for LibPFMImpl::replaceRect");
+        }
+
+        fseek(fp, 0, SEEK_SET);
+        ftruncate(fileno(fp), 0);
+        pfm_writepfm_type(fp, ppmbuffer, width, height, 1, -1, PFM_3BYTE);
     	}
     }
     

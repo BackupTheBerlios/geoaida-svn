@@ -60,10 +60,11 @@ namespace Ga
 std::auto_ptr<Ga::ImageIO> Ga::ImageIO::create(const std::string& filename,
   FileType fileType, int sizeX, int sizeY, int channels)
 {
-  printf("ImageIO: creating %s\n", filename.c_str());
-  fflush(0);
-
   // Future: For tiled images, create a directory representation.
+
+  FILE* fp = fopen(filename.c_str(), "w+b");
+  if (!fp)
+    throw std::runtime_error("Could not create/overwrite file " + filename);
   
   switch (fileType)
   {
@@ -75,7 +76,7 @@ std::auto_ptr<Ga::ImageIO> Ga::ImageIO::create(const std::string& filename,
   case _PGM:
   case _PPM:
   {
-    std::auto_ptr<LibPFMImpl> impl(new LibPFMImpl(fopen(filename.c_str(), "wb"), fileType, sizeX, sizeY));
+    std::auto_ptr<LibPFMImpl> impl(new LibPFMImpl(fp, fileType, sizeX, sizeY));
     return std::auto_ptr<ImageIO>(new ImageIOAdapter<LibPFMImpl>(impl));
   }
   
@@ -92,12 +93,11 @@ std::auto_ptr<Ga::ImageIO> Ga::ImageIO::create(const std::string& filename,
 
 std::auto_ptr<Ga::ImageIO> Ga::ImageIO::reopen(const std::string& filename)
 {
-  printf("ImageIO: reopening %s\n", filename.c_str());
-  fflush(0);
-  
   // Future: For directories, use tiled image implementation.
   
   FILE* fp = fopen(filename.c_str(), "rb+");
+  if (!fp)
+    throw std::runtime_error("Could not reopen " + filename);
   
   // TODO: Decide by first two bytes?
 
