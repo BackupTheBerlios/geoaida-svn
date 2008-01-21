@@ -118,7 +118,7 @@ namespace Ga
         
         Dest* storageBuffer = static_cast<Dest*>(pfm_readpfm_type(fp, &sizeX_, &sizeY_,
           &min, &max, storageTypeFromTypeId(typeid(Dest)), 0));
-        
+        std::copy(storageBuffer, storageBuffer + width * height, buffer);
         free(storageBuffer);
       }
       else
