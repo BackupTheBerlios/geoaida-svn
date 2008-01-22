@@ -61,4 +61,10 @@ class ToolsTest < Test::Unit::TestCase
   def test_canny
     assert_tool_works("#{gi 'canny'} %s %s 0.03 0.06", "face.ppm")
   end
+  
+  def test_gaussian
+    assert_tool_works("#{gi 'gaussian'} %s 2.3 %s", "face.ppm")
+  end
+  
+  
 end
