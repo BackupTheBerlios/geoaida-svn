@@ -55,10 +55,15 @@ ImageT<PixTyp>::ImageT(int x, int y, int noChannels) : ImageBase() {
   setFileType(_UNKNOWN);
   if (noChannels == 3 && typeid(PixTyp) == typeid(unsigned char))
     setFileType(_PPM);
-  if (noChannels == 1 && typeid(PixTyp) == typeid(unsigned char))
+  if (noChannels != 1)
+    return;
+    
+  if (typeid(PixTyp) == typeid(unsigned char))
     setFileType(_PFM_FLOAT);
-  if (noChannels == 1 && typeid(PixTyp) == typeid(float))
+  else if (typeid(PixTyp) == typeid(float))
     setFileType(_PGM);
+  else if (typeid(PixTyp) == typeid(bool))
+    setFileType(_PBM);
   // TODO: etc.
 }
 

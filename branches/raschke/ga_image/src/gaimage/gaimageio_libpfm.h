@@ -32,7 +32,6 @@ namespace Ga
     LibPFMImpl(const LibPFMImpl&);    
     LibPFMImpl& operator=(const LibPFMImpl&);
 
-    // TODO: Superfluous?
     static const std::type_info& typeIdFromFileType(FileType fileType)
     {
       switch (fileType)
@@ -54,6 +53,8 @@ namespace Ga
     {
       if (id == typeid(float))
         return PFM_FLOAT;
+      else if (id == typeid(bool))
+        return PFM_BIT;
       else if (id == typeid(signed int))
         return PFM_SINT;
       else if (id == typeid(unsigned int))
@@ -72,36 +73,14 @@ namespace Ga
         throw std::logic_error("No storage type for typeId");
     }
     
-    static int channelsFromFileType(FileType fileType)
-    {
-      switch (fileType)
-      {
-      case _PFM_FLOAT:
-      case _PFM_SINT: 
-      case _PFM_UINT: 
-      case _PFM_SINT16:
-      case _PFM_UINT16:
-      case _PGM:
-      case _PBM: return 1;
-      case _PPM: return 3;
-      default:
-        throw std::logic_error("Unsupported PFM storage type");
-      }
-    }
-    
     FILE* fp;
     FileType type;
     int sizeX_, sizeY_;
     
   public:
-    // Read contents of file.
     LibPFMImpl(FILE* fp, FileType fileType, int sizeX, int sizeY)
     : fp(fp), type(fileType), sizeX_(sizeX), sizeY_(sizeY)
     {
-      fseek(fp, 0, SEEK_END);
-      if (ftell(fp) == 0)
-        // Empty file, just created; leave as is
-        return;
     }
     
     template<typename Dest>
@@ -169,7 +148,7 @@ namespace Ga
       else
   		{
   		  // Writing PPMs is a bit awkward. Each time a channel is written, the other channels are read
-  		  // and written again, unless the image is empty. If it is empty, the missing channels are filled
+  		  // and written again, unless the image is empty. If it is empty, unwritten channels are filled
   		  // with fake data.
         
         PFM3Byte *ppmbuffer;
@@ -177,9 +156,6 @@ namespace Ga
         fseek(fp, 0, SEEK_END);
   		  if (ftell(fp) == 0)
   		  {
-          puts("Writing new PPM file");
-          fflush(0);
-          
           ppmbuffer = (PFM3Byte*)malloc(sizeof ppmbuffer);
           ppmbuffer->r = (unsigned char*)malloc(width * height);
           ppmbuffer->g = (unsigned char*)malloc(width * height);
@@ -187,9 +163,6 @@ namespace Ga
   		  }
   		  else
   		  {
-          puts("Extending old PPM file");
-          fflush(0);
-          
           int w, h;
           float min, max;
           fseek(fp, 0, SEEK_SET);

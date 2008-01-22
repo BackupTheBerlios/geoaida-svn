@@ -82,12 +82,14 @@ std::auto_ptr<Ga::ImageIO> Ga::ImageIO::create(const std::string& filename,
   
 	case _PBM:
 	{
-    //std::auto_ptr<LibNetPBMImpl> impl(new LibNetPBMImpl(filename, filetype, sizeX, sizeY, channels));
-    //return std::auto_ptr<ImageIO>(new ImageIOAdapter(impl));
+    std::auto_ptr<LibNetPBMImpl> impl(new LibNetPBMImpl(fp, _PBM, sizeX, sizeY));
+    return std::auto_ptr<ImageIO>(new ImageIOAdapter<LibNetPBMImpl>(impl));
 	}
   
   default:
-    throw std::logic_error("Invalid file type in ImageIO::create");
+    char buf[1024];
+    sprintf(buf, "Invalid file type in ImageIO::create: %d", fileType);
+    throw std::logic_error(buf);
   }
 }
 
@@ -99,8 +101,6 @@ std::auto_ptr<Ga::ImageIO> Ga::ImageIO::reopen(const std::string& filename)
   if (!fp)
     throw std::runtime_error("Could not reopen " + filename);
   
-  // TODO: Decide by first two bytes?
-
   // Try libpfm.
   int sizeX, sizeY;
   float min, max;
@@ -117,11 +117,10 @@ std::auto_ptr<Ga::ImageIO> Ga::ImageIO::reopen(const std::string& filename)
   int pnmType;
   pnm_readpnminit(fp, &sizeX, &sizeY, &max_x, &pnmType);
   fseek(fp, 0, SEEK_SET);  
-  if (pnmType == PBM_FORMAT || pnmType == RPBM_FORMAT ||
-      pnmType == PPM_FORMAT || pnmType == RPBM_FORMAT)
+  if (pnmType == PBM_FORMAT || pnmType == RPBM_FORMAT)
   {
-    //std::auto_ptr<LibNetPBMImpl> impl(new LibNetPBMImpl(fp));
-    //return std::auto_ptr<ImageIO>(new ImageIOAdapter(impl));
+    std::auto_ptr<LibNetPBMImpl> impl(new LibNetPBMImpl(fp, _PBM, sizeX, sizeY));
+    return std::auto_ptr<ImageIO>(new ImageIOAdapter<LibNetPBMImpl>(impl));
   }
   
   throw std::runtime_error("Unknown image type in " + filename);
