@@ -146,19 +146,19 @@ void GeoImage::read(MLParser & parser)
   if (!find("size_x")) insert("size_x", new QString("not set"));
   if (!find("size_y")) insert("size_y", new QString("not set"));
 #else
-  if (!find("type"))
+  if (!contains("type"))
     insert("type", QString("not set"));
-  if (!find("file"))
+  if (!contains("file"))
     insert("file", QString("not set"));
-  if (!find("dir"))
+  if (!contains("dir"))
     insert("dir", "");
-  if (!find("res_x"))
+  if (!contains("res_x"))
     insert("res_x", QString("not set"));
-  if (!find("res_y"))
+  if (!contains("res_y"))
     insert("res_y", QString("not set"));
-  if (!find("size_x"))
+  if (!contains("size_x"))
     insert("size_x", QString("not set"));
-  if (!find("size_y"))
+  if (!contains("size_y"))
     insert("size_y", QString("not set"));
 #endif
 }
@@ -166,7 +166,7 @@ void GeoImage::read(MLParser & parser)
 /** configure attributes for this GeoImage through dictionary */
 void GeoImage::configure(ArgDict & dict)
 {
-#define copyarg(name) if (dict[name]) insert(name,new QString(*dict[name]));
+#define copyarg(name) if (dict.contains(name)) insert(name,dict[name]);
   copyarg("geoNorth");
   copyarg("geoSouth");
   copyarg("geoWest");
@@ -181,19 +181,19 @@ void GeoImage::configure(ArgDict & dict)
   MLParser::setFloat(geoSouth_, this, "geoSouth");
   MLParser::setFloat(geoWest_, this, "geoWest");
   MLParser::setFloat(geoEast_, this, "geoEast");
-  if (!find("type"))
+  if (!contains("type"))
     insert("type", new QString("not set"));
-  if (!find("file"))
+  if (!contains("file"))
     insert("file", new QString("not set"));
-  if (!find("dir"))
+  if (!contains("dir"))
     insert("dir", new QString(""));
-  if (!find("x_res"))
+  if (!contains("x_res"))
     insert("x_res", new QString("not set"));
-  if (!find("y_res"))
+  if (!contains("y_res"))
     insert("y_res", new QString("not set"));
-  if (!find("size_x"))
+  if (!contains("size_x"))
     insert("size_x", new QString("not set"));
-  if (!find("size_y"))
+  if (!contains("size_y"))
     insert("size_y", new QString("not set"));
 #undef copyarg
 }
@@ -202,17 +202,17 @@ void GeoImage::configure(ArgDict & dict)
 void GeoImage::load()
 {
   QString fname = filename();
-  qDebug("GeoImage::load(%s)", (const char *) fname);
+  qDebug("GeoImage::load(%s)", fname.toLatin1().constData());
   FILE *fp;
-  fp = fopen(fname, "r");
+  fp = fopen(fname.toLatin1().constData(), "r");
   if (!fp) {
     qDebug("#  (ERROR)GeoImage::load(%s) Can't open file for reading!",
-           (const char *) fname);
+           fname.toLatin1().constData());
 
     throw FatalError(QString().
                      sprintf
                      ("GeoImage::load(%s) Can't open file for reading!",
-                      (const char *) fname));
+                      fname.toLatin1().constData()));
   }
   int pxmtype;
   xelval max_x;
@@ -290,13 +290,13 @@ const void *GeoImage::data()
     return (void *) data_;
   qDebug("GeoImage::data() - load data");
   QString fname = filename();
-  qDebug("GeoImage::data() %s", (const char *) fname);
+  qDebug("GeoImage::data() %s", fname.toLatin1().constData());
 
   FILE *fp;
-  fp = fopen(fname, "r");
+  fp = fopen(fname.toLatin1().constData(), "r");
   if (!fp) {
     qDebug("#  (ERROR)GeoImage::load(%s) Can't open file for reading!",
-           (const char *) fname);
+           fname.toLatin1().constData());
     return 0;
   }
   int cols, rows;
@@ -396,14 +396,10 @@ bool GeoImage::testSize(int cols, int rows, IMGTYPE)
 /** get the filename */
 QString GeoImage::filename()
 {
-  if (find("dir") && !find("dir")->isEmpty())
-#ifdef WIN32
-    return (*(find("dir"))) + "\\" + (*(find("file")));
-#else
-    return (*(find("dir"))) + "/" + (*(find("file")));
-#endif
+  if (contains("dir") && !value("dir").isEmpty())
+    return QDir(value("dir")).filePath(value("file"));
   else
-    return (*(find("file")));
+    return (value("file"));
 }
 
 /** write a scrap of the data,
@@ -416,19 +412,22 @@ QString
                  QString fname)
 {
   if (fname.isEmpty()) {        //create output filname
-    ASSERT(find("key"));
+    Q_ASSERT(contains("key"));
     QString dir = CleanUp::getTmpDir();
-    fname.sprintf("%s/%s_%f_%f_%f_%f", dir.latin1(), find("key")->latin1(),
+    fname.sprintf("%s/%s_%f_%f_%f_%f", 
+		  dir.toLatin1().constData(), 
+		  value("key").toLatin1().constData(),
                   west, north, east, south);
   }
-  qDebug("#  GeoImage::part %s (%f, %f, %f, %f)", (const char *) fname, west,
+  qDebug("#  GeoImage::part %s (%f, %f, %f, %f)", 
+	 fname.toLatin1().constData(), west,
          north, east, south);
   QFile f(fname);
   if (f.exists())
     return fname;
 
   const void *data_p = data();        //get pointer to data
-  ASSERT(data_p);
+  Q_ASSERT(data_p);
   if (type_ == UNKNOWN)
     return 0;
   int dx, dy, i, j, rx1, ry1, rx2, ry2;
@@ -443,12 +442,12 @@ QString
                              dx, rx2, rx1, dy, ry2, ry1));
   }
 
-  FILE *of = fopen(fname, "w");
+  FILE *of = fopen(fname.toLatin1().constData(), "w");
   if (!of) {
     throw FatalError(QString().
                      sprintf
                      ("GeoImage::part Can't open file %s for writing!\n",
-                      (const char *) fname));
+                      fname.toLatin1().constData()));
   }
 
   switch (type_) {
@@ -517,8 +516,8 @@ QString
 /** write the image to disk */
 void GeoImage::write()
 {
-  QString *fname = find("file");
-  ASSERT(fname);
+  QString fname = value("file");
+  Q_ASSERT(!fname.isEmpty());
   switch (type_) {
   case PBM:
   case PGM:
@@ -526,18 +525,18 @@ void GeoImage::write()
     qDebug("GeoImage::write: Format %d not supported", type_);
     break;
   default:{
-      FILE *of = fopen(*fname, "w");
-      if (!of) {
-        fprintf(stderr,
-                "GeoImage::write: (ERROR) Can't open file %s for writing!\n",
-                (const char *) fname);
-        return;
-      }
-      pfm_geo_set(geoWest(),geoNorth(),geoEast(),geoSouth());
-      pfm_writepfm_type(of, data_, cols_, rows_, 1, -1, type_);
-      fclose(of);
-      break;
+    FILE *of = fopen(fname.toLatin1().constData(), "w");
+    if (!of) {
+      fprintf(stderr,
+	      "GeoImage::write: (ERROR) Can't open file %s for writing!\n",
+	      fname.toLatin1().constData());
+      return;
     }
+    pfm_geo_set(geoWest(),geoNorth(),geoEast(),geoSouth());
+    pfm_writepfm_type(of, data_, cols_, rows_, 1, -1, type_);
+    fclose(of);
+    break;
+  }
   }
 }
 
@@ -639,19 +638,20 @@ QString GeoImage::mask(float west, float north, float east, float south,
 }
 
   if (fname.isEmpty()) {        //create output filname
-    ASSERT(find("key"));
+    Q_ASSERT(contains("key"));
     QString dir = CleanUp::mkdir(CleanUp::getTmpDirPID(), prefixDir);
-    fname.sprintf("%s/%f_%f_%f_%f.pbm", dir.latin1(),
+    fname.sprintf("%s/%f_%f_%f_%f.pbm", 
+		  dir.toLatin1().constData(),
                   west, north, east, south);
   }
-  qDebug("#  GeoImage::mask %s (%f, %f, %f, %f)", (const char *) fname,
+  qDebug("#  GeoImage::mask %s (%f, %f, %f, %f)", fname.toLatin1().constData(),
          west, north, east, south);
   QFile f(fname);
   if (f.exists())
     return fname;
 
   const void *data_p = data();        //get pointer to data
-  ASSERT(data_p);
+  Q_ASSERT(data_p);
   if (type_ == UNKNOWN)
     return 0;
   int dx, dy, rx1, ry1, rx2, ry2;
@@ -662,10 +662,10 @@ QString GeoImage::mask(float west, float north, float east, float south,
     qDebug("#  (ERROR) GeoImage::part: (dx=%d=%d-%d || dy=%d=%d-%d)", dx, rx2,
            rx1, dy, ry2, ry1);
 
-  FILE *of = fopen(fname, "w");
+  FILE *of = fopen(fname.toLatin1().constData(), "w");
   if (!of) {
     fprintf(stderr, "#  (ERROR) Can't open file %s for writing!\n",
-            (const char *) fname);
+            fname.toLatin1().constData());
     return "";
   }
 

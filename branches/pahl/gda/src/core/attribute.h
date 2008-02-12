@@ -26,8 +26,8 @@
 #ifndef ATTRIBUTE_H
 #define ATTRIBUTE_H
 
-#include <qstring.h>
-#include <qstringlist.h>
+#include <QString>
+#include <QStringList>
 #include <MLParser.h>
 
 /**Holds the name, type, parameter and default value of an attrbute

@@ -145,9 +145,9 @@ bool INode::linkSNode(SNode * parent)
   bool status = true;
   if (!parent_) {
     sNode(parent);
-    QListIterator < INode > it(children());
-    for (; it.current(); ++it) {
-      INode *node = it.current();
+    QList < INode* >::const_iterator it=children().constBegin();
+    for (; it!=children().constEnd(); ++it) {
+      INode *node = *it;
       status = status & node->linkSNode(parent);
     }
   }
@@ -155,9 +155,9 @@ bool INode::linkSNode(SNode * parent)
     sNode(parent->findClass(attribute("class")));
     if (!sNode_)
       return false;
-    QListIterator < INode > it(children());
-    for (; it.current(); ++it) {
-      INode *node = it.current();
+    QList< INode* >::const_iterator it = children().constBegin();
+    for (; it!=children().constEnd(); ++it) {
+      INode *node = *it;
       status = status & node->linkSNode(sNode_);
     }
   }
@@ -174,7 +174,7 @@ void INode::taskFinished(int pid, int exit_state)
     int flag = -1;
 #ifdef DEBUGMSG
     qDebug("#  INode::taskFinished (%s)(%p) pid=%d ES=%d",
-           (const char *) name(), this, pid, execState());
+           name().toLatin1().constData(), this, pid, execState());
 #endif
     switch (execState()) {
     case TD:
@@ -200,7 +200,7 @@ void INode::taskFinished(int pid, int exit_state)
     }
 #ifdef DEBUGMSG
     qDebug("#  INode::taskFinished: finish ... (%s) pid=%d %p flag=%d\n",
-           (const char *) name(), pid, this, flag);
+           name().toLatin1().constData(), pid, this, flag);
 #endif
     switch (flag) {
     case 1:
@@ -224,8 +224,8 @@ void INode::taskFinished(int pid, int exit_state)
     }
   }
   catch(FatalError err) {
-    qDebug("INode::taskFinished(): Exception(%s) %s", name().latin1(),
-           err.message().latin1());
+    qDebug("INode::taskFinished(): Exception(%s) %s", name().toLatin1().constData(),
+           err.message().toLatin1().constData());
 //    emit analysis_->message(err.message());
   }
 }
@@ -243,7 +243,7 @@ void INode::taskFinished(int pid, int exit_state)
 int INode::evalBottomUp(int pid)
 {
 #ifdef DEBUGMSG
-  qDebug("#*  INode::evalBottomUp(%s): pid=%d (%p)\n", (const char *) name(),
+  qDebug("#*  INode::evalBottomUp(%s): pid=%d (%p)\n", name().toLatin1().constData(),
          pid, this);
 #endif
   if (pid <= 0) {
@@ -267,7 +267,7 @@ int INode::evalBottomUp(int pid)
 
   }
   analysis_->nodeChange(this);
-  QList < INode > &nodeList = sNode_->evalBottomUp(this);       //new composition
+  QList < INode* > &nodeList = sNode_->evalBottomUp(this);       //new composition
   analysis_->nodeChange(this);
 
 #ifdef DEBUGMSG
@@ -351,18 +351,19 @@ int INode::evalBottomUp(int pid)
     return 2;                   //=>
   }
 
-  QListIterator < INode > it(nodeList);
-  for (; it.current(); ++it) {
-    INode *iNode = it.current();
+  QList < INode* >::const_iterator it=nodeList.constBegin();
+  for (; it!=nodeList.constEnd(); ++it) {
+    INode *iNode = *it;
     analysis_->nodeChange(iNode);
     parent()->childLink(iNode);
     iNode->status(CI);
-    INode *el;
-    for (el = iNode->children().first(); el != 0;
-         el = iNode->children().next()) {
-      if (el->status() <= MI)
+    QList<INode*>::iterator el;
+    for (el = iNode->children().begin(); 
+	 el != iNode->children().end();
+         ++el) {
+      if ((*el)->status() <= MI)
         iNode->status(MI);
-      analysis_->nodeChange(el);        //info to the rest of the world
+      analysis_->nodeChange(*el);        //info to the rest of the world
     }
   }
 
@@ -396,11 +397,11 @@ int INode::evalTopDown(int pid)
 {
 #ifdef DEBUGMSG
   qDebug("#*  INode::evalTopDown(%s)(%p): pid=%d Start\n",
-         (const char *) name(), this, pid);
+         name().toLatin1().constData(), this, pid);
 #endif
-  CHECK_PTR(sNode_);
+  Q_CHECK_PTR(sNode_);
 //Hier Absturz weil parent = 0
-  CHECK_PTR(parent());
+  Q_CHECK_PTR(parent());
   INode* parent=INode::parent();
   if (pid <= 0) {
 #ifdef DEBUGMSG
@@ -426,7 +427,7 @@ int INode::evalTopDown(int pid)
   }
 
   if (sNode_->holistic()) {     //pid > 0
-    QList < INode > iNodeList = sNode_->evalTopDown(this);
+    QList < INode* > iNodeList = sNode_->evalTopDown(this);
 #ifdef DEBUGMSG
 qDebug("##*** evalTopDown: %d(min) < %d(ist) < %d(max)",sNode()->minNumNode(),iNodeList.count(), sNode()->maxNumNode());
 #endif
@@ -462,27 +463,32 @@ qDebug("*****  iNodeList.count %d, sNode->minNumNode %d, sNode->maxNumNode %d \n
     }
 
     parent->incrementCount(iNodeList.count() - 1);
-    INode *el;
     parent->childUnlink(this);        //!remove this temporary INode
-    for (el = iNodeList.first(); el != 0; el = iNodeList.next()) {
+    QList<INode*>::iterator el;
+    for (el = iNodeList.begin(); 
+	 el != iNodeList.end(); 
+	 ++el) {
 #ifdef DEBUGMSG
-      qDebug("# einhaengen: (%p) %s in %s", this,(const char *)el->name(), (const char *)parent->name());
+      qDebug("# einhaengen: (%p) %s in %s", 
+	     this,
+	     (*el)->name().toLatin1().constData(), 
+	     parent->name().toLatin1().constData());
 #endif
-      if (el->isLast())
-        el->status(CI);  //el->execState(BU); ???????????
+      if ((*el)->isLast())
+        (*el)->status(CI);  //(*el)->execState(BU); ???????????
       else
-        el->status(PI);
-      el->execState(TD); //}?????????????
-      parent->childLink(el);         //insert the new INodes
-      analysis_->nodeChange(el);
-      if (el->isLast())
+        (*el)->status(PI);
+      (*el)->execState(TD); //}?????????????
+      parent->childLink(*el);         //insert the new INodes
+      analysis_->nodeChange(*el);
+      if ((*el)->isLast())
         parent->decrementCount();
       else
-        el->childTopDown();     //last node have no children
+        (*el)->childTopDown();     //last node have no children
     }
     //delete this; //XXXX
 #ifdef DEBUGMSG
-      qDebug("# einhaengen: (%p) fertig in %s",this,(const char *)parent->name());
+    qDebug("# einhaengen: (%p) fertig in %s",this,parent->name().toLatin1().constData());
 #endif
     return 0;
   }
@@ -510,13 +516,20 @@ qDebug("*****  iNodeList.count %d, sNode->minNumNode %d, sNode->maxNumNode %d \n
 bool INode::childTopDown(bool first)
 {
 #ifdef DEBUGMSG
-  qDebug("#  INode::childTopDown (%s) cont_td (this %p) first: %d", (const char *) name(), this, first);
-    qDebug("##(xxx) INode::childTopDown (%s) (this %p) #childcount %d, ordercount %d, aktivorder %d, aktivcount %d, truncation %d",
-      (const char *) name(), this, childcount_,ordercount_,aktivorder_,aktivcount_,truncation());
+  qDebug("#  INode::childTopDown (%s) cont_td (this %p) first: %d", 
+	 name().toLatin1().constData(),
+	 this, first);
+  qDebug("##(xxx) INode::childTopDown (%s) (this %p) #childcount %d, ordercount %d, aktivorder %d, aktivcount %d, truncation %d",
+	 name().toLatin1().constData(), 
+	 this, 
+	 childcount_,
+	 ordercount_,
+	 aktivorder_,
+	 aktivcount_,
+	 truncation());
 #endif
-  SNode *el; // hilfspointer
   if (first) {// first call of 'childTopDown' for this object
-    childList_ = &(sNode_->children()); // liste der subknoten erzeugen
+    childList_ = &sNode_->children(); // liste der subknoten erzeugen
     childcount_ = childList_->count(); // anzahl aller (noch) zu bearbeitenden knoten
     aktivorder_=-1; // prioritaet der zu bearbeitenden nodes
     if (childcount_ == 0) { //no sub nodes
@@ -533,32 +546,43 @@ bool INode::childTopDown(bool first)
   //Praemisse (ordercount_ == 0) && (childcount_ > 0)
   while (ordercount_ == 0) {
     aktivorder_ ++;
-    for (el = childList_->first(); el != 0; el = childList_->next())
-      if(el->order() == aktivorder_) ordercount_++; // anzahl der nodes der aktuellen prioritaet
+    QList<SNode*>::iterator el; // hilfspointer
+    for (el = childList_->begin(); 
+	 el != childList_->end(); 
+	 ++el)
+      if((*el)->order() == aktivorder_) ordercount_++; // anzahl der nodes der aktuellen prioritaet
   }
 #ifdef DEBUGMSG
     qDebug("## INode::childTopDown (%s) (this %p) #childs %d, ordercount %d, aktivorder %d, aktivcount_ %d",
-      (const char *) name(), this, childcount_, ordercount_, aktivorder_,aktivcount_);
+	   name().toLatin1().constData(), 
+	   this, 
+	   childcount_, 
+	   ordercount_, 
+	   aktivorder_,
+	   aktivcount_);
 #endif
 
     INode *inode;
-    for (el = childList_->first(); el != 0; el = childList_->next()) {
+    QList<SNode*>::iterator el; // hilfspointer
+    for (el = childList_->begin(); 
+	 el != childList_->end(); 
+	 ++el) {
       if (truncation()) { //bedingungen nicht mehr erfüllt
         aktivcount_ = 0;
         execBottomUp();             //execState(BU);// BottomUp
         return 0;
       }
-      if (el->order() == aktivorder_) {
+      if ((*el)->order() == aktivorder_) {
         incrementCount(); //einer mehr in der queue -> siehe decrementCount()
         childcount_--; ordercount_--; //aktuelle wird gleich bearbeitet
-        inode = new INode(el);    //new INode
+        inode = new INode(*el);    //new INode
 #ifdef WIN32
          if (inode == 0){
           cout << "Out of Memory..12";
           exit(1);
           }
 #endif
-        CHECK_PTR(inode);
+        Q_CHECK_PTR(inode);
         inode->status(HI);
         inode->execState(TD);
         childLink(inode);         // remount node in the tree
@@ -576,7 +600,7 @@ bool INode::childTopDown(bool first)
 void INode::execTopDown()
 {
 #ifdef DEBUGMSG
-  qDebug("#*  INode::execTopDown(%s)(%p): Start\n", (const char *) name(),this);
+  qDebug("#*  INode::execTopDown(%s)(%p): Start\n", name().toLatin1().constData(),this);
 #ifdef WIN32
   QMessageBox::information(0,"INode","execTopDown",QMessageBox::Default);
 #endif
@@ -586,7 +610,7 @@ void INode::execTopDown()
     return;
   }
   execState(TD);
-  CHECK_PTR(this->sNode());
+  Q_CHECK_PTR(this->sNode());
   if (sNode_->holistic())
     sNode_->execTopDownOp(this);        //start TD
   else if (!sNode_->attributeBool("td_multiclass"))
@@ -638,7 +662,7 @@ int INode::decrementCount()
 {
 #ifdef DEBUGMSG
   qDebug("#  decrementCount(%s)(%p): Start, aktivcount = %d\n",
-         (const char *) name(), this, aktivcount_);
+         name().toLatin1().constData(), this, aktivcount_);
 #endif
   analysis_->nodeChange(this);
   if (aktivcount_ == 0) {
@@ -665,7 +689,8 @@ int INode::decrementCount()
 void INode::incrementCount(int c)
 {
 #ifdef DEBUGMSG
-  qDebug("#  incrementCount(%s)(%p): Start, aktivcount = %d + %d\n",(const char *) name(), this, aktivcount_, c);
+  qDebug("#  incrementCount(%s)(%p): Start, aktivcount = %d + %d\n",
+	 name().toLatin1().constData(), this, aktivcount_, c);
 #endif
   if (c > 0)
     aktivcount_ += c;
@@ -675,7 +700,7 @@ void INode::incrementCount(int c)
 void INode::execBottomUp()
 {
 #ifdef DEBUGMSG
-  qDebug("#*  INode::execBottomUp(%s)(%p): Start\n", (const char *) name(), this);
+  qDebug("#*  INode::execBottomUp(%s)(%p): Start\n", name().toLatin1().constData(), this);
 #endif
   if (analysis()->error()) {
     status(BU_ABORTED);
@@ -683,7 +708,7 @@ void INode::execBottomUp()
   }
 
   execState(BU);
-  CHECK_PTR(this->sNode());
+  Q_CHECK_PTR(this->sNode());
   if (sNode_)
     sNode_->execBottomUpOp(this);       //start BU
 }
@@ -692,7 +717,8 @@ void INode::execBottomUp()
 bool INode::isLast()
 {
 #ifdef DEBUGMSG
-  qDebug("#isLast# INode::isLast(%s)(%p): %d\n", (const char *) name(), this, sNode_->attributeBool("resultNode"));
+  qDebug("#isLast# INode::isLast(%s)(%p): %d\n", 
+	 name().toLatin1().constData(), this, sNode_->attributeBool("resultNode"));
 #endif
   if (sNode_->attributeBool("resultNode")) return TRUE;
   return ((sNode_->children()).isEmpty());
@@ -772,12 +798,12 @@ void INode::setGeoRegion(float gW, float gN, float gE, float gS, INode* parent)
 #endif
   assert(labelImage_);
   labelImage_->load();
-  if (!attribList_["geoNorth"] || attribList_["geoNorth"]->isEmpty()) { // geo coordinates are not set
+  if (!attribList_.contains("geoNorth") || attribList_.value("geoNorth").isEmpty()) { // geo coordinates are not set
     qDebug("INode::setRegion: geo ausrechnen");
     labelImage_->geoBBox(llx, lly, urx, ury, geoWest, geoNorth, geoEast,
                          geoSouth);
   }
-  else if (!attribList_["llx"]) {       // boundingbox not set, but geo coordinates are set
+  else if (!attribList_.contains("llx")) {       // boundingbox not set, but geo coordinates are set
     qDebug("INode::setRegion: bbox ausrechnen");
     // if file geocoordinates describe a smaller area than the inode geocoordinates,
     // adjust the inode geocoordinates
@@ -818,9 +844,10 @@ void INode::setGeoRegion(float gW, float gN, float gE, float gS, INode* parent)
   attribList_.replace("geoEast", QString().sprintf("%f", geoEast));
 #endif
   qDebug("INode::setGeoRegion: %s file=%s(%f,%f,%f,%f) bbox=(%5d, %5d, %5d %5d) geo=(%f, %f, %f, %f) res=(%f, %f)",
-     name.latin1(), file.latin1(), gW, gN, gE, gS, llx, lly, urx, ury,
-     geoWest, geoNorth, geoEast, geoSouth, labelImage_->resolutionX(),
-     labelImage_->resolutionY());
+	 name.toLatin1().constData(), file.toLatin1().constData(), 
+	 gW, gN, gE, gS, llx, lly, urx, ury,
+	 geoWest, geoNorth, geoEast, geoSouth, labelImage_->resolutionX(),
+	 labelImage_->resolutionY());
 
 #undef defFloat
 #undef defInt
@@ -830,10 +857,10 @@ void INode::setGeoRegion(float gW, float gN, float gE, float gS, INode* parent)
 int INode::setNewID(int id)
 {
   attribute("IDStart", id);
-  QListIterator < INode > it = QListIterator < INode > (children());
-  for (; it.current(); ++it) {
+  QList < INode* >::iterator it = children().begin();
+  for (; it!=children().end(); ++it) {
     ++id;
-    id = it.current()->setNewID(id);
+    id = (*it)->setNewID(id);
   }
   attribute("IDEnd", id);
   return id;
@@ -842,10 +869,10 @@ int INode::setNewID(int id)
 /** merge inodes labelimage into the result image */
 void INode::mergeResultImage(GeoImage & resultImg)
 {
-  qDebug("INode::mergeResultImage: name=%s", name_.latin1());
-  QListIterator < INode > it = QListIterator < INode > (children());
-  for (; it.current(); ++it) {
-    INode *node = it.current();
+  qDebug("INode::mergeResultImage: name=%s", name_.toLatin1().constData());
+  QList < INode* >::iterator it = (children().begin());
+  for (; it!=children().end(); ++it) {
+    INode *node = (*it);
     if (node->status() == TRASH)
       continue;
     if (node->labelImage() && node->attributeInt("id")) {
@@ -858,11 +885,11 @@ void INode::mergeResultImage(GeoImage & resultImg)
     else {
       node->attribute("status", "no labelimage");
       qDebug("INode::mergeResultImage: %s ommitted",
-             (const char *) node->name());
+             node->name().toLatin1().constData());
     }
   }
-  for (it.toFirst(); it.current(); ++it) {
-    INode *node = it.current();
+  for (it=children().begin(); it!=children().end(); ++it) {
+    INode *node = (*it);
     if (node->status() == TRASH)
       continue;
     if (node->attributeInt("id")) {
@@ -871,7 +898,7 @@ void INode::mergeResultImage(GeoImage & resultImg)
     }
     else {
       qDebug("INode::mergeResultImage: %s ommitted",
-             (const char *) node->name());
+             node->name().toLatin1().constData());
     }
   }
 }
@@ -892,7 +919,7 @@ QString INode::path()
 
 /** set flag to handle min and max restriction of snode definition */
 void INode::truncation(bool v){
-qDebug("****:truncate %d => %d (%s %p)",truncation_,v,(const char *)name(),this);
+  qDebug("****:truncate %d => %d (%s %p)",truncation_,v,name().toLatin1().constData(),this);
   truncation_ = v;
   if (truncation_) status(TRASH);
 }

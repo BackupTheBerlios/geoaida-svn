@@ -27,17 +27,14 @@
 #define OPERATORLIST_H
 
 #include "operator.h"
-#ifdef MUELL
-#include "resource.h"
-#endif
-#include "qdict.h"
-#include "qfile.h"
+#include "QHash"
+#include "QFile"
 
 /**List of all available Operators
   *@author Martin Pahl
   */
 
-class OperatorList:public QDict < Operator >
+class OperatorList : public QHash < QString, Operator* >
 {
 public:
   OperatorList();
@@ -54,7 +51,7 @@ public:
   QStringList *keys(QString type);
 protected:                     // Protected attributes
   /** Contains the list of keys in this dictionary */
-    QDict < QStringList > keys_;
+  QHash < QString, QStringList* > keys_;
 };
 
 extern OperatorList operatorList_;

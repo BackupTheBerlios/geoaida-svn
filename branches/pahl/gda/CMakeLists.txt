@@ -1,3 +1,3 @@
-project(gda)
-add_subdirectory(src)
-add_subdirectory(doc)
+PROJECT(gda)
+ADD_SUBDIRECTORY(src)
+ADD_SUBDIRECTORY(doc)

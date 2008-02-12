@@ -26,14 +26,14 @@
 #ifndef CLEANUP_H
 #define CLEANUP_H
 
-#include <qmap.h>
-#include <qstring.h>
+#include <QStringList>
+#include <QString>
 
 /** Names of temporary files are stored in this class for later cleanup
   *@author Martin pahl
   */
 
-class CleanUp:public QMap < QString, char >
+class CleanUp : public QStringList
 {
 public:
   CleanUp();

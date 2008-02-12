@@ -41,16 +41,13 @@ GeoImageList::GeoImageList(QString filename)
 /** denstructor */
 GeoImageList::~GeoImageList()
 {
-  setAutoDelete(TRUE);
+  clear();
 }
 
-void
-GeoImageList::clear()
+void GeoImageList::clear()
 {
-  setAutoDelete(TRUE);
-  QDict < GeoImage >::clear();
-  list_.clear();
-  setAutoDelete(FALSE);
+  qDeleteAll(*this);
+  QHash< QString, GeoImage* >::clear();
   minMaxResUptodate_ = false;
 }
 
@@ -61,8 +58,8 @@ GeoImageList::remove(GeoImage * img)
   if (!img)
     return;
   minMaxResUptodate_ = false;
-  QDict < GeoImage >::remove(img->filename());
-  list_.remove(img->filename());
+  QHash< QString, GeoImage* >::remove(img->filename());
+  list_.removeAll(img->filename());
   delete img;
 }
 
@@ -71,9 +68,9 @@ void
 GeoImageList::read(QString filename)
 {
   QFile fp(filename);
-  if (!fp.open(IO_ReadOnly)) {
+  if (!fp.open(QIODevice::ReadOnly)) {
     qDebug("GeoImageList::read(%s): file not founed\n",
-           (const char *) filename);
+           filename.toLatin1().constData());
     return;
   }
   read(fp);
@@ -130,8 +127,8 @@ GeoImageList::read(MLParser & parser)
           geoEast_ = gi->geoEast();
         if (gi->geoWest() < geoWest_)
           geoWest_ = gi->geoWest();
-        insert(*((*gi)["key"]), gi);    //insert read geoimage
-        list_ += *((*gi)["key"]);       //fill additional list of image names
+        insert(gi->value("key"), gi);    //insert read geoimage
+        list_ += gi->value("key");       //fill additional list of image names
         break;
       }
     default:{
@@ -146,48 +143,43 @@ GeoImageList::read(MLParser & parser)
   QString key;
   for (QStringList::Iterator it = list_.begin(); it != list_.end(); ++it) {
     key = *it;
-    GeoImage *img = find(key);
-    qDebug("## GeoImageList::read(parser)" + img->filename());
+    GeoImage *img = value(key);
+    qDebug("## GeoImageList::read(parser) %s",img->filename().toLatin1().constData());
     img->load();
   }
 }
 
 
 /** return void pointer to the GeoImage class */
-GeoImage *
-GeoImageList::geoImage(QString imgKey)
+GeoImage* GeoImageList::geoImage(QString imgKey)
 {
-  return find(imgKey);
+  return value(imgKey);
 }
 
 /** return void pointer to the image data */
-const void *
-GeoImageList::data(QString imgKey)
+const void* GeoImageList::data(QString imgKey)
 {
-  return (find(imgKey))->data();
+  return (value(imgKey))->data();
 }
 
 /** return the cols numbers of the image */
-int
-GeoImageList::cols(QString imgKey)
+int GeoImageList::cols(QString imgKey)
 {
-  return (find(imgKey))->cols();
+  return (value(imgKey))->cols();
 }
 
 /** return the rows numbers of the image */
-int
-GeoImageList::rows(QString imgKey)
+int GeoImageList::rows(QString imgKey)
 {
-  return (find(imgKey))->rows();
+  return (value(imgKey))->rows();
 }
 
 /** return geoNorth value of the image*/
-float
-GeoImageList::geoNorth(QString imgKey)
+float GeoImageList::geoNorth(QString imgKey)
 {
   if (imgKey.isEmpty())
     return geoNorth_;
-  return (find(imgKey))->geoNorth();
+  return (value(imgKey))->geoNorth();
 }
 
 /** return geoSouth value of the image*/
@@ -196,7 +188,7 @@ GeoImageList::geoSouth(QString imgKey)
 {
   if (imgKey.isEmpty())
     return geoSouth_;
-  return (find(imgKey))->geoSouth();
+  return (value(imgKey))->geoSouth();
 }
 
 /** return geoEast value of the image*/
@@ -205,7 +197,7 @@ GeoImageList::geoEast(QString imgKey)
 {
   if (imgKey.isEmpty())
     return geoEast_;
-  return (find(imgKey))->geoEast();
+  return (value(imgKey))->geoEast();
 }
 
 /** return geoWest value of the image*/
@@ -214,14 +206,14 @@ GeoImageList::geoWest(QString imgKey)
 {
   if (imgKey.isEmpty())
     return geoWest_;
-  return (find(imgKey))->geoWest();
+  return (value(imgKey))->geoWest();
 }
 
 /** return Info about the image*/
 QString
 GeoImageList::info(QString imgKey)
 {
-  return (find(imgKey))->info();
+  return (value(imgKey))->info();
 }
 
 #pragma warning (disable : 4715 )
@@ -231,11 +223,11 @@ QString
 GeoImageList::part(QString imgKey, float north, float south, float west,
                    float east, QString fname)
 {
-  if (find(imgKey))
-    return (find(imgKey))->part(west, north, east, south, fname);
+  if (contains(imgKey))
+    return (value(imgKey))->part(west, north, east, south, fname);
   else
     qDebug("## (Warning) GeoImageList::part(%s, %f, %f, %f, %f) no entry",
-           (const char *) imgKey, west, north, east, south);
+           imgKey.toLatin1().constData(), west, north, east, south);
 }
 #pragma warning (default : 4715 )
 
@@ -248,9 +240,9 @@ QStringList GeoImageList::list(QString type)
   QStringList::ConstIterator it;
   for (it = list_.begin(); it != list_.end(); ++it) {
     GeoImage *im = geoImage(*it);
-    if (qstricmp(im->type(), type) == 0)
+    if (QString::compare(im->type(), type, Qt::CaseInsensitive) == 0)
       list += (*it);
-    qDebug("GeoImageList::list(item=%s)", (const char *) (*it));
+    qDebug("GeoImageList::list(item=%s)", it->toLatin1().constData());
   }
   return list;
 }
@@ -263,7 +255,7 @@ GeoImage *GeoImageList::loadLabelImage(QString fname,
                              float west, float north, float east, float south)
 {
   minMaxResUptodate_ = false;
-  GeoImage *img = find(fname);
+  GeoImage *img = value(fname);
   if (img)
     return img->shallowCopy();
   GeoImage *gi = new GeoImage(fname, key, west, north, east, south);
@@ -287,18 +279,19 @@ GeoImageList::maxResolution()
     minRes_ = -1;
     maxRes_ = 500;
     qDebug("GeoImageList::maxResolution");
-    QDictIterator < GeoImage > it = QDictIterator < GeoImage > (*this);
-    for (; it.current(); ++it) {
-      GeoImage *img = it.current();
+    Iterator it = begin();
+    for (; it!=end(); ++it) {
+      GeoImage *img = it.value();
       qDebug("%s: xres: %f yres: %f",
-             (img->filename()).latin1(),
-             img->resolutionX(), img->resolutionY());
-      float res = it.current()->resolutionX();
+             img->filename().toLatin1().constData(),
+             img->resolutionX(), 
+	     img->resolutionY());
+      float res = img->resolutionX();
       if (res > minRes_)
         minRes_ = res;
       if (res < maxRes_)
         maxRes_ = res;
-      res = it.current()->resolutionY();
+      res = img->resolutionY();
       if (res > minRes_)
         minRes_ = res;
       if (res < maxRes_)

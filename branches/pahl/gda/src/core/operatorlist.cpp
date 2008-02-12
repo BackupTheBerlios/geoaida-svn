@@ -30,7 +30,7 @@
 #include <stdlib.h> // für exit
 #endif
 
-OperatorList::OperatorList():QDict < Operator > (17, false), keys_(17, false)
+OperatorList::OperatorList()
 {
 }
 
@@ -48,19 +48,11 @@ OperatorList::~OperatorList()
 void
 OperatorList::readDir(QString dir)
 {
-  qDebug("OperatorList::readDir %s\n", dir.latin1());
-#ifdef WIN32
-  QDir d(dir, stopsuffix);
-#else
+  qDebug("OperatorList::readDir %s\n", dir.toLatin1().constData());
   QDir d(dir, "*.op");
-#endif
   unsigned int i;
   for (i = 0; i < d.count(); i++) {
-#ifdef WIN32
-    read(dir + "\\" + d[i]);
-#else
-    read(dir + "/" + d[i]);
-#endif
+    read(d.filePath(d[i]));
   }
 }
 
@@ -69,9 +61,9 @@ void
 OperatorList::read(QString filename)
 {
   QFile fp(filename);
-  qDebug("OperatorList::read(%s)", filename.latin1());
-  if (!fp.open(IO_ReadOnly)) {
-    qDebug("SmeNet::read(%s): file not found\n", (const char *) filename);
+  qDebug("OperatorList::read(%s)", filename.toLatin1().constData());
+  if (!fp.open(QIODevice::ReadOnly)) {
+    qDebug("SmeNet::read(%s): file not found\n", filename.toLatin1().constData());
     return;
   }
   read(fp);

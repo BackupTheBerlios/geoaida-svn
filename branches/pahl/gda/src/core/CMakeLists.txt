@@ -1,16 +1,19 @@
-find_package(Qt3 REQUIRED)
+FIND_PACKAGE(Qt4 REQUIRED)
 
-add_definitions(${QT_DEFINITIONS})
+ADD_DEFINITIONS(${QT_DEFINITIONS})
+
 add_definitions(-DTMPDIR=\\\"${CMAKE_INSTALL_PREFIX}/tmp\\\")
 add_definitions(-DDEBUG_MSG)
 
-include_directories(.
+INCLUDE_DIRECTORIES(.
         ${CMAKE_SOURCE_DIR}/pfm/libpfm
-	${CMAKE_SOURCE_DIR}/qtguiapplication/src/qtparser
-	${CMAKE_SOURCE_DIR}/qtguiapplication/src/qtgui
-        ${QT_INCLUDE_DIR})
+	${CMAKE_SOURCE_DIR}/parser
+#	${CMAKE_BINARY_DIR}
+        ${QT_INCLUDES}
+)
 
-set(headers analysis.h
+
+SET(headers analysis.h
             attribute.h
             cleanup.h
             fatalerror.h
@@ -26,7 +29,14 @@ set(headers analysis.h
             snode.h
             task.h)
 
-set(sources 
+SET(mocheaders  analysis.h
+            fatalerror.h
+            geoimagecache.h
+            judge.h
+            semnet.h
+            task.h)
+
+SET(sources 
 	   analysis.cpp
            attribute.cpp
            cleanup.cpp
@@ -43,8 +53,8 @@ set(sources
            snode.cpp
            task.cpp)
 
-qt_wrap_cpp(moclib mocsrc ${headers})
+QT4_WRAP_CPP(moclib ${mocheaders})
 
-add_library(core ${sources} ${mocsrc})
+ADD_LIBRARY(core ${sources} ${moclib})
 
-install(TARGETS core DESTINATION lib)
+INSTALL(TARGETS core DESTINATION lib)

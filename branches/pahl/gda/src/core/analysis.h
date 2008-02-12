@@ -26,7 +26,7 @@
 #ifndef ANALYSIS_H
 #define ANALYSIS_H
 
-#include <qobject.h>
+#include <QObject>
 #include "inode.h"
 #include "semnet.h"
 #include "geoimagelist.h"

@@ -41,8 +41,8 @@ T* TreeNode<T, Base>::parent()
 
 /** Get the List of children */
 template <class T, class Base>
-QList<T>& TreeNode<T, Base>::children()
+QList<T*>& TreeNode<T, Base>::children()
 {
-  return (QList<T>&)Base::children_;
+  return (QList<T*>&)Base::children_;
 }
 

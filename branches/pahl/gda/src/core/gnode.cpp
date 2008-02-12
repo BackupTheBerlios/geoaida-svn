@@ -45,10 +45,7 @@ GNode::GNode()
 
 GNode::~GNode()
 {
-  QListIterator < GNode > it = QListIterator < GNode > (children());
-  for (; it.current(); ++it) {
-    delete(it.current());
-  }
+  while (!children().isEmpty()) delete children().takeFirst();
 #if defined WITH_GUI_SUPPORT || WIN32
   if (guiPtr_) delete guiPtr_;
 #endif
@@ -63,18 +60,12 @@ GNode::GNode(GNode & node)
   parent_ = &node;
 #endif
   sections_ = node.sections_;
-  {
-    QDictIterator < QString > it(node.attribList_);
-    while (it.current()) {
-      attribList_.replace(it.currentKey(), new QString(*it.current()));
-      ++it;
-    }
-  }
+  attribList_=node.attribList_;
   name_ = node.name_;
   {
-    QListIterator < GNode > it = QListIterator < GNode > (node.children());
-    for (; it.current(); ++it) {
-      childLink((it.current())->copy());
+    QList<GNode*>::const_iterator it = node.children().constBegin();
+    for (; it!=node.children().constEnd(); ++it) {
+      childLink((*it)->copy());
     }
   }
 }
@@ -148,9 +139,9 @@ void GNode::write(QTextStream & fp, QString indent, bool recursive)
   }
   else {
     fp << ">" << endl;
-    QListIterator < GNode > it = QListIterator < GNode > (children());
-    for (; it.current(); ++it) {
-      it.current()->write(fp, indent + "  ");
+    QList<GNode*>::const_iterator it = children().constBegin();
+    for (; it!=children().constEnd(); ++it) {
+      (*it)->write(fp, indent + "  ");
     }
     fp << indent << "</node>" << endl;
   }
@@ -196,9 +187,8 @@ void GNode::attribute(QString key, const char* val)
 /** Get the value of attribute key */
 const QString & GNode::attribute(QString key)
 {
-  QString *s = attribList_[key];
-  if (s)
-    return *s;
+  if (attribList_.contains(key))
+    return attribList_[key];
   else
     return nullString;
 }
@@ -292,7 +282,7 @@ const QStringList & GNode::attributeSections()
 }
 
 /** Get the attribute description for the specified section */
-QDict < Attribute > *GNode::attributeDesc(QString section)
+QMultiHash < QString, Attribute* > *GNode::attributeDesc(QString section)
 {
   return 0;
 }
@@ -300,23 +290,15 @@ QDict < Attribute > *GNode::attributeDesc(QString section)
 /** Configure this node using attribList    */
 void GNode::configure(AttribList & attribList)
 {
-  attribList_.clear();
-  {
-    QDictIterator < QString > it = QDictIterator < QString > (attribList);
-    for (; it.current(); ++it) {
-      attributeSet(it.currentKey(), *(it.current()));
-    }
-  }
-
-
+  attribList_=attribList;
 }
 
 /** Update attributes of this node with the given attribute list  */
 void GNode::update(AttribList & attribList)
 {
-  QDictIterator < QString > it = QDictIterator < QString > (attribList);
-  for (; it.current(); ++it) {
-    attributeSet(it.currentKey(), *(it.current()));
+  AttribListConstIterator it = attribList.constBegin();
+  for (; it!=attribList.constEnd(); ++it) {
+    attributeSet(it.key(), it.value());
   }
 }
 

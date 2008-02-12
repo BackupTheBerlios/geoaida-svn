@@ -21,8 +21,9 @@
 #include "MLParser.h"
 #include "treegnode.h"
 #include "treenode.h"
-#include <qstringlist.h>
-#include <qlist.h>
+#include <QStringList>
+#include <QList>
+#include <QMultiHash>
 #include "attribute.h"
 /**Base Node
   *@author Martin Pahl
@@ -31,6 +32,8 @@
 extern const MLTagTable nodeTagTable;
 
 typedef ArgDict AttribList;
+typedef ArgDictConstIterator AttribListConstIterator;
+typedef ArgDictIterator AttribListIterator;
 
 class OperatorObject;
 class TreeItem;
@@ -76,8 +79,8 @@ public:                        // Public attributes
   void isCompound(bool val);
   /** This node is a compound of its subnodes. */
   bool isCompound();
-        /**  Makes a copy of this node */
-  virtual GNode *copy();
+  /**  Makes a copy of this node */
+  virtual GNode* copy();
   /** return a new Node */
   virtual GNode *newNode();
   /** Set variables of this node using the attributes */
@@ -90,7 +93,7 @@ public:                        // Public attributes
   /** Returns the attribute sections of this node */
   virtual const QStringList & attributeSections();
   /** Get the attribute description for the specified section */
-  virtual QDict < Attribute > *attributeDesc(QString section);
+  virtual QMultiHash < QString, Attribute* > *attributeDesc(QString section);
   /** Configure this node using attribList    */
   void configure(AttribList & attribList);
   /** Update attributes of this node with the given attribute list  */

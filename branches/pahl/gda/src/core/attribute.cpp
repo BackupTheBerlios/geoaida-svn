@@ -24,7 +24,7 @@
  */
 
 #include "attribute.h"
-#include <qregexp.h>
+#include <QRegExp>
 
 Attribute::Attribute()
 {
@@ -61,7 +61,7 @@ Attribute::Attribute(QString name, QString defaultValue, int type,
                      QString label, QString tip)
 {
   init(name, label, tip);
-  ASSERT(type == STRING || type == BOOL || type == COLOR);
+  Q_ASSERT(type == STRING || type == BOOL || type == COLOR);
 #if 0
   qDebug("%d", type);
 #endif
@@ -193,7 +193,7 @@ Attribute::set(ArgDict & attribs)
       MLParser::setString(val, &attribs, "options");
       e_.options_ = new QStringList();
       if (!val.isEmpty())
-        *(e_.options_) = QStringList::split(",", val);
+        *(e_.options_) = val.split(",");
       break;
     }
   case OPERATOR:
@@ -219,13 +219,13 @@ QString
 Attribute::command(ArgDict & argdict)
 {
   QString cmd = cmd_;
-  if (!argdict[name_] || argdict[name_]->isEmpty())
+  if (!argdict.contains(name_) || argdict[name_].isEmpty())
     return "";
-  QDictIterator < QString > it(argdict);
-  for (; it.current(); ++it) {
-    cmd.replace(QRegExp("@" + it.currentKey() + "@", false), *it.current());
+  ArgDictConstIterator it=argdict.constBegin();
+  for (; it==argdict.constEnd(); ++it) {
+    cmd.replace(QRegExp("@" + it.key() + "@", Qt::CaseInsensitive), it.value());
   }
-  qDebug("Attribute::command %s\n", (const char *) cmd);
+  qDebug("Attribute::command %s\n", cmd.toLatin1().constData());
   return cmd;
 }
 

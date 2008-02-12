@@ -26,9 +26,10 @@
 #include "MLParser.h"
 #include "treenode.h"
 #include "gnode.h"
-#include <qstringlist.h>
-#include <qlist.h>
-#include <qobject.h>
+#include <QMultiHash>
+#include <QStringList>
+#include <QList>
+#include <QObject>
 
 /**Base Node
   *@author Martin Pahl
@@ -104,11 +105,11 @@ public:                        // Public attributes
   /** Returns true if  this class is a cname */
   virtual bool isA(QString cname);
   /** Get the attribute description for the specified section */
-  virtual QDict < Attribute > *attributeDesc(QString section);
+  virtual QMultiHash < QString, Attribute* > *attributeDesc(QString section);
   /** Evaluates the result of TopDownOperator    */
-  QList<INode> evalTopDown(INode * inode);
+  QList<INode*> evalTopDown(INode * inode);
   /** Evaluate the result of the bottom-up-operator   */
-  QList<INode> &evalBottomUp(INode * iNode);
+  QList<INode*> &evalBottomUp(INode * iNode);
   /** says whether the node is hollistisch */
   bool holistic(void);
   /** No descriptions */
@@ -152,7 +153,7 @@ protected:                     // Protected attributes
   /** Dictionary of the general attribute of this node. These are the attributes not
 			provided by the operators, e.g. name, class of this node.
 	*/
-  QDict < Attribute > genericAttributes_;
+  QMultiHash<QString, Attribute* > genericAttributes_;
   /** set TRUE for synchron analyze working otherwise FALSE (default: FALSE) */
   static bool synchron_;
   /** counter of running td operators */

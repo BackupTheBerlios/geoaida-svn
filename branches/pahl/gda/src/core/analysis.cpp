@@ -186,7 +186,7 @@ void Analysis::writeInstanceNet(QString fname)
   if (!iNodeRoot_)
     return;
   QFile fp(fname);
-  fp.open(IO_WriteOnly);
+  fp.open(QIODevice::WriteOnly);
   QTextStream str(&fp);
   iNodeRoot_->write(str);
 
@@ -222,7 +222,7 @@ int Analysis::genGoal(INode* iNode)
     iNodeRoot_ = new INode(semNet_->rootNode());  //generate root INote
   else
     iNodeRoot_=iNode;
-  CHECK_PTR(iNodeRoot_);
+  Q_CHECK_PTR(iNodeRoot_);
   if (geoImageList_) {
     iNodeRoot_->attribute("geoNorth", geoImageList_->geoNorth());
     iNodeRoot_->attribute("geoSouth", geoImageList_->geoSouth());
@@ -281,7 +281,7 @@ void Analysis::nodeChange(INode * iNode)
 {
 #ifdef DEBUG_MSG
   if (iNode)
-    qDebug("#  Node change %s (%p)\n", (const char *) (iNode->name()), this);
+    qDebug("#  Node change %s (%p)\n", iNode->name().toLatin1().constData(), this);
 #endif
   if (iNode)
     if (iNode->sNode()) {

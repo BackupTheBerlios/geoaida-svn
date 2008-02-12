@@ -46,7 +46,7 @@ inline void TreeGNode::parent(TreeGNode* node)
 }
 
 /** Get the List of children */
-inline QList<TreeGNode>& TreeGNode::children()
+inline QList<TreeGNode*>& TreeGNode::children()
 {
 	return children_;
 }
@@ -54,17 +54,15 @@ inline QList<TreeGNode>& TreeGNode::children()
 /** add a child to the tree */
 inline void TreeGNode::childLink(TreeGNode *node)
 {
-	if (!node) return;
-	if (node->parent()) node->parent()->childUnlink(node);
-	node->parent(this);
-	children_.append(node);
+  if (!node) return;
+  if (node->parent()) node->parent()->childUnlink(node);
+  node->parent(this);
+  children_.append(node);
 }
 
 /** Remove a child from the list of children */
 inline void TreeGNode::childUnlink(TreeGNode *node)
 {
-	if (children_.findRef(node)>=0) {
-		children_.take();
-		node->parent(0);
-	}
+  if (children_.removeAll(node))
+    node->parent(0);
 }

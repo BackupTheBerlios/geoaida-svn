@@ -24,7 +24,7 @@
  */
 
 #include "semnet.h"
-#include <qfile.h>
+#include <QFile>
 #ifdef WIN32
 #include <stdlib.h> // für exit
 #endif
@@ -62,7 +62,7 @@ void SemNet::read(QIODevice & fp)
   if (tag == TOK_NODE)
     rootNode_ = new SNode(parser);
   if (rootNode_)
-    qDebug("SemNet: Root=%s\n", (const char *) rootNode_->name());
+    qDebug("SemNet: Root=%s\n", rootNode_->name().toLatin1().constData());
 #ifdef WIN32
 #warning cout ist gar nicht definiert!!!!!
   else {
@@ -76,8 +76,8 @@ void SemNet::read(QIODevice & fp)
 void SemNet::read(const QString & fname)
 {
   QFile fp(fname);
-  if (!fp.open(IO_ReadOnly)) {
-    qDebug("SemNet::read(%s): file not found", (const char *) fname);
+  if (!fp.open(QIODevice::ReadOnly)) {
+    qDebug("SemNet::read(%s): file not found", fname.toLatin1().constData());
     return;
   }
   read(fp);
@@ -95,8 +95,8 @@ void SemNet::write(QTextStream & fp)
 void SemNet::write(const QString & fname)
 {
   QFile fp(fname);
-  if (!fp.open(IO_WriteOnly)) {
-    qDebug("SemNet::write(%s): file not accessable", (const char *) fname);
+  if (!fp.open(QIODevice::WriteOnly)) {
+    qDebug("SemNet::write(%s): file not accessable", fname.toLatin1().constData());
     return;
   }
   QTextStream str(&fp);

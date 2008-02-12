@@ -28,7 +28,6 @@
 
 Operator::Operator()
 {
-  attributeDict_.setAutoDelete(true);
   type_ = "topdown";
   runGlobal_ = false;
 }
@@ -36,7 +35,6 @@ Operator::Operator()
 /** Generate a new operator using the provided parser */
 Operator::Operator(MLParser & parser)
 {
-  attributeDict_.setAutoDelete(true);
   type_ = "topdown";
   runGlobal_ = false;
   read(parser);
@@ -52,24 +50,23 @@ Operator::command(AttribList & attribList)
 {
   QString cmd = cmd_;
   {                             // Replace the attributes known by this operator
-    QDictIterator < Attribute > it =
-      QDictIterator < Attribute > (attributeDict_);
-    for (; it.current(); ++it) {
-//D                     qDebug("Operator::command %s\n",(const char*)it.currentKey());
-      cmd.replace(QRegExp("@" + it.currentKey() + "@", false),
-                  it.current()->command(attribList));
+    QMultiHash < QString, Attribute* >::const_iterator  it = attributeDict_.constBegin();
+    for (; it!=attributeDict_.constEnd(); ++it) {
+      //D                     qDebug("Operator::command %s\n",(const char*)it.currentKey());
+      cmd.replace(QRegExp("@" + it.key() + "@", Qt::CaseInsensitive),
+                  it.value()->command(attribList));
     }
   }
   {                             // Replace all unknown attributes
-    QDictIterator < QString > it = QDictIterator < QString > (attribList);
-    for (; it.current(); ++it) {
-//D                     qDebug("Operator::command %s\n",(const char*)it.currentKey());
-      cmd.replace(QRegExp("@" + it.currentKey() + "@", false),
-                  *(it.current()));
+    AttribListConstIterator it = attribList.constBegin();
+    for (; it!=attribList.constEnd(); ++it) {
+      //D                     qDebug("Operator::command %s\n",(const char*)it.currentKey());
+      cmd.replace(QRegExp("@" + it.key() + "@", Qt::CaseInsensitive),
+                  it.value());
     }
   }
 
-  qDebug("Operator::command: %s\n", (const char *) cmd);
+  qDebug("Operator::command: %s\n", cmd.toLatin1().constData());
 
   return cmd;
 }
@@ -94,8 +91,10 @@ Operator::read(MLParser & parser)
   MLParser::setBool(runGlobal_, args, "runglobal");
   delete args;
   qDebug("Operator (%s/%s/%s) %s\n",
-         (const char *) type_, (const char *) class_, (const char *) name_,
-         (const char *) cmd_);
+         type_.toLatin1().constData(), 
+	 class_.toLatin1().constData(), 
+	 name_.toLatin1().constData(),
+         cmd_.toLatin1().constData());
 
   QString keywords[] = { "OPERATOR", "ATTRIBUTE", "" };
   const MLTagTable nodeTagTable(keywords);
@@ -116,7 +115,7 @@ Operator::read(MLParser & parser)
       attrib->prefix(type()+"/");
 #endif
       qDebug("Operator::read new Attribute %s\n",
-             (const char *) attrib->name());
+             attrib->name().toLatin1().constData());
       attributeDict_.insert(attrib->name(), attrib);
       break;
     }
@@ -126,7 +125,7 @@ Operator::read(MLParser & parser)
 }
 
 /** Returns the description of the attributes */
-QDict < Attribute > *Operator::attributeDesc()
+QMultiHash<QString, Attribute* > *Operator::attributeDesc()
 {
 //      qDebug("Operator::attributeDesc() name=%s",name_.latin1());
   return &attributeDict_;

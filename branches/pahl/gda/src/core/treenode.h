@@ -27,7 +27,7 @@
 #define TREENODE_H
 
 #include <qstring.h>
-#include <qlist.h>
+#include <QList>
 /**Template class for a tree
   *@author Martin Pahl
   */
@@ -41,7 +41,7 @@ public:
   /** Get the parent of this node */
   T* parent();
   /** Get the List of children */
-  QList<T>& children();
+  QList<T*>& children();
 };
 
 #include "treenode.hpp"

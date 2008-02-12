@@ -30,7 +30,9 @@
 #include <unistd.h>
 #include <signal.h>
 #include <string.h>
-#include <qapplication.h>
+#include <QTimer>
+#include <QProcess>
+#include <QApplication>
 
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -40,11 +42,11 @@
 #include <qmessagebox.h>
 #endif
 
-#define DEBUG_MSG
+//#define DEBUG_MSG
 
 Task::Task(unsigned int maxJobs)
 {
-  timer_ = new QTimer(this, "Process timer");
+  timer_ = new QTimer(this);
   connect(timer_, SIGNAL(timeout()), this, SLOT(check()));
   jid_ = 0;
 #ifdef WIN32
@@ -81,7 +83,7 @@ int Task::execNext()
     }
   }
   ProcessEntry *p = jobQueue_.dequeue();
-  ASSERT(p);
+  Q_ASSERT(p);
   QString command = p->cmd_;
   int pid = start(p->cmd_);
   p->pid_ = pid;
@@ -92,12 +94,12 @@ int Task::execNext()
     failedJobs_.enqueue(p);
   else
 #ifdef WIN32
-	process_[++process_count]=*p;
+    process_[++process_count]=*p;
 #else
-	process_.insert(pid,p);
+  process_.insert(pid,p);
 #endif
 #ifdef DEBUG_MSG
-  qDebug("Task::execNext(%d): %s\n", pid, command.latin1());
+  qDebug("Task::execNext(%d): %s\n", pid, command.toLatin1().constData());
 #endif
   if (!timerRunning_) {
     timer_->start(200);
@@ -134,16 +136,16 @@ int Task::start(QString command)
   if (command.isEmpty())
     return 0;
 #ifdef DEBUG_MSG
-  qDebug("Task::start: %s\n", command.latin1());
+  qDebug("Task::start: %s\n", command.toLatin1().constData());
 #endif
   pid = fork();
   if (pid == -1)
     return -1;
   if (pid == 0) {
     char *  argv[4];
-    argv[0] = "sh";
-    argv[1] = "-c";
-    argv[2] = qstrdup(command);
+    argv[0] = qstrdup("sh");
+    argv[1] = qstrdup("-c");
+    argv[2] = qstrdup(command.toLatin1().constData());
     argv[3] = 0;
     execve("/bin/sh", argv, environ);
     exit(127);
@@ -335,21 +337,12 @@ void Task::wait(int jid)
 #ifdef DEBUG_MSG
   qDebug("Task::wait(%d)\n", jid);
 #endif
-#ifdef WIN32
-  if (jid==0) 
-    while (job_.count()!=0) 
-      qApp->processEvents(400);
-    else 
-      while (job_[jid]!=0) 
-        qApp->processEvents(400);
-#else
   if (jid == 0)
     while (process_.count() != 0)
-      qApp->processEvents(400);
+      qApp->processEvents(QEventLoop::AllEvents,400);
   else
     while (job_[jid] != 0)
-      qApp->processEvents(400);
-#endif
+      qApp->processEvents(QEventLoop::AllEvents,400);
 
 #ifdef DEBUG_MSG
   qDebug("Task::wait(%d) done\n", jid);
@@ -386,12 +379,15 @@ bool Task::systemLoad()
   if (process_.count() == 0)
     return false;
   if (!num_cpus) {
-    QProcess script(QString("/bin/sh"));
-    script.addArgument("-c");
-    script.addArgument("cat /proc/cpuinfo | grep processor | wc -l");
-    if (script.launch("")) {
-      while (!script.canReadLineStdout());
-      QString s = script.readLineStdout();
+    QProcess script;
+    QString program = "/bin/sh";
+    QStringList arguments;
+    arguments << "-c" << "cat /proc/cpuinfo | grep processor | wc -l";
+    script.setReadChannel(QProcess::StandardOutput);
+    script.start(program,arguments);
+    if (script.waitForStarted()) {
+      while (!script.canReadLine());
+      QString s = script.readLine();
       num_cpus = s.toInt();
     }
     else

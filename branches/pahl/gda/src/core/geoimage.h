@@ -30,10 +30,9 @@
 #undef __USE_ISOC99
 #endif
 
-#include <qstring.h>
-#include <qshared.h>
-#include <qpoint.h>
-#include <qfile.h>
+#include <QString>
+#include <QPoint>
+#include <QFile>
 #include "MLParser.h"
 #include "geoimagecache.h"
 
@@ -65,11 +64,20 @@ extern "C"
 #ifndef NAN
 #define NAN sqrt(-1)
 #endif
+
+struct Shared
+     {
+         Shared() : count(1) {}
+         void ref() { ++count; }
+         bool deref() { return !--count; }
+         uint count;
+     };
+
 /**class to handel the infos for one image
   *@author Jürgen Bückner
   */
 
-class GeoImage:public ArgDict, QShared
+class GeoImage : public ArgDict, Shared
 {
 public:
   /** default constructor */
@@ -205,9 +213,12 @@ public:
   {
     return QString().
       sprintf("%s: %s, type:%s, key:%s, x_resolution:%s, y_resolution:%s, ",
-              find("key")->latin1(), find("file")->latin1(),
-              find("type")->latin1(), find("key")->latin1(),
-              find("x_res")->latin1(), find("y_res")->latin1());
+              find("key")->toLatin1().constData(), 
+	      find("file")->toLatin1().constData(),
+              find("type")->toLatin1().constData(), 
+	      find("key")->toLatin1().constData(),
+              find("x_res")->toLatin1().constData(), 
+	      find("y_res")->toLatin1().constData());
   };
   /** Generate a mask image (pbm)  */
   QString mask(float west, float north, float east, float south, int id,

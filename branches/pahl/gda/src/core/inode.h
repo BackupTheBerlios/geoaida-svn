@@ -178,7 +178,7 @@ protected:                     // Protected attributes
   /** flag to handle min and max restriction of snode definition */
   bool truncation_;
   /** childlist of 'this' used in childTopDown */
-  QList < SNode > *childList_;
+  QList < SNode* > *childList_;
 
 };
 

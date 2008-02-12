@@ -39,7 +39,7 @@ public:
 	  /** Get the parent of this node */
   TreeGNode* parent();
   /** Get the List of children */
-  QList<TreeGNode>& children();
+  QList<TreeGNode*>& children();
   /** set the parent */
   void parent(TreeGNode*);
   /** Remove a child from the list of children */
@@ -50,7 +50,7 @@ public:
   virtual const QString& name() const = 0;
 protected: // Protected attributes
   /** List of children */
-  QList<TreeGNode> children_;
+  QList<TreeGNode*> children_;
   /** parent of this node */
   TreeGNode* parent_;
 	};

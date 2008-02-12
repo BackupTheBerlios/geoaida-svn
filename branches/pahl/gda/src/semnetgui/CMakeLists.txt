@@ -1,13 +1,16 @@
-find_package(Qt3 REQUIRED)
+FIND_PACKAGE(Qt4 REQUIRED)
 
-add_definitions(${QT_DEFINITIONS})
+ADD_DEFINITIONS(${QT_DEFINITIONS})
+
 add_definitions(-DTMPDIR=\\\"${CMAKE_INSTALL_PREFIX}/tmp\\\")
-include_directories(.
+
+INCLUDE_DIRECTORIES(.
         ${PROJECT_SOURCE_DIR}/src/core
         ${CMAKE_SOURCE_DIR}/pfm/libpfm
-	${CMAKE_SOURCE_DIR}/qtguiapplication/src/qtparser
-	${CMAKE_SOURCE_DIR}/qtguiapplication/src/qtgui
-        ${QT_INCLUDE_DIR})
+	${CMAKE_SOURCE_DIR}/parser
+#	${CMAKE_BINARY_DIR}
+        ${QT_INCLUDES}
+)
 
 set(headers formbasenode.h
            formeditwidget.h

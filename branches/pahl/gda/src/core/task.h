@@ -29,10 +29,10 @@
 #define maxProcess 20
 #endif
 #include "inode.h"
-#include <qtimer.h>
-#include <qintdict.h>
-#include <qptrqueue.h>
-#include <qstring.h>
+#include <QTimer>
+#include <QHash>
+#include <QQueue>
+#include <QString>
 
 class QListViewItem;
 
@@ -72,16 +72,10 @@ public:
   int execNext();
   int jid_;
   unsigned int maxJobs_;
-#ifdef WIN32
-   int process_count;
-   ProcessEntry process_ [maxProcess];//maximale ProcessZahl,
-						//weil QIntDictIterator nicht läuft
-#else
-    QIntDict < ProcessEntry > process_;
-#endif
-    QIntDict < ProcessEntry > job_;
-    QPtrQueue < ProcessEntry > jobQueue_;
-    QPtrQueue < ProcessEntry > failedJobs_;
+  QHash < int, ProcessEntry* > process_;
+  QHash < int, ProcessEntry* > job_;
+  QQueue < ProcessEntry* > jobQueue_;
+  QQueue < ProcessEntry* > failedJobs_;
   QTimer *timer_;
   bool timerRunning_;
   /** system load */

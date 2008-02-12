@@ -18,16 +18,16 @@
 #include "snode.h"
 #include "task.h"
 #include "operatorlist.h"
-#include "qcolor.h"
-#include <qdir.h>
-#include <qregexp.h>
+#include "QColor"
+#include <QDir>
+#include <QRegExp>
+#include <QTextStream>
 #include "cleanup.h"
-#include <assert.h>
 #ifdef WIN32
 #include <stdlib.h> // für exit
-#include <qmessagebox.h>
+#include <QMessageBox>
 #endif
-#define DEBUG_MSG
+//#define DEBUG_MSG
 
 static QString GetTmpFilename(QString prefix = "", QString path = "")
 {
@@ -36,13 +36,13 @@ static QString GetTmpFilename(QString prefix = "", QString path = "")
 #ifdef WIN32
   if (!path.isEmpty())
     return dir + "\\" + path + QString().sprintf("%04d-%s", no++,
-                                                prefix.latin1());
-  return dir + QString().sprintf("\\%04d-%s", no++, prefix.latin1());
+                                                prefix.toLatin1().constData());
+  return dir + QString().sprintf("\\%04d-%s", no++, prefix.toLatin1().constData());
 #else
   if (!path.isEmpty())
     return dir + "/" + path + QString().sprintf("%04d-%s", no++,
-                                                prefix.latin1());
-  return dir + QString().sprintf("/%04d-%s", no++, prefix.latin1());
+                                                prefix.toLatin1().constData());
+  return dir + QString().sprintf("/%04d-%s", no++, prefix.toLatin1().constData());
 #endif
 }
 
@@ -170,11 +170,12 @@ int SNode::order() {
 void SNode::attributeSet(QString key, QString val)
 {
 #ifdef DEBUG_MSG
-  qDebug("SNode::attributeSet %s=%s\n", (const char *) key,
-         (const char *) val);
+  qDebug("SNode::attributeSet %s=%s\n", 
+	 key.toLatin1().constData(),
+         val.toLatin1().constData());
 #endif
   GNode::attributeSet(key, val);
-  if ((key == "name") && (!attribList_["class"]))
+  if ((key == "name") && (!attribList_.contains("class")))
     attributeSet("class", val);
   if (key == "isCompound")
     isCompound_ = (val.toInt() != 0);
@@ -190,7 +191,7 @@ void SNode::attributeSet(QString key, QString val)
     int b = 0;
     QString attrib = val;
     attrib.replace(QRegExp("[,;:]"), " ");
-    QTextIStream istr(&attrib);
+    QTextStream istr(&attrib);
     if (!istr.atEnd())
       istr >> r;
     if (!istr.atEnd())
@@ -256,24 +257,16 @@ void SNode::setVars()
 #define OLD_NET_COMPATIBILITY
 #ifdef OLD_NET_COMPATIBILITY
   if (topDown_) {
-    QDict < Attribute > *attribs = topDown_->attributeDesc();
+    QMultiHash < QString, Attribute* > *attribs = topDown_->attributeDesc();
     if (attribs) {
-      QDictIterator < Attribute > it(*attribs);
-      for (; it.current(); ++it) {
-#ifdef WIN32
-        QString name = (*it.current()).name();
-#else
-        QString name = (**it).name();
-#endif
-        QString *val=attribList().find(name);
-        if  (val) {
-#ifdef WIN32
-          qDebug("SNode::setVars: substituting %s with %s",name.latin1(),(*it.current()).fullname().latin1());
-          attribList().replace((*it.current()).fullname(),val);
-#else
-          qDebug("SNode::setVars: substituting %s with %s",name.latin1(),(**it).fullname().latin1());
-          attribList().replace((**it).fullname(),val);
-#endif
+      QMultiHash<QString, Attribute* >::const_iterator it=attribs->constBegin();
+      for (; it!=attribs->constEnd(); ++it) {
+	Attribute* attrib= *it;
+        QString name = attrib->name();
+	if (attribList().contains(name)) {
+	  QString val=attribList().value(name);
+          qDebug("SNode::setVars: substituting %s with %s",name.toLatin1().constData(),(**it).fullname().toLatin1().constData());
+          attribList().replace(attrib->fullname(),val);
           attribList().remove(name);
         }
       }
@@ -286,24 +279,16 @@ void SNode::setVars()
 
 #ifdef OLD_NET_COMPATIBILITY
   if (bottomUp_) {
-    QDict < Attribute > *attribs = bottomUp_->attributeDesc();
+    QMultiHash < QString, Attribute* > *attribs = bottomUp_->attributeDesc();
     if (attribs) {
-      QDictIterator < Attribute > it(*attribs);
-      for (; it.current(); ++it) {
-#ifdef WIN32
-        QString name = (*it.current()).name();
-#else
-        QString name = (**it).name();
-#endif  
-        QString *val=attribList().find(name);
-        if  (val) {
-#ifdef WIN32
-          qDebug("SNode::setVars: substituting %s with %s",name.latin1(),(*it.current()).fullname().latin1());
-          attribList().replace((*it.current()).fullname(),val);
-#else
-          qDebug("SNode::setVars: substituting %s with %s",name.latin1(),(**it).fullname().latin1());
-          attribList().replace((**it).fullname(),val);
-#endif
+      QMultiHash<QString, Attribute* >::const_iterator it=attribs->constBegin();
+      for (; it!=attribs->constEnd(); ++it) {
+	Attribute* attrib= *it;
+        QString name = attrib->name();
+	if (attribList().contains(name)) {
+	  QString val=attribList().value(name);
+          qDebug("SNode::setVars: substituting %s with %s",name.toLatin1().constData(),(**it).fullname().toLatin1().constData());
+          attribList().replace(attrib->fullname(),val);
           attribList().remove(name);
         }
       }
@@ -338,8 +323,8 @@ void SNode::execOperator(Operator * op, INode * iNode, AttribList & attribs,
   QString stdout_file=iNode->output()+".stdout";
   QString stderr_file=iNode->output()+".stderr";
   QFile fp(iNode->output()+".cmd");
-  if (fp.open(IO_WriteOnly)) {
-    fp.writeBlock(cmd,cmd.length());
+  if (fp.open(QIODevice::WriteOnly)) {
+    fp.write(cmd.toLatin1().constData(),cmd.length());
     fp.close();
   }
 //  cmd+=" >"+stdout_file+" 2>"+stderr_file;
@@ -351,15 +336,14 @@ void SNode::execOperator(Operator * op, INode * iNode, AttribList & attribs,
 
 static void putAttribs(SNode & snode, AttribList & attribs, QString section)
 {
-  QDict < Attribute > *attribDict = snode.attributeDesc(section);
+  QMultiHash <QString, Attribute* > *attribDict = snode.attributeDesc(section);
   AttribList & attribList = snode.attribList();
   if (attribDict) {
-    QDictIterator < Attribute > it(*attribDict);
-    for (; it.current(); ++it) {
-      QString name = (**it).name();
-      QString *val = attribList[(**it).fullname()];
-      if (val)
-        attribs.replace(name, val);
+    QMultiHash <QString, Attribute*>::const_iterator it=attribDict->constBegin();
+    for (; it!=attribDict->constEnd(); ++it) {
+      QString name = (*it)->name();
+      if (attribList.contains((*it)->fullname()))
+	attribs.replace(name, attribList.value((*it)->fullname()));
     }
   }
 }
@@ -369,12 +353,12 @@ static void putAttribs(SNode & snode, AttribList & attribs, QString section)
 void SNode::execTopDownOp(INode * iNode)
 {
 #ifdef DEBUG_MSG
-  qDebug("#* SNode::execTopDown(%s) (%p)", name_.latin1(), this);
+  qDebug("#* SNode::execTopDown(%s) (%p)", name_.toLatin1().constData(), this);
 #ifdef WIN32
   QMessageBox::information(0,"SNode","execTopDown",QMessageBox::Default);
 #endif
 #endif
-  ASSERT(iNode->parent());
+  Q_ASSERT(iNode->parent());
 //((*(TreeGNode*)(&(*(TreeNode<GNode,TreeGNode>*)(&(*(GNode*)(&(*(TreeNode<INode,GNode>*)(&*iNode))))))))).parent_
 //Hier Absturz weil parent = 0
 //Darf nur aus Analyze::start() gestartet werden, nicht aus MainGui::Start()!
@@ -393,21 +377,21 @@ void SNode::execTopDownOp(INode * iNode)
 #endif
 
   AttribList attribs(parent->attribList());
-  QDict < Attribute > *topDownAttrib = attributeDesc("topDown");
+  QMultiHash < QString, Attribute* > *topDownAttrib = attributeDesc("topDown");
   // now generate image specific attributes
   if (topDownAttrib) {
-    QDictIterator < Attribute > it(*topDownAttrib);
-    for (; it.current(); ++it) {
-      switch ((**it).type()) {
+    QMultiHash < QString, Attribute* >::const_iterator it=topDownAttrib->constBegin();
+    for (; it!=topDownAttrib->constEnd(); ++it) {
+      Attribute *attrib=*it;
+      switch (attrib->type()) {
       case Attribute::IMAGE:{
-          QString imageName = attribute((**it).fullname());
-          QString keyName = (**it).name();
+          QString imageName = attribute(attrib->fullname());
+          QString keyName = attrib->name();
           GeoImage *image = geoImageList_.geoImage(imageName);
           if (image) {
-            QDictIterator < QString > it(*image);
-            for (; it.current(); ++it) {
-              attribs.replace(keyName + "_" + it.currentKey(),
-                              (it.current()));
+            ArgDictConstIterator it= image->constBegin();
+            for (; it!=image->constEnd(); ++it) {
+              attribs.replace(keyName + "_" + it.key(),it.value());
             }
             QString partName;
             if (topDown_ && topDown_->runGlobal())
@@ -433,9 +417,9 @@ void SNode::execTopDownOp(INode * iNode)
   // create a mask image and store mask attributes
   GeoImage *labelImage = parent->labelImage();
   if (labelImage) {
-    QDictIterator < QString > it(*labelImage);
-    for (; it.current(); ++it) {
-      attribs.replace("mask_" + it.currentKey(), it.current());
+    ArgDictConstIterator it = labelImage->constBegin();
+    for (; it!=labelImage->constEnd(); ++it) {
+      attribs.replace("mask_" + it.key(), it.value());
     }
     QString maskfile;
     if (topDown_ && topDown_->runGlobal()) {
@@ -494,7 +478,7 @@ void SNode::execTopDownOp(INode * iNode)
 #ifdef DEBUG_MSG
   {
     qDebug("SNode::execTopDown: attributes");
-    QTextOStream ts(stderr);
+    QTextStream ts(stderr);
     ts << attribs;
   }
 #endif
@@ -506,13 +490,13 @@ void SNode::execTopDownOp(INode * iNode)
 void SNode::execBottomUpOp(INode * iNode)
 {
 #ifdef DEBUG_MSG
-  qDebug("#* SNode::execBottomUp(%s)", name_.latin1());
+  qDebug("#* SNode::execBottomUp(%s)", name_.toLatin1().constData());
 #endif
   CleanUp::mkdir(CleanUp::getTmpDirPID(), iNode->path());
   QString iname = GetTmpFilename("input", iNode->path());
   QFile ifp(iname);
-  if (!ifp.open(IO_WriteOnly)) {
-    qDebug("Could not open tempfile %s\n", iname.latin1());
+  if (!ifp.open(QIODevice::WriteOnly)) {
+    qDebug("Could not open tempfile %s\n", iname.toLatin1().constData());
     iNode->taskFinished(0,0);
     return;
   }
@@ -537,9 +521,9 @@ void SNode::execBottomUpOp(INode * iNode)
     }
 #endif
     QTextStream str(&ifp);
-    QListIterator < INode > it = QListIterator < INode > (iNode->children());
-    for (; it.current(); ++it) {
-      INode *node = it.current();
+    QList < INode* >::const_iterator it = iNode->children().constBegin();
+    for (; it!=iNode->children().constEnd(); ++it) {
+      INode *node = *it;
 #if 1                           // If trashnode is not deleted (s.a.) trashnodes must be skipped here
       if (node->status() == TRASH)
         continue;
@@ -567,12 +551,12 @@ void SNode::execBottomUpOp(INode * iNode)
 #endif
   iNode->attribute("input", iname);
   {
-    QDictIterator < QString > it(iNode->attribList());
-    for (; it.current(); ++it) {
+    AttribListConstIterator it= iNode->attribList().constBegin();
+    for (; it!=iNode->attribList().constEnd(); ++it) {
 #ifdef WIN32
-      QMessageBox::information(0,"SNode",it.currentKey(),1);
+      QMessageBox::information(0,"SNode",it.key(),1);
 #endif
-      attribs.replace(it.currentKey(), it.current());
+      attribs.replace(it.key(), it.value());
     }
   }
   execOperator(bottomUp_, iNode, attribs, iNode->path(), buCounter_);
@@ -592,10 +576,10 @@ bool SNode::isA(QString cname)
 }
 
 /** Get the attribute description for the specified section */
-QDict < Attribute > *SNode::attributeDesc(QString section)
+QMultiHash < QString, Attribute* > *SNode::attributeDesc(QString section)
 {
 #ifdef DEBUG_MSG
-  qDebug("SNode::attributeDesc(%s)\n", section.latin1());
+  qDebug("SNode::attributeDesc(%s)\n", section.toLatin1().constData());
 #endif
   if (section == "generic")
     return &genericAttributes_;
@@ -606,33 +590,33 @@ QDict < Attribute > *SNode::attributeDesc(QString section)
   if ((section == "evaluation") && (evaluation_))
     return evaluation_->attributeDesc();
 #ifdef DEBUG_MSG
-  qDebug("SNode::attributeDesc(%s) not found\n", section.latin1());
+  qDebug("SNode::attributeDesc(%s) not found\n", section.toLatin1().constData());
 #endif
   return 0;
 }
 
 /** Evaluates the result of TopDownOperator    */
-QList < INode > SNode::evalTopDown(INode * inode)
+QList < INode* > SNode::evalTopDown(INode * inode)
 {
 #ifdef DEBUG_MSG
-  qDebug("#* SNode::evalTopDown(%s)", name_.latin1());
+  qDebug("#* SNode::evalTopDown(%s)", name_.toLatin1().constData());
 #endif
   tdCounter_--;
   stateChanged(guiPtr_);
-  assert(inode);
-  QList < INode > list;
+  Q_ASSERT(inode);
+  QList < INode* > list;
   cleanUp_.append(inode->output());
   QFile fp(inode->output());
-  if (!fp.open(IO_ReadOnly)) {
+  if (!fp.open(QIODevice::ReadOnly)) {
     qDebug("SNode::evalTopDown(%s): file not founed\n",
-           (const char *) (inode->output()));
+           (inode->output().toLatin1().constData()));
     return list;
   }
   MLParser parser(&fp);
   QString classname;
   MLParser::setString(classname, &(attribList()), "class");
 #ifdef DEBUG_MSG
-  qDebug("SNode::evalTopDown: Searching for %s\n", classname.latin1());
+  qDebug("SNode::evalTopDown: Searching for %s\n", classname.toLatin1().constData());
 #endif
   int tag;
   do {
@@ -645,16 +629,17 @@ QList < INode > SNode::evalTopDown(INode * inode)
     case TOK_REGION: {
         SNode *sNode;
         INode *node;
-        QString *classNameRegion = (*attribList)["class"];
+        QString classNameRegion = attribList->value("class");
+	
 #ifdef DEBUG_MSG
-        qDebug("class is %s\n", (const char *) *classNameRegion);
+        qDebug("class is %s\n", classNameRegion.toLatin1().constData());
 #endif
-        if (classNameRegion) {
-          if (qstricmp(classname, *classNameRegion) == 0) {
+        if (attribList->contains("class")) {
+          if (QString::compare(classname, classNameRegion,Qt::CaseInsensitive) == 0) {
             sNode = this;
           }
           else if (parent() && attributeBool("td_multiclass")) {
-            sNode = parent()->findClass(*classNameRegion);
+            sNode = parent()->findClass(classNameRegion);
           }
           else
             sNode = 0;
@@ -665,14 +650,16 @@ QList < INode > SNode::evalTopDown(INode * inode)
         if (sNode) {
 #ifdef DEBUG_MSG
           qDebug("SNode::evalTopDown(): found %s\n",
-                 classNameRegion->latin1());
+                 classNameRegion.toLatin1().constData());
 #endif
           node = new INode(sNode);
           node->configure(*attribList);
-          if (node->attribute("name").isEmpty() && (*attribList)["id"])
-            node->attribute("name", sNode->name() + QString().sprintf("_%03d",
-                                                                      ((*attribList)["id"])->toInt()));
-          assert(inode->parent());
+          if (node->attribute("name").isEmpty() && attribList->contains("id"))
+            node->attribute("name", 
+			    sNode->name() 
+			    + QString().sprintf("_%03d",
+						attribList->value("id").toInt()));
+          Q_ASSERT(inode->parent());
           double gN = inode->parent()->attributeFloat("geoNorth");
           double gS = inode->parent()->attributeFloat("geoSouth");
           double gW = inode->parent()->attributeFloat("geoWest");
@@ -692,31 +679,30 @@ QList < INode > SNode::evalTopDown(INode * inode)
 }
 
 /** Evaluates the result of the bottom-up-operator   */
-QList < INode > &SNode::evalBottomUp(INode * iNode)
+QList < INode* > &SNode::evalBottomUp(INode * iNode)
 {
 #ifdef DEBUG_MSG
-  qDebug("#* SNode::evalBottomUp(%s)", name_.latin1());
+  qDebug("#* SNode::evalBottomUp(%s)", name_.toLatin1().constData());
 #endif
   buCounter_--;
   stateChanged(guiPtr_);
   cleanUp_.append(iNode->attribute("input"));
   iNode->attributeRemove("input");
 
-  QList < INode > *groupList = new QList < INode >;
-  groupList->setAutoDelete(false);
+  QList < INode* > *groupList = new QList < INode* >;
 
   INode *list = 0;
 
   cleanUp_.append(iNode->output());
   QFile fp(iNode->output());
-  if (!fp.open(IO_ReadOnly)) {
+  if (!fp.open(QIODevice::ReadOnly)) {
     qDebug("SNode::evalBottomUp(%s): file not found\n",
-           (const char *) (iNode->output()));
+           iNode->output().toLatin1().constData());
     return *groupList;
   }
   MLParser parser(&fp);
 #ifdef DEBUG_MSG
-  qDebug("SNode::evalBottomUp: Parsing %s\n", (const char *) iNode->output());
+  qDebug("SNode::evalBottomUp: Parsing %s\n", iNode->output().toLatin1().constData());
 #endif
   int tag;
   do {
@@ -746,8 +732,10 @@ QList < INode > &SNode::evalBottomUp(INode * iNode)
       list->attributeRemove("file_geoEast");
       list->attributeRemove("file_geoSouth");
       list->update(*attribList);
-      if (!(*attribList)["name"] && (*attribList)["id"])
-        list->attribute("name", iNode->name() + QString().sprintf("_%03d",((*attribList)["id"])->toInt()));
+      if (!attribList->contains("name") && attribList->contains("id"))
+        list->attribute("name", 
+			iNode->name() 
+			+ QString().sprintf("_%03d",(attribList->value("id").toInt())));
       break;
     case -TOK_GROUP:
       if (list->children().count() != 0) {
@@ -767,14 +755,14 @@ QList < INode > &SNode::evalBottomUp(INode * iNode)
       break;
     case TOK_NODE:
       {
-        QString *s = (*attribList)["addr"];
-        if (!s || s->isEmpty())
+        QString s = attribList->value("addr");
+        if (s.isEmpty())
           break;
         node = 0;
-        if (sscanf((const char *) *s, "%p", &node) != 1)
+        if (sscanf(s.toLatin1().constData(), "%p", &node) != 1)
           break;
 #ifdef DEBUG_MSG
-        qDebug("Found %s\n", (const char *) (node->name()));
+        qDebug("Found %s\n", node->name().toLatin1().constData());
 #endif
         node->update(*attribList);
         node->attributeRemove("addr");
@@ -800,20 +788,20 @@ QList < INode > &SNode::evalBottomUp(INode * iNode)
 #ifdef DEBUG_MSG
     qDebug
       ("#  (Warning) %s(%p) has no parent -> write result './new_result1.net'\n",
-       (const char *) (iNode->attribute("name")), iNode);
+       iNode->attribute("name").toLatin1().constData(), iNode);
 #endif
     QFile fp("new_result1.net");
-    fp.open(IO_WriteOnly);
+    fp.open(QIODevice::WriteOnly);
     QTextStream str(&fp);
     iNode->write(str);
     fp.close();
   }
 
   {                             // Debug
-    QListIterator < INode > it(*groupList);
-    for (; it.current(); ++it) {
+    QList < INode* >::const_iterator it = groupList->constBegin();
+    for (; it!=groupList->constEnd(); ++it) {
 #ifdef DEBUG_MSG
-      qDebug("count=%d\n", it.current()->children().count());
+      qDebug("count=%d\n", (*it)->children().count());
 #endif
     }
   }
@@ -840,10 +828,10 @@ bool SNode::synchron_ = FALSE;
 /** find a snode with the given classname. Only direct children of this snode are checked. */
 SNode *SNode::findClass(QString classname)
 {
-  QListIterator < SNode > it(this->children());
-  for (; it.current(); ++it) {
-    SNode *node = it.current();
-    if (qstricmp(classname, node->attribute("class")) == 0)
+  QList < SNode* >::const_iterator it= children().constBegin();
+  for (; it!=children().constEnd(); ++it) {
+    SNode *node = (*it);
+    if (QString::compare(classname, node->attribute("class"),Qt::CaseInsensitive) == 0)
       return node;
   }
   return 0;
@@ -863,14 +851,14 @@ void SNode::changeOperator(Operator * &op, QString opName)
   if (op == newOp)
     return;
   if (op) {
-    QDictIterator < QString > it(attribList());
-    while (it.current()) {
+    AttribListConstIterator it = attribList().constBegin();
+    while (it!=attribList().constEnd()) {
 #ifdef WIN32
-      if (it.currentKey().contains(op->type().lower() + "\\")) {
+      if (it.key().contains(op->type().toLower() + "\\")) {
 #else
-      if (it.currentKey().contains(op->type().lower() + "/")) {
+      if (it.key().contains(op->type().toLower() + "/")) {
 #endif
-        attribList().remove(it.currentKey());
+        attribList().remove(it.key());
       }
       else
         ++it;
@@ -880,19 +868,19 @@ void SNode::changeOperator(Operator * &op, QString opName)
   op = newOp;
   if (!op)
     return;
-  QDict < Attribute > *attribs = op->attributeDesc();
+  QMultiHash < QString, Attribute* > *attribs = op->attributeDesc();
   if (attribs) {
-    QDictIterator < Attribute > it(*attribs);
-    for (; it.current(); ++it) {
+    QMultiHash < QString, Attribute* >::const_iterator it = attribs->constBegin();
+    for (; it!=attribs->constEnd(); ++it) {
 #ifdef WIN32
-      QString name = (*it.current()).fullname();
-      QString val = (*it.current()).value();
+      QString name = (*it)->.fullname();
+      QString val = (*it)->value();
 #else
-      QString name = (**it).fullname();
-      QString val = (**it).value();
+      QString name = (*it)->fullname();
+      QString val = (*it)->value();
 #endif
       if (!val.isEmpty())
-        attribList().replace(name, new QString(val));
+        attribList().replace(name, val);
     }
   }
 
@@ -907,5 +895,5 @@ void SNode::link()
 void SNode::unlink()
 {
   refCounter_--;
-  assert(refCounter_>=0);
+  Q_ASSERT(refCounter_>=0);
 }

@@ -26,14 +26,14 @@
 #ifndef GEOIMAGECACHE_H
 #define GEOIMAGECACHE_H
 
-#include <qlist.h>
+#include <QList>
 class GeoImage;
 
 /**image cache
   *@author Martin pahl
   */
 
-class GeoImageCache : public QPtrList<GeoImage>  {
+class GeoImageCache : public QList<GeoImage*>  {
 public: 
   GeoImageCache();
   ~GeoImageCache();

@@ -20,22 +20,20 @@
 #ifndef GEO_IMAGE_LIST_H
 #define GEO_IMAGE_LIST_H
 
-#include <qstring.h>
-#include <qstringlist.h>
-#include <qpoint.h>
-#include <qcache.h>
-#include "qfile.h"
+#include <QString>
+#include <QStringList>
+#include <QPoint>
+#include <QCache>
+#include "QFile"
 #include "geoimage.h"
 #include "geoimagecache.h"
-#ifdef WIN32
-//#define	_isnan(v)	isnan(v)
-#endif
+
 
 /**class to handel a list of image informations
   *@author Jürgen Bückner
   */
 
-class GeoImageList:public QDict< GeoImage >
+class GeoImageList : public QHash< QString, GeoImage* >
 {
 public:
   /** default constructor */
