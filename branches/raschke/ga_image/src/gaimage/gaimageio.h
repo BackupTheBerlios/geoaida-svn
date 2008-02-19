@@ -37,6 +37,8 @@ namespace Ga
 		_UNKNOWN 
   };
   
+  // Abstract base class that provides an interface for initiating the read/write
+  // process and reading and writing portions of an image.
   class ImageIO
   { 
   private:
@@ -58,6 +60,18 @@ namespace Ga
     virtual int sizeY() const = 0;
     virtual int channels() const = 0;
     virtual const std::type_info& pixType() const = 0;
+
+    // The comment is only available after reading the image, and should be
+    // set before starting to write the image. This is an implication of
+    // libpfm's design, but could be changed with some effort.
+    // Usually, this is only used by ImageT<>::read/write, which handle this
+    // correctly.
+    
+    virtual std::string comment() const = 0;
+    virtual void setComment(const std::string& comment) = 0;
+
+    // These methods must be virtual; since virtual templates aren't allowed, a
+    // macro is used to generate them.
     
     #define DECLARE_IO_METHODS(Type) \
     virtual void readRect(int channel, int x, int y, int width, int height, \

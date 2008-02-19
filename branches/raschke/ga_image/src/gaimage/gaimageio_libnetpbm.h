@@ -112,5 +112,15 @@ namespace Ga
     {
       return typeid(bool);
     }
+    
+    std::string comment() const
+    {
+      return std::string();
+    }
+    
+    void setComment(const std::string& comment) const
+    {
+      // TODO: Rather throw an exception here?
+    }
   };
 }

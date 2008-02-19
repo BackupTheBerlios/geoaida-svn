@@ -176,7 +176,7 @@ namespace Ga
     double getPixelAsDouble(int x, int y, int channel, double neutral) const;
     void setPixelToDouble(int x, int y, double val, int channel, bool clip);
     
-    // mutable: ConstIterator needs a non-const BlockHandle to lock/unlock it.
+    // mutable because ConstIterator needs a non-const BlockHandle to lock/unlock it.
     mutable std::vector<BlockHandle> channels;
     
   public:
@@ -192,7 +192,7 @@ namespace Ga
     
     // I/O.
     void read(ImageIO& io);
-    void write(ImageIO& io, int channel=0, const char* comment=0);
+    void write(ImageIO& io, int channel=0);
     using ImageBase::read;
     using ImageBase::write;
 

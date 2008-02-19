@@ -52,19 +52,26 @@ ImageT<PixTyp>::ImageT(int x, int y, int noChannels) : ImageBase() {
     channels[i] = Cache::get().alloc(size);
   
   // Try to guess the filetype.
+  
   setFileType(_UNKNOWN);
   if (noChannels == 3 && typeid(PixTyp) == typeid(unsigned char))
     setFileType(_PPM);
   if (noChannels != 1)
     return;
-    
   if (typeid(PixTyp) == typeid(unsigned char))
     setFileType(_PFM_FLOAT);
+  else if (typeid(PixTyp) == typeid(signed))
+    setFileType(_PFM_SINT);
+  else if (typeid(PixTyp) == typeid(unsigned))
+    setFileType(_PFM_UINT);
+  else if (typeid(PixTyp) == typeid(signed short))
+    setFileType(_PFM_SINT16);
+  else if (typeid(PixTyp) == typeid(unsigned short))
+    setFileType(_PFM_UINT16);
   else if (typeid(PixTyp) == typeid(float))
     setFileType(_PGM);
   else if (typeid(PixTyp) == typeid(bool))
     setFileType(_PBM);
-  // TODO: etc.
 }
 
 template <class PixTyp>
@@ -128,7 +135,7 @@ typename ImageT<PixTyp>::Iterator ImageT<PixTyp>::end(int row, int channel) {
 }
 	
 template <class PixTyp>
-typename ImageT<PixTyp>::Iterator ImageT<PixTyp>::end() { // TODO: WTF?
+typename ImageT<PixTyp>::Iterator ImageT<PixTyp>::end() {
   return end(sizeY(), noChannels());
 }
 	
@@ -143,7 +150,7 @@ typename ImageT<PixTyp>::ConstIterator ImageT<PixTyp>::constEnd(int row, int cha
 }
 	
 template <class PixTyp>
-typename ImageT<PixTyp>::ConstIterator ImageT<PixTyp>::constEnd() const { // TODO: WTF?
+typename ImageT<PixTyp>::ConstIterator ImageT<PixTyp>::constEnd() const {
   return constEnd(sizeY(), noChannels());
 }
 	
@@ -205,10 +212,12 @@ template <class PixTyp>
 void ImageT<PixTyp>::read(ImageIO& io) {
   for (int c = 0; c < noChannels(); ++c)
     io.readRect(c, 0, 0, io.sizeX(), io.sizeY(), &*begin(0, c));
+  setComment(io.comment());
 }
 
 template <class PixTyp>
-void ImageT<PixTyp>::write(ImageIO& io, int channel, const char* comment) {
+void ImageT<PixTyp>::write(ImageIO& io, int channel) {
+  io.setComment(comment());
   for (int c = 0; c < noChannels(); ++c)
     io.replaceRect(c, 0, 0, sizeX(), sizeY(), &*begin(0, c));
 }

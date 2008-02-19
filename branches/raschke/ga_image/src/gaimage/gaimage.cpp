@@ -136,6 +136,14 @@ void Image::setFileType(FileType t) {
   pImage_->setFileType(t);
 }
 
+std::string Image::comment() const {
+  return pImage_->comment();
+}
+
+void Image::setComment(const std::string& comment) {
+  pImage_->setComment(comment);
+}
+
 bool Image::read(const char* filename) {
   Image(filename).swap(*this);
   // Exception used for error handling.

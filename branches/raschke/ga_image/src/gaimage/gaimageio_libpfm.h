@@ -75,6 +75,7 @@ namespace Ga
     
     FILE* fp;
     FileType type;
+    std::string comment_;
     int sizeX_, sizeY_;
     
   public:
@@ -126,6 +127,9 @@ namespace Ga
         free(ppmbuffer->b);
         free(ppmbuffer);
       }
+      
+      // Update comment from static libpfm buffer.
+      comment_ = pfm_comment_get() ? pfm_comment_get() : "";
     }
     
     template<typename Src>
@@ -134,6 +138,9 @@ namespace Ga
     {
       assert(buffer != 0);
       assert(x == 0 && y == 0 && width == sizeX() && height == sizeY());
+
+      // Store comment so libpfm will use it.
+      pfm_comment_set(comment_.c_str());
       
       if (fileType() != _PPM)
       {
@@ -150,6 +157,9 @@ namespace Ga
   		  // Writing PPMs is a bit awkward. Each time a channel is written, the other channels are read
   		  // and written again, unless the image is empty. If it is empty, unwritten channels are filled
   		  // with fake data.
+  		  
+  		  // This could be worked around by merging all channels into a single one; however, this raises
+  		  // new questions (how would findMax work etc.)
         
         PFM3Byte *ppmbuffer;
   		  
@@ -214,6 +224,16 @@ namespace Ga
     const std::type_info& pixType() const
     {
       return typeIdFromFileType(fileType());
+    }
+
+    std::string comment() const
+    {
+      return comment_;
+    }
+    
+    void setComment(const std::string& comment)
+    {
+      comment_ = comment;
     }
   };
 }

@@ -29,7 +29,7 @@
 #include <climits>
 #include <stdexcept>
 
-// TODO: Change to new-style includes; involves work.
+// TODO: Change to C++-style (NON-deprecated) includes.
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -49,8 +49,9 @@ class ImageBase
 protected:
   FileType fileType_;
   int sizeX_, sizeY_;
+  std::string comment_;
 
-  ImageBase();
+  ImageBase() : fileType_(_UNKNOWN), sizeX_(0), sizeY_(0) {}
 
 public:
   virtual ImageBase* copyObject() = 0;
@@ -62,14 +63,23 @@ public:
   int noPixels() const { return sizeX_*sizeY_; }
   virtual int noChannels() const=0;
   virtual void getChannel(ImageBase& pic, int channel=0) = 0;
-  virtual void resize(int rx, int ry, int noChannels=1)=0; // TODO: KILL!
+  virtual void resize(int rx, int ry, int noChannels=1)=0; // TODO: Remove; unclear that it creates a new image
 
   FileType fileType() const { return fileType_; }
 	void setFileType(FileType t) { fileType_ = t;}
-  void read(const char* filename);
-  void write(const char *filename, int channel=0);
+
+  std::string comment() const { return comment_; }
+  void setComment(const std::string& comment) { comment_ = comment; }
+
   virtual void read(ImageIO&) = 0;
-  virtual void write(ImageIO&, int channel=0, const char* comment=0) = 0;
+  virtual void write(ImageIO&, int channel=0) = 0;
+  
+  void read(const char* filename) {
+    read(*ImageIO::reopen(filename));
+  }
+  void write(const char *filename, int channel=0) {
+    write(*ImageIO::create(filename, fileType(), sizeX(), sizeY(), noChannels()), 0);
+  }
 
   // Drawing primitives
   virtual double getPixelAsDouble(int x, int y, int channel=0, double neutral=0) const=0;
@@ -82,25 +92,6 @@ public:
   virtual double findMinValue(int ch=0) =0;
 };
 
-inline ImageBase::ImageBase()
-{
-  sizeX_=0;
-  sizeY_=0;
-  fileType_=_UNKNOWN;
-}
-
-inline void ImageBase::read(const char* filename)
-{
-  std::auto_ptr<ImageIO> io = ImageIO::reopen(filename);
-  return read(*io);
-}
-
-inline void ImageBase::write(const char* filename, int channel)
-{
-  std::auto_ptr<ImageIO> io = ImageIO::create(filename, fileType(), sizeX(), sizeY(), noChannels());
-  return write(*io, channel);
-}
-
 } // namespace Ga
 
-#endif        // __GA_IMAGEBASE_H
+#endif

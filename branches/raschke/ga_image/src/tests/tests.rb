@@ -2,6 +2,9 @@
 
 require 'test/unit'
 
+# Run all tests in enclosing directory.
+Dir.chdir(File.dirname(__FILE__))
+
 class ToolsTest < Test::Unit::TestCase
   def gi(toolname)
     "../tools/gi_#{toolname}/gi_#{toolname}"
@@ -24,6 +27,11 @@ class ToolsTest < Test::Unit::TestCase
     reference = "reference/#{tool_name}_#{source}"
     
     assert_exec command % ["fixtures/" + source, output]
+
+    if not File.exist? reference then
+      fail "Reference file #{reference} missing"
+    end
+    
     assert_equal_images(output, reference)
   end
   
@@ -66,5 +74,8 @@ class ToolsTest < Test::Unit::TestCase
     assert_tool_works("#{gi 'gaussian'} %s 2.3 %s", "face.ppm")
   end
   
-  
+  # Tool currently broken
+  #def test_resample
+  #  assert_tool_works("#{gi 'resample'} -r %s %s 0.5 2.0", "face.ppm")
+  #end
 end

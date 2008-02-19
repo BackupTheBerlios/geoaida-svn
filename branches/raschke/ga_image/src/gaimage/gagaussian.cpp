@@ -58,7 +58,7 @@ a less problematic choice than to assume a constant colour outside.
 
 Possible improvements:
 
-* Speed up by working on ImageT instead of Image?
+* Speed up by working on ImageT instead of Image!!
 
 */
 

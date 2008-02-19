@@ -23,6 +23,10 @@
 
 namespace Ga
 {
+  // An adapter that is derived from ImageIO and can be used (= returned) as such,
+  // and translates all virtual calls to calls of template member functions of the
+  // given implementation (which must implement these methods).
+  
   template<typename Impl>
   class ImageIOAdapter : public ImageIO
   {
@@ -33,6 +37,8 @@ namespace Ga
     int sizeY() const { return impl->sizeY(); }
     int channels() const { return impl->channels(); }
     const std::type_info& pixType() const { return impl->pixType(); }
+    std::string comment() const { return impl->comment(); }
+    void setComment(const std::string& comment) { impl->setComment(comment); }
     
     #define IMPLEMENT_IO_METHODS(Type) \
     void readRect(int channel, int x, int y, int width, int height, \
@@ -60,7 +66,7 @@ namespace Ga
 std::auto_ptr<Ga::ImageIO> Ga::ImageIO::create(const std::string& filename,
   FileType fileType, int sizeX, int sizeY, int channels)
 {
-  // Future: For tiled images, create a directory representation.
+  // TODO: For tiled images, create a directory representation.
 
   FILE* fp = fopen(filename.c_str(), "w+b");
   if (!fp)
@@ -95,7 +101,7 @@ std::auto_ptr<Ga::ImageIO> Ga::ImageIO::create(const std::string& filename,
 
 std::auto_ptr<Ga::ImageIO> Ga::ImageIO::reopen(const std::string& filename)
 {
-  // Future: For directories, use tiled image implementation.
+  // TODO: For tiled images, check for and read directory implementation.
   
   FILE* fp = fopen(filename.c_str(), "rb+");
   if (!fp)

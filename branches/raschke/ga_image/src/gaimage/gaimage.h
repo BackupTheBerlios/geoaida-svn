@@ -29,7 +29,7 @@ class ImageBase;
 
 // Simple Forward-Iterator that uses getPixel and setPixel to access the contents of its Image.
 // (Just as slow as calling getPixel/setPixel yourself, so you may want to avoid it.)
-// (Maybe it should leave altogether, as iterators suggest reasonable performance.)
+// (Maybe it should be removed. It's a lot of code for something that is used infrequently.)
 template<typename Img>
 struct SimpleIterator
 {
@@ -95,6 +95,10 @@ public:
   int noChannels() const;
   Image getChannel(int channel=0);
 
+  // Comments (most notable used to implement associated geoposition data)
+  std::string comment() const;
+  void setComment(const std::string& comment);
+
   // I/O
   FileType fileType() const;
   void setFileType(FileType t);
@@ -107,13 +111,13 @@ public:
   void fillRow(int row, int startX, int endX, double val, int channel=0);
   void fill(double value);
   
-  // Auslagern usw.
-  /*o*/ double findMinValue(int channel=0) const;
-  /*o*/ double findMaxValue(int channel=0) const;
-
+  // TODO: Move to algorithms; needn't be member functions
+  double findMinValue(int channel=0) const;
+  double findMaxValue(int channel=0) const;
+  
   // Iterators
-  // TODO: Restore & DEPRECATE old iterator functions;
-  // replace by channelBegin/rowBegin +const +end
+  // TODO: replace by channelBegin/rowBegin (+const*, +*End)
+  // The current iterators make it easy to iterate over channel boundaries!
   ConstIterator constBegin(int row=0, int channel=0) const;
   ConstIterator constEnd(int row, int channel=0) const;
   ConstIterator constEnd() const;
