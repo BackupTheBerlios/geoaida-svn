@@ -120,7 +120,27 @@ namespace Ga
     
     void setComment(const std::string& comment) const
     {
-      // TODO: Rather throw an exception here?
+      assert(comment.empty());
+    }
+    
+    double fileMin() const
+    {
+      return 0;
+    }
+    
+    double fileMax() const
+    {
+      return 255;
+    }
+    
+    void setFileMin(double min)
+    {
+      assert(min == 0);
+    }
+    
+    void setFileMax(double max)
+    {
+      assert(max == 255);
     }
   };
 }

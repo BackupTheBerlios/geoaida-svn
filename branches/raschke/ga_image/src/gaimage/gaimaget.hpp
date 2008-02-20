@@ -53,6 +53,9 @@ ImageT<PixTyp>::ImageT(int x, int y, int noChannels) : ImageBase() {
   
   // Try to guess the filetype.
   
+  fileMin_ = 0;
+  fileMax_ = 255;
+  
   setFileType(_UNKNOWN);
   if (noChannels == 3 && typeid(PixTyp) == typeid(unsigned char))
     setFileType(_PPM);
@@ -213,11 +216,15 @@ void ImageT<PixTyp>::read(ImageIO& io) {
   for (int c = 0; c < noChannels(); ++c)
     io.readRect(c, 0, 0, io.sizeX(), io.sizeY(), &*begin(0, c));
   setComment(io.comment());
+  setFileMin(io.fileMin());
+  setFileMax(io.fileMax());
 }
 
 template <class PixTyp>
 void ImageT<PixTyp>::write(ImageIO& io, int channel) {
   io.setComment(comment());
+  io.setFileMin(fileMin());
+  io.setFileMax(fileMax());
   for (int c = 0; c < noChannels(); ++c)
     io.replaceRect(c, 0, 0, sizeX(), sizeY(), &*begin(0, c));
 }

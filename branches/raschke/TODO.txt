@@ -1,10 +1,13 @@
 Image redesign/cleanup TO DO:
 
 * Actual handling of multi-area images, even if no format available
-* Load and store min/max from/to files, allow overwriting
 * Geo data parser/writer for comments
   - Comments are prepended with 'comment' at libpfm level; this does not bode well!
 * Reorganize the directories in ga_image
+* Try to simplify the algorithm call -> template algorithm call translation
 * Merger with rest of project
 * Use Size and LargeSize types for image dimensions
 * Many assertions -> Exceptions
+* Documentation
+* ...
+* PROFIT!

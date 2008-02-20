@@ -76,6 +76,7 @@ namespace Ga
     FILE* fp;
     FileType type;
     std::string comment_;
+    float fileMin_, fileMax_;
     int sizeX_, sizeY_;
     
   public:
@@ -94,18 +95,15 @@ namespace Ga
 
       if (fileType() != _PPM)
       {
-        float min, max;
-        
         Dest* storageBuffer = static_cast<Dest*>(pfm_readpfm_type(fp, &sizeX_, &sizeY_,
-          &min, &max, storageTypeFromTypeId(typeid(Dest)), 0));
+          &fileMin_, &fileMax_, storageTypeFromTypeId(typeid(Dest)), 0));
         std::copy(storageBuffer, storageBuffer + width * height, buffer);
         free(storageBuffer);
       }
       else
       {
-      	float min, max;
         PFM3Byte* ppmbuffer = static_cast<PFM3Byte*>(pfm_readpfm_type(fp, &sizeX_, &sizeY_,
-          &min, &max, PFM_3BYTE, 0));
+          &fileMin_, &fileMax_, PFM_3BYTE, 0));
         
         switch(channel)
         {
@@ -148,9 +146,7 @@ namespace Ga
         assert(channel == 0);
         fseek(fp, 0, SEEK_SET);
         ftruncate(fileno(fp), 0);
-        pfm_writepfm_type(fp, buffer, sizeX(), sizeY(),
-          *std::min_element(buffer, buffer + width * height),
-          *std::max_element(buffer, buffer + width * height),
+        pfm_writepfm_type(fp, buffer, sizeX(), sizeY(), fileMin(), fileMax(),
           storageTypeFromTypeId(typeid(Src)));
       }
       else
@@ -198,7 +194,7 @@ namespace Ga
 
         fseek(fp, 0, SEEK_SET);
         ftruncate(fileno(fp), 0);
-        pfm_writepfm_type(fp, ppmbuffer, width, height, 1, -1, PFM_3BYTE);
+        pfm_writepfm_type(fp, ppmbuffer, width, height, fileMin(), fileMax(), PFM_3BYTE);
     	}
     }
     
@@ -235,6 +231,26 @@ namespace Ga
     void setComment(const std::string& comment)
     {
       comment_ = comment;
+    }
+    
+    double fileMin() const
+    {
+      return fileMin_;
+    }
+    
+    double fileMax() const
+    {
+      return fileMax_;
+    }
+    
+    void setFileMin(double fileMin)
+    {
+      fileMin_ = fileMin;
+    }
+    
+    void setFileMax(double fileMax)
+    {
+      fileMax_ = fileMax;
     }
   };
 }

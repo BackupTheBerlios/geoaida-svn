@@ -61,9 +61,17 @@ public:
   int sizeX() const { return sizeX_; }
   int sizeY() const { return sizeY_; }
   int noPixels() const { return sizeX_*sizeY_; }
+  
+  virtual double fileMin() const = 0;
+  virtual double fileMax() const = 0;
+  virtual void setFileMin(double min) = 0;
+  virtual void setFileMax(double max) = 0;
+  
   virtual int noChannels() const=0;
   virtual void getChannel(ImageBase& pic, int channel=0) = 0;
-  virtual void resize(int rx, int ry, int noChannels=1)=0; // TODO: Remove; unclear that it creates a new image
+
+  // TODO: Remove; unclear that it creates a new image (but it does!)
+  virtual void resize(int rx, int ry, int noChannels=1)=0;
 
   FileType fileType() const { return fileType_; }
 	void setFileType(FileType t) { fileType_ = t;}

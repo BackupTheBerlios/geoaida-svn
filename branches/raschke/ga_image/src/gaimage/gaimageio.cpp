@@ -39,6 +39,10 @@ namespace Ga
     const std::type_info& pixType() const { return impl->pixType(); }
     std::string comment() const { return impl->comment(); }
     void setComment(const std::string& comment) { impl->setComment(comment); }
+    double fileMin() const { return impl->fileMin(); }
+    double fileMax() const { return impl->fileMax(); }
+    void setFileMin(double fileMin) { impl->setFileMin(fileMin); }
+    void setFileMax(double fileMax) { impl->setFileMax(fileMax); }
     
     #define IMPLEMENT_IO_METHODS(Type) \
     void readRect(int channel, int x, int y, int width, int height, \

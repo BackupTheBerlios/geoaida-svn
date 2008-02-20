@@ -37,7 +37,8 @@ extern "C" {
 #include <algorithm>
 #include <vector>
 
-namespace Ga {
+namespace Ga
+{
   template<typename Pix, bool Mutable>
   class Iterator
   {
@@ -176,6 +177,7 @@ namespace Ga
     double getPixelAsDouble(int x, int y, int channel, double neutral) const;
     void setPixelToDouble(int x, int y, double val, int channel, bool clip);
     
+    double fileMin_, fileMax_;
     // mutable because ConstIterator needs a non-const BlockHandle to lock/unlock it.
     mutable std::vector<BlockHandle> channels;
     
@@ -189,6 +191,10 @@ namespace Ga
     // Metrics.
     virtual const class std::type_info& typeId() const;
     int noChannels() const;
+    double fileMin() const { return fileMin_; }
+    double fileMax() const { return fileMax_; }
+    void setFileMin(double fileMin) { fileMin_ = fileMin; }
+    void setFileMax(double fileMax) { fileMax_ = fileMax; }
     
     // I/O.
     void read(ImageIO& io);

@@ -66,9 +66,14 @@ namespace Ga
     // libpfm's design, but could be changed with some effort.
     // Usually, this is only used by ImageT<>::read/write, which handle this
     // correctly.
+    // The same applies to fileMin/fileMax.
     
     virtual std::string comment() const = 0;
     virtual void setComment(const std::string& comment) = 0;
+    virtual double fileMin() const = 0;
+    virtual double fileMax() const = 0;
+    virtual void setFileMin(double fileMin) = 0;
+    virtual void setFileMax(double fileMax) = 0;
 
     // These methods must be virtual; since virtual templates aren't allowed, a
     // macro is used to generate them.
