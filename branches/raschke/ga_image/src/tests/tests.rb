@@ -15,7 +15,7 @@ class ToolsTest < Test::Unit::TestCase
   end
   
   def assert_equal_images(file1, file2)
-    assert_exec "#{gi 'testhelper'} --assert-equal #{file1} #{file2}"
+    assert_exec "#{gi:testhelper} --assert-equal #{file1} #{file2}"
   end
 
   def assert_tool_works(command, source)
@@ -52,26 +52,31 @@ class ToolsTest < Test::Unit::TestCase
   end
   
   def test_copy_pbm
-    assert_tool_works("#{gi 'testhelper'} --copy %s %s",
+    assert_tool_works("#{gi:testhelper} --copy %s %s",
                       "face.pbm")
   end
   
   def test_copy_pgm
-    assert_tool_works("#{gi 'testhelper'} --copy %s %s",
+    assert_tool_works("#{gi:testhelper} --copy %s %s",
                       "face.pgm")
   end
   
   def test_copy_ppm
-    assert_tool_works("#{gi 'testhelper'} --copy %s %s",
+    assert_tool_works("#{gi:testhelper} --copy %s %s",
                       "face.ppm")
   end
   
+  def test_comments
+    assert_exec("#{gi:testhelper} --assert-comment-equal fixtures/face.pgm ''")
+    assert_exec("#{gi:testhelper} --assert-comment-equal fixtures/comment_xyz.pgm xyz")
+  end
+  
   def test_canny
-    assert_tool_works("#{gi 'canny'} %s %s 0.03 0.06", "face.ppm")
+    assert_tool_works("#{gi:canny} %s %s 0.03 0.06", "face.ppm")
   end
   
   def test_gaussian
-    assert_tool_works("#{gi 'gaussian'} %s 2.3 %s", "face.ppm")
+    assert_tool_works("#{gi:gaussian} %s 2.3 %s", "face.ppm")
   end
   
   # Tool currently broken

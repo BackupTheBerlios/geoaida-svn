@@ -140,7 +140,8 @@ namespace Ga
       assert(x == 0 && y == 0 && width == sizeX() && height == sizeY());
 
       // Store comment so libpfm will use it.
-      pfm_comment_set(comment_.c_str());
+      if (!comment_.empty())
+        pfm_comment_set(comment_.c_str());
       
       if (fileType() != _PPM)
       {

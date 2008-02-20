@@ -35,6 +35,13 @@ int main(int argc, char **argv)
     Image first(argv[2]);
     Image second(argv[3]);
   
+    if (first.comment() != second.comment())
+    {
+      printf("Comment mismatch (%s : %s)\n",
+        first.comment().c_str(), second.comment().c_str());
+      return EXIT_FAILURE;
+    }
+  
     if (first.noChannels() != second.noChannels())
     {
       printf("Channel count mismatch (%d : %d)\n",
@@ -64,6 +71,20 @@ int main(int argc, char **argv)
         printf("Content mismatch (channel %d)\n", ch);
         return EXIT_FAILURE;
       }
+  }
+  else if (!strcmp(argv[1], "--assert-comment-equal")) {
+    if (argc < 4) {
+      printf("Usage:\n  %s --assert-comment-equal <source> <comment>\n", argv[0]);
+      return EXIT_FAILURE;
+    }
+
+    Image image(argv[2]);
+    if (image.comment() != argv[3])
+    {
+      printf("Comment mismatch (%s : %s)\n",
+        image.comment().c_str(), argv[3]);
+      return EXIT_FAILURE;
+    }
   }
   else if (!strcmp(argv[1], "--copy")) {
     if (argc < 4) {
