@@ -29,10 +29,10 @@
 namespace Ga
 {
 
-Image::Image(const std::type_info& t, int x, int y, int noChannels)
+Image::Image(const std::type_info& t, int x, int y, int noChannels, int segSizeX, int segSizeY)
 {
   #define TRY_TYPE(type) \
-    if (t == typeid(type)) pImage_ = new ImageT<type>(x, y, noChannels);
+    if (t == typeid(type)) pImage_ = new ImageT<type>(x, y, noChannels, segSizeX, segSizeY);
 
   TRY_TYPE(bool) else
   TRY_TYPE(char) else
@@ -56,7 +56,7 @@ Image::Image(const std::string& filename)
   // Use other constructor to create image representation, then throw the
   // temporary Image away.
   // This looks strange, but if you think about it, swap() is a great tool. -- jlnr
-  Image(io->pixType(), io->sizeX(), io->sizeY(), io->channels()).swap(*this);
+  Image(io->pixType(), io->sizeX(), io->sizeY(), io->channels(), io->segmentSizeX(), io->segmentSizeY()).swap(*this);
   
   try
   {  

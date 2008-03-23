@@ -75,7 +75,8 @@ public:
   typedef SimpleIterator<const Image> ConstIterator;
 
   // Create wih ImageT representation of the given type, and given metrics.
-  explicit Image(const class std::type_info& t, int x = 0, int y = 0, int noChannels=1);
+  explicit Image(const class std::type_info& t, int x = 0, int y = 0,
+    int noChannels=1, int segSizeX=0, int segSizeY=0);
   // Load from file.
   explicit Image(const std::string& filename);
 

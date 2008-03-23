@@ -33,23 +33,40 @@ void ImageT<PixTyp>::setPixelToDouble(int x, int y, double val, int channel, boo
 }
 
 template <class PixTyp>
-ImageT<PixTyp>::ImageT(int x, int y, int noChannels) : ImageBase() {
+int ImageT<PixTyp>::segmentsX() const
+{
+  return static_cast<int>(ceil(sizeX() / segSizeX_));
+}
+
+template <class PixTyp>
+int ImageT<PixTyp>::segmentsY() const
+{
+  return static_cast<int>(ceil(sizeY() / segSizeY_));
+}
+
+template <class PixTyp>
+ImageT<PixTyp>::ImageT(int sizeX, int sizeY, int noChannels, int segSizeX, int segSizeY) : ImageBase() {
   // Unsigned values would make more sense, but can be dangerous as well.
   // Let's put our fate into good, old assert's hand.
-  assert(x >= 0);
-  assert(y >= 0);
+  assert(sizeX >= 0);
+  assert(sizeY >= 0);
+  assert(segSizeX >= 0);
+  assert(segSizeY >= 0);
   
-  sizeX_ = x;
-  sizeY_ = y;
+  sizeX_ = sizeX;
+  sizeY_ = sizeY;
+  segSizeX_ = segSizeX ? segSizeX : sizeX;
+  segSizeY_ = segSizeY ? segSizeY : sizeY;
   channels.resize(noChannels);
   
   // Protection against integer overflows.
-  LargeSize size = x;
-  size *= y;
+  LargeSize size = segSizeX_;
+  size *= segSizeY_;
   size *= sizeof(PixTyp);
   // Actual allocation.
   for (int i = 0; i < noChannels; ++i)
-    channels[i] = Cache::get().alloc(size);
+    for (int j = 0; j < segmentsX() * segmentsY(); ++j)
+      channels[i].segments.push_back(Cache::get().alloc(size));
   
   // Try to guess the filetype.
   
@@ -105,7 +122,7 @@ PixTyp ImageT<PixTyp>::getPixel(int x, int y, int channel, PixTyp neutral) const
 template <class PixTyp>
 void ImageT<PixTyp>::partCopy(const ImageBase &rvalue, int x0, int y0, int width, int height) {
   const ImageT& rval = dynamic_cast<const ImageT&>(rvalue);
-
+  
   assert(width >= 0);
   assert(width < rval.sizeX() - x0);
   assert(height >= 0);
@@ -124,17 +141,17 @@ void ImageT<PixTyp>::partCopy(const ImageBase &rvalue, int x0, int y0, int width
 
 template <class PixTyp>
 typename ImageT<PixTyp>::Iterator ImageT<PixTyp>::begin(int row, int channel) {
-  return Iterator(channels.at(channel), row * sizeX());
+  return Iterator(channels.at(channel).segments[0], row * sizeX());
 }
 
 template <class PixTyp>
 typename ImageT<PixTyp>::ConstIterator ImageT<PixTyp>::constBegin(int row, int channel) const {
-  return ConstIterator(channels.at(channel), row * sizeX());
+  return ConstIterator(channels.at(channel).segments[0], row * sizeX());
 }
 
 template <class PixTyp>
 typename ImageT<PixTyp>::Iterator ImageT<PixTyp>::end(int row, int channel) {
-  return Iterator(channels.at(channel), (row + 1) * sizeX());
+  return Iterator(channels.at(channel).segments[0], (row + 1) * sizeX());
 }
 	
 template <class PixTyp>
@@ -149,7 +166,7 @@ typename ImageT<PixTyp>::Iterator ImageT<PixTyp>::endChannel(int channel) {
 
 template <class PixTyp>
 typename ImageT<PixTyp>::ConstIterator ImageT<PixTyp>::constEnd(int row, int channel) const {
-  return ConstIterator(channels.at(channel), (row + 1) * sizeX());
+  return ConstIterator(channels.at(channel).segments[0], (row + 1) * sizeX());
 }
 	
 template <class PixTyp>

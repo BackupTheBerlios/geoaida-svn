@@ -33,7 +33,8 @@ namespace Ga
     _PFM_UINT16,
 		_PGM,
 		_PBM,
-		_PPM,	
+		_PPM,
+		_SPLIT,
 		_UNKNOWN 
   };
   
@@ -60,6 +61,9 @@ namespace Ga
     virtual int sizeY() const = 0;
     virtual int channels() const = 0;
     virtual const std::type_info& pixType() const = 0;
+    
+    virtual int segmentSizeX() const = 0;
+    virtual int segmentSizeY() const = 0;
 
     // The comment is only available after reading the image, and should be
     // set before starting to write the image. This is an implication of

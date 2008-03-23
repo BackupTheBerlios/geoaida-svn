@@ -213,6 +213,16 @@ namespace Ga
       return sizeY_;
     }
     
+    int segmentSizeX() const
+    {
+      return sizeX();
+    }
+    
+    int segmentSizeY() const
+    {
+      return sizeY();
+    }
+    
     int channels() const
     {
       return fileType() == _PPM ? 3 : 1;

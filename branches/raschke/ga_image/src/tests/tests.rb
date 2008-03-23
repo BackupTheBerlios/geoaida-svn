@@ -66,6 +66,10 @@ class ToolsTest < Test::Unit::TestCase
                       "face.ppm")
   end
   
+  def test_split
+    assert_equal_images("fixtures/face.ppm", "split:fixtures/face.ppm")
+  end
+  
   def test_comments
     assert_exec("#{gi:testhelper} --assert-comment-equal fixtures/face.pgm ''")
     assert_exec("#{gi:testhelper} --assert-comment-equal fixtures/comment_xyz.pgm xyz")

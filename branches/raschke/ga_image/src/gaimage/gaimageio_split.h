@@ -1,8 +1,8 @@
 /****************************************************************************
-                          gaimageio.h - Image I/O implementation
+                          gaimageio_splitpfm.h - Image I/O implementation
                              -------------------
-    begin                : 2007-10-29
-    copyright            : (C) 2007 TNT, Uni Hannover
+    begin                : 2008-03-23
+    copyright            : (C) 2008 TNT, Uni Hannover
     authors              : Julian Raschke
     email                : raschke@tnt.uni-hannover.de
  ***************************************************************************/
@@ -16,54 +16,36 @@
  *                                                                         *
  ***************************************************************************/
 
-extern "C" {
-#include <pnm.h>
-}
-
-#include "gaimageio.h"
 #include "gaimage.h"
-#include <algorithm>
-#include <vector>
 
-// This degenerated implementation only supports PBM files anymore.
+// Proof of concept implementation for segmented images. Built on top of the
+// libpfm implementation with artificial splitting of the image.
 
 namespace Ga
 {
-  class LibNetPBMImpl
+  class SplitImpl
   {
-    LibNetPBMImpl(const LibNetPBMImpl&);
-    LibNetPBMImpl& operator=(const LibNetPBMImpl&);
-
-    FILE* fp;
-    int sizeX_, sizeY_;
-
+    SplitImpl(const LibNetPBMImpl&);
+    SplitImpl& operator=(const LibNetPBMImpl&);
+    
+    mutable Image img;
+    
   public:
     // Read contents of file.
-    LibNetPBMImpl(FILE* fp, FileType fileType, int sizeX, int sizeY)
-    : fp(fp), sizeX_(sizeX), sizeY_(sizeY)
+    SplitImpl(const std::string& filename)
+    : img(filename)
     {
-      assert(fileType == _PBM);
     }
     
     template<typename Dest>
     void readRect(int channel, int x, int y, int width, int height,
       Dest* buffer)
     {
-      assert(x == 0 && y == 0 && width == sizeX() && height == sizeY());
-
-      fseek(fp, 0, SEEK_SET);
-
-   	  int format;
-   	  int cols, rows;
-    	pbm_readpbminit(fp, &cols, &rows, &format);
-
-      assert(cols == width && rows == height && "Should be right from readpnminit");
-      
-      std::vector<bit> row(width);
-      for (int y = 0; y < height; ++y)
+      for (int row = y; row < y + height; ++row)
       {
-        pbm_readpbmrow(fp, &row[0], width, format);
-        std::copy(row.begin(), row.end(), buffer + y * width);
+        Image::ConstIterator it = img.constBegin(row, channel);
+        for (int col = x; col < x + width; ++col)
+          *buffer++ = *it++;
       }
     }
     
@@ -71,51 +53,42 @@ namespace Ga
     void replaceRect(int channel, int x, int y, int width, int height,
       const Src* buffer)
     {
-      assert(buffer != 0);
-      assert(x == 0 && y == 0 && width == sizeX() && height == sizeY());
-      
-      assert(channel == 0);
-      fseek(fp, 0, SEEK_SET);
-      ftruncate(fileno(fp), 0);
-      
-      pbm_writepbminit(fp, width, height, 0);
-
-      std::vector<bit> row(width);
-      for (int y = 0; y < height; ++y)
+      for (int row = y; row < y + height; ++row)
       {
-        std::copy(buffer + y * width, buffer + (y + 1) * width, row.begin());
-        pbm_writepbmrow(fp, &row[0], width, 0);
+        Image::Iterator it = img.begin(row, channel);
+        for (int col = x; col < x + width; ++col)
+          *it++ = *buffer++;
       }
     }
     
     FileType fileType() const
     {
-      return _PBM;
+      return _SPLIT;
     }
     
     int sizeX() const
     {
-      return sizeX_;
+      return img.sizeX();
     }
     
     int sizeY() const
     {
-      return sizeY_;
+      return img.sizeY();
     }
     
     int segmentSizeX() const
     {
-      return sizeX();
+      return 13;
     }
     
     int segmentSizeY() const
     {
-      return sizeY();
+      return 11;
     }
     
     int channels() const
     {
-      return 1;
+      return img.noChannels();
     }
     
     const std::type_info& pixType() const
@@ -125,32 +98,32 @@ namespace Ga
     
     std::string comment() const
     {
-      return std::string();
+      return img.comment();
     }
     
     void setComment(const std::string& comment) const
     {
-      assert(comment.empty());
+      img.setComment(comment);
     }
     
     double fileMin() const
     {
-      return 0;
+      return img.pImage()->fileMin();
     }
     
     double fileMax() const
     {
-      return 255;
+      return img.pImage()->fileMax();
     }
     
     void setFileMin(double min)
     {
-      assert(min == 0);
+      img.pImage()->setFileMin(min);
     }
     
     void setFileMax(double max)
     {
-      assert(max == 255);
+      img.pImage()->setFileMax(max);
     }
   };
 }

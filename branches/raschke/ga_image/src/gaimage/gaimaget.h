@@ -172,20 +172,28 @@ namespace Ga
   class ImageT : public ImageBase
   {
   private:
-    // To be called from Image. private to show that this is not supposed to be
-    // used when using ImageT directly.
+    // Called by Image on ImageBase. private to show that this is not supposed to
+    // be used when using ImageT directly.
     double getPixelAsDouble(int x, int y, int channel, double neutral) const;
     void setPixelToDouble(int x, int y, double val, int channel, bool clip);
     
     double fileMin_, fileMax_;
     // mutable because ConstIterator needs a non-const BlockHandle to lock/unlock it.
-    mutable std::vector<BlockHandle> channels;
+    int segSizeX_, segSizeY_;
+    struct Channel
+    {
+      std::vector<BlockHandle> segments;
+    };
+    mutable std::vector<Channel> channels;
+    
+    int segmentsX() const;
+    int segmentsY() const;
     
   public:
     typedef Ga::Iterator<PixTyp, true> Iterator;
     typedef Ga::Iterator<const PixTyp, false> ConstIterator;
 
-    ImageT(int x, int y, int noChannels=1);
+    ImageT(int sizeX, int sizeY, int noChannels=1, int segSizeX=0, int segSizeY=0);
     virtual ImageBase* copyObject();
 
     // Metrics.

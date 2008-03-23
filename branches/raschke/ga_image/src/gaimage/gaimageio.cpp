@@ -19,6 +19,7 @@
 #include "gaimageio.h"
 #include "gaimageio_libnetpbm.h"
 #include "gaimageio_libpfm.h"
+#include "gaimageio_split.h"
 #include <stdexcept>
 
 namespace Ga
@@ -37,6 +38,8 @@ namespace Ga
     int sizeY() const { return impl->sizeY(); }
     int channels() const { return impl->channels(); }
     const std::type_info& pixType() const { return impl->pixType(); }
+    int segmentSizeX() const { return impl->segmentSizeX(); }
+    int segmentSizeY() const { return impl->segmentSizeY(); }
     std::string comment() const { return impl->comment(); }
     void setComment(const std::string& comment) { impl->setComment(comment); }
     double fileMin() const { return impl->fileMin(); }
@@ -105,8 +108,14 @@ std::auto_ptr<Ga::ImageIO> Ga::ImageIO::create(const std::string& filename,
 
 std::auto_ptr<Ga::ImageIO> Ga::ImageIO::reopen(const std::string& filename)
 {
-  // TODO: For tiled images, check for and read directory implementation.
-  
+  // Proof of concept tiled image implementation, enabled for images
+  // whose filename is prefixed with "split:".
+  if (filename.find("split:") == 0)
+  {
+    std::auto_ptr<SplitImpl> impl(new SplitImpl(filename.substr(6, std::string::npos)));
+    return std::auto_ptr<ImageIO>(new ImageIOAdapter<SplitImpl>(impl));
+  }
+
   FILE* fp = fopen(filename.c_str(), "rb+");
   if (!fp)
     throw std::runtime_error("Could not reopen " + filename);
