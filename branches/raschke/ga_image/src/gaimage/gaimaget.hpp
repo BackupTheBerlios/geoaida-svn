@@ -3,7 +3,7 @@
                              -------------------
     begin                : Thu Jan 11 2001
     copyright            : (C) 2001 TNT, Uni Hannover
-    authors              : Jürgen Bückner, Oliver Stahlhut, Martin Pahl,
+    authors              : JÂ¸rgen BÂ¸ckner, Oliver Stahlhut, Martin Pahl,
                            Julian Raschke
     email                : bueckner@tnt.uni-hannover.de
  ***************************************************************************/
@@ -260,11 +260,17 @@ void ImageT<PixTyp>::getChannel(ImageBase& resultImg, int channel)
   pic.swap(channelCopy);
 }
 
+template<typename PixTyp>
+struct AvoidVectorBool { typedef PixTyp Type; };
+template<>
+struct AvoidVectorBool<bool> { typedef unsigned char Type; };
+
 template <class PixTyp>
 void ImageT<PixTyp>::read(ImageIO& io) {
   for (int c = 0; c < noChannels(); ++c)
   {
-    std::vector<PixTyp> buffer(io.sizeX(), io.sizeY());
+    std::vector<typename AvoidVectorBool<PixTyp>::Type>
+        buffer(io.sizeX() * io.sizeY());
     io.readRect(c, 0, 0, io.sizeX(), io.sizeY(), &buffer[0]);
     std::copy(buffer.begin(), buffer.end(), begin(0, c));
   }
@@ -280,7 +286,8 @@ void ImageT<PixTyp>::write(ImageIO& io, int channel) {
   io.setFileMax(fileMax());
   for (int c = 0; c < noChannels(); ++c)
   {
-    std::vector<PixTyp> buffer(sizeX(), sizeY());
+    std::vector<typename AvoidVectorBool<PixTyp>::Type>
+        buffer(sizeX(), sizeY());
     std::copy(begin(0, c), begin(0, c) + sizeX() * sizeY(), buffer.begin());
     io.replaceRect(c, 0, 0, sizeX(), sizeY(), &buffer[0]);
   }
