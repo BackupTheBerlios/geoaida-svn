@@ -50,20 +50,28 @@ It ImageT<PixTyp>::iteratorForElem(unsigned channel, unsigned elem) const
 {
   BlockHandle* handle;
   unsigned rangeBegin, rangeEnd;
-
+  
   if (elem < noPixels())
   {
     // TODO: LargeSize again?
     unsigned col = elem % sizeX(), row = elem / sizeX();
     unsigned segX = col / segSizeX_, segY = row / segSizeY_;
+
+    fprintf(stderr, "* On Object %u *\n", this);
+    fprintf(stderr, "iteratorForElem %u of %u -> segment %u\n", elem, noPixels(), segY * segmentsX() + segX);
+    fprintf(stderr, "channel %u of %u\n", channel, channels.size());
+    fprintf(stderr, "segments available: %u\n", channels.at(channel).segments.size());
+    fflush(0);
+
     handle = &channels.at(channel).segments.at(segY * segmentsX() + segX);
-  
+    
+    fprintf(stderr, "after at.at()\n");
+    fflush(0);
+    
     rangeBegin = row * sizeX() + segX * segSizeX_;
     rangeEnd = rangeBegin + segSizeX_;
     if (segX == segmentsX() - 1 && sizeX() % segSizeX_ != 0)
-    {
-      //rangeEnd -= (segSizeX_ - (sizeX() % segSizeX_));
-    }
+      rangeEnd -= (segSizeX_ - (sizeX() % segSizeX_));
   }
   else
   {
@@ -72,7 +80,7 @@ It ImageT<PixTyp>::iteratorForElem(unsigned channel, unsigned elem) const
     handle = 0;
     rangeBegin = rangeEnd = 0;
   }
-    
+  
   return It(handle, elem, rangeBegin, rangeEnd,
     std::tr1::bind(&ImageT<PixTyp>::template iteratorForElem<It>, this, channel, std::tr1::placeholders::_1));
 }

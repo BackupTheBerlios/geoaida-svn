@@ -226,14 +226,26 @@ Ga::Image Ga::canny(const Image& img, double lowThreshold, double highThreshold)
 	
 	// Normalize the image so every pixel lies in 0..1.
 	input = normalizeImage(input);
-	
+		
   Image sobelX = convolve(input, SOBEL_X, 1.0/4, 0.5);
   Image sobelY = convolve(input, SOBEL_Y, 1.0/4, 0.5);
-  
+
   Image intensities = combineIntensities(sobelX, sobelY);
   Image angles = calcAngles(sobelX, sobelY);
 
   Image localMaxs = findLocalMaxs(intensities, angles);
+  
+  /*
+  localMaxs.setFileType(_PGM);
+  localMaxs.write("/Users/jlnr/Desktop/localMaxs.pgm");
+  input.setFileType(_PGM);
+  input.write("/Users/jlnr/Desktop/normalized.pgm");
+  intensities.setFileType(_PGM);
+  intensities.write("/Users/jlnr/Desktop/intensities.pgm");
+  angles.setFileType(_PGM);
+  angles.write("/Users/jlnr/Desktop/angles.pgm");
+  */
+
   Image canny = applyHysteresis(localMaxs, angles, lowThreshold, highThreshold);
   return canny;
 }

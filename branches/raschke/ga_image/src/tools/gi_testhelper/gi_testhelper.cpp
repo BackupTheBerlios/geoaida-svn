@@ -31,31 +31,31 @@ int main(int argc, char **argv)
       printf("Usage:\n  %s --assert-equal <first-file> <second-file>\n", argv[0]);
       return EXIT_FAILURE;
     }
-
+    
     Image first(argv[2]);
     Image second(argv[3]);
-  
+    
     if (first.comment() != second.comment())
     {
       printf("Comment mismatch (%s : %s)\n",
         first.comment().c_str(), second.comment().c_str());
       return EXIT_FAILURE;
     }
-  
+    
     if (first.noChannels() != second.noChannels())
     {
       printf("Channel count mismatch (%d : %d)\n",
         first.noChannels(), second.noChannels());
       return EXIT_FAILURE;
     }
-  
+    
     if (first.sizeX() != second.sizeX())
     {
       printf("Width mismatch (%d : %d)\n",
         first.sizeX(), second.sizeX());
       return EXIT_FAILURE;
     }
-  
+    
     if (first.sizeY() != second.sizeY())
     {
       printf("Height mismatch (%d : %d)\n",
