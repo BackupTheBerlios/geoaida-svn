@@ -57,16 +57,7 @@ It ImageT<PixTyp>::iteratorForElem(unsigned channel, unsigned elem) const
     unsigned col = elem % sizeX(), row = elem / sizeX();
     unsigned segX = col / segSizeX_, segY = row / segSizeY_;
 
-    fprintf(stderr, "* On Object %u *\n", this);
-    fprintf(stderr, "iteratorForElem %u of %u -> segment %u\n", elem, noPixels(), segY * segmentsX() + segX);
-    fprintf(stderr, "channel %u of %u\n", channel, channels.size());
-    fprintf(stderr, "segments available: %u\n", channels.at(channel).segments.size());
-    fflush(0);
-
     handle = &channels.at(channel).segments.at(segY * segmentsX() + segX);
-    
-    fprintf(stderr, "after at.at()\n");
-    fflush(0);
     
     rangeBegin = row * sizeX() + segX * segSizeX_;
     rangeEnd = rangeBegin + segSizeX_;
@@ -272,7 +263,11 @@ void ImageT<PixTyp>::getChannel(ImageBase& resultImg, int channel)
 template <class PixTyp>
 void ImageT<PixTyp>::read(ImageIO& io) {
   for (int c = 0; c < noChannels(); ++c)
-    io.readRect(c, 0, 0, io.sizeX(), io.sizeY(), &*begin(0, c));
+  {
+    std::vector<PixTyp> buffer(io.sizeX(), io.sizeY());
+    io.readRect(c, 0, 0, io.sizeX(), io.sizeY(), &buffer[0]);
+    std::copy(buffer.begin(), buffer.end(), begin(0, c));
+  }
   setComment(io.comment());
   setFileMin(io.fileMin());
   setFileMax(io.fileMax());
@@ -284,7 +279,11 @@ void ImageT<PixTyp>::write(ImageIO& io, int channel) {
   io.setFileMin(fileMin());
   io.setFileMax(fileMax());
   for (int c = 0; c < noChannels(); ++c)
-    io.replaceRect(c, 0, 0, sizeX(), sizeY(), &*begin(0, c));
+  {
+    std::vector<PixTyp> buffer(sizeX(), sizeY());
+    std::copy(begin(0, c), begin(0, c) + sizeX() * sizeY(), buffer.begin());
+    io.replaceRect(c, 0, 0, sizeX(), sizeY(), &buffer[0]);
+  }
 }
 
 } // namespace Ga
