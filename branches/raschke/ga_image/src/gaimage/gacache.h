@@ -78,7 +78,7 @@ namespace Ga
 		
 	public:
 		explicit Block(Size size)
-		: lastAccess(0), lockCount(0), size(size), dirty(false)
+		: lastAccess(0), size(size), lockCount(0), dirty(false)
 		{
 			// Global memory management already knows about this.
 			memory = new char[size];
@@ -180,6 +180,7 @@ namespace Ga
     BlockHandle& operator=(const BlockHandle& other)
     {
       BlockHandle(other).swap(*this);
+      return *this;
     }
     
     ~BlockHandle()
@@ -244,13 +245,13 @@ namespace Ga
 		LargeSize heap, total;
 		
 		Cache()
-		: total(0), heap(0)
+		: heap(0), total(0)
 		{
 		}
 		
 	public:
 		static Cache& get();
-    ~Cache();
+        ~Cache();
 		
 		BlockHandle alloc(Size size);
 		void requestDiskToHeap(Size size);
