@@ -59,7 +59,7 @@ It ImageT<PixTyp>::iteratorForElem(unsigned channel, unsigned elem) const
     unsigned segX = col / segSizeX_, segY = row / segSizeY_;
 
     handle = &channels.at(channel).segments.at(segY * segmentsX() + segX);
-    offset = row % segSizeY_;
+    offset = (row % segSizeY_) * segSizeX_;
     
     rangeBegin = row * sizeX() + segX * segSizeX_;
     rangeEnd = rangeBegin + segSizeX_;

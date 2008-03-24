@@ -2,6 +2,7 @@ Image redesign/cleanup TO DO:
 
 * Actual handling of multi-area images, even if no format available
   - Lazy loading!
+  - Whole-image range-optimization
 * Documentation
 * Windows port
 * Geo data parser/writer for comments
