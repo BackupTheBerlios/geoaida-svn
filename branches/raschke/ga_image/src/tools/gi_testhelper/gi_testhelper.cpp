@@ -34,23 +34,7 @@ int main(int argc, char **argv)
     
     Image first(argv[2]);
     Image second(argv[3]);
-
-    puts("Bild 1, Ch 1:");
-    for (int y = 0; y < first.sizeY(); ++y)
-    {
-        for (int x = 0; x < first.sizeX(); ++x)
-            printf("%lf ", first.getPixel(x, y, 1));
-        puts("");
-    }
-    
-    puts("Bild 2, Ch 1:");
-    for (int y = 0; y < second.sizeY(); ++y)
-    {
-        for (int x = 0; x < second.sizeX(); ++x)
-            printf("%lf ", second.getPixel(x, y, 1));
-        puts("");
-    }
-    
+        
     if (first.comment() != second.comment())
     {
       printf("Comment mismatch (%s : %s)\n",

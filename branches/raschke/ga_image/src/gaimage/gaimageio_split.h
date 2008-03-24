@@ -45,7 +45,7 @@ namespace Ga
     {
       for (int row = y; row < y + height; ++row)
         for (int col = x; col < x + width; ++col)
-          *buffer++ = img.getPixel(col, row);
+          *buffer++ = img.getPixel(col, row, channel);
     }
     
     template<typename Src>
@@ -54,7 +54,7 @@ namespace Ga
     {
       for (int row = y; row < y + height; ++row)
         for (int col = x; col < x + width; ++col)
-          img.setPixel(col, row, *buffer++);
+          img.setPixel(col, row, *buffer++, channel);
     }
     
     FileType fileType() const
