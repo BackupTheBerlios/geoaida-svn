@@ -66,8 +66,8 @@ class ToolsTest < Test::Unit::TestCase
                       "face.ppm")
   end
   
-  def test_split
-    assert_equal_images("fixtures/mini.ppm", "split:fixtures/mini.ppm")
+  def test_read_from_split
+    assert_equal_images("fixtures/face.ppm", "split:fixtures/face.ppm")
   end
   
   # Comments broken until TODO point fixed
