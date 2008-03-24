@@ -44,11 +44,8 @@ namespace Ga
       Dest* buffer)
     {
       for (int row = y; row < y + height; ++row)
-      {
-        Image::ConstIterator it = img.constBegin(row, channel);
         for (int col = x; col < x + width; ++col)
-          *buffer++ = *it++;
-      }
+          *buffer++ = img.getPixel(col, row);
     }
     
     template<typename Src>
@@ -56,11 +53,8 @@ namespace Ga
       const Src* buffer)
     {
       for (int row = y; row < y + height; ++row)
-      {
-        Image::Iterator it = img.begin(row, channel);
         for (int col = x; col < x + width; ++col)
-          *it++ = *buffer++;
-      }
+          img.setPixel(col, row, *buffer++);
     }
     
     FileType fileType() const
@@ -95,7 +89,7 @@ namespace Ga
     
     const std::type_info& pixType() const
     {
-      return typeid(bool);
+      return img.typeId();
     }
     
     std::string comment() const

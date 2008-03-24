@@ -35,6 +35,13 @@ int main(int argc, char **argv)
     Image first(argv[2]);
     Image second(argv[3]);
     
+    for (int y = 0; y < second.sizeY(); ++y)
+    {
+        for (int x = 0; x < second.sizeX(); ++x)
+            printf("%lf ", second.getPixel(x, y));
+        puts("");
+    }
+    
     if (first.comment() != second.comment())
     {
       printf("Comment mismatch (%s : %s)\n",
@@ -72,6 +79,7 @@ int main(int argc, char **argv)
       if (mismatch.first != first.constBegin(first.sizeY(), ch))
       {
         printf("Content mismatch (channel %d, element %d)\n", ch, mismatch.first - first.constBegin(0, ch));
+        printf("Value in first file: %lf, value in second file: %lf\n", 1.0 * *mismatch.first, 1.0 * *mismatch.second);
         return EXIT_FAILURE;
       }
     }
