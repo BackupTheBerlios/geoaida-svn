@@ -1,19 +1,19 @@
 Image redesign/cleanup TO DO:
 
 * Actual handling of multi-area images, even if no format available
+  - Lazy loading!
 * Documentation
-* Oh my gosh, can those file headers not leave altogether?
 * Windows port
 * Geo data parser/writer for comments
   - Comments are prepended with 'comment' at libpfm level; this does not bode well!
-* Reorganize the directories in ga_image
-* Try to simplify the algorithm call -> template algorithm call translation
-* Merger with rest of project
 * Use Size and LargeSize types for image dimensions
-* channels() or noChannels()?
-* ImageBase* pImage() -> ImageBase& imageT()?
 * Assertions -> Exceptions where okay for performance
+
+Optional improvements:
+* Reorganize the directories in ga_image
+* Oh my gosh, can those file headers not leave altogether?
 * Special comment everywhere where all possible formats are listed (so extenders can grep for such places)
 * Don't use poor Schäuble :(
-* ...
-* PROFIT!
+* ImageBase* pImage() -> ImageBase& imageT()?
+* channels() or noChannels()?
+* Try to simplify the algorithm call -> template algorithm call translation

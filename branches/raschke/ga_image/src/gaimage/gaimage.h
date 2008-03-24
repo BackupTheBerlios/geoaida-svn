@@ -50,6 +50,7 @@ struct SimpleIterator
   SimpleIterator& operator++() { ++elem; return *this; }
   SimpleIterator operator++(int) { SimpleIterator old = *this; ++*this; return old; }
   Proxy operator*() const { return Proxy(*img, ch, elem); }
+  std::ptrdiff_t operator-(const SimpleIterator& other) const { return elem - other.elem; }
   
   bool operator==(const SimpleIterator& rhs) const {
     return img == rhs.img && ch == rhs.ch && elem == rhs.elem;
@@ -61,7 +62,7 @@ struct SimpleIterator
   
   typedef std::input_iterator_tag iterator_category;
   typedef double value_type;
-  typedef std::size_t difference_type;
+  typedef std::ptrdiff_t difference_type;
   typedef Proxy* pointer;
   typedef Proxy reference;
 };
@@ -73,13 +74,13 @@ class Image
 public:
   typedef SimpleIterator<Image> Iterator;
   typedef SimpleIterator<const Image> ConstIterator;
-
+  
   // Create wih ImageT representation of the given type, and given metrics.
   explicit Image(const class std::type_info& t, int x = 0, int y = 0,
     int noChannels=1, int segSizeX=0, int segSizeY=0);
   // Load from file.
   explicit Image(const std::string& filename);
-
+  
   Image(const Image& rhs);
   Image& operator=(const Image& rhs);
   ~Image();

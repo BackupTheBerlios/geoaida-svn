@@ -45,6 +45,39 @@ int ImageT<PixTyp>::segmentsY() const
 }
 
 template <class PixTyp>
+template <typename It>
+It ImageT<PixTyp>::iteratorForElem(unsigned channel, unsigned elem) const
+{
+  BlockHandle* handle;
+  unsigned rangeBegin, rangeEnd;
+
+  if (elem < noPixels())
+  {
+    // TODO: LargeSize again?
+    unsigned col = elem % sizeX(), row = elem / sizeX();
+    unsigned segX = col / segSizeX_, segY = row / segSizeY_;
+    handle = &channels.at(channel).segments.at(segY * segmentsX() + segX);
+  
+    rangeBegin = row * sizeX() + segX * segSizeX_;
+    rangeEnd = rangeBegin + segSizeX_;
+    if (segX == segmentsX() - 1 && sizeX() % segSizeX_ != 0)
+    {
+      //rangeEnd -= (segSizeX_ - (sizeX() % segSizeX_));
+    }
+  }
+  else
+  {
+    // Special case for end iterators etc.: If the elem is out of range, the
+    // iterator is given an empty range.
+    handle = 0;
+    rangeBegin = rangeEnd = 0;
+  }
+    
+  return It(handle, elem, rangeBegin, rangeEnd,
+    std::tr1::bind(&ImageT<PixTyp>::template iteratorForElem<It>, this, channel, std::tr1::placeholders::_1));
+}
+
+template <class PixTyp>
 ImageT<PixTyp>::ImageT(int sizeX, int sizeY, int noChannels, int segSizeX, int segSizeY) : ImageBase() {
   // Unsigned values would make more sense, but can be dangerous as well.
   // Let's put our fate into good, old assert's hand.
@@ -141,42 +174,42 @@ void ImageT<PixTyp>::partCopy(const ImageBase &rvalue, int x0, int y0, int width
 
 template <class PixTyp>
 typename ImageT<PixTyp>::Iterator ImageT<PixTyp>::begin(int row, int channel) {
-  return Iterator(channels.at(channel).segments[0], row * sizeX());
+  return iteratorForElem<Iterator>(channel, row * sizeX());
 }
 
 template <class PixTyp>
 typename ImageT<PixTyp>::ConstIterator ImageT<PixTyp>::constBegin(int row, int channel) const {
-  return ConstIterator(channels.at(channel).segments[0], row * sizeX());
+  return iteratorForElem<ConstIterator>(channel, row * sizeX());
 }
 
 template <class PixTyp>
 typename ImageT<PixTyp>::Iterator ImageT<PixTyp>::end(int row, int channel) {
-  return Iterator(channels.at(channel).segments[0], (row + 1) * sizeX());
+  return iteratorForElem<Iterator>(channel, (row + 1) * sizeX());
 }
 	
 template <class PixTyp>
 typename ImageT<PixTyp>::Iterator ImageT<PixTyp>::end() {
-  return end(sizeY(), noChannels());
+  return iteratorForElem<Iterator>(noChannels() - 1, noPixels());
 }
 	
 template <class PixTyp>
 typename ImageT<PixTyp>::Iterator ImageT<PixTyp>::endChannel(int channel) {
-  return end(sizeY(), channel);
+  return iteratorForElem<Iterator>(channel, noPixels());
 }
 
 template <class PixTyp>
 typename ImageT<PixTyp>::ConstIterator ImageT<PixTyp>::constEnd(int row, int channel) const {
-  return ConstIterator(channels.at(channel).segments[0], (row + 1) * sizeX());
+  return iteratorForElem<ConstIterator>(channel, (row + 1) * sizeX());
 }
-	
+
 template <class PixTyp>
 typename ImageT<PixTyp>::ConstIterator ImageT<PixTyp>::constEnd() const {
-  return constEnd(sizeY(), noChannels());
+  return iteratorForElem<ConstIterator>(noChannels() - 1, noPixels());
 }
 	
 template <class PixTyp>
 typename ImageT<PixTyp>::ConstIterator ImageT<PixTyp>::constEndChannel(int channel) const {
-  return constEnd(sizeY(), channel);
+  return iteratorForElem<ConstIterator>(channel, noPixels());
 }
 
 template <class PixTyp>

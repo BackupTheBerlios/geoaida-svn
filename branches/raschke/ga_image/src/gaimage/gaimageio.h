@@ -34,7 +34,6 @@ namespace Ga
 		_PGM,
 		_PBM,
 		_PPM,
-		_SPLIT,
 		_UNKNOWN 
   };
   
@@ -68,7 +67,7 @@ namespace Ga
     // The comment is only available after reading the image, and should be
     // set before starting to write the image. This is an implication of
     // libpfm's design, but could be changed with some effort.
-    // Usually, this is only used by ImageT<>::read/write, which handle this
+    // This is usually called only by ImageT<>::read/write, which handle this
     // correctly.
     // The same applies to fileMin/fileMax.
     
@@ -78,7 +77,7 @@ namespace Ga
     virtual double fileMax() const = 0;
     virtual void setFileMin(double fileMin) = 0;
     virtual void setFileMax(double fileMax) = 0;
-
+    
     // These methods must be virtual; since virtual templates aren't allowed, a
     // macro is used to generate them.
     

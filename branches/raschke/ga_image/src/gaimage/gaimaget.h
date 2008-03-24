@@ -36,33 +36,56 @@ extern "C" {
 #include "gacache.h"
 #include <algorithm>
 #include <vector>
+#include <tr1/functional>
 
 namespace Ga
 {
   template<typename Pix, bool Mutable>
   class Iterator
   {
+  public:
+    typedef std::tr1::function<Iterator<Pix, Mutable>(unsigned elem)> Relocator;
+    
+  private:
     BlockHandle* handle;
+    // TODO: Use LargeSize or sth.
     unsigned elem;
     
+    // Used for relocation to a different segment.
+    unsigned rangeBegin, rangeEnd;
+    Relocator relocator;
+    
   public:
-    Iterator(BlockHandle& handle, unsigned elem)
-    : handle(&handle), elem(elem)
+    Iterator(BlockHandle* handle, unsigned elem,
+      unsigned rangeBegin, unsigned rangeEnd, const Relocator& relocator)
+    : handle(handle), elem(elem), rangeBegin(rangeBegin), rangeEnd(rangeEnd), relocator(relocator)
     {
+      // No valid handle given: This iterator can only be used for relocating.
+      if (!handle)
+        return;
+      
       if (Mutable)
-        handle.lockRW();
+        handle->lockRW();
       else
-        handle.lockR();
+        handle->lockR();
     }
     
     Iterator(const Iterator& other)
     {
       handle = other.handle;
+      elem = other.elem;
+      rangeBegin = other.rangeBegin;
+      rangeEnd = other.rangeEnd;
+      relocator = other.relocator;
+
+      // No valid handle given: This iterator can only be used for relocating.
+      if (!handle)
+        return;
+      
       if (Mutable)
         handle->lockRW();
       else
         handle->lockR();
-      elem = other.elem;
     }
     
     Iterator& operator=(const Iterator& other)
@@ -73,24 +96,39 @@ namespace Ga
     
     ~Iterator()
     {
-      handle->unlock();
+      if (handle)
+        handle->unlock();
     }
     
     void swap(Iterator& other)
     {
-      std::swap(handle, other.handle);
-      std::swap(elem, other.elem);
+      using std::swap;
+      swap(handle, other.handle);
+      swap(elem, other.elem);
+      swap(rangeBegin, other.rangeBegin);
+      swap(rangeEnd, other.rangeEnd);
+      swap(relocator, other.relocator);
     }
     
-    Pix& operator*() const
+    Pix& operator*()
     {
-      return (*this)[0];
+      if (elem < rangeBegin || elem >= rangeEnd)
+      {
+        //fprintf(stderr, "Relocating for elem %u (out of range %u .. %u)...\n", elem, rangeBegin, rangeEnd);
+        fflush(0);
+        *this = relocator(elem);
+        //fprintf(stderr, "New range; %u .. %u\n", rangeBegin, rangeEnd);
+        assert(elem >= rangeBegin);
+        assert(elem < rangeEnd);
+      }
+
+      Pix* data = static_cast<Pix*>(handle->getData());
+      return data[elem - rangeBegin];
     }
     
     Pix& operator[](std::size_t index) const
     {
-      Pix* data = static_cast<Pix*>(handle->getData());
-      return data[elem + index];
+      return *(*this + index);
     }
     
     Iterator& operator+=(std::ptrdiff_t offset)
@@ -101,7 +139,9 @@ namespace Ga
     
     Iterator operator+(std::ptrdiff_t offset) const
     {
-      return Iterator(*this) += offset;
+      Iterator result(*this);
+      result.elem += offset;
+      return result;
     }
     
     Iterator& operator++()
@@ -125,7 +165,9 @@ namespace Ga
     
     Iterator operator-(std::ptrdiff_t offset) const
     {
-      return Iterator(*this) -= offset;
+      Iterator result(*this);
+      result.elem -= offset;
+      return result;
     }
     
     Iterator& operator--()
@@ -178,16 +220,17 @@ namespace Ga
     void setPixelToDouble(int x, int y, double val, int channel, bool clip);
     
     double fileMin_, fileMax_;
-    // mutable because ConstIterator needs a non-const BlockHandle to lock/unlock it.
     int segSizeX_, segSizeY_;
     struct Channel
     {
       std::vector<BlockHandle> segments;
     };
+    // mutable because ConstIterator needs a non-const BlockHandle to lock/unlock it.
     mutable std::vector<Channel> channels;
     
     int segmentsX() const;
     int segmentsY() const;
+    template<typename It> It iteratorForElem(unsigned channel, unsigned elem) const;
     
   public:
     typedef Ga::Iterator<PixTyp, true> Iterator;

@@ -64,13 +64,17 @@ int main(int argc, char **argv)
     }
   
     for (int ch = 0; ch < first.noChannels(); ++ch)
-      if (!std::equal(first.constBegin(0, ch),
-                      first.constBegin(first.sizeY(), ch),
-                      second.constBegin(0, ch)))
+    {
+      std::pair<Image::ConstIterator, Image::ConstIterator> mismatch =
+        std::mismatch(first.constBegin(0, ch),
+                        first.constBegin(first.sizeY(), ch),
+                        second.constBegin(0, ch));
+      if (mismatch.first != first.constBegin(first.sizeY(), ch))
       {
-        printf("Content mismatch (channel %d)\n", ch);
+        printf("Content mismatch (channel %d, element %d)\n", ch, mismatch.first - first.constBegin(0, ch));
         return EXIT_FAILURE;
       }
+    }
   }
   else if (!strcmp(argv[1], "--assert-comment-equal")) {
     if (argc < 4) {

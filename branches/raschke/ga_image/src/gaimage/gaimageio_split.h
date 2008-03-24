@@ -21,6 +21,8 @@
 // Proof of concept implementation for segmented images. Built on top of the
 // libpfm implementation with artificial splitting of the image.
 
+// Note: Will never *really* save to disk!
+
 namespace Ga
 {
   class SplitImpl
@@ -63,7 +65,7 @@ namespace Ga
     
     FileType fileType() const
     {
-      return _SPLIT;
+      return img.fileType();
     }
     
     int sizeX() const
