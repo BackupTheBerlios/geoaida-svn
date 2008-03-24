@@ -49,6 +49,7 @@ template <typename It>
 It ImageT<PixTyp>::iteratorForElem(unsigned channel, unsigned elem) const
 {
   BlockHandle* handle;
+  unsigned offset;
   unsigned rangeBegin, rangeEnd;
   
   if (elem < noPixels())
@@ -58,6 +59,7 @@ It ImageT<PixTyp>::iteratorForElem(unsigned channel, unsigned elem) const
     unsigned segX = col / segSizeX_, segY = row / segSizeY_;
 
     handle = &channels.at(channel).segments.at(segY * segmentsX() + segX);
+    offset = row % segSizeY_;
     
     rangeBegin = row * sizeX() + segX * segSizeX_;
     rangeEnd = rangeBegin + segSizeX_;
@@ -69,10 +71,10 @@ It ImageT<PixTyp>::iteratorForElem(unsigned channel, unsigned elem) const
     // Special case for end iterators etc.: If the elem is out of range, the
     // iterator is given an empty range.
     handle = 0;
-    rangeBegin = rangeEnd = 0;
+    offset = rangeBegin = rangeEnd = 0;
   }
   
-  return It(handle, elem, rangeBegin, rangeEnd,
+  return It(handle, elem, offset, rangeBegin, rangeEnd,
     std::tr1::bind(&ImageT<PixTyp>::template iteratorForElem<It>, this, channel, std::tr1::placeholders::_1));
 }
 

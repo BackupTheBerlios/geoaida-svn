@@ -3,7 +3,7 @@
                              -------------------
     begin                : Thu Jan 11 2001
     copyright            : (C) 2001 TNT, Uni Hannover
-    authors              : Jürgen Bückner, Oliver Stahlhut, Martin Pahl,
+    authors              : JÂ¸rgen BÂ¸ckner, Oliver Stahlhut, Martin Pahl,
                            Julian Raschke
     email                : bueckner@tnt.uni-hannover.de
  ***************************************************************************/
@@ -50,15 +50,18 @@ namespace Ga
     BlockHandle* handle;
     // TODO: Use LargeSize or sth.
     unsigned elem;
+    // Offset into handle so that elem=0 ^= rangeBegin.
+    unsigned offset;
     
     // Used for relocation to a different segment.
     unsigned rangeBegin, rangeEnd;
     Relocator relocator;
     
   public:
-    Iterator(BlockHandle* handle, unsigned elem,
+    Iterator(BlockHandle* handle, unsigned elem, unsigned offset,
       unsigned rangeBegin, unsigned rangeEnd, const Relocator& relocator)
-    : handle(handle), elem(elem), rangeBegin(rangeBegin), rangeEnd(rangeEnd), relocator(relocator)
+    : handle(handle), elem(elem), offset(offset),
+        rangeBegin(rangeBegin), rangeEnd(rangeEnd), relocator(relocator)
     {
       // No valid handle given: This iterator can only be used for relocating.
       if (!handle)
@@ -74,6 +77,7 @@ namespace Ga
     {
       handle = other.handle;
       elem = other.elem;
+      offset = other.offset;
       rangeBegin = other.rangeBegin;
       rangeEnd = other.rangeEnd;
       relocator = other.relocator;
@@ -105,6 +109,7 @@ namespace Ga
       using std::swap;
       swap(handle, other.handle);
       swap(elem, other.elem);
+      swap(offset, other.offset);
       swap(rangeBegin, other.rangeBegin);
       swap(rangeEnd, other.rangeEnd);
       swap(relocator, other.relocator);
@@ -123,7 +128,7 @@ namespace Ga
       }
 
       Pix* data = static_cast<Pix*>(handle->getData());
-      return data[elem - rangeBegin];
+      return data[elem - rangeBegin + offset];
     }
     
     Pix& operator[](std::size_t index) const

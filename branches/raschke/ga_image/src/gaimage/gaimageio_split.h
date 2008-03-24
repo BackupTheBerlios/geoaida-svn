@@ -74,12 +74,12 @@ namespace Ga
     
     int segmentSizeX() const
     {
-      return 13;
+      return 10;
     }
     
     int segmentSizeY() const
     {
-      return 11;
+      return 10;
     }
     
     int channels() const
