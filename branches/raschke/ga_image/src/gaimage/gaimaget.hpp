@@ -287,7 +287,7 @@ void ImageT<PixTyp>::write(ImageIO& io, int channel) {
   for (int c = 0; c < noChannels(); ++c)
   {
     std::vector<typename AvoidVectorBool<PixTyp>::Type>
-        buffer(sizeX(), sizeY());
+        buffer(sizeX() * sizeY());
     std::copy(begin(0, c), begin(0, c) + sizeX() * sizeY(), buffer.begin());
     io.replaceRect(c, 0, 0, sizeX(), sizeY(), &buffer[0]);
   }
