@@ -28,11 +28,13 @@
 
 #include <QString>
 #include <QStringList>
-#include <MLParser.h>
+#include <ArgDict>
+#include <QMultiHash>
 
-/**Holds the name, type, parameter and default value of an attrbute
-  *@author Martin Pahl
-  */
+
+/*! \brief class holds the name, type, parameter and default value of an attrbute
+ *  \author Martin Pahl
+ */
 
 class Attribute
 {
@@ -151,5 +153,10 @@ public: // Public attributes
   /** prefix describing the section this attribute is used in */
   QString prefix_;
 };
+
+/*!
+ * \brief Dictionary of Attributes
+ */
+typedef QMultiHash<QString, Attribute*> AttributeDictionary;
 
 #endif

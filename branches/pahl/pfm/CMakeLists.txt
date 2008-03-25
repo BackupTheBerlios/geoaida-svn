@@ -1,3 +1,3 @@
-project(pfm)
-add_subdirectory(libpfm)
-add_subdirectory(pfm_view)
+PROJECT(pfm)
+ADD_SUBDIRECTORY(libpfm)
+#ADD_SUBDIRECTORY(pfm_view)

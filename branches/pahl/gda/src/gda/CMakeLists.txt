@@ -1,34 +1,57 @@
-find_package(Qt3 REQUIRED)
+FIND_PACKAGE(Qt4 REQUIRED)
 
-add_definitions(${QT_DEFINITIONS})
-add_definitions(-DTMPDIR=\\\"${CMAKE_INSTALL_PREFIX}/tmp\\\")
-add_definitions(-DPRGDIR=\\\"${CMAKE_INSTALL_PREFIX}\\\")
-include_directories(.
+ADD_DEFINITIONS(${QT_DEFINITIONS})
+ADD_DEFINITIONS(-DTMPDIR=\\\"${CMAKE_INSTALL_PREFIX}/tmp\\\")
+ADD_DEFINITIONS(-DPRGDIR=\\\"${CMAKE_INSTALL_PREFIX}\\\")
+
+INCLUDE_DIRECTORIES(.
         ${PROJECT_SOURCE_DIR}/src/core
-        ${PROJECT_SOURCE_DIR}/src/semnetgui
+        ${PROJECT_SOURCE_DIR}/src/gui
+#        ${PROJECT_SOURCE_DIR}/src/semnetgui
         ${CMAKE_SOURCE_DIR}/pfm/libpfm
-	${CMAKE_SOURCE_DIR}/qtguiapplication/src/qtparser
-	${CMAKE_SOURCE_DIR}/qtguiapplication/src/qtgui
-        ${QT_INCLUDE_DIR})
+	${CMAKE_SOURCE_DIR}/parser
+	${PROJECT_BINARY_DIR}/src/gda
+        ${QT_INCLUDES}
+)
 
-set(headers maingui.h)
+SET(headers mainwindow.h)
 
-set(sources main.cpp maingui.cpp)
+SET(mocheaders mainwindow.h)
 
-set(data gda.app cleanup.xpm   filenew.xpm   filesave.xpm  generalization.xpm  start.png
-compound.xpm  fileopen.xpm  gda.xpm       mini-gda.xpm        start.xpm)
+SET(classheaders MainWindow)
 
-qt_wrap_cpp(moclib mocsrc ${headers})
+SET(sources main.cpp mainwindow.cpp)
 
-add_executable(gda ${sources} ${mocsrc})
+SET(uifiles mainwindow.ui)
+
+SET(resources gda.qrc)
 
 
-target_link_libraries(gda semnetgui core qtgui qtparser pfm pnm ${QT_LIBRARIES})
+set(data 
+  gda.app 
+  cleanup.xpm   
+  filenew.xpm   
+  filesave.xpm  
+  generalization.xpm  
+  start.png
+  compound.xpm  
+  fileopen.xpm    
+  start.xpm)
 
-install(TARGETS gda DESTINATION bin)
-install(FILES ${data} DESTINATION share/data/application)
+QT4_WRAP_CPP(moclib ${mocheaders})
+QT4_WRAP_UI(uilib ${uifiles})
+QT4_ADD_RESOURCES(resourcelib ${resources})
 
-add_custom_command(TARGET gda POST_BUILD
+
+ADD_EXECUTABLE(gda ${sources} ${moclib} ${uilib} ${resourcelib} )
+
+
+TARGET_LINK_LIBRARIES(gda gdacore gdagui mlparser pfm pnm ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} ${QT_QTXML_LIBRARY})
+
+INSTALL(TARGETS gda DESTINATION bin)
+INSTALL(FILES ${data} DESTINATION share/data/application)
+
+ADD_CUSTOM_COMMAND(TARGET gda POST_BUILD
                    COMMAND mkdir -p ${PROJECT_BINARY_DIR}/src/share/data/application
                    COMMAND cp -pR ${data} ${PROJECT_BINARY_DIR}/src/share/data/application
 		   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}

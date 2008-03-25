@@ -33,8 +33,9 @@
 #include <QString>
 #include <QPoint>
 #include <QFile>
-#include "MLParser.h"
-#include "geoimagecache.h"
+#include "MLParser"
+#include "ArgDict"
+#include "GeoImageCache"
 
 #ifdef WIN32
 #include <pbm.h>

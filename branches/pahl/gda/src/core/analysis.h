@@ -27,9 +27,9 @@
 #define ANALYSIS_H
 
 #include <QObject>
-#include "inode.h"
-#include "semnet.h"
-#include "geoimagelist.h"
+#include "INode"
+#include "SemNet"
+#include "GeoImageList"
 
 /**class to control the analysis and handle the search tree node
   *@author Jürgen Bückner

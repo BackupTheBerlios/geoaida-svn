@@ -15,9 +15,9 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "snode.h"
-#include "task.h"
-#include "operatorlist.h"
+#include "SNode"
+#include "Task"
+#include "OperatorList"
 #include "QColor"
 #include <QDir>
 #include <QRegExp>
@@ -257,9 +257,9 @@ void SNode::setVars()
 #define OLD_NET_COMPATIBILITY
 #ifdef OLD_NET_COMPATIBILITY
   if (topDown_) {
-    QMultiHash < QString, Attribute* > *attribs = topDown_->attributeDesc();
+    AttributeDictionary *attribs = topDown_->attributeDesc();
     if (attribs) {
-      QMultiHash<QString, Attribute* >::const_iterator it=attribs->constBegin();
+      AttributeDictionary::const_iterator it=attribs->constBegin();
       for (; it!=attribs->constEnd(); ++it) {
 	Attribute* attrib= *it;
         QString name = attrib->name();
@@ -279,9 +279,9 @@ void SNode::setVars()
 
 #ifdef OLD_NET_COMPATIBILITY
   if (bottomUp_) {
-    QMultiHash < QString, Attribute* > *attribs = bottomUp_->attributeDesc();
+    AttributeDictionary *attribs = bottomUp_->attributeDesc();
     if (attribs) {
-      QMultiHash<QString, Attribute* >::const_iterator it=attribs->constBegin();
+      AttributeDictionary::const_iterator it=attribs->constBegin();
       for (; it!=attribs->constEnd(); ++it) {
 	Attribute* attrib= *it;
         QString name = attrib->name();
@@ -336,10 +336,10 @@ void SNode::execOperator(Operator * op, INode * iNode, AttribList & attribs,
 
 static void putAttribs(SNode & snode, AttribList & attribs, QString section)
 {
-  QMultiHash <QString, Attribute* > *attribDict = snode.attributeDesc(section);
+  AttributeDictionary *attribDict = snode.attributeDesc(section);
   AttribList & attribList = snode.attribList();
   if (attribDict) {
-    QMultiHash <QString, Attribute*>::const_iterator it=attribDict->constBegin();
+    AttributeDictionary::const_iterator it=attribDict->constBegin();
     for (; it!=attribDict->constEnd(); ++it) {
       QString name = (*it)->name();
       if (attribList.contains((*it)->fullname()))
@@ -377,10 +377,10 @@ void SNode::execTopDownOp(INode * iNode)
 #endif
 
   AttribList attribs(parent->attribList());
-  QMultiHash < QString, Attribute* > *topDownAttrib = attributeDesc("topDown");
+  AttributeDictionary *topDownAttrib = attributeDesc("topDown");
   // now generate image specific attributes
   if (topDownAttrib) {
-    QMultiHash < QString, Attribute* >::const_iterator it=topDownAttrib->constBegin();
+    AttributeDictionary::const_iterator it=topDownAttrib->constBegin();
     for (; it!=topDownAttrib->constEnd(); ++it) {
       Attribute *attrib=*it;
       switch (attrib->type()) {
@@ -576,7 +576,7 @@ bool SNode::isA(QString cname)
 }
 
 /** Get the attribute description for the specified section */
-QMultiHash < QString, Attribute* > *SNode::attributeDesc(QString section)
+AttributeDictionary *SNode::attributeDesc(QString section)
 {
 #ifdef DEBUG_MSG
   qDebug("SNode::attributeDesc(%s)\n", section.toLatin1().constData());
@@ -868,9 +868,9 @@ void SNode::changeOperator(Operator * &op, QString opName)
   op = newOp;
   if (!op)
     return;
-  QMultiHash < QString, Attribute* > *attribs = op->attributeDesc();
+  AttributeDictionary *attribs = op->attributeDesc();
   if (attribs) {
-    QMultiHash < QString, Attribute* >::const_iterator it = attribs->constBegin();
+    AttributeDictionary::const_iterator it = attribs->constBegin();
     for (; it!=attribs->constEnd(); ++it) {
 #ifdef WIN32
       QString name = (*it)->.fullname();
@@ -896,4 +896,9 @@ void SNode::unlink()
 {
   refCounter_--;
   Q_ASSERT(refCounter_>=0);
+}
+
+void SNode::stateChanged(TreeItem*)
+{
+  qWarning("SNode::stateChanged function not implemented");
 }

@@ -2,8 +2,8 @@ FIND_PACKAGE(Qt4 REQUIRED)
 
 ADD_DEFINITIONS(${QT_DEFINITIONS})
 
-add_definitions(-DTMPDIR=\\\"${CMAKE_INSTALL_PREFIX}/tmp\\\")
-add_definitions(-DDEBUG_MSG)
+ADD_DEFINITIONS(-DTMPDIR=\\\"${CMAKE_INSTALL_PREFIX}/tmp\\\")
+ADD_DEFINITIONS(-DDEBUG_MSG)
 
 INCLUDE_DIRECTORIES(.
         ${CMAKE_SOURCE_DIR}/pfm/libpfm
@@ -20,6 +20,7 @@ SET(headers analysis.h
             geoimage.h
             geoimagecache.h
             geoimagelist.h
+	    attriblist.h
             gnode.h
             inode.h
             judge.h
@@ -29,11 +30,28 @@ SET(headers analysis.h
             snode.h
             task.h)
 
+SET(classheaders 
+  TreeGNode
+  TreeNode
+  GNode
+  SNode
+  Attribute
+  AttributeDictionary
+  AtribList
+  GeoImage
+  GeoImageList
+  GeoImageCache
+  Task
+  Operator
+  OperatorList
+  CleanUp
+  Analysis
+  )
+
 SET(mocheaders  analysis.h
             fatalerror.h
             geoimagecache.h
             judge.h
-            semnet.h
             task.h)
 
 SET(sources 
@@ -55,6 +73,8 @@ SET(sources
 
 QT4_WRAP_CPP(moclib ${mocheaders})
 
-ADD_LIBRARY(core ${sources} ${moclib})
+ADD_LIBRARY(gdacore ${sources} ${moclib})
 
-INSTALL(TARGETS core DESTINATION lib)
+INSTALL(TARGETS gdacore DESTINATION lib)
+#INSTALL(FILES ${headers} DESTINATION include)
+#INSTALL(FILES ${classheaders} DESTINATION include)

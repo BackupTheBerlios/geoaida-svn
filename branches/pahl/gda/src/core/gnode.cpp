@@ -30,7 +30,7 @@
 
 const static QString nullString("");
 
-static QString keywords[] = { "NODE", "REGION", "GROUP", "" };
+static QString keywords[] = { "node", "region", "group", "" };
 const MLTagTable nodeTagTable(keywords);
 
 GNode::GNode()
@@ -45,7 +45,7 @@ GNode::GNode()
 
 GNode::~GNode()
 {
-  while (!children().isEmpty()) delete children().takeFirst();
+  qDeleteAll(children()); // while (!children().isEmpty()) delete children().takeFirst();
 #if defined WITH_GUI_SUPPORT || WIN32
   if (guiPtr_) delete guiPtr_;
 #endif

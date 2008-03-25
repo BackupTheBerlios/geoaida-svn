@@ -23,7 +23,7 @@
  * $Locker:  $
  */
 
-#include "MLParser.h"
+#include "mlparser.h"
 //#include <ctype.h>
 //#include <qstringlist.h>
 #include <QRegExp>
@@ -117,122 +117,6 @@ MLTagTable::~MLTagTable()
   if (tagtable_) delete tagtable_;
 }
 
-#if 0
-/*****************************************************************
-CLASS: MLParserPrivate
-*****************************************************************/
-class MLParserPrivate {
-public:
-  MLParserPrivate(QTextStream *istr) {
-    istr_=istr; strstorage_=0; voidstorage_=0; 
-    linenumber_=1; lineoffset_=0; lc_=0;
-  }
-  ~MLParserPrivate() {
-    if (strstorage_) delete strstorage_;
-    if (voidstorage_) delete voidstorage_;
-  }
-  void readOneChar() {     
-    istr_->readRawBytes(&lc_,1);
-    if (lc_=='\n') lineoffset_++;
-  }
-  void incLineNumber() { linenumber_+=lineoffset_; lineoffset_=0; }
-  QString readWord(bool acceptSlash=true);
-  QString readTagWord();
-  /* Variables */
-  QTextStream *istr_;
-  char lc_; // last character
-  bool endtag_;
-  QString lasttag_;
-  int linenumber_;
-  int lineoffset_;
-  QDict<QString> *strstorage_;
-  QDict<void> *voidstorage_;
-};
-
-QString MLParserPrivate::readWord(bool acceptSlash)
-{
-  QString word="";
-  if ((lc_=='>') || (lc_=='<') || (lc_=='/')) return word;
-  //  istr_->skipWhiteSpace();
-  do {
-    readOneChar();
-  } while ((QChar(lc_).isSpace()) && !istr_->atEnd());
-  //  istr_->readRawBytes(&lc_,1);
-  //  if (lc_=='\n') lineoffset_++;
-#ifdef DEBUGMSG
-  //  qDebug("read %c(%d)\n",lc_,lc_);
-#endif
-  if (lc_=='"') {
-    readOneChar();
-    while ((lc_!='"') && (!istr_->atEnd())) {
-#ifdef DEBUGMSG
-      //      qDebug("read %c(%d)\n",lc_,lc_);
-#endif
-      if (lc_=='\\') {
-	readOneChar();
-      }
-      word+=lc_;
-      readOneChar();
-    }
-  }
-  else {
-    if (!acceptSlash && (lc_=='/')) return word;
-    else
-      while ((lc_!='=') && (lc_!='>') && (lc_!='<') 
-	     && !isspace(lc_) && (!istr_->atEnd())) {
-#ifdef DEBUGMSG
-	//      qDebug("read %c(%d)\n",lc_,lc_);
-#endif
-	if (lc_=='\\') {
-	  readOneChar();
-	}
-	word+=lc_;
-	readOneChar();
-      }
-  }
-#ifdef DEBUGMSG
-  //      qDebug("read %c(%d)\n",lc_,lc_);
-#endif
-  
-  return word;
-}
-
-QString MLParserPrivate::readTagWord()
-{
-  QString keyword;
-  endtag_=false;
-
-  while (1) {
-    while((lc_ != '<') && (lc_ != '/') && !istr_->atEnd()) {
-      readOneChar();
-    }
-    if (lc_ != '/') {
-      readOneChar();
-    }
-    if (lc_=='/') {
-      if (lasttag_.isEmpty())
-        {
-          readOneChar();
-          continue;
-        }
-      endtag_=true;
-      readOneChar();
-    }
-    break;
-  }
-  incLineNumber();
-  while (isalnum(lc_) && !isspace(lc_) && !istr_->atEnd()) {
-    keyword+=lc_;
-    readOneChar();
-#ifdef DEBUGMSG
-    //    qDebug("char=%c(%d)\n",lc_,lc_);
-#endif
-  }
-  if (keyword.isEmpty() && endtag_ ) keyword=lasttag_;
-  lasttag_=keyword;
-  return keyword;
-}
-#endif
 
 /*****************************************************************
 CLASS: MLParser
@@ -255,6 +139,12 @@ int MLParser::tag(const MLTagTable &tagtable)
     lasttag_=name().toString();
     tag=tagtable[lasttag_];
     switch (token) {
+    case Invalid:
+      qWarning("MLParser::tag: invalid token");
+      break;
+    case StartDocument:
+    case Characters:
+      break;
     case StartElement: 
       return tag;
     case EndElement: 

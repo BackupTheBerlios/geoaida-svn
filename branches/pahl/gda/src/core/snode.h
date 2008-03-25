@@ -23,14 +23,17 @@
 #include <stdio.h>
 #endif
 
-#include "MLParser.h"
-#include "treenode.h"
-#include "gnode.h"
+#include "MLParser"
+#include "TreeNode"
+#include "GNode"
+#include "AttributeDictionary"
+#include "AttribList"
 #include <QMultiHash>
 #include <QStringList>
 #include <QList>
 #include <QObject>
 
+enum { NodeRole=Qt::UserRole };
 /**Base Node
   *@author Martin Pahl
   */
@@ -38,12 +41,9 @@
 //extern const MLTagTable nodeTagTable;
 const int TOK_NODE = 1;
 
-typedef ArgDict AttribList;
 
 class Operator;
 class INode;
-/** Signal is emitted whenever tdCount_ or buCount_ changes */
-void stateChanged(TreeItem *);
 
 class SNode:public TreeNode < SNode, GNode >
 {
@@ -132,11 +132,16 @@ public:                        // Public attributes
   /** decrease the reference counter */
   void unlink();
   virtual void setGuiPtr(TreeItem * ptr);
+
 protected:                     // Protected methods
   /** Init member variables */
   virtual void init();
   /** Set the attribute key to val */
   virtual void attributeSet(QString key, QString val);
+
+  /** Signal is emitted whenever tdCount_ or buCount_ changes */
+  void stateChanged(TreeItem *);
+
 protected:                     // Protected attributes
   Operator * topDown_;
   Operator *bottomUp_;
@@ -153,7 +158,7 @@ protected:                     // Protected attributes
   /** Dictionary of the general attribute of this node. These are the attributes not
 			provided by the operators, e.g. name, class of this node.
 	*/
-  QMultiHash<QString, Attribute* > genericAttributes_;
+  AttributeDictionary  genericAttributes_;
   /** set TRUE for synchron analyze working otherwise FALSE (default: FALSE) */
   static bool synchron_;
   /** counter of running td operators */

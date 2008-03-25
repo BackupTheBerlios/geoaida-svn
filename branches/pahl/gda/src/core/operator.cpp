@@ -24,7 +24,7 @@
  */
 
 #include "operator.h"
-#include <qregexp.h>
+#include <QRegExp>
 
 Operator::Operator()
 {

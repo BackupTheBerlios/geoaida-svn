@@ -1,6 +1,6 @@
 /*!*************************************************************************
- * \file semnet.h 
- * \brief Prototype for class "SemNet"
+ * \file attributemodel.h 
+ * \brief Prototype for class "AttributeModel"
  *
  * \date
  *  begin                : Mon Sep 4 2000
@@ -19,31 +19,36 @@
  ***************************************************************************/
 
 /*
- * $Source: /data/cvs/gda/gda/core/semnet.h,v $
+ * $Source: /data/cvs/gda/gda/core/attributemodel.h,v $
  * $Revision: 1.3 $
  * $Date: 2001/11/27 16:35:30 $
  * $Author: pahl $
  * $Locker:  $
  */
 
-#ifndef SEMNET_H
-#define SEMNET_H
+#ifndef ATTRIBUTEMODEL_H
+#define ATTRIBUTEMODEL_H
 
 #include <QTextStream>
 #include <QAbstractItemModel>
 #include <QHash>
-class SNode;
+#include <QList>
+#include <QStringList>
+
+class GNode;
+class Attribute;
 
 /*!
  * \brief Class for Semantic Net of type SNode
  *
  */
 
-class SemNet : public QAbstractItemModel
+class AttributeModel : public QAbstractItemModel
 {
+Q_OBJECT
 public:
-  SemNet();
-  ~SemNet();
+  AttributeModel();
+  ~AttributeModel();
 
   virtual int columnCount ( const QModelIndex & parent = QModelIndex() ) const;
   virtual int rowCount ( const QModelIndex & parent = QModelIndex() ) const;
@@ -54,18 +59,15 @@ public:
 				Qt::Orientation orientation, 
 				int role = Qt::DisplayRole ) const;
  private:
-  SNode* nodeFromIndex(const QModelIndex& index) const;
+  //  GNode* nodeFromIndex(const QModelIndex& index) const;
 
- public:
-
-  void read(const QString & fname);
-  void read(QIODevice & fp);
-  SNode *rootNode(void);
-  void write(QTextStream & fp);
-  void write(const QString & fname);
+ public slots:
+  void setNode(GNode* node);
+  void setNode(const QModelIndex & index);
 protected:     
-  /** root node of the semantic net */
-  SNode * rootNode_;
-  mutable QHash<uint,QPixmap> pixmapHash_;
+  /** node containing the attributes */
+  GNode * node_;
+  QStringList section_;
+  QHash < QString, QList <Attribute*> > attributesDict_;
 };
 #endif

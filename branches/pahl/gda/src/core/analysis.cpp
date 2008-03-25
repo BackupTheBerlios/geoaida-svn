@@ -26,9 +26,11 @@
 #define DEBUGMSG
 
 #include "analysis.h"
-#include "task.h"
-#include "cleanup.h"
-#include "MLParser.h"
+#include "Task"
+#include "CleanUp"
+#include "MLParser"
+#include "ArgDict"
+#include "SemNet"
 
 Analysis::Analysis():iNodeRoot_(0), semNet_(0)
 {                               //default constructor

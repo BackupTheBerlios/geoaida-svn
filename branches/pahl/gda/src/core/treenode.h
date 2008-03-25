@@ -42,6 +42,7 @@ public:
   T* parent();
   /** Get the List of children */
   QList<T*>& children();
+  QList<T*>& child(int row);
 };
 
 #include "treenode.hpp"

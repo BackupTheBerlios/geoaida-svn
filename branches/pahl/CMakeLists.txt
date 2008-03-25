@@ -2,7 +2,7 @@
 
 
 ADD_SUBDIRECTORY(parser)
-#ADD_SUBDIRECTORY(pfm)
+ADD_SUBDIRECTORY(pfm)
 ADD_SUBDIRECTORY(gda)
 #add_subdirectory(doc)
 #add_subdirectory(qtguiapplication)

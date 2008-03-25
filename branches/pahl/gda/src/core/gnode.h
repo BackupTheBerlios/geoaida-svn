@@ -18,22 +18,20 @@
 #ifndef GNODE_H
 #define GNODE_H
 
-#include "MLParser.h"
-#include "treegnode.h"
-#include "treenode.h"
+#include "MLParser"
+#include "TreeGNode"
+#include "TreeNode"
+#include "AttribList"
 #include <QStringList>
 #include <QList>
 #include <QMultiHash>
-#include "attribute.h"
+#include "Attribute"
 /**Base Node
   *@author Martin Pahl
   */
 
 extern const MLTagTable nodeTagTable;
 
-typedef ArgDict AttribList;
-typedef ArgDictConstIterator AttribListConstIterator;
-typedef ArgDictIterator AttribListIterator;
 
 class OperatorObject;
 class TreeItem;

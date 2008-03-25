@@ -24,7 +24,7 @@
  */
 
 #include "operatorlist.h"
-#include <MLParser.h>
+#include <MLParser>
 #include <qdir.h>
 #ifdef WIN32
 #include <stdlib.h> // für exit

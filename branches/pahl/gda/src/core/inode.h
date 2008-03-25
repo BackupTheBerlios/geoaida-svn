@@ -26,10 +26,10 @@
 #ifndef INODE_H
 #define INODE_H
 
-#include "geoimage.h"
-#include "gnode.h"
-#include "snode.h"
-#include "analysis.h"
+#include "GeoImage"
+#include "GNode"
+#include "SNode"
+#include "Analysis"
 
 enum IType
 { TRASH, MI, IH, CI, PI, HI, TD_ERROR, BU_ERROR, TD_ABORTED, BU_ABORTED };  //analysis status of the instance INode

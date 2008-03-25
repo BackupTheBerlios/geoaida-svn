@@ -26,7 +26,7 @@
 #ifndef OPERATORLIST_H
 #define OPERATORLIST_H
 
-#include "operator.h"
+#include "Operator"
 #include "QHash"
 #include "QFile"
 

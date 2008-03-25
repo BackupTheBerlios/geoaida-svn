@@ -46,3 +46,10 @@ QList<T*>& TreeNode<T, Base>::children()
   return (QList<T*>&)Base::children_;
 }
 
+/** Get the child in the given row */
+template <class T, class Base>
+QList<T*>& TreeNode<T, Base>::child(int row)
+{
+  return (QList<T*>&)Base::children_.value(row);
+}
+

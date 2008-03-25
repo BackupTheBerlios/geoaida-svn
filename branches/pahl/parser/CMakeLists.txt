@@ -10,11 +10,14 @@ INCLUDE_DIRECTORIES(.
 )
 
 SET(sources
-  MLParser.cpp
+  mlparser.cpp
 )
 
 SET(headers
-  MLParser.h
+  mlparser.h
+  ArgDict
+  MLParser
+  MLTagTable
 )
 
 #SET(uifiles )
@@ -28,7 +31,7 @@ SET(headers
 #ADD_LIBRARY(mlparser ${sources} ${moclib} ${uilib} ${resourcelib})
 ADD_LIBRARY(mlparser ${sources} ${moclib})
 
-ADD_EXECUTABLE(test_mlparser test_MLParser.cpp ${mlparser})
+ADD_EXECUTABLE(test_mlparser test_mlparser.cpp ${mlparser})
 TARGET_LINK_LIBRARIES(test_mlparser mlparser ${QT_QTCORE_LIBRARY} ${QT_QTXML_LIBRARY})
 
 ADD_EXECUTABLE(convert_xml convert_xml.cpp)

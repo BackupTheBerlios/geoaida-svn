@@ -14,12 +14,18 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
-#include "maingui.h"
+#include <QApplication>
+#include "MainWindow"
 #include <getopt.h>
 
 int main(int argc, char **argv)
 {
-	MainGui maingui(argc,argv);
+  QApplication app(argc, argv);
+  
+  MainWindow *mainWindow = new MainWindow(argc,argv);
+  mainWindow->show();
+  
+  int ret_val=app.exec();
   return 0;
 
 }

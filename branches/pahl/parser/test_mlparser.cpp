@@ -1,7 +1,7 @@
 #include <QFile>
 #include <QXmlStreamReader>
 #include <QXmlStreamAttributes>
-#include "MLParser.h"
+#include "MLParser"
 
 #include <QXmlStreamWriter>
 

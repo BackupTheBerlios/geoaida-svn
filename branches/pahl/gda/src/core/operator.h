@@ -26,9 +26,9 @@
 #ifndef OPERATOR_H
 #define OPERATOR_H
 
-#include <MLParser.h>
-#include "gnode.h"     //! typedef ArgDict AttribList
-#include "attribute.h"
+#include <MLParser>
+#include "AttribList"    
+#include "Attribute"
 #include <QMultiHash>
 
 /**An Operator starts an external executable to perform a certain task e.g. topDown, bottomUp for a node
