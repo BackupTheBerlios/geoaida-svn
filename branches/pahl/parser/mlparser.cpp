@@ -140,9 +140,10 @@ int MLParser::tag(const MLTagTable &tagtable)
     tag=tagtable[lasttag_];
     switch (token) {
     case Invalid:
-      qWarning("MLParser::tag: invalid token");
+      qWarning("MLParser::tag: invalid token in line %d at column %d",lineNumber(),columnNumber());
       break;
     case StartDocument:
+    case EndDocument:
     case Characters:
       break;
     case StartElement: 
@@ -150,7 +151,7 @@ int MLParser::tag(const MLTagTable &tagtable)
     case EndElement: 
       return -tag;
     default:
-      qWarning("MLParser::tag: unknown token");
+      qWarning("MLParser::tag: unknown token %d",token);
     }
   }
   return END_OF_FILE;
