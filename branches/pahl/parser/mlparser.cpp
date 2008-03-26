@@ -150,9 +150,10 @@ int MLParser::tag(const MLTagTable &tagtable)
     case EndElement: 
       return -tag;
     default:
-      return END_OF_FILE;
+      qWarning("MLParser::tag: unknown token");
     }
   }
+  return END_OF_FILE;
 }
 
 ArgDict *MLParser::args(ArgDict *argdict, bool insertMode)
