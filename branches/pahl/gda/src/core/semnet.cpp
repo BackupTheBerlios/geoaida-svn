@@ -125,8 +125,8 @@ QVariant SemNet::data ( const QModelIndex & index, int role ) const
 	return QVariant();
       }
       else return QVariant();
-    case NodeRole:
-      return QVariant::fromValue(node);
+      //!    case NodeRole:
+      //      return QVariant::fromValue(node);
     }
   }
   return QVariant();

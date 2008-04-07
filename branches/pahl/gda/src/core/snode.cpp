@@ -18,6 +18,7 @@
 #include "SNode"
 #include "Task"
 #include "OperatorList"
+#include "FileList"
 #include "QColor"
 #include <QDir>
 #include <QRegExp>
@@ -406,6 +407,18 @@ void SNode::execTopDownOp(INode * iNode)
                                      parent->attributeFloat("geoSouth"));
             cleanUp_.append(partName);
             attribs.replace(keyName + "_file", partName);
+          }
+        }
+        break;
+      case Attribute::FILE:{
+          QString fileName = attribute((**it).fullname());
+          QString keyName = (**it).name();
+          ArgDict *args = fileList_.value(fileName);
+          if (args) {
+            ArgDictConstIterator it=args->constBegin();
+            for (; it!=args->constEnd(); ++it) {
+              attribs.replace(keyName + "_" + it.key(),it.value());
+            }
           }
         }
         break;

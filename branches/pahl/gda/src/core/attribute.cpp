@@ -166,7 +166,7 @@ Attribute::set(ArgDict & attribs)
   MLParser::setString(tip_, &attribs, "tip");
   type_ = STRING;
   QString options[] =
-    { "STRING", "INT", "BOOL", "DOUBLE", "FORMULA", "ENUM", "OPERATOR", "IMAGE", "" };
+    { "STRING", "INT", "BOOL", "DOUBLE", "FORMULA", "ENUM", "OPERATOR", "IMAGE", "FILE", "" };
   MLParser::setOption(type_, &attribs, "type", options);
   qDebug("Type %d\n", type_);
   switch (type_) {
@@ -269,6 +269,16 @@ Attribute::imageType()
 {
   if (type_ == IMAGE)
     return *(im_.imageType_);
+  else
+    return "";
+}
+
+/** Returns the file type */
+QString
+Attribute::fileType()
+{
+  if (type_ == FILE)
+    return *(file_.fileType_);
   else
     return "";
 }

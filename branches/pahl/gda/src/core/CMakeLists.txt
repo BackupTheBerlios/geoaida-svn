@@ -20,6 +20,7 @@ SET(headers analysis.h
             geoimage.h
             geoimagecache.h
             geoimagelist.h
+	    filelist.h
 	    attriblist.h
             gnode.h
             inode.h
@@ -41,6 +42,7 @@ SET(classheaders
   GeoImage
   GeoImageList
   GeoImageCache
+  FileList
   Task
   Operator
   OperatorList
@@ -62,6 +64,7 @@ SET(sources
            geoimage.cpp
            geoimagecache.cpp
            geoimagelist.cpp
+	   filelist.cpp
            gnode.cpp
            inode.cpp
            judge.cpp
