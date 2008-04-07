@@ -29,7 +29,7 @@
 #include <QIcon>
 #include <QPixmap>
 #ifdef WIN32
-#include <stdlib.h> // für exit
+#include <stdlib.h> // f-bür exit-A
 #endif
 
 /*!
@@ -125,6 +125,8 @@ QVariant SemNet::data ( const QModelIndex & index, int role ) const
 	return QVariant();
       }
       else return QVariant();
+    case NodeRole:
+      return QVariant::fromValue(node);
     }
   }
   return QVariant();
