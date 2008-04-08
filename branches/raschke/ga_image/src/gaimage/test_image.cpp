@@ -14,7 +14,7 @@ void beginTest(const std::string& test)
 }
 
 int main()
-{  
+{	
   beginTest("Creating/assigning image of a specified size");
   Image img(typeid(float), 100, 200, 3);
   assert(img.sizeX() == 100);
@@ -31,11 +31,7 @@ int main()
   
   beginTest("Loading a PPM file from disk");
   img.read("../tests/fixtures/face.ppm");
-  printf("Random pixel: %lf %lf %lf\n",
-    img.getPixel(0, 1, 0),
-    img.getPixel(0, 1, 1),
-    img.getPixel(0, 1, 2));
-  
+
   beginTest("Setting pixels on different channels");
   img.setPixel(0, 0, 10, 0);
   img.setPixel(0, 0, 20, 1);
@@ -47,5 +43,13 @@ int main()
   
   beginTest("Using Image iterators");
   *img.begin() = 5;
-  assert(*img.begin() == 5);
+  assert(*img.begin() == 5);  
+
+  beginTest("Creating empty image and loading a PGM file to it");
+  Image img2(typeid(unsigned char));
+  img2.read("../tests/fixtures/face.ppm");
+  assert(img.sizeX() == img2.sizeX());
+  assert(img.sizeY() == img2.sizeY());
+  assert(img.noChannels() == img2.noChannels());
+  assert(img.getPixel(10, 10, 1) == img2.getPixel(10, 10, 1));
 }
