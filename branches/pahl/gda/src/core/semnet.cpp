@@ -202,6 +202,37 @@ SNode* SemNet::nodeFromIndex(const QModelIndex& index) const
  */
 //@{
 
+/** Set the filename */
+void SemNet::setFilename(QString filename)
+{
+  filename_=filename;
+}
+
+/** Get the filename */
+void SemNet::filename()
+{
+  return filename_;
+}
+
+/** Read a semantic net. The filename must be set before */
+void SemNet::read()
+{
+  read(filename_);
+}
+
+/** Read a semantic net by using a filename */
+void SemNet::read(const QString & fname)
+{
+  QFile fp(fname);
+  if (!fp.open(QIODevice::ReadOnly)) {
+    qDebug("SemNet::read(%s): file not found", fname.toLatin1().constData());
+    return;
+  }
+  read(fp);
+  fp.close();
+  setFilename(fname);
+}
+
 /** Read a semantic net  */
 void SemNet::read(QIODevice & fp)
 {
@@ -218,32 +249,14 @@ void SemNet::read(QIODevice & fp)
     rootNode_ = new SNode(parser);
   if (rootNode_)
     qDebug("SemNet: Root=%s\n", rootNode_->name().toLatin1().constData());
-#ifdef WIN32
-#warning cout ist gar nicht definiert!!!!!
-  else {
-    cout << "Out of Memory..14";
-    exit(1);
-  }
-#endif
+  else
+    throw NodeException();
 }
 
-/** Read a semantic net by using a filename */
-void SemNet::read(const QString & fname)
+/** Write a semantic net. The filename must be set before */
+void SemNet::write()
 {
-  QFile fp(fname);
-  if (!fp.open(QIODevice::ReadOnly)) {
-    qDebug("SemNet::read(%s): file not found", fname.toLatin1().constData());
-    return;
-  }
-  read(fp);
-  fp.close();
-}
-
-/** write the semantic net to the file fp */
-void SemNet::write(QTextStream & fp)
-{
-  if (rootNode_)
-    rootNode_->write(fp, QString(""));
+  write(filename_);
 }
 
 /** Write the semantic net to the file fname */
@@ -252,11 +265,19 @@ void SemNet::write(const QString & fname)
   QFile fp(fname);
   if (!fp.open(QIODevice::WriteOnly)) {
     qDebug("SemNet::write(%s): file not accessable", fname.toLatin1().constData());
-    return;
+    throw FileIOException(FILE_OPEN_WRITEMODE, fname);
   }
   QTextStream str(&fp);
   write(str);
   fp.close();
+  setFilename(fname);
+}
+
+/** write the semantic net to the file fp */
+void SemNet::write(QTextStream & fp)
+{
+  if (rootNode_)
+    rootNode_->write(fp, QString(""));
 }
 
 /** Get the rootNode_ of the semantic net */

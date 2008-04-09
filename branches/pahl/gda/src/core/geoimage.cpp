@@ -209,10 +209,7 @@ void GeoImage::load()
     qDebug("#  (ERROR)GeoImage::load(%s) Can't open file for reading!",
            fname.toLatin1().constData());
 
-    throw FatalError(QString().
-                     sprintf
-                     ("GeoImage::load(%s) Can't open file for reading!",
-                      fname.toLatin1().constData()));
+    throw FileIOException(FileIOException::FILE_NOT_EXISTS, fname);
   }
   int pxmtype;
   xelval max_x;
@@ -437,17 +434,12 @@ QString
   if (dx <= 0 || dy <= 0) {
     qDebug("#  (ERROR) GeoImage::part: (dx=%d=%d-%d || dy=%d=%d-%d)", dx, rx2,
            rx1, dy, ry2, ry1);
-    throw FatalError(QString().
-                     sprintf("GeoImage::part: (dx=%d=%d-%d || dy=%d=%d-%d)",
-                             dx, rx2, rx1, dy, ry2, ry1));
+    throw ImageException(rx1,rx2,dx,ry1,ry2,dy);                             dx, rx2, rx1, dy, ry2, ry1));
   }
 
   FILE *of = fopen(fname.toLatin1().constData(), "w");
   if (!of) {
-    throw FatalError(QString().
-                     sprintf
-                     ("GeoImage::part Can't open file %s for writing!\n",
-                      fname.toLatin1().constData()));
+    throw FileIOException(FILE_OPEN_WRITEMODE,fname);
   }
 
   switch (type_) {

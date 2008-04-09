@@ -13,7 +13,9 @@ INCLUDE_DIRECTORIES(.
 )
 
 
-SET(headers analysis.h
+SET(headers 
+	    exception.h
+	    analysis.h
             attribute.h
             cleanup.h
             fatalerror.h
@@ -27,52 +29,57 @@ SET(headers analysis.h
             judge.h
             operator.h
             operatorlist.h
-            semnet.h
+            semanticnet.h
             snode.h
             task.h)
 
 SET(classheaders 
-  TreeGNode
-  TreeNode
-  GNode
-  SNode
-  Attribute
-  AttributeDictionary
-  AtribList
-  GeoImage
-  GeoImageList
-  GeoImageCache
-  FileList
-  Task
-  Operator
-  OperatorList
-  CleanUp
-  Analysis
+    Exception
+    FileIOException
+    ImageException
+    NodeException
+    TreeGNode
+    TreeNode
+    GNode
+    SNode
+    Attribute
+    AttributeDictionary
+    AtribList
+    GeoImage
+    GeoImageList
+    GeoImageCache
+    FileList
+    Task
+    Operator
+    OperatorList
+    CleanUp
+    Analysis
   )
 
-SET(mocheaders  analysis.h
-            fatalerror.h
-            geoimagecache.h
-            judge.h
-            task.h)
+SET(mocheaders  
+    analysis.h
+    geoimagecache.h
+    judge.h
+    task.h)
 
-SET(sources 
-	   analysis.cpp
-           attribute.cpp
-           cleanup.cpp
-           fatalerror.cpp
-           geoimage.cpp
-           geoimagecache.cpp
-           geoimagelist.cpp
-	   filelist.cpp
-           gnode.cpp
-           inode.cpp
-           judge.cpp
-           operator.cpp
-           operatorlist.cpp
-           semnet.cpp
-           snode.cpp
-           task.cpp)
+SET(sources
+    project.cpp
+    exception.cpp 
+    analysis.cpp
+    attribute.cpp
+    cleanup.cpp
+    geoimage.cpp
+    geoimagecache.cpp
+    geoimagelist.cpp
+    filelist.cpp
+    gnode.cpp
+    inode.cpp
+    judge.cpp
+    operator.cpp
+    operatorlist.cpp
+    semanticnet.cpp
+    snode.cpp
+    task.cpp)
 
 QT4_WRAP_CPP(moclib ${mocheaders})
 

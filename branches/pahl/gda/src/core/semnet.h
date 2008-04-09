@@ -57,15 +57,20 @@ public:
   SNode* nodeFromIndex(const QModelIndex& index) const;
 
  public:
-
+  void setFilename(QString filename);
+  QString filename();
+  void read();
   void read(const QString & fname);
   void read(QIODevice & fp);
   SNode *rootNode(void);
+  void write();
   void write(QTextStream & fp);
   void write(const QString & fname);
-protected:     
+ protected:     
   /** root node of the semantic net */
   SNode * rootNode_;
   mutable QHash<uint,QPixmap> pixmapHash_;
+ private:
+  QString filename_;
 };
 #endif
