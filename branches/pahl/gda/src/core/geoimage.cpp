@@ -16,13 +16,12 @@
  ***************************************************************************/
 
 
-
 #include "geoimage.h"
-#include <qcolor.h>
-#include <qdir.h>
-#include <assert.h>
-#include "fatalerror.h"
-#include "cleanup.h"
+#include <QDir>
+#include <QRgb>
+#include "FileIOException"
+#include "ImageException"
+#include "CleanUp"
 
 GeoImageCache GeoImage::cache_;
 
@@ -218,7 +217,7 @@ void GeoImage::load()
 
   if (pfm_readpfm_header(fp, &cols_, &rows_, &minval_, &maxval_, &pxmtype))
     type_ = (IMGTYPE) pxmtype;  //0 = FALSE, 1 = TRUE
-  else {                        /* now check for all the other fucking p?m-formats */
+  else {                        /* now check for all the other p?m-formats */
     pnm_readpnminit(fp, &cols_, &rows_, &max_x, &pxmtype);
     rewind(fp);
     minval_ = 0.0;
@@ -434,12 +433,12 @@ QString
   if (dx <= 0 || dy <= 0) {
     qDebug("#  (ERROR) GeoImage::part: (dx=%d=%d-%d || dy=%d=%d-%d)", dx, rx2,
            rx1, dy, ry2, ry1);
-    throw ImageException(rx1,rx2,dx,ry1,ry2,dy);                             dx, rx2, rx1, dy, ry2, ry1));
+    throw ImageException(rx1,rx2,dx,ry1,ry2,dy); 
   }
 
   FILE *of = fopen(fname.toLatin1().constData(), "w");
   if (!of) {
-    throw FileIOException(FILE_OPEN_WRITEMODE,fname);
+    throw FileIOException(FileIOException::OPEN_FAILED,fname);
   }
 
   switch (type_) {
@@ -531,7 +530,6 @@ void GeoImage::write()
   }
   }
 }
-
 
 float GeoImage::geo2picX(float x)
 {
@@ -756,10 +754,10 @@ bool GeoImage::mergeInto(GeoImage & img, int compareId, int id, int newId)
   for (y = ury; y < lly; y++)
     for (x = llx; x < urx; x++) {
 #if 0
-      assert(x >= 0);
-      assert(x < cols());
-      assert(y >= 0);
-      assert(y < rows());
+      Q_ASSERT(x >= 0);
+      Q_ASSERT(x < cols());
+      Q_ASSERT(y >= 0);
+      Q_ASSERT(y < rows());
 #endif
       if (getId(x, y) != compareId)
         continue;
@@ -770,10 +768,10 @@ bool GeoImage::mergeInto(GeoImage & img, int compareId, int id, int newId)
       nx = int (img.geo2picX(gx));
       ny = int (img.geo2picY(gy));
 #if 0
-      assert(nx >= 0);
-      assert(nx < img.cols());
-      assert(ny >= 0);
-      assert(ny < img.rows());
+      Q_ASSERT(nx >= 0);
+      Q_ASSERT(nx < img.cols());
+      Q_ASSERT(ny >= 0);
+      Q_ASSERT(ny < img.rows());
 #endif
       if (img.getId(nx, ny) == id) {
 //                              qDebug("GeoImage::mergeInto 1->(%d,%d)",x,y);
@@ -792,10 +790,10 @@ int GeoImage::getId(int x, int y)
            cols_, rows_);
     return -1;
   }
-  assert(x >= 0);
-  assert(x < cols_);
-  assert(y >= 0);
-  assert(y < rows_);
+  Q_ASSERT(x >= 0);
+  Q_ASSERT(x < cols_);
+  Q_ASSERT(y >= 0);
+  Q_ASSERT(y < rows_);
   const void* data_p=data();
   if (!data_p)
     return 0;

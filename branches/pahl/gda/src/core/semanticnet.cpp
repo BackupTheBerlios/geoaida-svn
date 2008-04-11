@@ -1,7 +1,7 @@
 /***************************************************************************
-                          semnet.cpp  -  description
+                          semanticnet.cpp  -  description
                              -------------------
-    begin                : Mon Sep 4 2000
+    begin                : Tue Feb 12 2008
     copyright            : (C) 2000 by Martin Pahl
     email                : pahl@tnt.uni-hannover.de
  ***************************************************************************/
@@ -16,14 +16,14 @@
  ***************************************************************************/
 
 /*
- * $Source: /data/cvs/gda/gda/core/semnet.cpp,v $
+ * $Source: /data/cvs/gda/gda/core/semanticnet.cpp,v $
  * $Revision: 1.8 $
  * $Date: 2002/06/28 07:27:25 $
  * $Author: pahl $
  * $Locker:  $
  */
 
-#include "semnet.h"
+#include "semanticnet.h"
 #include "SNode"
 #include <QFile>
 #include <QIcon>
@@ -35,7 +35,7 @@
 /*!
  * \brief constructor
  */
-SemNet::SemNet()
+SemanticNet::SemanticNet()
 {
   rootNode_ = new SNode();
 #ifdef WIN32
@@ -52,7 +52,7 @@ SemNet::SemNet()
 /*!
  * \brief destructor
  */
-SemNet::~SemNet()
+SemanticNet::~SemanticNet()
 {
   if (rootNode_)
     delete rootNode_;
@@ -66,12 +66,12 @@ SemNet::~SemNet()
 /*!
  * \brief return the number of columns for the given object
  *
- * In the SemNet-model columns represent the attributes of one node.
+ * In the SemanticNet-model columns represent the attributes of one node.
  *
  * \param parent - the node for which to return number of columns.
  * \return number of columns
  */
-int SemNet::columnCount ( const QModelIndex & parent ) const
+int SemanticNet::columnCount ( const QModelIndex & parent ) const
 {
   return 1;
 }
@@ -79,12 +79,12 @@ int SemNet::columnCount ( const QModelIndex & parent ) const
 /*!
  * \brief return the number of rows for the given object
  *
- * In the SemNet-model rows represent the children of one node.
+ * In the SemanticNet-model rows represent the children of one node.
  *
  * \param parent - the node for which to return number of rows.
  * \return number of rows
  */
-int SemNet::rowCount ( const QModelIndex & parent ) const
+int SemanticNet::rowCount ( const QModelIndex & parent ) const
 {
   SNode *parentNode = nodeFromIndex(parent);
   if (!parentNode)
@@ -99,7 +99,7 @@ int SemNet::rowCount ( const QModelIndex & parent ) const
  * \param role - the role of the data which should be returned
  * \return number of rows
  */
-QVariant SemNet::data ( const QModelIndex & index, int role ) const
+QVariant SemanticNet::data ( const QModelIndex & index, int role ) const
 {
   if (role != Qt::DisplayRole && role != Qt::DecorationRole )
     return QVariant();
@@ -140,7 +140,7 @@ QVariant SemNet::data ( const QModelIndex & index, int role ) const
  * \param column - the role of the data which should be returned
  * \return number of rows
  */
-QModelIndex SemNet::index (int row, int column, 
+QModelIndex SemanticNet::index (int row, int column, 
 			   const QModelIndex & parent ) const
 {
     if (!rootNode_)
@@ -155,7 +155,7 @@ QModelIndex SemNet::index (int row, int column,
  * \param child - index of child
  * \return index of parent
  */
-QModelIndex SemNet::parent(const QModelIndex &child) const
+QModelIndex SemanticNet::parent(const QModelIndex &child) const
  {
     SNode *node = nodeFromIndex(child);
     if (!node)
@@ -170,7 +170,7 @@ QModelIndex SemNet::parent(const QModelIndex &child) const
     return createIndex(row, child.column(), parentNode);
 }
 
-QVariant SemNet::headerData ( int section, 
+QVariant SemanticNet::headerData ( int section, 
 			      Qt::Orientation orientation, 
 			      int role ) const 
 {
@@ -184,7 +184,7 @@ QVariant SemNet::headerData ( int section,
  * \param index
  * \return pointer to SNode
  */
-SNode* SemNet::nodeFromIndex(const QModelIndex& index) const
+SNode* SemanticNet::nodeFromIndex(const QModelIndex& index) const
 {
   if (index.isValid()) {
     return static_cast<SNode *>(index.internalPointer());
@@ -198,34 +198,34 @@ SNode* SemNet::nodeFromIndex(const QModelIndex& index) const
 
 
 /*!
- * \name Semnet-specific interface 
+ * \name SemanticNet-specific interface 
  */
 //@{
 
 /** Set the filename */
-void SemNet::setFilename(QString filename)
+void SemanticNet::setFilename(QString filename)
 {
   filename_=filename;
 }
 
 /** Get the filename */
-void SemNet::filename()
+void SemanticNet::filename()
 {
   return filename_;
 }
 
 /** Read a semantic net. The filename must be set before */
-void SemNet::read()
+void SemanticNet::read()
 {
   read(filename_);
 }
 
 /** Read a semantic net by using a filename */
-void SemNet::read(const QString & fname)
+void SemanticNet::read(const QString & fname)
 {
   QFile fp(fname);
   if (!fp.open(QIODevice::ReadOnly)) {
-    qDebug("SemNet::read(%s): file not found", fname.toLatin1().constData());
+    qDebug("SemanticNet::read(%s): file not found", fname.toLatin1().constData());
     return;
   }
   read(fp);
@@ -234,7 +234,7 @@ void SemNet::read(const QString & fname)
 }
 
 /** Read a semantic net  */
-void SemNet::read(QIODevice & fp)
+void SemanticNet::read(QIODevice & fp)
 {
   if (rootNode_) {
     delete rootNode_;
@@ -248,23 +248,23 @@ void SemNet::read(QIODevice & fp)
   if (tag == TOK_NODE)
     rootNode_ = new SNode(parser);
   if (rootNode_)
-    qDebug("SemNet: Root=%s\n", rootNode_->name().toLatin1().constData());
+    qDebug("SemanticNet: Root=%s\n", rootNode_->name().toLatin1().constData());
   else
     throw NodeException();
 }
 
 /** Write a semantic net. The filename must be set before */
-void SemNet::write()
+void SemanticNet::write()
 {
   write(filename_);
 }
 
 /** Write the semantic net to the file fname */
-void SemNet::write(const QString & fname)
+void SemanticNet::write(const QString & fname)
 {
   QFile fp(fname);
   if (!fp.open(QIODevice::WriteOnly)) {
-    qDebug("SemNet::write(%s): file not accessable", fname.toLatin1().constData());
+    qDebug("SemanticNet::write(%s): file not accessable", fname.toLatin1().constData());
     throw FileIOException(FILE_OPEN_WRITEMODE, fname);
   }
   QTextStream str(&fp);
@@ -274,14 +274,14 @@ void SemNet::write(const QString & fname)
 }
 
 /** write the semantic net to the file fp */
-void SemNet::write(QTextStream & fp)
+void SemanticNet::write(QTextStream & fp)
 {
   if (rootNode_)
     rootNode_->write(fp, QString(""));
 }
 
 /** Get the rootNode_ of the semantic net */
-SNode *SemNet::rootNode(void)
+SNode *SemanticNet::rootNode(void)
 {
   return rootNode_;
 }

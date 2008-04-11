@@ -27,10 +27,11 @@
 #define ANALYSIS_H
 
 #include <QObject>
-#include "INode"
-#include "SemNet"
-#include "GeoImageList"
 
+class SemanticNet;
+class GeoImage;
+class GeoImageList;
+class INode;
 /**class to control the analysis and handle the search tree node
   *@author Jürgen Bückner
   */
@@ -45,10 +46,10 @@ Q_OBJECT public:
   Analysis(const QString & fname);
 
         /** initialization with "Semanic Net"  */
-  Analysis(SemNet *sn, GeoImageList *gil, GeoImageList *lil);
+  Analysis(SemanticNet *sn, GeoImageList *gil, GeoImageList *lil);
 
         /** initialization with "Semanic Net"  */
-  Analysis(SemNet * sn);
+  Analysis(SemanticNet * sn);
 
   /** destructor */
   ~Analysis();
@@ -57,13 +58,13 @@ Q_OBJECT public:
   void init(void);
 
   /** return a pointer to the "Semantic Net" */
-  SemNet *semNet(void)
+  SemanticNet *semNet(void)
   {
     return semNet_;
   };
 
   /** set the pointer to the "Semantic Net" */
-  void semNet(SemNet * sn)
+  void semNet(SemanticNet * sn)
   {
     semNet_ = sn;
   };
@@ -126,9 +127,9 @@ Q_OBJECT public:
   /** read the project file. The semantic net and the image description*/
   void readProject(QString fname);
   /** read the semantic net */
-  void readSemNet(QString fname);
+  void readSemanticNet(QString fname);
   /** write the semantic net to the given file */
-  void writeSemNet(QString fname);
+  void writeSemanticNet(QString fname);
   /** write the instance net to the given file */
   void writeInstanceNet(QString fname);
   /** return the geo image list - a QStringList with the keys of the images */
@@ -149,9 +150,9 @@ protected:                     // Protected members
   /** pointer to the root INode of the INode tree for this search tree node  */
   INode *trashNodeRoot_;
   /** pointer to the root of the semantic net */
-  SemNet *semNet_;
+  SemanticNet *semNet_;
   /** pointer to the result map */
-  GeoImage *map_;
+  GeoImage* map_;
   /** pointer to the infos for the used input images */
   GeoImageList *geoImageList_;
   /** pointer to the infos for the generated label images */

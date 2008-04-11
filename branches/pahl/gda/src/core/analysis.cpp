@@ -30,7 +30,9 @@
 #include "CleanUp"
 #include "MLParser"
 #include "ArgDict"
-#include "SemNet"
+#include "INode"
+#include "SemanticNet"
+#include "GeoImageList"
 
 Analysis::Analysis():iNodeRoot_(0), semNet_(0)
 {                               //default constructor
@@ -43,13 +45,13 @@ Analysis::Analysis(const QString & prjfile):iNodeRoot_(0), semNet_(0)
   readProject(prjfile);
 }
 
-Analysis::Analysis(SemNet * sn):iNodeRoot_(0), semNet_(0)
+Analysis::Analysis(SemanticNet * sn):iNodeRoot_(0), semNet_(0)
 {
   init();
   semNet_ = sn;
 }
 
-Analysis::Analysis(SemNet * sn, GeoImageList * gil, GeoImageList * lil):iNodeRoot_(0),
+Analysis::Analysis(SemanticNet * sn, GeoImageList * gil, GeoImageList * lil):iNodeRoot_(0),
 semNet_
 (0)
 {
@@ -129,7 +131,7 @@ void Analysis::readProject(QString fname)
           MLParser::setString(netfile, args, "file");   //read tempor.
           MLParser::setString(dir, args, "dir");        //read tempor.
           dir += "/" + netfile;
-          readSemNet(netfile);
+          readSemanticNet(netfile);
           delete args;
         }
         break;
@@ -168,16 +170,16 @@ void Analysis::readProject(QString fname)
 }
 
 /** read the semantic net */
-void Analysis::readSemNet(QString fname)
+void Analysis::readSemanticNet(QString fname)
 {
   if (semNet_)
     delete semNet_;
-  semNet_ = new SemNet;
+  semNet_ = new SemanticNet;
   semNet_->read(fname);
 }
 
 /** write the semantic net to the given file */
-void Analysis::writeSemNet(QString fname)
+void Analysis::writeSemanticNet(QString fname)
 {
   semNet_->write(fname);
 }

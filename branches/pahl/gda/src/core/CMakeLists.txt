@@ -29,7 +29,9 @@ SET(headers
             judge.h
             operator.h
             operatorlist.h
+	    netmodel.h
             semanticnet.h
+	    instancenet.h
             snode.h
             task.h)
 
@@ -42,6 +44,9 @@ SET(classheaders
     TreeNode
     GNode
     SNode
+    NetModel
+    SemanticNet
+    InstanceNet
     Attribute
     AttributeDictionary
     AtribList
@@ -77,7 +82,9 @@ SET(sources
     judge.cpp
     operator.cpp
     operatorlist.cpp
+    netmodel.cpp
     semanticnet.cpp
+    instancenet.cpp
     snode.cpp
     task.cpp)
 

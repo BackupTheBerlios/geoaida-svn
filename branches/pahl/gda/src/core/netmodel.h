@@ -1,11 +1,11 @@
 /*!*************************************************************************
- * \file semnet.h 
- * \brief Prototype for class "SemNet"
+ * \file netmodel.h 
+ * \brief Prototype for class "NetModel"
  *
  * \date
- *  begin                : Mon Sep 4 2000
+ *  begin                : Tue Feb 12 2008
  * \author 
- *  copyright            : (C) 2000 by Martin Pahl
+ *  copyright            : (C) 2008 by Martin Pahl
  *  email                : pahl@tnt.uni-hannover.de
  ***************************************************************************/
 
@@ -18,32 +18,25 @@
  *                                                                         *
  ***************************************************************************/
 
-/*
- * $Source: /data/cvs/gda/gda/core/semnet.h,v $
- * $Revision: 1.3 $
- * $Date: 2001/11/27 16:35:30 $
- * $Author: pahl $
- * $Locker:  $
- */
 
-#ifndef SEMNET_H
-#define SEMNET_H
+#ifndef NETMODEL_H
+#define NETMODEL_H
 
 #include <QTextStream>
 #include <QAbstractItemModel>
 #include <QHash>
-class SNode;
+class GNode;
 
 /*!
- * \brief Class for Semantic Net of type SNode
+ * \brief Class for  NetModel of type GNode
  *
  */
 
-class SemNet : public QAbstractItemModel
+class NetModel : public QAbstractItemModel
 {
 public:
-  SemNet();
-  ~SemNet();
+  NetModel();
+  ~NetModel();
 
   virtual int columnCount ( const QModelIndex & parent = QModelIndex() ) const;
   virtual int rowCount ( const QModelIndex & parent = QModelIndex() ) const;
@@ -54,21 +47,22 @@ public:
 				Qt::Orientation orientation, 
 				int role = Qt::DisplayRole ) const;
  private:
-  SNode* nodeFromIndex(const QModelIndex& index) const;
+  GNode* nodeFromIndex(const QModelIndex& index) const;
 
  public:
   void setFilename(QString filename);
   QString filename();
   void read();
   void read(const QString & fname);
-  void read(QIODevice & fp);
-  SNode *rootNode(void);
+  void read(QIODevice& fp);
+  virtual void read(MLParser& parser);
+  GNode *rootNode(void);
   void write();
   void write(QTextStream & fp);
   void write(const QString & fname);
  protected:     
-  /** root node of the semantic net */
-  SNode * rootNode_;
+  /** root node of the net */
+  GNode * rootNode_;
   mutable QHash<uint,QPixmap> pixmapHash_;
  private:
   QString filename_;
