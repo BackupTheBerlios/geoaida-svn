@@ -27,6 +27,7 @@
 #define INODE_H
 
 #include "GeoImage"
+#include "GeoImageList"
 #include "GNode"
 #include "SNode"
 #include "Analysis"

@@ -21,48 +21,20 @@
 #ifndef SEMANTICNET_H
 #define SEMANTICNET_H
 
-#include <QTextStream>
-#include <QAbstractItemModel>
-#include <QHash>
-class SNode;
+#include "NetModel"
+#include "SNode"
 
 /*!
  * \brief Class for Semantic Net of type SNode
  *
  */
-
-class SemanticNet : public QAbstractItemModel
+class SemanticNet : public NetModel
 {
 public:
-  SemanticNet();
-  ~SemanticNet();
-
-  virtual int columnCount ( const QModelIndex & parent = QModelIndex() ) const;
-  virtual int rowCount ( const QModelIndex & parent = QModelIndex() ) const;
-  virtual QVariant data ( const QModelIndex & index, int role = Qt::DisplayRole ) const;
-  virtual QModelIndex index ( int row, int column, const QModelIndex & parent = QModelIndex() ) const;
-  virtual QModelIndex parent(const QModelIndex &child) const;
-  virtual QVariant headerData ( int section, 
-				Qt::Orientation orientation, 
-				int role = Qt::DisplayRole ) const;
- private:
-  SNode* nodeFromIndex(const QModelIndex& index) const;
-
- public:
-  void setFilename(QString filename);
-  QString filename();
-  void read();
-  void read(const QString & fname);
-  void read(QIODevice & fp);
-  SNode *rootNode(void);
-  void write();
-  void write(QTextStream & fp);
-  void write(const QString & fname);
- protected:     
-  /** root node of the semantic net */
-  SNode * rootNode_;
-  mutable QHash<uint,QPixmap> pixmapHash_;
- private:
-  QString filename_;
+  SNode *rootNode() {
+    return static_cast<SNode*>(rootNode_);
+  }
+  void readfile(MLParser& parser);
 };
+
 #endif

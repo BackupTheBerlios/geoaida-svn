@@ -16,13 +16,13 @@
  ***************************************************************************/
 
 #include "netmodel.h"
-#include "GNode"
 #include <QFile>
 #include <QIcon>
 #include <QPixmap>
-#ifdef WIN32
-#include <stdlib.h> // f-bür exit-A
-#endif
+#include "GNode"
+#include "SNode"
+#include "INode"
+#include "NodeException"
 
 /*!
  * \brief constructor
@@ -103,8 +103,8 @@ QVariant NetModel::data ( const QModelIndex & index, int role ) const
     case Qt::DisplayRole:
       return node->name();
     case Qt::DecorationRole:
-      if (node->isA("GNode")) {
-	uint color=node->color();
+      if (node->isA("SNode")) {
+	uint color=static_cast<SNode*>(node)->color();
 	if (pixmapHash_.contains(color)) {
 	  return QIcon(pixmapHash_.value(color));
 	}
@@ -201,7 +201,7 @@ void NetModel::setFilename(QString filename)
 }
 
 /** Get the filename */
-void NetModel::filename()
+QString NetModel::filename()
 {
   return filename_;
 }
@@ -218,7 +218,7 @@ void NetModel::read(const QString & fname)
   QFile fp(fname);
   if (!fp.open(QIODevice::ReadOnly)) {
     qDebug("NetModel::read(%s): file not found", fname.toLatin1().constData());
-    return;
+    throw FileIOException(FileIOException::FILE_NOT_EXISTS,fname);
   }
   read(fp);
   fp.close();
@@ -229,11 +229,11 @@ void NetModel::read(const QString & fname)
 void NetModel::read(QIODevice & fp)
 {
   MLParser parser(&fp);
-  read(parser);
+  readfile(parser);
 }
 
 /** Read a  net  */
-void NetModel::read(MLParser& parser)
+void NetModel::readfile(MLParser& parser)
 {
   if (rootNode_) {
     delete rootNode_;
@@ -263,7 +263,7 @@ void NetModel::write(const QString & fname)
   QFile fp(fname);
   if (!fp.open(QIODevice::WriteOnly)) {
     qDebug("NetModel::write(%s): file not accessable", fname.toLatin1().constData());
-    throw FileIOException(FILE_OPEN_WRITEMODE, fname);
+    throw FileIOException(FileIOException::OPEN_FAILED, fname);
   }
   QTextStream str(&fp);
   write(str);

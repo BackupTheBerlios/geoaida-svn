@@ -353,6 +353,8 @@ static void putAttribs(SNode & snode, AttribList & attribs, QString section)
   * and returns. When the topDown task is finish iNode->taskFinished() is called. */
 void SNode::execTopDownOp(INode * iNode)
 {
+  GeoImageList *geoImageList=iNode->analysis()->geoImageList();
+  Q_ASSERT(geoImageList);
 #ifdef DEBUG_MSG
   qDebug("#* SNode::execTopDown(%s) (%p)", name_.toLatin1().constData(), this);
 #ifdef WIN32
@@ -388,7 +390,7 @@ void SNode::execTopDownOp(INode * iNode)
       case Attribute::IMAGE:{
           QString imageName = attribute(attrib->fullname());
           QString keyName = attrib->name();
-          GeoImage *image = geoImageList_.geoImage(imageName);
+          GeoImage *image = geoImageList->geoImage(imageName);
           if (image) {
             ArgDictConstIterator it= image->constBegin();
             for (; it!=image->constEnd(); ++it) {
@@ -396,10 +398,10 @@ void SNode::execTopDownOp(INode * iNode)
             }
             QString partName;
             if (topDown_ && topDown_->runGlobal())
-              partName = image->part(geoImageList_.geoWest(),
-                                     geoImageList_.geoNorth(),
-                                     geoImageList_.geoEast(),
-                                     geoImageList_.geoSouth());
+              partName = image->part(geoImageList->geoWest(),
+                                     geoImageList->geoNorth(),
+                                     geoImageList->geoEast(),
+                                     geoImageList->geoSouth());
             else
               partName = image->part(parent->attributeFloat("geoWest"),
                                      parent->attributeFloat("geoNorth"),
@@ -437,8 +439,8 @@ void SNode::execTopDownOp(INode * iNode)
     QString maskfile;
     if (topDown_ && topDown_->runGlobal()) {
       int global_mask_x, global_mask_y, x2, y2, local_mask_x, local_mask_y;
-      labelImage->picBBox(geoImageList_.geoWest(),geoImageList_.geoNorth(),
-              geoImageList_.geoEast(),geoImageList_.geoSouth(),
+      labelImage->picBBox(geoImageList->geoWest(),geoImageList->geoNorth(),
+              geoImageList->geoEast(),geoImageList->geoSouth(),
               global_mask_x, y2, x2, global_mask_y);
       int global_mask_size_x=x2-global_mask_x+1;
       int global_mask_size_y=y2-global_mask_y+1;
@@ -457,8 +459,8 @@ void SNode::execTopDownOp(INode * iNode)
              "                          x=%d, y=%d, size_x=%d, size_y=%d\n"
              "                          mw=%f, mn=%f, me=%f, ms=%f\n"
              "                          msize_x=%d, msize_y=%d\n",
-              geoImageList_.geoWest(),geoImageList_.geoNorth(),
-              geoImageList_.geoEast(),geoImageList_.geoSouth(),
+              geoImageList->geoWest(),geoImageList->geoNorth(),
+              geoImageList->geoEast(),geoImageList->geoSouth(),
               local_mask_x-global_mask_x, local_mask_y-global_mask_y,global_mask_size_x, global_mask_size_y,
               labelImage->geoWest(),labelImage->geoNorth(),labelImage->geoEast(),labelImage->geoSouth(),
               labelImage->cols(),labelImage->rows());
@@ -474,8 +476,8 @@ void SNode::execTopDownOp(INode * iNode)
   }
   else attribs.replace("mask_file", "\"\"");
 
-  attribs.replace("minRes", geoImageList_.minResolution());
-  attribs.replace("maxRes", geoImageList_.maxResolution());
+  attribs.replace("minRes", geoImageList->minResolution());
+  attribs.replace("maxRes", geoImageList->maxResolution());
   attribs.replace("numRegions",SNode::parent()->refCounter_);
 #if 1
   putAttribs(*this, attribs, "generic");

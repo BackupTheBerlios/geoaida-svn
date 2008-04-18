@@ -25,10 +25,8 @@
 
 #include "operatorlist.h"
 #include <MLParser>
-#include <qdir.h>
-#ifdef WIN32
-#include <stdlib.h> // für exit
-#endif
+#include <QDir>
+#include "FileIOException"
 
 OperatorList::OperatorList()
 {
@@ -63,8 +61,8 @@ OperatorList::read(QString filename)
   QFile fp(filename);
   qDebug("OperatorList::read(%s)", filename.toLatin1().constData());
   if (!fp.open(QIODevice::ReadOnly)) {
-    qDebug("SmeNet::read(%s): file not found\n", filename.toLatin1().constData());
-    return;
+    qDebug("OperatorList::read(%s): file not found\n", filename.toLatin1().constData());
+    throw FileIOException(FileIOException::FILE_NOT_EXISTS,filename);
   }
   read(fp);
   fp.close();
@@ -75,7 +73,7 @@ OperatorList::read(QString filename)
 void
 OperatorList::read(QIODevice & fp)
 {
-  QString keywords[] = { "OPERATOR", "" };
+  QString keywords[] = { "operator", "" };
   const MLTagTable nodeTagTable(keywords);
   const int TOK_OPERATOR = 1;
   MLParser parser(&fp);

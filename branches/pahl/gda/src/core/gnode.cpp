@@ -157,7 +157,7 @@ void GNode::name(QString name)
 /** Set the attribute key to val */
 void GNode::attribute(QString key, QString val)
 {
-  attributeSet(key, val);
+  attributeSet(key.toLower(), val);
 }
 
 /** returns the name of this node */
@@ -187,6 +187,7 @@ void GNode::attribute(QString key, const char* val)
 /** Get the value of attribute key */
 const QString & GNode::attribute(QString key)
 {
+  key=key.toLower();
   if (attribList_.contains(key))
     return attribList_[key];
   else

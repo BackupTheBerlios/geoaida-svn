@@ -15,6 +15,7 @@ INCLUDE_DIRECTORIES(.
 
 SET(headers 
 	    exception.h
+	    project.h
 	    analysis.h
             attribute.h
             cleanup.h
@@ -57,6 +58,7 @@ SET(classheaders
     Task
     Operator
     OperatorList
+    Project
     CleanUp
     Analysis
   )

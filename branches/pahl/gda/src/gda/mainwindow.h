@@ -33,8 +33,9 @@
 
 #include <ui_mainwindow.h>
 #include <QMainWindow>
-#include "SemNet"
+#include "SemanticNet"
 #include "AttributeModel"
+#include "Project"
 
 class MainWindow : public QMainWindow, private Ui::MainWindow
 {
@@ -45,9 +46,11 @@ class MainWindow : public QMainWindow, private Ui::MainWindow
  public slots:
   void on_actionQuit_triggered();
   void on_actionNetLoad_triggered();
+  void on_actionProjectLoad_triggered();
  private:
   bool dirty_;	
-  SemNet semNet_;
+  Project project_;
+  SemanticNet semNet_;
   AttributeModel attributeModel_;
   /** filename for the semantic net */
   QString fileSemanticNet_;

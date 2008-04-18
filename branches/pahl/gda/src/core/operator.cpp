@@ -96,7 +96,7 @@ Operator::read(MLParser & parser)
 	 name_.toLatin1().constData(),
          cmd_.toLatin1().constData());
 
-  QString keywords[] = { "OPERATOR", "ATTRIBUTE", "" };
+  QString keywords[] = { "operator", "attribute", "" };
   const MLTagTable nodeTagTable(keywords);
   enum
   { TOK_OPERATOR = 1, TOK_ATTRIBUTE };

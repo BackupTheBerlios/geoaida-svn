@@ -25,6 +25,8 @@
 #include <QTextStream>
 #include <QAbstractItemModel>
 #include <QHash>
+#include "MLParser"
+
 class GNode;
 
 /*!
@@ -55,7 +57,7 @@ public:
   void read();
   void read(const QString & fname);
   void read(QIODevice& fp);
-  virtual void read(MLParser& parser);
+  virtual void readfile(MLParser& parser);
   GNode *rootNode(void);
   void write();
   void write(QTextStream & fp);

@@ -182,8 +182,8 @@ QModelIndex AttributeModel::parent(const QModelIndex &child) const
 }
 
 QVariant AttributeModel::headerData ( int section, 
-			      Qt::Orientation orientation, 
-			      int role ) const 
+				      Qt::Orientation orientation, 
+				      int role ) const 
 {
   if (role!=Qt::DisplayRole) return QVariant();
   switch (section) {
@@ -194,6 +194,17 @@ QVariant AttributeModel::headerData ( int section,
   }
   return QVariant();
 }
+
+/*!
+ * \brief return flags for the given index
+ *
+ * \param index
+ * \return Qt::ItemFlags
+ */
+Qt::ItemFlags AttributeModel::flags ( const QModelIndex & index ) const
+{
+}
+
 
 /*!
  * \brief convert internal pointer of a QModelIndex to SNode

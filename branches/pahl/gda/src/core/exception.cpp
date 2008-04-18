@@ -1,7 +1,7 @@
 #include "exception.h"
 #include <QObject>
 
-QString Exception::what()
+QString Exception::what() const
 {
   return QObject::tr("General Exception"); 
 }
@@ -11,7 +11,7 @@ FileIOException::FileIOException(ExceptionType type, QString filename)
 {
 }
 
-QString FileIOException::what()
+QString FileIOException::what() const
 {
   switch (type_) {
   case FILE_NOT_EXISTS:
@@ -26,7 +26,7 @@ ImageException::ImageException(int x1, int x2, int dx, int y1, int y2, int dy)
 {
 }
 
-QString ImageException::what()
+QString ImageException::what() const
 {
   return QObject::tr("Image has wrong dimensions x1=%1, x2=%2, dx=%3, y1=%4, y2=%5, dy=%6")
     .arg(x1_).arg(x2_).arg(dx_).arg(y1_).arg(y2_).arg(dy_);
@@ -37,7 +37,7 @@ NodeException::NodeException(ExceptionType type)
 {
 }
 
-QString NodeException::what()
+QString NodeException::what() const
 {
   return QObject::tr("Node exception");
 }

@@ -15,12 +15,20 @@
  *                                                                         *
  ***************************************************************************/
 #include <QApplication>
+#include <QDir>
 #include "MainWindow"
+#include "OperatorList"
+#include "CleanUp"
 #include <getopt.h>
 
 int main(int argc, char **argv)
 {
   QApplication app(argc, argv);
+
+  cleanUp_.prefix(PRGDIR);
+  QDir d(PRGDIR);
+  d.cd("share/data/operators");
+  operatorList_.readDir(d.path());	
   
   MainWindow *mainWindow = new MainWindow(argc,argv);
   mainWindow->show();

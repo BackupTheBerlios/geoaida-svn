@@ -24,6 +24,10 @@
 #include "NetModel"
 #include "INode"
 
+/*!
+ * \brief Class for Instance Net of type INode
+ *
+ */
 class InstanceNet : public NetModel
 {
  public:

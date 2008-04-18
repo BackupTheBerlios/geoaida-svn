@@ -46,42 +46,42 @@ QTextStream& ArgDict::write(QTextStream& fp) const
 
 void ArgDict::insert(QString name, int val) {
   QString s=QString().sprintf("%d",val);
-  insert(name,s);
+  insert(name.toLower(),s);
 }
 
 void ArgDict::insert(QString name, double val) {
   QString s=QString().sprintf("%f",val);
-  insert(name,s);
+  insert(name.toLower(),s);
 }
 
 void ArgDict::insert(QString name, QString val) {
-  QHash<QString,QString>::insert(name,val);
+  QHash<QString,QString>::insert(name.toLower(),val);
 }
 
 void ArgDict::insert(QString name, bool val) {
   QString s(val ? "TRUE" : "FALSE" );
-  insert(name,s);
+  insert(name.toLower(),s);
 }
 
 void ArgDict::replace(QString name, int val) {
-  insert(name,val);
+  insert(name.toLower(),val);
 }
 
 void ArgDict::replace(QString name, double val) {
-  insert(name,val);
+  insert(name.toLower(),val);
 }
 
 void ArgDict::replace(QString name, QString val) {
-  insert(name,val);
+  insert(name.toLower(),val);
 }
 
 void ArgDict::replace(QString name, bool val) {
-  insert(name,val);
+  insert(name.toLower(),val);
 }
 
 QTextStream& operator<<(QTextStream& fp, ArgDict& argDict)
 {
-	return argDict.write(fp);
+  return argDict.write(fp);
 }
 
 /*****************************************************************
@@ -169,11 +169,11 @@ ArgDict *MLParser::args(ArgDict *argdict, bool insertMode)
        it!=attribs.constEnd();
        ++it) {
     if (insertMode)
-      dict->insert(it->name().toString(),it->value().toString());
+      dict->insert(it->name().toString().toLower(),it->value().toString());
     else
-      dict->replace(it->name().toString(),it->value().toString());
+      dict->replace(it->name().toString().toLower(),it->value().toString());
 #ifdef DEBUGMSG
-    qDebug("%s=%s\n",(const char*)it.name().toString(),(const char*)it.value().toString());
+    qDebug("%s=%s\n",it.name().toString().toLower().toLatin1().constData(),it.value().toString().toLatin1().constData());
 #endif
     
   }
@@ -232,13 +232,13 @@ CLASS: MLParser static functions
 void MLParser::setString(QString &str, ArgDict *dict, 
 				       QString name) 
 {
-  QString s=dict->value(name);
+  QString s=dict->value(name.toLower());
   if (!s.isEmpty()) str=s;
 }
 
 void MLParser::setBool(bool &var, ArgDict *dict, QString name) 
 {
-  QString s=dict->value(name);
+  QString s=dict->value(name.toLower());
   if (!s.isEmpty()) {
       var=true;
       if ((s.toUpper()=="OFF")
@@ -249,7 +249,7 @@ void MLParser::setBool(bool &var, ArgDict *dict, QString name)
 }
 
 void MLParser::setInt(int &var, ArgDict *dict, QString name) {
-  QString s=dict->value(name);
+  QString s=dict->value(name.toLower());
   if (!s.isEmpty()) {
     bool ok;
     int val=s.toInt(&ok);
@@ -260,7 +260,7 @@ void MLParser::setInt(int &var, ArgDict *dict, QString name) {
 void MLParser::setDouble(double &var, ArgDict *dict,
 				       QString name) 
 {
-  QString s=dict->value(name);
+  QString s=dict->value(name.toLower());
   if (!s.isEmpty()) {
     bool ok;
     double val=s.toDouble(&ok);
@@ -271,7 +271,7 @@ void MLParser::setDouble(double &var, ArgDict *dict,
 void MLParser::setFloat(float &var, ArgDict *dict,
 				       QString name)
 {
-  QString s=dict->value(name);
+  QString s=dict->value(name.toLower());
   if (!s.isEmpty()) {
     bool ok;
     float val=s.toFloat(&ok);
@@ -290,14 +290,14 @@ int MLParser::getOption(QString val, QString *keywords)
 void MLParser::setOption(int &var, ArgDict *dict, 
 				       QString name, QString *options)
 {
-  QString s=dict->value(name);
+  QString s=dict->value(name.toLower());
   if (!s.isEmpty()) var=getOption(s,options);
 }
 
 void MLParser::setBitMask(int &var, ArgDict *dict, 
 			  QString name, QString *options, int *optionvals)
 {
-  QString s=dict->value(name);
+  QString s=dict->value(name.toLower());
   MLTagTable tagtable(options);
 
   if (!s.isEmpty()) {

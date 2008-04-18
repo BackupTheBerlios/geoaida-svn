@@ -25,10 +25,7 @@
 
 #include <assert.h>
 #include "inode.h"
-#include "fatalerror.h"
-#ifdef WIN32
-#include <qmessagebox.h>
-#endif
+#include "FileIOException"
 
 
 const char *const INode::iTypeName[] = {
@@ -223,9 +220,9 @@ void INode::taskFinished(int pid, int exit_state)
 #endif
     }
   }
-  catch(FatalError err) {
+  catch(FileIOException err) {
     qDebug("INode::taskFinished(): Exception(%s) %s", name().toLatin1().constData(),
-           err.message().toLatin1().constData());
+           err.what().toLatin1().constData());
 //    emit analysis_->message(err.message());
   }
 }
@@ -771,7 +768,7 @@ void INode::setGeoRegion(float gW, float gN, float gE, float gS, INode* parent)
   //! Dealing with the case "geocoordinates AND bounding box are given" is missing
   //! Geocoordinates of the labelimage must be calculated in this case.
   labelImage_ =
-    labelImageList_.loadLabelImage(file, sNode()->GNode::name(), gW, gN, gE, gS);
+    analysis()->labelImageList()->loadLabelImage(file, sNode()->GNode::name(), gW, gN, gE, gS);
 #define TRY_TO_CORRECT_SCALING_ERRORS
 #ifdef TRY_TO_CORRECT_SCALING_ERRORS
   // Correct errors in geocoordinates cause by scaling

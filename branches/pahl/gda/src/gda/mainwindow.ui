@@ -92,7 +92,7 @@
     <addaction name="action_Save_Net" />
     <addaction name="actionLoad_Result" />
     <addaction name="actionSave_Result" />
-    <addaction name="actionLoad_Project" />
+    <addaction name="actionProjectLoad" />
     <addaction name="separator" />
     <addaction name="actionQuit" />
    </widget>
@@ -165,7 +165,7 @@
     <string>Save Result</string>
    </property>
   </action>
-  <action name="actionLoad_Project" >
+  <action name="actionProjectLoad" >
    <property name="text" >
     <string>Load &amp;Project</string>
    </property>
