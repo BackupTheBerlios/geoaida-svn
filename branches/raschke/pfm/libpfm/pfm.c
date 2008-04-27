@@ -11,8 +11,12 @@ int __isnanf(float);
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+
+#ifndef WIN32
 #include <sys/wait.h>
 #include <unistd.h>
+#endif
+
 #include <signal.h>
 #include "pfm.h"
 #ifdef WORDS_BIGENDIAN
@@ -66,7 +70,9 @@ static FILE* start_decompression(FILE* fp, const char* command)
   char buffer[1025];
   int num_char;
   FILE *fifofp;
+#ifndef WIN32
   sprintf(fifoname_,"/tmp/pfm.%d",getpid());
+#endif
   mkfifo(fifoname_,0700);
   sprintf(cmd,command,fifoname_);
 #ifdef DEBUG
@@ -122,7 +128,9 @@ static FILE* stop_decompression(FILE *fp)
 {
   if (!compressed_) return fp;
   kill(pid_,SIGTERM);
+#ifndef WIN32
   waitpid(pid_,0,0);
+#endif
   pid_=0;
   pclose(fp);
   unlink(fifoname_);
@@ -501,7 +509,11 @@ typedef void *ConvertFunc(void*, void*, int, PFMConvert*, float, float);
 
 static void pfm_read_ppm(FILE *fp, int cols, int rows, PFM3Byte *ppmbuffer)
 {
-  unsigned char buffer[cols*3*sizeof(unsigned char)];
+#ifdef WIN32
+  unsigned char buffer = malloc(cols * 3 * sizeof(unsigned char));
+#else
+  unsigned char buffer[cols*3];
+#endif
   int r,c;
   unsigned char *p_r, *p_g, *p_b;
   unsigned char *p_buf;
@@ -517,6 +529,9 @@ static void pfm_read_ppm(FILE *fp, int cols, int rows, PFM3Byte *ppmbuffer)
       *p_b++=*p_buf++;
     }
   }
+#ifdef WIN32
+  free(buffer);
+#endif
 }
 
 void *pfm_readpfm_type(FILE *fp,
@@ -1027,7 +1042,11 @@ static void pfm_write_ppm_part(FILE *fp,
                          unsigned char*p_b,
                          int num_items)
 {
-  unsigned char buffer[num_items*3*sizeof(unsigned char)];
+#ifdef WIN32
+  unsigned char* buffer = malloc(num_items*3*sizeof(unsigned char));
+#else
+  unsigned char buffer[num_items*3];
+#endif
   unsigned char *p_buf;
   int i;
   p_buf=buffer;
@@ -1037,6 +1056,9 @@ static void pfm_write_ppm_part(FILE *fp,
     *p_buf++=*p_b++;
   }
   fwrite(buffer,sizeof(unsigned char)*3,num_items,fp);
+#ifdef WIN32
+  free(buffer);
+#endif
 }
 
 static void pfm_write_ppm(FILE *fp, const PFM3Byte *data,
@@ -1045,8 +1067,13 @@ static void pfm_write_ppm(FILE *fp, const PFM3Byte *data,
                           int x1, int y1, int x2, int y2,
                           int dx, int dy)
 {
-  unsigned char emptybuffer[dx*sizeof(unsigned char)*3];
-  unsigned char buffer[dx*sizeof(unsigned char)*3];
+#ifdef WIN32
+  unsigned char *emptybuffer = malloc(dx * 3 * sizeof(unsigned char));
+  unsigned char *buffer = malloc(dx * 3 * sizeof(unsigned char));
+#else
+  unsigned char emptybuffer[dx*3];
+  unsigned char buffer[dx*3];
+#endif
   unsigned char* p_r=data->r;
   unsigned char* p_g=data->g;
   unsigned char* p_b=data->b;
@@ -1080,6 +1107,10 @@ static void pfm_write_ppm(FILE *fp, const PFM3Byte *data,
       else {/* x1>=0 x2<cols y>0 y<rows  */
         pfm_write_ppm_part(fp,&p_r[y*cols+x1],&p_g[y*cols+x1],&p_b[y*cols+x1],x2-x1+1);
       }
+#ifdef WIN32
+  free(emptybuffer);
+  free(buffer);
+#endif
 }
 
 int pfm_writepfm_region_type(FILE *fp, const void *data,
@@ -1109,7 +1140,11 @@ int pfm_writepfm_region_type(FILE *fp, const void *data,
     fpx= calloc(dx,sizeof(float));
      if(!fpx) return 0;
     if (minval>maxval) {
+#ifdef WIN32
+      minval=100000000.0; maxval=-1000000000.0;
+#else
       minval=1/0.0; maxval=-1/0.0;
+#endif
       y=y1; yi=y2;
       if(y1<0) y=0;
       if(y2>rows)yi=rows;
@@ -1165,7 +1200,11 @@ int pfm_writepfm_region_type(FILE *fp, const void *data,
     dpx = calloc(dx,sizeof(double));
     if(!dpx) return 0;
     if (minval>maxval) {
+#ifdef WIN32
+      minval=100000000.0; maxval=-1000000000.0;
+#else
       minval=1/0.0; maxval=-1/0.0;
+#endif
       y=y1; yi=y2;
       if(y1<0) y=0;
       if(y2>rows)yi=rows;

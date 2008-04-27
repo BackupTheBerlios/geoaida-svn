@@ -28,6 +28,7 @@
 #define __GA_DOWINDOWT_H
 
 #include "gaimaget.h"
+#include <vector>
 
 namespace Ga {
 
@@ -43,7 +44,7 @@ void doWindow(ImageT<ResultPixTyp>& result,
   //erzeugen eines Vektors mit Pointern zu den Bilddaten:
   //PixTyp* in_data = imgIn.Data();
   int vecSize=winSize*winSize;
-  PixTyp* vec[vecSize]; // TODO: Will not compile on Windows, no ANSI C++ either.
+  std::vector<PixTyp*> vec(vecSize);
   int offset=winSize/2;
 
   for (int y=0; y<imgIn.sizeY(); y++) {
@@ -62,7 +63,7 @@ void doWindow(ImageT<ResultPixTyp>& result,
           printf("vec[%d,%d]=%p\n",xx,yy,vec[xx+(yy*winSize)]);
 
 #endif
-	  	result(x,y) = winFunc(vec);
+	  	result(x,y) = winFunc(&vec[0]);
 #if 0	  	
 	  	printf(" (%04d,%04d)=%10.3f\n",
 	  	       x,y,result(x+offset,y+offset));

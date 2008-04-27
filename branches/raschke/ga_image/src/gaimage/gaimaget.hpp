@@ -134,7 +134,7 @@ ImageBase* ImageT<PixTyp>::copyObject() {
 }
 
 template <class PixTyp>
-const class std::type_info& ImageT<PixTyp>::typeId() const {
+const std::type_info& ImageT<PixTyp>::typeId() const {
   return typeid(PixTyp);
 }
 

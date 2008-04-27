@@ -21,6 +21,7 @@
 
 #include <string>
 #include <typeinfo>
+#include <memory>
 
 namespace Ga
 {

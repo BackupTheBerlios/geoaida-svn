@@ -31,6 +31,10 @@
 #include "gaimage.h"
 #include "gaimaget.h"
 #include "gadowindowt.h"
+#ifdef WIN32
+#include <math.h>
+#define isnan _isnan
+#endif
 #ifdef GCC29
 #include <math.h>
 #endif

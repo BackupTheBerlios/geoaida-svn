@@ -26,11 +26,6 @@
 #include <math.h>
 #include <limits.h>
 
-extern "C" {
-#include <pnm.h>
-#include <pfm.h>
-}
-
 #include <assert.h>
 #include "gaimagebase.h"
 #include "gacache.h"
@@ -201,6 +196,11 @@ namespace Ga
     bool operator!=(Iterator other) const
     {
       return !(*this == other);
+    }
+
+	bool operator<(Iterator other) const
+	{
+	  return elem < other.elem;
     }
   };
 }

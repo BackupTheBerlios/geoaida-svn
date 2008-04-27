@@ -28,6 +28,9 @@
 #include <string>
 #include <vector>
 #include <tr1/memory>
+#ifdef WIN32
+#include <windows.h>
+#endif
 
 namespace Ga
 {
@@ -43,8 +46,12 @@ namespace Ga
 	class CacheFile
 	{
 		Size blockSize;
-    std::string filename;
+		std::string filename;
+#ifdef WIN32
+		HANDLE file;
+#else
 		int fd;
+#endif
 		std::vector<bool> marked;
 		
 		explicit CacheFile(Size blockSize);

@@ -22,13 +22,34 @@
 #include <algorithm>
 #include <map>
 #include <stdexcept>
+#ifndef WIN32
 #include <fcntl.h>
 #include <unistd.h>
+#endif
 using namespace std;
 
 Ga::CacheFile::CacheFile(Size blockSize)
 : blockSize(blockSize)
 {
+#ifdef WIN32
+	TCHAR tempPath[MAX_PATH];
+	DWORD ret = GetTempPath(MAX_PATH, tempPath);
+	if (ret == 0 || ret >= MAX_PATH)
+		throw std::runtime_error("Could not get temp path");
+
+	ostringstream stream;
+	stream << tempPath << "\gacachefile_" << blockSize << ".tmp";
+    filename = stream.str();
+	
+	DWORD access = GENERIC_READ | GENERIC_WRITE;
+    DWORD shareMode = FILE_SHARE_READ;
+    DWORD creationDisp = OPEN_ALWAYS;
+
+    file = CreateFile(filename.c_str(), access, shareMode, 0,
+        creationDisp, FILE_FLAG_DELETE_ON_CLOSE, 0);
+    if (file == INVALID_HANDLE_VALUE)
+		throw std::runtime_error("Could not open ga_image cache file: " + filename);
+#else
 	ostringstream stream;
 	stream << "/tmp/gacachefile_" << blockSize << ".tmp";
     filename = stream.str();
@@ -36,13 +57,18 @@ Ga::CacheFile::CacheFile(Size blockSize)
 	fd = open(filename.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0600);
 	if (fd < 0)
 		throw runtime_error("Could not open ga_image cache file: " + filename);
+#endif
 }
 
 Ga::CacheFile::~CacheFile()
 {
     assert(find(marked.begin(), marked.end(), true) == marked.end());
+#ifdef WIN32
+	CloseHandle(file);
+#else
 	close(fd);
     unlink(filename.c_str());
+#endif
 }
 
 Ga::CacheFile& Ga::CacheFile::get(Size blockSize)
@@ -77,8 +103,15 @@ unsigned Ga::CacheFile::store(const void* buffer)
 	}
 	
 	// Now go write the data!
+#ifdef WIN32
+    if (SetFilePointer(file, index * blockSize, 0, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
+		throw std::runtime_error("Error setting the file pointer");
+    DWORD dummy;
+    WriteFile(file, buffer, blockSize, &dummy, 0);
+#else
 	lseek(fd, index * blockSize, SEEK_SET);
 	write(fd, buffer, blockSize);
+#endif
 	return index;
 }
 
@@ -89,8 +122,15 @@ void Ga::CacheFile::recover(unsigned index, void* buffer)
 	assert(marked.at(index));
 	
 	// Read stored data from the file.
+#ifdef WIN32
+    if (SetFilePointer(file, index * blockSize, 0, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
+		throw std::runtime_error("Error setting the file pointer");
+    DWORD dummy;
+    ReadFile(file, buffer, blockSize, &dummy, 0);
+#else
 	lseek(fd, index * blockSize, SEEK_SET);
 	read(fd, buffer, blockSize);
+#endif
 	dismiss(index);
 }
 
