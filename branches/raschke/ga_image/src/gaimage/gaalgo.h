@@ -1,11 +1,12 @@
-/****************************************************************************
-                          gaalgo.h  -  GeoAIDA algorithm declarations
-                             -------------------
-    begin                : 2007-06-21
-    copyright            : (C) 2007 TNT, Uni Hannover
-    authors              : Julian Raschke
-    email                : raschke@tnt.uni-hannover.de
- ***************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+///
+/// \file		gaalgo.h
+/// \brief		GeoAIDA Image Algorithms
+///
+/// \date		2007-06-21
+/// \author		Julian Raschke (julian@raschke.de)
+///
+////////////////////////////////////////////////////////////////////////////////
 
 /***************************************************************************
  *                                                                         *
@@ -23,7 +24,7 @@
 
 namespace Ga
 {
-  /*
+  /**
   Implementation of the Canny edge detection algorithm.
   
   Creates a same-sized image from the supplied one, where detected edges are
@@ -42,16 +43,16 @@ namespace Ga
   */
   Image canny(const Image& img, double lowThreshold, double highThreshold);
   
-  // Convert RGB color image to luminance (single-channel double) image.
+  /// Convert RGB color image to luminance (single-channel double) image.
   Image toLuminance(const Image& img);
   
-  // Convert RGB color image to hue/saturation/value image.
+  /// Convert RGB color image to hue/saturation/value image.
   Image toHSV(const Image& img);
   
-  // Generate histogram as a narrow int image (width n, height 1).
+  /// Generate histogram as a narrow int image (width n, height 1).
   Image calcHistogram(const Image& img, double min, double max, int n, int channel = 0);
   
-  // Converts a 3-band image (irrgb-color) to a new single band NDVI image.
+  /// Converts a 3-band image (irrgb-color) to a new single band NDVI image.
   Image toNDVI(const Image& img);
   
 #if 0

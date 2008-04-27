@@ -1,11 +1,13 @@
-/***************************************************************************
-                          gacache.h  -  caching system that uses both
-										the heap and disk files.
-                             -------------------
-    begin                : 2007-05-19
-    copyright            : (C) 2007 by Julian Raschke
-    email                : raschke@tnt.uni-hannover.de
- ***************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+///
+/// \file		gacache.h - Caching system that uses both the heap and disk files.
+/// \brief		GeoAIDA Image Algorithms
+///
+/// \date		2007-05-19
+/// \author		Julian Raschke (julian@raschke.de)
+///
+////////////////////////////////////////////////////////////////////////////////
+
 
 /***************************************************************************
  *                                                                         *
@@ -29,15 +31,15 @@
 
 namespace Ga
 {
-	// Size type for single allocations.
+	/// Size type for single allocations.
 	typedef std::size_t Size;
-	// Size type for sums of allocations.
+	/// Size type for sums of allocations.
 	typedef unsigned long long LargeSize;
 	
-	// Cache metrics.
+	/// Cache metrics.
 	const LargeSize HEAP_USAGE = 512 * 1024*1024;
 
-	// Used by Block to store and recover chunks of memory.
+	/// Used by Block to store and recover chunks of memory.
 	class CacheFile
 	{
 		Size blockSize;
@@ -47,18 +49,28 @@ namespace Ga
 		
 		explicit CacheFile(Size blockSize);
 		
-		// Copying forbidden.
-		CacheFile(const CacheFile&);
-		CacheFile& operator=(const CacheFile&);
+		CacheFile(const CacheFile&);            //< Copying forbidden.
+		CacheFile& operator=(const CacheFile&); //< Copying forbidden.
 		
 	public:
+	  /// Almost a singleton: Get the CacheFile instance for a given block size.
 		static CacheFile& get(Size blockSize);
 		~CacheFile();
+		
+		/// Returns the index (handle) of a buffer that is saved to disk.
 		unsigned store(const void* buffer);
+		
+		/// Reloads memory from disk, given an index (handle) and a target buffer.
+		/// The block is removed from disk by calling this method, no need to
+		/// call dismiss.
 		void recover(unsigned index, void* buffer);
+		
+		/// Tells the CacheFile that it can forget about a block of memory that was
+		/// saved to disk.
 		void dismiss(unsigned index);
 	};
 
+  /// Block of memory that can be written to, and retrieved from disk.
 	class Block
 	{
 		unsigned lastAccess;
@@ -100,11 +112,13 @@ namespace Ga
 			return size;
 		}
 		
+		/// Used for deciding which blocks to write to disk first.
 		unsigned getLastAccess() const
 		{
 			return lastAccess;
 		}
 		
+		/// Used for deciding which blocks to write to disk first.
 		void setLastAccess(unsigned val)
 		{
 			lastAccess = val;
@@ -125,8 +139,13 @@ namespace Ga
 			return dirty;
 		}
 		
+		/// Locks the block and returns its memory position, valid until the next
+		/// call to unlock(). This implies that a locked block will never be moved
+		/// to file storage.
+		/// NOTE: If too many blocks are locked, it is possible that more than
+		/// heap space than defined by HEAP_USAGE is used.
 		void* lock();
-		// Defined below due to order of definitions.
+		// Defined below for compiler reasons.
 				
 		void unlock()
 		{
@@ -152,8 +171,8 @@ namespace Ga
 		}
 	};
 
-	// Minimalistic wrapper around a Block.
-	// Implements copy-on-write semantics.
+	/// Minimalistic wrapper around a Block.
+	/// Implements copy-on-write semantics.
 	class BlockHandle
 	{
 		typedef std::tr1::shared_ptr<Block> Ptr;
@@ -200,6 +219,7 @@ namespace Ga
 			return !ptr;
 		}
 		
+		/// Locks the target block for reading.
 		void lockR()
 		{
 			assert(!isEmpty());
@@ -208,6 +228,7 @@ namespace Ga
 			data = ptr->lock();
 		}
 		
+		/// Locks the target block for reading and writing.
 		void lockRW()
 		{
 			assert(!isEmpty());
@@ -221,6 +242,7 @@ namespace Ga
 			data = ptr->lock();
 		}
 				
+		/// Unlocks the target block.
 		void unlock()
 		{
 			assert(!isEmpty());
@@ -229,6 +251,7 @@ namespace Ga
       lockCount -= 1;
 		}
 		
+		/// If locked, returns a pointer to the block's data.
 		void* getData() const
 		{
       assert(!isEmpty());
@@ -237,6 +260,8 @@ namespace Ga
 		}
 	};
 	
+	/// Singleton cache that knows about all allocations and their sizes, and thus
+	/// can tell blocks to move to disk storage as a reaction to new allocations.
 	class Cache
 	{
 		typedef std::list<std::tr1::weak_ptr<Block> > Blocks;
@@ -251,17 +276,23 @@ namespace Ga
 		
 	public:
 		static Cache& get();
-        ~Cache();
+    ~Cache();
 		
+		/// Allocates a new block of memory.
 		BlockHandle alloc(Size size);
+
+		/// Called internally by the caching system before reloading a block from disk.
 		void requestDiskToHeap(Size size);
+		
+		/// Called internally to sort blocks by importance and delete expired block information.
 		void compactBlocks();
 		
-		// Called by Block on access id wraparound:
-		// First calls compactBlocks, then sets each block's last access id to it's position
+		// Called by Block in the case of an access id overflow (i.e. more than 2^32 calls to lock):
+		// First calls compactBlocks, then sets each block's last access id to its position
 		// in the list, and returns the number of blocks.
 		unsigned normalizeAndCountBlocks();
 		
+		/// Memory in use both on the heap and on disk.
 		LargeSize totalUsage()
 		{
 			return total;
