@@ -28,7 +28,7 @@
 //#include <qstringlist.h>
 #include <QRegExp>
 
-// #define DEBUG_MSG
+#define DEBUGMSG
 
 QTextStream& ArgDict::write(QTextStream& fp) const
 {
@@ -173,7 +173,9 @@ ArgDict *MLParser::args(ArgDict *argdict, bool insertMode)
     else
       dict->replace(it->name().toString().toLower(),it->value().toString());
 #ifdef DEBUGMSG
-    qDebug("%s=%s\n",it.name().toString().toLower().toLatin1().constData(),it.value().toString().toLatin1().constData());
+    qDebug("MLParser::args %s=%s\n",
+	   it->name().toString().toLower().toLatin1().constData(),
+	   it->value().toString().toLatin1().constData());
 #endif
     
   }
@@ -319,7 +321,7 @@ void MLParser::setBitMask(int &var, ArgDict *dict,
 
 #ifdef DEBUGMSG
     qDebug("MLParser::setBitMask(): name=%s val=%s(%d)\n",
-	   (const char*)name,(const char*)*s,var);
+	   name.toLatin1().constData(),s.toLatin1().constData(),var);
 #endif
   }
 }

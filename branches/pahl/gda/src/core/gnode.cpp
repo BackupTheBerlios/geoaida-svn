@@ -16,14 +16,6 @@
  ***************************************************************************/
 
 #include "gnode.h"
-#ifdef WITH_GUI_SUPPORT 
-#include "treeitem.h"
-#elif defined WIN32
-#include "..\semnetgui\treeitem.h"
-#endif
-#ifdef WIN32
-#include <stdlib.h> // für exit
-#endif
 
 
 // #define DEBUGMSG
@@ -96,16 +88,7 @@ void GNode::init()
 /** Read GNode by parsing a file */
 void GNode::read(MLParser & parser)
 {
-//Gerhards
-	//error C2660: 'args' : Funktion akzeptiert keine 2 Parameter
-//! MP In der neuesten Version akzeptiert die Funktion sehr wohl 2 Parameter.
-//  Bitte qtguiapplication neu auschecken!!!
-//Wo finde ich die???
-#ifdef WIN32
-  parser.args(&attribList_);
-#else
   parser.args(&attribList_,false);
-#endif
   setVars();
 #ifdef DEBUGMSG
 //  qDebug("Node: name=%s\n", (const char *) name_);
@@ -126,14 +109,7 @@ void GNode::read(MLParser & parser)
 void GNode::write(QTextStream & fp, QString indent, bool recursive)
 {
   fp << indent << "<node ";
-#ifdef WIN32
-	QDictIterator<QString> it=QDictIterator<QString>(attribList_);
-  	for (;it.current(); ++it)
-   {	 fp << it.currentKey() << "=\"" << *(it.current()) << "\" ";
-  	}
-#else
   fp << attribList_;
-#endif
   if (children().count() == 0 || !recursive) {
     fp << "/>" << endl;
   }
@@ -234,12 +210,6 @@ AttribList & GNode::attribList()
 GNode *GNode::copy()
 {
   GNode *gn = new GNode(*this);
-#ifdef WIN32
-  if (gn == 0){
-    cout << "Out of Memory..7";
-    exit(1);
-  }
-#endif
   return gn;
 }
 
@@ -247,19 +217,13 @@ GNode *GNode::copy()
 GNode *GNode::newNode()
 {
   GNode *gn = new GNode();
-#ifdef WIN32
-  if (gn == 0){
-    cout << "Out of Memory..8";
-    exit(1);
-  }
-#endif
   return gn;
 }
 
 /** Set the attribute key to val */
 void GNode::attributeSet(QString key, QString val)
 {
-  attribList_.replace(key, new QString(val));
+  attribList_.replace(key, val);
   if (key == "name")
     name_ = val;
 }

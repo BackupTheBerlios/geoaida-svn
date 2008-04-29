@@ -59,10 +59,12 @@ public:
 				Qt::Orientation orientation, 
 				int role = Qt::DisplayRole ) const;
   virtual Qt::ItemFlags flags ( const QModelIndex & index ) const;
+  bool setData ( const QModelIndex & index, const QVariant & value, int role = Qt::EditRole );
  private:
   //  GNode* nodeFromIndex(const QModelIndex& index) const;
 
  public slots:
+  void clear();
   void setNode(GNode* node);
   void setNode(const QModelIndex & index);
 protected:     

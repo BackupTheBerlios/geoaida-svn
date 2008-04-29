@@ -27,17 +27,6 @@ SET(uifiles mainwindow.ui)
 SET(resources gda.qrc)
 
 
-set(data 
-  gda.app 
-  cleanup.xpm   
-  filenew.xpm   
-  filesave.xpm  
-  generalization.xpm  
-  start.png
-  compound.xpm  
-  fileopen.xpm    
-  start.xpm)
-
 QT4_WRAP_CPP(moclib ${mocheaders})
 QT4_WRAP_UI(uilib ${uifiles})
 QT4_ADD_RESOURCES(resourcelib ${resources})
@@ -49,10 +38,4 @@ ADD_EXECUTABLE(gda ${sources} ${moclib} ${uilib} ${resourcelib} )
 TARGET_LINK_LIBRARIES(gda gdacore gdagui mlparser pfm pnm ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} ${QT_QTXML_LIBRARY})
 
 INSTALL(TARGETS gda DESTINATION bin)
-INSTALL(FILES ${data} DESTINATION share/data/application)
 
-ADD_CUSTOM_COMMAND(TARGET gda POST_BUILD
-                   COMMAND mkdir -p ${PROJECT_BINARY_DIR}/src/share/data/application
-                   COMMAND cp -pR ${data} ${PROJECT_BINARY_DIR}/src/share/data/application
-		   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-)

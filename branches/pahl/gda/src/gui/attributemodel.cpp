@@ -1,7 +1,7 @@
 /***************************************************************************
                           attributemodel.cpp  -  description
                              -------------------
-    begin                : Mon Sep 4 2000
+    begin                : 2008-03-25
     copyright            : (C) 2000 by Martin Pahl
     email                : pahl@tnt.uni-hannover.de
  ***************************************************************************/
@@ -14,14 +14,6 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
-
-/*
- * $Source: /data/cvs/gda/gda/core/attributemodel.cpp,v $
- * $Revision: 1.8 $
- * $Date: 2002/06/28 07:27:25 $
- * $Author: pahl $
- * $Locker:  $
- */
 
 #include "attributemodel.h"
 #include "GNode"
@@ -95,7 +87,7 @@ int AttributeModel::rowCount( const QModelIndex & parent ) const
  */
 QVariant AttributeModel::data( const QModelIndex & index, int role ) const
 {
-  if (role != Qt::DisplayRole )
+  if (role != Qt::DisplayRole && role!=Qt::EditRole)
     return QVariant();
   int section=index.internalId();
   if (section==-1) {
@@ -110,38 +102,23 @@ QVariant AttributeModel::data( const QModelIndex & index, int role ) const
       return attrib->name();
     }
     if (index.column()==1) {
-      return node_->attribute(attrib->name());
-    }
-  }
-
-  return QString("Test");
-
-#if 0
-  SNode *node = nodeFromIndex(index);
-  if (!node)
-    return QVariant();
-  if (index.column() == 0) {
-    switch (role) {
-    case Qt::DisplayRole:
-      return node->name();
-    case Qt::DecorationRole:
-      if (node->isA("SNode")) {
-	uint color=node->color();
-	if (pixmapHash_.contains(color)) {
-	  return QIcon(pixmapHash_.value(color));
-	}
-	else {
-	  QPixmap p(20,10);
-	  p.fill(color);
-	  pixmapHash_.insert(color,p);
-	  return QIcon(p);
-	}
-	return QVariant();
+      qDebug("AttributeModel::data: %s -> %s",
+	     attrib->name().toLatin1().constData(),
+	     node_->attribute(attrib->fullname()).toLatin1().constData());
+      QString value=node_->attribute(attrib->fullname());
+      switch (attrib->type()) {
+      case Attribute::INT:
+	return value.toInt();
+      case Attribute::DOUBLE:
+	return value.toDouble();
+      case Attribute::BOOL:
+	return value=="true";
+      default:
+	return value;
       }
-      else return QVariant();
     }
   }
-#endif
+
   return QVariant();
 }
 
@@ -203,25 +180,52 @@ QVariant AttributeModel::headerData ( int section,
  */
 Qt::ItemFlags AttributeModel::flags ( const QModelIndex & index ) const
 {
-}
+  if (!index.isValid())
+    return Qt::ItemIsEnabled;
+  
+  if (index.column()==0)
+    return Qt::ItemIsEnabled;
 
+  int section=index.internalId();
+  if (section==-1) 
+    return Qt::ItemIsEnabled;
+
+  return QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
+}
 
 /*!
- * \brief convert internal pointer of a QModelIndex to SNode
+ * \brief change data in the underlying model 
  *
- * \param index
- * \return pointer to SNode
+ * \param index of the data to change
+ * \param value - new value
+ * \param role - usually EditRole
  */
-#if 0
-SNode* AttributeModel::nodeFromIndex(const QModelIndex& index) const
+bool AttributeModel::setData(const QModelIndex &index,
+			     const QVariant &value, int role)
 {
-  if (index.isValid()) {
-    return static_cast<SNode *>(index.internalPointer());
-  } else {
-    return rootNode_;
+  if (index.isValid() && role == Qt::EditRole) {
+    if (index.column()==0) 
+      return false;
+
+    int section=index.internalId();
+    if (section==-1) 
+      return false;
+    
+    QString sectionName=section_[section];
+    if (attributesDict_.contains(sectionName)) {
+      Attribute* attrib=attributesDict_.value(sectionName)[index.row()];
+      if (index.column()==1) {
+	qDebug("AttributeModel::data: %s -> %s",
+	       attrib->name().toLatin1().constData(),
+	       node_->attribute(attrib->fullname()).toLatin1().constData());
+	node_->attribute(attrib->fullname(),value.toString());
+	emit dataChanged(index, index);
+	return true;
+      }
+    }
   }
+  return false;
 }
-#endif
 
 
 //@}
@@ -232,10 +236,17 @@ SNode* AttributeModel::nodeFromIndex(const QModelIndex& index) const
  */
 //@{
 
+/*! \brief remove alle model data */
+void AttributeModel::clear()
+{
+  attributesDict_.clear();
+}
+
 /*! \brief set the node  */
 void AttributeModel::setNode(GNode* node) 
 {
   qDebug("AttributeModel::setNode");
+  clear();
   node_=node;
   if (!node_) return;
   section_=node_->attributeSections();

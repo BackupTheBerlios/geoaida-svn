@@ -109,11 +109,7 @@ Operator::read(MLParser & parser)
     case TOK_ATTRIBUTE:
       Attribute * attrib = new Attribute();
       attrib->set(*args);
-#ifdef WIN32
-      attrib->prefix(type()+"\\");
-#else
-      attrib->prefix(type()+"/");
-#endif
+      attrib->prefix(type()+".");
       qDebug("Operator::read new Attribute %s\n",
              attrib->name().toLatin1().constData());
       attributeDict_.insert(attrib->name(), attrib);
