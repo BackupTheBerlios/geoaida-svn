@@ -4,11 +4,11 @@ Image redesign/cleanup TO DO:
   - Lazy loading!
   - Whole-image range-optimization
 * Documentation
-* Windows port
 * Geo data parser/writer for comments
   - Comments are prepended with 'comment' at libpfm level; this does not bode well!
 * Use Size and LargeSize types for image dimensions
 * Assertions -> Exceptions where okay for performance
+* Windows port
 
 Optional improvements:
 * Reorganize the directories in ga_image
