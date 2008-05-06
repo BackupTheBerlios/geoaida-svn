@@ -27,6 +27,7 @@
 #include <list>
 #include <string>
 #include <vector>
+#include <cassert>
 #include <tr1/memory>
 #ifdef WIN32
 #include <windows.h>
