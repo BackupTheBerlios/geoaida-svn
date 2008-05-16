@@ -19,9 +19,7 @@
 #include "GNode"
 #include <QFile>
 #include <AttributeModel>
-#ifdef WIN32
-#include <stdlib.h> // für exit
-#endif
+#include "AttributeValue"
 
 /*!
  * \brief constructor
@@ -87,6 +85,10 @@ int AttributeModel::rowCount( const QModelIndex & parent ) const
  */
 QVariant AttributeModel::data( const QModelIndex & index, int role ) const
 {
+#if 0
+  qDebug("AttributeModel::data: row=%d, co=l=%d, role=%d",
+	 index.row(),index.column(),role);
+#endif
   if (role != Qt::DisplayRole && role!=Qt::EditRole)
     return QVariant();
   int section=index.internalId();
@@ -99,23 +101,16 @@ QVariant AttributeModel::data( const QModelIndex & index, int role ) const
   if (attributesDict_.contains(sectionName)) {
     Attribute* attrib=attributesDict_.value(sectionName)[index.row()];
     if (index.column()==0) {
-      return attrib->name();
+      return attrib->label();
     }
     if (index.column()==1) {
-      qDebug("AttributeModel::data: %s -> %s",
+      qDebug("AttributeModel::data: %s -> %s (%d)",
 	     attrib->name().toLatin1().constData(),
-	     node_->attribute(attrib->fullname()).toLatin1().constData());
+	     node_->attribute(attrib->fullname()).toLatin1().constData(),
+	     role);
       QString value=node_->attribute(attrib->fullname());
-      switch (attrib->type()) {
-      case Attribute::INT:
-	return value.toInt();
-      case Attribute::DOUBLE:
-	return value.toDouble();
-      case Attribute::BOOL:
-	return value=="true";
-      default:
-	return value;
-      }
+      if (role==Qt::DisplayRole) return value;
+      return qVariantFromValue(AttributeValue(attrib,value));
     }
   }
 
@@ -215,10 +210,11 @@ bool AttributeModel::setData(const QModelIndex &index,
     if (attributesDict_.contains(sectionName)) {
       Attribute* attrib=attributesDict_.value(sectionName)[index.row()];
       if (index.column()==1) {
-	qDebug("AttributeModel::data: %s -> %s",
+	qDebug("AttributeModel::setData: %s -> %s",
 	       attrib->name().toLatin1().constData(),
 	       node_->attribute(attrib->fullname()).toLatin1().constData());
 	node_->attribute(attrib->fullname(),value.toString());
+	setNode(node_);
 	emit dataChanged(index, index);
 	return true;
       }

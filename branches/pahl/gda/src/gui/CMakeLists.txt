@@ -17,22 +17,34 @@ INCLUDE_DIRECTORIES(.
 SET(headers 
   attributemodel.h
   attributeeditor.h
+  attributevalue.h
+  attributevaluedelegate.h
+  attributevalueeditor.h
   )
 
 SET(classheaders 
   AttributeModel
   AttributeEditor
-
+  AttributeValue
+  AttributeValueDelegate
+  AttributeValueEditor
+  StringEditor
+  OperatorListEditor
   )
 
 SET(mocheaders 
   attributemodel.h
   attributeeditor.h
+  attributevaluedelegate.h
+  attributevalueeditor.h
   )
 
 SET(sources 
   attributemodel.cpp
   attributeeditor.cpp
+  attributevalue.cpp
+  attributevaluedelegate.cpp
+  attributevalueeditor.cpp
   )
  
 QT4_WRAP_CPP(moclib ${mocheaders})

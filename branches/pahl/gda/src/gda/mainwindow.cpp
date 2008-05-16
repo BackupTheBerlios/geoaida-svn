@@ -53,6 +53,7 @@ void MainWindow::on_actionNetLoad_triggered()
 	   attributeEditor_,SLOT(expandAll()));
    
    attributeEditor_->setModel(&attributeModel_);
+   attributeEditor_->setItemDelegate(&attributeValueDelegate_);
    //  treeEditor->rootNode(semNet.rootNode());
  }
  catch ( const Exception& err ) {

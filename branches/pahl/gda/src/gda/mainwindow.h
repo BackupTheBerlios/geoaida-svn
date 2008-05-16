@@ -35,6 +35,7 @@
 #include <QMainWindow>
 #include "SemanticNet"
 #include "AttributeModel"
+#include "AttributeValueDelegate"
 #include "Project"
 
 class MainWindow : public QMainWindow, private Ui::MainWindow
@@ -52,6 +53,7 @@ class MainWindow : public QMainWindow, private Ui::MainWindow
   Project project_;
   SemanticNet semNet_;
   AttributeModel attributeModel_;
+  AttributeValueDelegate attributeValueDelegate_;
   /** filename for the semantic net */
   QString fileSemanticNet_;
 };

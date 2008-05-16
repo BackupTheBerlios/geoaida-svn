@@ -178,11 +178,11 @@ void SNode::attributeSet(QString key, QString val)
   GNode::attributeSet(key, val);
   if ((key == "name") && (!attribList_.contains("class")))
     attributeSet("class", val);
-  if (key == "isCompound")
+  if (key == "iscompound")
     isCompound_ = (val.toInt() != 0);
-  if (key == "topDown")
+  if (key == "topdown")
     changeOperator(topDown_, val);
-  if (key == "bottomUp")
+  if (key == "bottomup")
     changeOperator(bottomUp_, val);
   if (key == "evaluation")
     changeOperator(evaluation_, val);

@@ -113,10 +113,11 @@ OperatorList::read(QIODevice & fp)
 }
 
 /** Returns a list of the keys contained in this dictionary */
-QStringList *
-OperatorList::keys(QString type)
+const QStringList& OperatorList::keys(QString type) const
 {
-  return keys_[type];
+  QStringList* keys=keys_[type];
+  if (!keys) return emptyList_;
+  else return *keys;
 }
 
 OperatorList operatorList_;

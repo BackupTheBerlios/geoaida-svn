@@ -48,10 +48,11 @@ public:
   /** Read the operatorlist from the provided filepointer */
   void read(QIODevice & fp);
   /** Returns a list of the keys contained in this dictionary */
-  QStringList *keys(QString type);
+  const QStringList& keys(QString type) const;
 protected:                     // Protected attributes
   /** Contains the list of keys in this dictionary */
   QHash < QString, QStringList* > keys_;
+  QStringList emptyList_;
 };
 
 extern OperatorList operatorList_;
