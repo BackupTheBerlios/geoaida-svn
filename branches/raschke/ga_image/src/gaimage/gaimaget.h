@@ -113,7 +113,6 @@ namespace Ga
     {
       if (elem < rangeBegin || elem >= rangeEnd)
       {
-        fflush(0);
         *this = relocator(elem);
         assert(elem >= rangeBegin);
         assert(elem < rangeEnd);
