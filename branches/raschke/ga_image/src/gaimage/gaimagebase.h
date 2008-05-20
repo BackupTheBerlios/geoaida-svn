@@ -46,18 +46,23 @@ namespace Ga {
 
 template <class PixType> class ImageT;
 
+/// Shortcut typedef for a shared ImageIO.
+typedef std::tr1::shared_ptr<ImageIO> ImageIOPtr;
+
+/// Abstract base class for ImageT<>, the efficient container that is the storage of an Image.
 class ImageBase
 {
 protected:
   FileType fileType_;
   int sizeX_, sizeY_;
   std::string comment_;
+
+  // Used to hold the source for image data open
+  ImageIOPtr source_;
   
   ImageBase() : fileType_(_UNKNOWN), sizeX_(0), sizeY_(0) {}
 
 public:
-  typedef std::tr1::shared_ptr<ImageIO> ImageIOPtr;
-
   virtual ImageBase* copyObject() = 0;
   virtual ~ImageBase() {}
   
@@ -91,8 +96,15 @@ public:
     read(ImageIOPtr(ptr));
   }
   void write(const char *filename) {
-    std::auto_ptr<ImageIO> ptr = ImageIO::create(filename, fileType(), sizeX(), sizeY(), noChannels());
-    write(ImageIOPtr(ptr));
+    if (source_ && source_->filename() == filename)
+      // Is same file: DO NOT create a new ImageIO instance! This would overwrite ALL of the source file!
+      write(source_);
+    else
+    {
+      // Is different file: Overwrite!
+      std::auto_ptr<ImageIO> ptr = ImageIO::create(filename, fileType(), sizeX(), sizeY(), noChannels());
+      write(ImageIOPtr(ptr));
+    }
   }
   
   // Drawing primitives

@@ -229,9 +229,6 @@ namespace Ga
     // mutable because ConstIterator needs a non-const BlockHandle to lock/unlock it.
     mutable std::vector<Channel> channels;
     
-    // Used to hold the source for image data open
-    ImageIOPtr source;
-    
     int segmentsX() const;
     int segmentsY() const;
 

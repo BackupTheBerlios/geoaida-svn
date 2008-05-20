@@ -25,6 +25,7 @@
 
 namespace Ga
 {
+  // FORMAT: Supported file types
   enum FileType
   {
     _PFM_FLOAT,
@@ -43,15 +44,17 @@ namespace Ga
   class ImageIO
   { 
   private:
-    ImageIO(const ImageIO& other);
-    ImageIO& operator=(const ImageIO& other);
+    ImageIO(const ImageIO& other);            //< Copying forbidden
+    ImageIO& operator=(const ImageIO& other); //< Assignment forbidden
     
   protected:
     ImageIO() {}
 
   public:
+    /// Create an empty image file of the given dimensions.
     static std::auto_ptr<ImageIO> create(const std::string& filename,
       FileType fileType, int sizeX, int sizeY, int channels);
+    /// Reopen a given file for reading and potentially replacing stuff.
     static std::auto_ptr<ImageIO> reopen(const std::string& filename);
     
     virtual std::string filename() const = 0;
@@ -76,9 +79,14 @@ namespace Ga
     
     virtual std::string comment() const = 0;
     virtual void setComment(const std::string& comment) = 0;
+    
+    /// Stored min value of the file, if supported by the format.
     virtual double fileMin() const = 0;
+    /// Stored max value of the file, if supported by the format.
     virtual double fileMax() const = 0;
+    /// Store min value of the file, if supported by the format.
     virtual void setFileMin(double fileMin) = 0;
+    /// Store max value of the file, if supported by the format.
     virtual void setFileMax(double fileMax) = 0;
     
     // These methods must be virtual; since virtual templates aren't allowed, a
@@ -90,6 +98,7 @@ namespace Ga
     virtual void replaceRect(int channel, int x, int y, int width, int height, \
       const Type* buffer) = 0;
     
+    // FORMAT: Supported pixel types
     DECLARE_IO_METHODS(bool)
     DECLARE_IO_METHODS(char)
     DECLARE_IO_METHODS(signed char)

@@ -18,8 +18,8 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef _GA_CACHE_H
-#define _GA_CACHE_H
+#ifndef __GA_CACHE_H
+#define __GA_CACHE_H
 
 #include <cassert>
 #include <cstddef>

@@ -130,6 +130,7 @@ public:
   Iterator end();
 };
 
+// FORMAT: Macros that do generic stuff for each possible type
 #define ForTypeDo(PixTyp,function,args) \
   if (gaMatrixType==typeid(PixTyp)) {   \
     function<PixTyp>args;       \

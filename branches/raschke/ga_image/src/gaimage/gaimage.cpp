@@ -31,6 +31,8 @@ namespace Ga
 
 Image::Image(const std::type_info& t, int sizeX, int sizeY, int noChannels, int segSizeX, int segSizeY)
 {
+  // FORMAT: Mapping from type_info to possible pixel types
+  
   #define TRY_TYPE(type) \
     if (t == typeid(type)) pImage_ = new ImageT<type>(sizeX, sizeY, noChannels, segSizeX, segSizeY);
 
@@ -67,7 +69,7 @@ Image::Image(const std::string& filename)
   
   try
   {
-    pImage()->read(ImageBase::ImageIOPtr(io));
+    pImage()->read(ImageIOPtr(io));
   }
   catch (...)
   {

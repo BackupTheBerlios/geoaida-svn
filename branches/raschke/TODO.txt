@@ -2,7 +2,9 @@ GeoAIDA Pitfalls
 
 * If you mess with image formats, e.g. introduce a new one, grep for FORMAT to get a list of relevant places. If you write code that is affected by the introduction of new file formats, please add a FORMAT comment.
 
-* While the cache system/split file are up and running, neither have been really tested with HUGE files (>4GB). The Windows port is known NOT to work with such files at the moment (TODO!). The Unix part of gacachefile.cpp should work just fine on a system where lseek accepts 64bit values (e.g. 64-bit Darwin). If anything goes wrong with large files, there could be oversights here, i.e. temporary calculations still being done with ints, i.e. someFunction(sizeX*sizeY) where the variables are still ints. Correct: LargeSize(sizeX) * LargeSize(sizeY).
+* The cache and splitting system haven't really been properly tested with HUGE files (>4GB). The Unix part of gacachefile.cpp should work just fine on a system where off_t (used by lseek) is 64 bits wide, such as Darwin (apparently even in 32bit versions), but the Windows port is known NOT to work with such files (TODO).
+
+* If anything goes wrong with large files, there could be oversights here, i.e. temporary calculations still being done with ints, i.e. someFunction(sizeX*sizeY) where the variables are still ints. Correct: LargeSize(sizeX) * LargeSize(sizeY).
 
 * x, y, sizeX, sizeY are always stored as int values (only pixel indices are stored as long long/LargeSize). This means that while an Image *could* have an area of up to 2^64 pixels, its width and height are limited to 2^31-1 at the moment. I doubt that this will become a problem anytime soon, but it should be noted, and could be changed if someone has too much time on his hands :)
 
@@ -14,17 +16,14 @@ GeoAIDA Critical To Do
 
 * Integrate branches/raschke with the parts outside of ga_image, i.e. gad and gda. Some parts of them have already been superficially updated for the new Image interface, but most haven't.
 
-* A lot of work has gone into moving algorithms OUT of Ga::Image, which had grown unmanageably large. Anything that doesn't *HAVE* to be a member of Ga::Image should really be a function declaration in gaalgo.h, and an implementation in gaALGONAME.cpp, i.e. canny() in gacanny.cpp. Some algorithms have been left in gaalgo.h which have been removed from Ga::Image, but not yet moved into global functions due to lack of knowledge how they work. It would be very wise to handle the first point of the list below before this one.
+* Except Canny and Gaussian Blur, no algorithm has been tested a lot. They should be fixed if necessary, and a reference image/unit test should be created by someone who understands what the algorithms are supposed to do. This is the only way to guarantee that they will remain working over time!
+  * Some algorithms that were part of Image but should be moved out are included in gaalgo.h. They should be moved to a separate .cpp file and only their declaration left in gaalgo.h.
 
-* Except Canny and Gaussian Blur, no algorithm has been tested a lot. They should be fixed and a reference image/unit test should be created by someone who understands their intentions. This is the only way to guarantee that they will remain working over time.
-
-* Windows port: Most of the algorithms used variable-length arrays on the stack, a GCC extension not supported by Visual C++, so the Windows port doesn't work at all.
+* Windows port: Most of the algorithms use variable-length arrays on the stack, a GCC extension not supported by Visual C++, so the Windows port doesn't work at all. They all should be replaced by vectors.
 
 
 
 GeoAIDA Non-Critical Improvements
-
-* There is a lot of ugly, repetive boilerplate code inside algorithms which use ImageT, not the Image facade. If someone wants to flex his wizardly C++ muscles, this should be shortened to the absolute minimum and then reapplied to all algorithms to short them down A LOT. The Canny algorithm for example would massively benefit from working on ImageT in all stages.
 
 * All tabs should be transformed into two spaces, some files still contain them.
 

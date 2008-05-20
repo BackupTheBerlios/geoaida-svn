@@ -56,6 +56,7 @@ namespace Ga
     void replaceRect(int channel, int x, int y, int width, int height, \
       const Type* buffer) { impl->replaceRect(channel, x, y, width, height, buffer); }
     
+    // FORMAT: Supported pixel types
     IMPLEMENT_IO_METHODS(bool)
     IMPLEMENT_IO_METHODS(char)
     IMPLEMENT_IO_METHODS(signed char)

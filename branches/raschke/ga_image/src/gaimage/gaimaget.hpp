@@ -82,13 +82,13 @@ It ImageT<PixTyp>::iteratorForElem(unsigned channel, LargeSize elem) const
       // Protection against integer overflows.
       *handle = Cache::get().alloc(segmentSizeX(segX) * segmentSizeY(segY) * sizeof(PixTyp));
       
-      if (source)
+      if (source_)
       {
         // File source open: We need to load the file data now.
         
         handle->lockRW();
         BlockLock lock(*handle);
-        source->readRect(channel, segX * segmentSizeX(), segY * segmentSizeY(),
+        source_->readRect(channel, segX * segmentSizeX(), segY * segmentSizeY(),
           segmentSizeX(segX), segmentSizeY(segY), static_cast<PixTyp*>(handle->getData()));
       }
     }
@@ -134,6 +134,7 @@ ImageT<PixTyp>::ImageT(int sizeX, int sizeY, int noChannels, int segSizeX, int s
   fileMin_ = 0;
   fileMax_ = 255;
   
+  // FORMAT: File type guessing!
   setFileType(_UNKNOWN);
   if (noChannels == 3 && typeid(PixTyp) == typeid(unsigned char))
     setFileType(_PPM);
@@ -295,7 +296,7 @@ void ImageT<PixTyp>::getChannel(ImageBase& resultImg, int channel)
 
 template <class PixTyp>
 void ImageT<PixTyp>::read(ImageIOPtr io) {
-  source = io;
+  source_ = io;
   setComment(io->comment());
   setFileMin(io->fileMin());
   setFileMax(io->fileMax());
@@ -307,7 +308,7 @@ void ImageT<PixTyp>::write(ImageIOPtr io) {
   io->setFileMin(fileMin());
   io->setFileMax(fileMax());
   
-  if (source && io->filename() == source->filename())
+  if (io == source_)
   {
     // Same file: Only write changed segments
     for (int c = 0; c < noChannels(); ++c)
@@ -325,6 +326,9 @@ void ImageT<PixTyp>::write(ImageIOPtr io) {
             handle.markClean();
           }
         }
+        
+    // Do not continue, would screw things up :)
+    return;
   }
   
   // Load all segments (implicitly)
