@@ -28,7 +28,6 @@
 
 #include <assert.h>
 #include "gaimagebase.h"
-#include "gacache.h"
 #include <algorithm>
 #include <vector>
 #include <tr1/functional>
@@ -243,7 +242,7 @@ namespace Ga
     LargeSize segmentSizeX(int row = -1) const;
     LargeSize segmentSizeY(int col = -1) const;
 
-    template<typename It> It iteratorForElem(unsigned channel, unsigned elem) const;
+    template<typename It> It iteratorForElem(unsigned channel, LargeSize elem) const;
     
   public:
     typedef Ga::Iterator<PixTyp, true> Iterator;

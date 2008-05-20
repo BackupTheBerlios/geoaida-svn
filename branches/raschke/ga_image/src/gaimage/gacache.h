@@ -21,6 +21,7 @@
 #ifndef _GA_CACHE_H
 #define _GA_CACHE_H
 
+#include <cassert>
 #include <cstddef>
 #include <cstdlib>
 #include <cstring>

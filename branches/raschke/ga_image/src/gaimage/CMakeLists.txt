@@ -2,10 +2,8 @@ include_directories(.
         ${CMAKE_SOURCE_DIR}/pfm/libpfm)
 
 set(headers gaalgo.h
-           gaarray2dt.h
-           gacanny.h
+           gacache.h
            gaconvert.h
-           gadefines.h
            gadowindowt.h
            gadraw.h
            gadrawt.h

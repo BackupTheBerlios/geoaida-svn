@@ -115,7 +115,7 @@ int Image::sizeY() const {
   return pImage_->sizeY();
 }
 
-int Image::noPixels() const {
+LargeSize Image::noPixels() const {
   return pImage_->noPixels();
 }
 	

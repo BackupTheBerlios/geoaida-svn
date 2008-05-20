@@ -21,6 +21,7 @@
 #define __GAIMAGEBASE_H
 
 #include "gaimageio.h"
+#include "gacache.h"
 
 #include <typeinfo>
 #include <cassert>
@@ -70,7 +71,7 @@ public:
   virtual void setFileMin(double min) = 0;
   virtual void setFileMax(double max) = 0;
   
-  virtual LargeSize noChannels() const=0;
+  virtual int noChannels() const=0;
   virtual void getChannel(ImageBase& pic, int channel=0) = 0;
   
   // TODO: Remove; unclear that it creates a new image (but it does!)
