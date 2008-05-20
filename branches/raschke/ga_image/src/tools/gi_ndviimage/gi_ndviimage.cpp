@@ -58,5 +58,5 @@ int main(int argc, char **argv)
 
    Image im(infile);   
    Image result=toNDVI(im);
-   result.write(out,0);
+   result.write(out);
 }

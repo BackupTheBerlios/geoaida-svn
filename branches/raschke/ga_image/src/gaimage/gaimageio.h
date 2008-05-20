@@ -45,7 +45,7 @@ namespace Ga
   private:
     ImageIO(const ImageIO& other);
     ImageIO& operator=(const ImageIO& other);
-
+    
   protected:
     ImageIO() {}
 
@@ -53,6 +53,8 @@ namespace Ga
     static std::auto_ptr<ImageIO> create(const std::string& filename,
       FileType fileType, int sizeX, int sizeY, int channels);
     static std::auto_ptr<ImageIO> reopen(const std::string& filename);
+    
+    virtual std::string filename() const = 0;
     
     virtual ~ImageIO();
     

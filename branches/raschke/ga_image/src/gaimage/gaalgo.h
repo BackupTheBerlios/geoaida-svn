@@ -57,6 +57,9 @@ namespace Ga
   
 #if 0
 
+TODO: Move these algorithms into separate .cpp files as well, only put the function
+signature here.
+
 template <class PixTyp>
 void ImageT<PixTyp>::merge(ImageBase& image, double img_label, double new_label) {
 	ImageT<PixTyp>& img=(ImageT<PixTyp>&)image;

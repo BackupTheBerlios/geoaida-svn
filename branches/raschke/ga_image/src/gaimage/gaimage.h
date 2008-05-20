@@ -34,23 +34,25 @@ template<typename Img>
 struct SimpleIterator
 {
   Img* img;
-  unsigned ch, elem;
+  unsigned ch;
+  LargeSize elem;
   
   class Proxy {
     Img& img;
-    unsigned ch, elem;
+    unsigned ch;
+    LargeSize elem;
     
   public:
-    Proxy(Img& img, unsigned ch, unsigned elem) : img(img), ch(ch), elem(elem) {}
+    Proxy(Img& img, unsigned ch, LargeSize elem) : img(img), ch(ch), elem(elem) {}
     operator double() const { return img.getPixel(elem % img.sizeX(), elem / img.sizeX(), ch); }
     Proxy& operator=(double val) { img.setPixel(elem % img.sizeX(), elem / img.sizeX(), val, ch); return *this; }
   };
   
-  explicit SimpleIterator(Img& img, unsigned ch, unsigned elem) : img(&img), ch(ch), elem(elem) {}
+  explicit SimpleIterator(Img& img, unsigned ch, LargeSize elem) : img(&img), ch(ch), elem(elem) {}
   SimpleIterator& operator++() { ++elem; return *this; }
   SimpleIterator operator++(int) { SimpleIterator old = *this; ++*this; return old; }
   Proxy operator*() const { return Proxy(*img, ch, elem); }
-  std::ptrdiff_t operator-(const SimpleIterator& other) const { return elem - other.elem; }
+  LargeDiff operator-(const SimpleIterator& other) const { return elem - other.elem; }
   
   bool operator==(const SimpleIterator& rhs) const {
     return img == rhs.img && ch == rhs.ch && elem == rhs.elem;
@@ -62,7 +64,7 @@ struct SimpleIterator
   
   typedef std::input_iterator_tag iterator_category;
   typedef double value_type;
-  typedef std::ptrdiff_t difference_type;
+  typedef LargeDiff difference_type;
   typedef Proxy* pointer;
   typedef Proxy reference;
 };
@@ -76,7 +78,7 @@ public:
   typedef SimpleIterator<const Image> ConstIterator;
   
   // Create wih ImageT representation of the given type, and given metrics.
-  explicit Image(const class std::type_info& t, int x = 0, int y = 0,
+  explicit Image(const class std::type_info& t, int sizeX = 0, int sizeY = 0,
     int noChannels=1, int segSizeX=0, int segSizeY=0);
   // Load from file.
   explicit Image(const std::string& filename);
@@ -93,19 +95,19 @@ public:
   const class std::type_info& typeId() const;
   int sizeX() const;
   int sizeY() const;
-  int noPixels() const; 
+  LargeSize noPixels() const; 
   int noChannels() const;
-  Image getChannel(int channel=0);
-
+  Image getChannel(int channel);
+  
   // Comments (most notable used to implement associated geoposition data)
   std::string comment() const;
   void setComment(const std::string& comment);
-
+  
   // I/O
   FileType fileType() const;
   void setFileType(FileType t);
   bool read(const char* filename);
-  void write(const char* filename, int channel=0);
+  void write(const char* filename);
 	
   // Drawing primitives
   double getPixel(int x, int y, int channel = 0) const;
@@ -119,7 +121,7 @@ public:
   
   // Iterators
   // TODO: replace by channelBegin/rowBegin (+const*, +*End)
-  // The current iterators make it easy to iterate over channel boundaries!
+  // The current iterators make it tempting to iterate over channel boundaries!
   ConstIterator constBegin(int row=0, int channel=0) const;
   ConstIterator constEnd(int row, int channel=0) const;
   ConstIterator constEnd() const;

@@ -41,5 +41,5 @@ int main(int argc, char **argv)
   input.read(inputfile);
 
   Image output = gaussianBlur(input, sigma);
-  output.write(outputfile, 0);
+  output.write(outputfile);
 }

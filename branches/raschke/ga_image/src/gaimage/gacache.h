@@ -36,9 +36,15 @@
 namespace Ga
 {
 	/// Size type for single allocations.
+	/// Also used by images for pixel dimensions. (Equivalent!)
 	typedef std::size_t Size;
 	/// Size type for sums of allocations.
+	/// Also used by images for pixel counts. (Equivalent!)
 	typedef unsigned long long LargeSize;
+	/// Different type for pixel counts.
+  typedef signed long long LargeDiff;
+
+  // Size type for sums of allocations
 	
 	/// Cache metrics.
 	const LargeSize HEAP_USAGE = 512 * 1024*1024;
@@ -58,7 +64,7 @@ namespace Ga
 		explicit CacheFile(Size blockSize);
 		
 		CacheFile(const CacheFile&);            //< Copying forbidden.
-		CacheFile& operator=(const CacheFile&); //< Copying forbidden.
+		CacheFile& operator=(const CacheFile&); //< Assignment forbidden.
 		
 	public:
 	  /// Almost a singleton: Get the CacheFile instance for a given block size.
@@ -89,12 +95,12 @@ namespace Ga
 		
 		// Invariant: Either memory points to allocated memory, or if it is null,
 		// fileIndex is a valid (not yet recovered) index into the cache file.
+		
 		char* memory;
 		unsigned fileIndex;
 		
-		// Copying explicitly forbidden; handles would dangle.
-		Block(const Block& other);
-		Block& operator=(const Block& other);
+		Block(const Block& other);            //< Copying explicitly forbidden; handles would dangle.
+		Block& operator=(const Block& other); //< Assignment explicitly forbidden; handles would dangle.
 		
 	public:
 		explicit Block(Size size)
@@ -249,6 +255,18 @@ namespace Ga
       lockCount += 1;
 			data = ptr->lock();
 		}
+		
+		/// Returns whether the target block has been changed.
+		bool isDirty() const
+	  {
+      return ptr->isDirty();
+	  }
+	  
+	  /// Removes the dirty mark from the target block.
+	  void markClean()
+	  {
+      return ptr->markClean();
+	  }
 				
 		/// Unlocks the target block.
 		void unlock()
@@ -267,6 +285,18 @@ namespace Ga
       return data;
 		}
 	};
+	
+	/// Little RAII helper that unlocks a block upon leaving its scope.
+	class BlockLock
+	{
+    BlockHandle& handle;
+    BlockLock(const BlockLock& other); //< prevent copying
+    BlockLock& operator=(const BlockLock& other); //< prevent assignment (shouldn't be possible with a reference member anyway)
+    
+  public:
+    BlockLock(BlockHandle& handle) : handle(handle) {}
+    ~BlockLock() { handle.unlock(); }
+  };
 	
 	/// Singleton cache that knows about all allocations and their sizes, and thus
 	/// can tell blocks to move to disk storage as a reaction to new allocations.

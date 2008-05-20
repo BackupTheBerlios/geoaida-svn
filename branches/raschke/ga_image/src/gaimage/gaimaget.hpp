@@ -1,4 +1,4 @@
-/***************************************************************************
+ /***************************************************************************
                           gaimaget.hpp  -  GeoAIDA template impl.
                              -------------------
     begin                : Thu Jan 11 2001
@@ -45,26 +45,58 @@ int ImageT<PixTyp>::segmentsY() const
 }
 
 template <class PixTyp>
+LargeSize ImageT<PixTyp>::segmentSizeX(int row) const
+{
+  if (row == segmentsY() - 1)
+    return segSizeX_ - (sizeX() % segSizeX_);
+  else
+    return segSizeX_;
+}
+
+template <class PixTyp>
+LargeSize ImageT<PixTyp>::segmentSizeY(int col) const
+{
+  if (col == segmentsX() - 1)
+    return segSizeY_ - (sizeY() % segSizeY_);
+  else
+    return segSizeY_;
+}
+
+template <class PixTyp>
 template <typename It>
-It ImageT<PixTyp>::iteratorForElem(unsigned channel, unsigned elem) const
+It ImageT<PixTyp>::iteratorForElem(unsigned channel, LargeSize elem) const
 {
   BlockHandle* handle;
-  unsigned offset;
-  unsigned rangeBegin, rangeEnd;
+  LargeSize offset;
+  LargeSize rangeBegin, rangeEnd;
   
   if (elem < noPixels())
   {
-    // TODO: LargeSize again?
     unsigned col = elem % sizeX(), row = elem / sizeX();
     unsigned segX = col / segSizeX_, segY = row / segSizeY_;
 
     handle = &channels.at(channel).segments.at(segY * segmentsX() + segX);
+    
+    if (handle->isEmpty())
+    {
+      // Protection against integer overflows.
+      *handle = Cache::get().alloc(segmentSizeX(segX) * segmentSizeY(segY) * sizeof(PixTyp));
+      
+      if (source)
+      {
+        // File source open: We need to load the file data now.
+        
+        handle->lockRW();
+        BlockLock lock(*handle);
+        source->readRect(channel, segX * segmentSizeX(), segY * segmentSizeY(),
+          segmentSizeX(segX), segmentSizeY(segY), static_cast<PixTyp*>(handle->getData()));
+      }
+    }
+    
     offset = (row % segSizeY_) * segSizeX_;
     
     rangeBegin = row * sizeX() + segX * segSizeX_;
-    rangeEnd = rangeBegin + segSizeX_;
-    if (segX == segmentsX() - 1 && sizeX() % segSizeX_ != 0)
-      rangeEnd -= (segSizeX_ - (sizeX() % segSizeX_));
+    rangeEnd = rangeBegin + segmentSizeX(segX);
   }
   else
   {
@@ -93,14 +125,9 @@ ImageT<PixTyp>::ImageT(int sizeX, int sizeY, int noChannels, int segSizeX, int s
   segSizeY_ = segSizeY ? segSizeY : sizeY;
   channels.resize(noChannels);
   
-  // Protection against integer overflows.
-  LargeSize size = segSizeX_;
-  size *= segSizeY_;
-  size *= sizeof(PixTyp);
-  // Actual allocation.
+  // Reservation for later segments.
   for (int i = 0; i < noChannels; ++i)
-    for (int j = 0; j < segmentsX() * segmentsY(); ++j)
-      channels[i].segments.push_back(Cache::get().alloc(size));
+    channels[i].segments.resize(segmentsX() * segmentsY());
   
   // Try to guess the filetype.
   
@@ -123,9 +150,13 @@ ImageT<PixTyp>::ImageT(int sizeX, int sizeY, int noChannels, int segSizeX, int s
   else if (typeid(PixTyp) == typeid(unsigned short))
     setFileType(_PFM_UINT16);
   else if (typeid(PixTyp) == typeid(float))
+    // Min, max for float?
     setFileType(_PGM);
   else if (typeid(PixTyp) == typeid(bool))
+  {
+    fileMax_ = 1;
     setFileType(_PBM);
+  }
 }
 
 template <class PixTyp>
@@ -187,12 +218,12 @@ template <class PixTyp>
 typename ImageT<PixTyp>::Iterator ImageT<PixTyp>::end(int row, int channel) {
   return iteratorForElem<Iterator>(channel, (row + 1) * sizeX());
 }
-	
+  
 template <class PixTyp>
 typename ImageT<PixTyp>::Iterator ImageT<PixTyp>::end() {
   return iteratorForElem<Iterator>(noChannels() - 1, noPixels());
 }
-	
+  
 template <class PixTyp>
 typename ImageT<PixTyp>::Iterator ImageT<PixTyp>::endChannel(int channel) {
   return iteratorForElem<Iterator>(channel, noPixels());
@@ -207,7 +238,7 @@ template <class PixTyp>
 typename ImageT<PixTyp>::ConstIterator ImageT<PixTyp>::constEnd() const {
   return iteratorForElem<ConstIterator>(noChannels() - 1, noPixels());
 }
-	
+  
 template <class PixTyp>
 typename ImageT<PixTyp>::ConstIterator ImageT<PixTyp>::constEndChannel(int channel) const {
   return iteratorForElem<ConstIterator>(channel, noPixels());
@@ -220,8 +251,8 @@ PixTyp& ImageT<PixTyp>::operator() (int x, int y, int channel) {
 
 template <class PixTyp>
 void ImageT<PixTyp>::setPixel(int x, int y, PixTyp val, int channel, bool clip) {
-	assert(channel>=0);
-	assert(channel<noChannels());
+  assert(channel>=0);
+  assert(channel<noChannels());
   if (!clip || x >= 0 && x < sizeX() && y >= 0 && y < sizeY())
     begin(y,channel)[x] = val;
 }
@@ -262,37 +293,60 @@ void ImageT<PixTyp>::getChannel(ImageBase& resultImg, int channel)
   pic.swap(channelCopy);
 }
 
-template<typename PixTyp>
-struct AvoidVectorBool { typedef PixTyp Type; };
-template<>
-struct AvoidVectorBool<bool> { typedef unsigned char Type; };
-
 template <class PixTyp>
-void ImageT<PixTyp>::read(ImageIO& io) {
-  for (int c = 0; c < noChannels(); ++c)
-  {
-    std::vector<typename AvoidVectorBool<PixTyp>::Type>
-        buffer(io.sizeX() * io.sizeY());
-    io.readRect(c, 0, 0, io.sizeX(), io.sizeY(), &buffer[0]);
-    std::copy(buffer.begin(), buffer.end(), begin(0, c));
-  }
-  setComment(io.comment());
-  setFileMin(io.fileMin());
-  setFileMax(io.fileMax());
+void ImageT<PixTyp>::read(ImageIOPtr io) {
+  source = io;
+  setComment(io->comment());
+  setFileMin(io->fileMin());
+  setFileMax(io->fileMax());
 }
 
 template <class PixTyp>
-void ImageT<PixTyp>::write(ImageIO& io, int channel) {
-  io.setComment(comment());
-  io.setFileMin(fileMin());
-  io.setFileMax(fileMax());
-  for (int c = 0; c < noChannels(); ++c)
+void ImageT<PixTyp>::write(ImageIOPtr io) {
+  io->setComment(comment());
+  io->setFileMin(fileMin());
+  io->setFileMax(fileMax());
+  
+  if (source && io->filename() == source->filename())
   {
-    std::vector<typename AvoidVectorBool<PixTyp>::Type>
-        buffer(sizeX() * sizeY());
-    std::copy(begin(0, c), begin(0, c) + sizeX() * sizeY(), buffer.begin());
-    io.replaceRect(c, 0, 0, sizeX(), sizeY(), &buffer[0]);
+    // Same file: Only write changed segments
+    for (int c = 0; c < noChannels(); ++c)
+      for (int segY = 0; segY < segmentsY(); ++segY)
+        for (int segX = 0; segX < segmentsX(); ++segX)
+        {
+          BlockHandle& handle = channels[c].segments[segY * segmentsX() + segX];
+          if (!handle.isEmpty() && handle.isDirty())
+          {
+            handle.lockR();
+            BlockLock lock(handle);
+            io->replaceRect(c, segX * segmentSizeX(), segY * segmentSizeY(),
+              segmentSizeX(segX), segmentSizeY(segY),
+              static_cast<PixTyp*>(handle.getData()));
+            handle.markClean();
+          }
+        }
   }
+  
+  // Load all segments (implicitly)
+  for (int c = 0; c < noChannels(); ++c)
+    for (int segY = 0; segY < segmentsY(); ++segY)
+      for (int segX = 0; segX < segmentsX(); ++segX)
+        getPixel(segX * segmentSizeX(), segY * segmentSizeY(), c);
+
+  // Now write all segments back to disk
+  for (int c = 0; c < noChannels(); ++c)
+    for (int segY = 0; segY < segmentsY(); ++segY)
+      for (int segX = 0; segX < segmentsX(); ++segX)
+      {
+        BlockHandle& handle = channels[c].segments[segY * segmentsX() + segX];
+        assert(!handle.isEmpty());
+        handle.lockR();
+        BlockLock lock(handle);
+        io->replaceRect(c, segX * segmentSizeX(), segY * segmentSizeY(),
+          segmentSizeX(segX), segmentSizeY(segY),
+          static_cast<PixTyp*>(handle.getData()));
+        handle.markClean();
+      }
 }
 
 } // namespace Ga

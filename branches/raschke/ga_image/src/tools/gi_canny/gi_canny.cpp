@@ -32,5 +32,5 @@ int main(int argc, char **argv)
     double highTh = atof(argv[4]);
     
     Image input(inputfile);
-    canny(input, lowTh, highTh).write(outputfile, 0);
+    canny(input, lowTh, highTh).write(outputfile);
 }

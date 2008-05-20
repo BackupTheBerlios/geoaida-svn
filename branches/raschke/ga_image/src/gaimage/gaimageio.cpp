@@ -31,7 +31,10 @@ namespace Ga
   template<typename Impl>
   class ImageIOAdapter : public ImageIO
   {
+    std::string filename_;
     std::auto_ptr<Impl> impl;
+    
+    std::string filename() const { return filename_; }
     
     FileType fileType() const { return impl->fileType(); }
     int sizeX() const { return impl->sizeX(); }
@@ -66,7 +69,7 @@ namespace Ga
     #undef IMPLEMENT_IO_METHODS
     
   public:
-    ImageIOAdapter(std::auto_ptr<Impl>& impl) : impl(impl) {}
+    ImageIOAdapter(const std::string& filename, std::auto_ptr<Impl>& impl) : filename_(filename), impl(impl) {}
   };
 }
 
@@ -90,13 +93,13 @@ std::auto_ptr<Ga::ImageIO> Ga::ImageIO::create(const std::string& filename,
   case _PPM:
   {
     std::auto_ptr<LibPFMImpl> impl(new LibPFMImpl(fp, fileType, sizeX, sizeY));
-    return std::auto_ptr<ImageIO>(new ImageIOAdapter<LibPFMImpl>(impl));
+    return std::auto_ptr<ImageIO>(new ImageIOAdapter<LibPFMImpl>(filename, impl));
   }
   
 	case _PBM:
 	{
     std::auto_ptr<LibNetPBMImpl> impl(new LibNetPBMImpl(fp, _PBM, sizeX, sizeY));
-    return std::auto_ptr<ImageIO>(new ImageIOAdapter<LibNetPBMImpl>(impl));
+    return std::auto_ptr<ImageIO>(new ImageIOAdapter<LibNetPBMImpl>(filename, impl));
 	}
   
   default:
@@ -113,7 +116,7 @@ std::auto_ptr<Ga::ImageIO> Ga::ImageIO::reopen(const std::string& filename)
   if (filename.find("split:") == 0)
   {
     std::auto_ptr<SplitImpl> impl(new SplitImpl(filename.substr(6, std::string::npos)));
-    return std::auto_ptr<ImageIO>(new ImageIOAdapter<SplitImpl>(impl));
+    return std::auto_ptr<ImageIO>(new ImageIOAdapter<SplitImpl>(filename, impl));
   }
 
   FILE* fp = fopen(filename.c_str(), "rb+");
@@ -127,7 +130,7 @@ std::auto_ptr<Ga::ImageIO> Ga::ImageIO::reopen(const std::string& filename)
   if (pfm_readpfm_header(fp, &sizeX, &sizeY, &min, &max, &pfmStorageType))
   {
     std::auto_ptr<LibPFMImpl> impl(new LibPFMImpl(fp, static_cast<FileType>(pfmStorageType), sizeX, sizeY));
-    return std::auto_ptr<ImageIO>(new ImageIOAdapter<LibPFMImpl>(impl));
+    return std::auto_ptr<ImageIO>(new ImageIOAdapter<LibPFMImpl>(filename, impl));
   }
   fseek(fp, 0, SEEK_SET);
   
@@ -139,7 +142,7 @@ std::auto_ptr<Ga::ImageIO> Ga::ImageIO::reopen(const std::string& filename)
   if (pnmType == PBM_FORMAT || pnmType == RPBM_FORMAT)
   {
     std::auto_ptr<LibNetPBMImpl> impl(new LibNetPBMImpl(fp, _PBM, sizeX, sizeY));
-    return std::auto_ptr<ImageIO>(new ImageIOAdapter<LibNetPBMImpl>(impl));
+    return std::auto_ptr<ImageIO>(new ImageIOAdapter<LibNetPBMImpl>(filename, impl));
   }
   
   throw std::runtime_error("Unknown image type in " + filename);

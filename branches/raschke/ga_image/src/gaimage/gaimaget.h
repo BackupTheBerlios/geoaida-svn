@@ -39,22 +39,22 @@ namespace Ga
   class Iterator
   {
   public:
-    typedef std::tr1::function<Iterator<Pix, Mutable>(unsigned elem)> Relocator;
+    typedef std::tr1::function<Iterator<Pix, Mutable>(unsigned LargeSize)> Relocator;
     
   private:
     BlockHandle* handle;
-    // TODO: Use LargeSize or sth.
-    unsigned elem;
-    // Offset into handle so that elem=0 ^= rangeBegin.
-    unsigned offset;
+
+    LargeSize elem;
+    // Offset into handle so that elem=0 <=> iterator at rangeBegin'th element on image.
+    LargeSize offset;
     
     // Used for relocation to a different segment.
-    unsigned rangeBegin, rangeEnd;
+    LargeSize rangeBegin, rangeEnd;
     Relocator relocator;
     
   public:
-    Iterator(BlockHandle* handle, unsigned elem, unsigned offset,
-      unsigned rangeBegin, unsigned rangeEnd, const Relocator& relocator)
+    Iterator(BlockHandle* handle, LargeSize elem, LargeSize offset,
+      LargeSize rangeBegin, LargeSize rangeEnd, const Relocator& relocator)
     : handle(handle), elem(elem), offset(offset),
         rangeBegin(rangeBegin), rangeEnd(rangeEnd), relocator(relocator)
     {
@@ -114,10 +114,8 @@ namespace Ga
     {
       if (elem < rangeBegin || elem >= rangeEnd)
       {
-        //fprintf(stderr, "Relocating for elem %u (out of range %u .. %u)...\n", elem, rangeBegin, rangeEnd);
         fflush(0);
         *this = relocator(elem);
-        //fprintf(stderr, "New range; %u .. %u\n", rangeBegin, rangeEnd);
         assert(elem >= rangeBegin);
         assert(elem < rangeEnd);
       }
@@ -126,18 +124,18 @@ namespace Ga
       return data[elem - rangeBegin + offset];
     }
     
-    Pix& operator[](std::size_t index) const
+    Pix& operator[](LargeSize index) const
     {
       return *(*this + index);
     }
     
-    Iterator& operator+=(std::ptrdiff_t offset)
+    Iterator& operator+=(LargeDiff offset)
     {
       elem += offset;
       return *this;
     }
     
-    Iterator operator+(std::ptrdiff_t offset) const
+    Iterator operator+(LargeDiff offset) const
     {
       Iterator result(*this);
       result.elem += offset;
@@ -157,13 +155,13 @@ namespace Ga
       return temp;
     }
   
-    Iterator& operator-=(std::ptrdiff_t offset)
+    Iterator& operator-=(LargeDiff offset)
     {
       elem -= offset;
       return *this;
     }
     
-    Iterator operator-(std::ptrdiff_t offset) const
+    Iterator operator-(LargeDiff offset) const
     {
       Iterator result(*this);
       result.elem -= offset;
@@ -233,8 +231,18 @@ namespace Ga
     // mutable because ConstIterator needs a non-const BlockHandle to lock/unlock it.
     mutable std::vector<Channel> channels;
     
+    // Used to hold the source for image data open
+    ImageIOPtr source;
+    
     int segmentsX() const;
     int segmentsY() const;
+
+    // Size of segment row/column 'seg'; -1 meaning that the usual size (the one from ImageIO or
+    // the constructor) is used.
+    // These functions can return less than the usual size for the last row or column!
+    LargeSize segmentSizeX(int row = -1) const;
+    LargeSize segmentSizeY(int col = -1) const;
+
     template<typename It> It iteratorForElem(unsigned channel, unsigned elem) const;
     
   public:
@@ -253,8 +261,9 @@ namespace Ga
     void setFileMax(double fileMax) { fileMax_ = fileMax; }
     
     // I/O.
-    void read(ImageIO& io);
-    void write(ImageIO& io, int channel=0);
+    void read(ImageIOPtr io);
+    void write(ImageIOPtr io);
+    // Using declarations to avoid that our overrides hide the inherited overloads.
     using ImageBase::read;
     using ImageBase::write;
 

@@ -127,7 +127,6 @@ int main(int argc, char **argv)
       break;
   }
   if (keepMinMax && im.noChannels()==1) {
-    // TODO: Check what's going on with the max values.
     im.storeMinValue();
     im.storeMaxValue();
     float newMin=im.minValue();

@@ -29,10 +29,10 @@
 namespace Ga
 {
 
-Image::Image(const std::type_info& t, int x, int y, int noChannels, int segSizeX, int segSizeY)
+Image::Image(const std::type_info& t, int sizeX, int sizeY, int noChannels, int segSizeX, int segSizeY)
 {
   #define TRY_TYPE(type) \
-    if (t == typeid(type)) pImage_ = new ImageT<type>(x, y, noChannels, segSizeX, segSizeY);
+    if (t == typeid(type)) pImage_ = new ImageT<type>(sizeX, sizeY, noChannels, segSizeX, segSizeY);
 
   TRY_TYPE(bool) else
   TRY_TYPE(char) else
@@ -51,21 +51,23 @@ Image::Image(const std::type_info& t, int x, int y, int noChannels, int segSizeX
 Image::Image(const std::string& filename)
 : pImage_(0)
 { 
+  // Read image metrics, will throw an exception on failure.
   std::auto_ptr<ImageIO> io = ImageIO::reopen(filename);
+  
+  // I've seen all the gi_ tools check for empty images, so I moved this
+  // check right into the constructor. -- jlnr
+  if (io->sizeX() == 0 || io->sizeY() == 0)
+    throw std::runtime_error("Image " + filename + " is empty");
   
   // Use other constructor to create image representation, then throw the
   // temporary Image away.
-  // This looks strange, but if you think about it, swap() is a great tool. -- jlnr
+  // This looks strange, but if you think about it, swap() is a great tool. No
+  // need to think about cleanup in case of an exception! ;) -- jlnr
   Image(io->pixType(), io->sizeX(), io->sizeY(), io->channels(), io->segmentSizeX(), io->segmentSizeY()).swap(*this);
   
   try
-  {  
-    // Read image, will throw an exception on failure.
-    pImage()->read(*io);
-    // I've seen all the gi_ tools check for empty images, so I added this
-    // check. -- jlnr
-    if (sizeX() == 0 || sizeY() == 0)
-      throw std::runtime_error("Image " + filename + " is empty");
+  {
+    pImage()->read(ImageBase::ImageIOPtr(io));
   }
   catch (...)
   {
@@ -81,7 +83,7 @@ Image::Image(const Image& rhs)
 
 Image& Image::operator=(const Image& rhs)
 {
-  // Temporary Image & swap; same trick as above. -- jlnr
+  // Temporary Image & swap; less error prone than copying everything by hand... -- jlnr
   if (this != &rhs)
     Image(rhs).swap(*this);
   return *this;
@@ -150,8 +152,8 @@ bool Image::read(const char* filename) {
   return true;
 }
 
-void Image::write(const char* filename, int channel) {
-  pImage()->write(filename, channel);
+void Image::write(const char* filename) {
+  pImage()->write(filename);
 }
 
 double Image::getPixel(int x, int y, int channel) const

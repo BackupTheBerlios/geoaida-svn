@@ -21,16 +21,19 @@ using namespace Ga;
 
 int main(int argc, char **argv)
 {
-  if (argc < 3) {
+  if (argc < 2) {
     printf("Usage:\n  %s <function> ..\n", argv[0]);
     return EXIT_FAILURE;
   }
   
   if (!strcmp(argv[1], "--assert-equal")) {
-    if (argc < 4) {
-      printf("Usage:\n  %s --assert-equal <first-file> <second-file>\n", argv[0]);
+    if (argc < 4 || argc > 5) {
+      printf("Usage:\n  %s --assert-equal <first-file> <second-file> [--silent]\n", argv[0]);
       return EXIT_FAILURE;
     }
+    
+    if (argc == 5 && !strcmp("--silent", argv[4]))
+      fclose(stdout);
     
     Image first(argv[2]);
     Image second(argv[3]);
@@ -78,7 +81,7 @@ int main(int argc, char **argv)
     }
   }
   else if (!strcmp(argv[1], "--assert-comment-equal")) {
-    if (argc < 4) {
+    if (argc != 4) {
       printf("Usage:\n  %s --assert-comment-equal <source> <comment>\n", argv[0]);
       return EXIT_FAILURE;
     }
@@ -92,7 +95,7 @@ int main(int argc, char **argv)
     }
   }
   else if (!strcmp(argv[1], "--copy")) {
-    if (argc < 4) {
+    if (argc != 4) {
       printf("Usage:\n  %s --copy <source> <dest>\n", argv[0]);
       return EXIT_FAILURE;
     }

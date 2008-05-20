@@ -35,6 +35,14 @@ class ToolsTest < Test::Unit::TestCase
     assert_equal_images(output, reference)
   end
   
+  def test_sanity_reverse
+    # Important test. Suppose there is a bug that leaves all images empty - since they are
+    # all equal as expected, no other test will fail, so we need to compare two different
+    # images. If they are reported as being the same, something is broken!
+    
+    assert !system("#{gi:testhelper} --assert-equal fixtures/face.pbm fixtures/face.pgm --silent")
+  end
+  
   def test_sanity_pbm
    assert_equal_images("fixtures/face.pbm", "fixtures/face.pbm")
   end
@@ -70,7 +78,7 @@ class ToolsTest < Test::Unit::TestCase
     assert_equal_images("fixtures/face.ppm", "split:fixtures/face.ppm")
   end
   
-  # Comments broken until TODO point fixed
+  # Comments in libpfm are broken and this is documented in the TODO list.
   # def test_comments
   #   assert_exec("#{gi:testhelper} --assert-comment-equal fixtures/face.pgm ''")
   #   assert_exec("#{gi:testhelper} --assert-comment-equal fixtures/comment_xyz.pgm xyz")
@@ -84,7 +92,7 @@ class ToolsTest < Test::Unit::TestCase
     assert_tool_works("#{gi:gaussian} %s 2.3 %s", "face.ppm")
   end
   
-  # Tool currently broken
+  # Tool currently broken...
   #def test_resample
   #  assert_tool_works("#{gi 'resample'} -r %s %s 0.5 2.0", "face.ppm")
   #end

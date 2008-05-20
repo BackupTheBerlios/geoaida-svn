@@ -24,6 +24,7 @@ extern "C" {
 #include "gaimage.h"
 #include <algorithm>
 #include <vector>
+#include <stdexcept>
 
 namespace Ga
 {
@@ -117,7 +118,7 @@ namespace Ga
             std::copy(ppmbuffer->b, ppmbuffer->b + sizeX_ * sizeY_, buffer);
             break;
           default:
-            assert(!"Invalid channel for LibPFMImpl::readRect");
+            throw std::logic_error("Invalid channel for LibPFMImpl::readRect");
         }
         
         free(ppmbuffer->r);
@@ -133,7 +134,7 @@ namespace Ga
     template<typename Src>
     void replaceRect(int channel, int x, int y, int width, int height,
       const Src* buffer)
-    {
+    { 
       assert(buffer != 0);
       assert(x == 0 && y == 0 && width == sizeX() && height == sizeY());
 
@@ -174,7 +175,8 @@ namespace Ga
           float min, max;
           fseek(fp, 0, SEEK_SET);
   		    ppmbuffer = static_cast<PFM3Byte*>(pfm_readpfm_type(fp, &w, &h, &min, &max, PFM_3BYTE, 0));
-          assert(w == width && h == height && "Overwriting PPM files of different size not handled!");
+  		    if (w != width || h != height)
+            throw std::logic_error("Overwriting PPM files of different size not handled");
         }
         
         switch(channel)
@@ -189,7 +191,7 @@ namespace Ga
             std::copy(buffer, buffer + width * height, ppmbuffer->b);
             break;
           default:
-            assert(!"Invalid channel for LibPFMImpl::replaceRect");
+          throw std::logic_error("Invalid channel for LibPFMImpl::replaceRect");
         }
 
         fseek(fp, 0, SEEK_SET);

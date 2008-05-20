@@ -38,7 +38,7 @@ Ga::CacheFile::CacheFile(Size blockSize)
 		throw std::runtime_error("Could not get temp path");
 
 	ostringstream stream;
-	stream << tempPath << "\gacachefile_" << blockSize << ".tmp";
+	stream << tempPath << "\\gacachefile_" << blockSize << ".tmp";
     filename = stream.str();
 	
 	DWORD access = GENERIC_READ | GENERIC_WRITE;
@@ -85,8 +85,6 @@ Ga::CacheFile& Ga::CacheFile::get(Size blockSize)
 
 unsigned Ga::CacheFile::store(const void* buffer)
 {
-	// TODO: large file support (fpos_t), error checking.
-	
 	// Find a free entry.
 	unsigned index;
 	vector<bool>::iterator it =
@@ -109,7 +107,7 @@ unsigned Ga::CacheFile::store(const void* buffer)
     DWORD dummy;
     WriteFile(file, buffer, blockSize, &dummy, 0);
 #else
-	lseek(fd, index * blockSize, SEEK_SET);
+	lseek(fd, index * LargeSize(blockSize), SEEK_SET);
 	write(fd, buffer, blockSize);
 #endif
 	return index;
@@ -117,8 +115,6 @@ unsigned Ga::CacheFile::store(const void* buffer)
 
 void Ga::CacheFile::recover(unsigned index, void* buffer)
 {
-	// TODO: large file support (fpos_t), error checking.
-	
 	assert(marked.at(index));
 	
 	// Read stored data from the file.
@@ -128,7 +124,7 @@ void Ga::CacheFile::recover(unsigned index, void* buffer)
     DWORD dummy;
     ReadFile(file, buffer, blockSize, &dummy, 0);
 #else
-	lseek(fd, index * blockSize, SEEK_SET);
+	lseek(fd, index * LargeSize(blockSize), SEEK_SET);
 	read(fd, buffer, blockSize);
 #endif
 	dismiss(index);
@@ -138,5 +134,5 @@ void Ga::CacheFile::dismiss(unsigned index)
 {
 	assert(marked.at(index));
 	marked[index] = false;
-	// TODO: If this was the last block, free disk space again.
+	// TODO: If this was the last block, we could free disk space again now.
 }

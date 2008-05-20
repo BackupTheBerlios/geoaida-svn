@@ -57,7 +57,7 @@ namespace Ga
    	  int cols, rows;
     	pbm_readpbminit(fp, &cols, &rows, &format);
 
-      assert(cols == width && rows == height && "Should be right from readpnminit");
+      assert(cols == width && rows == height && "Should be corrent, come from readpnminit");
       
       std::vector<bit> row(width);
       for (int y = 0; y < height; ++y)

@@ -1,5 +1,5 @@
 /***************************************************************************
-                          pfmthreshhold.cpp  -  description TODO: no.
+                          pfmthreshhold.cpp  -  description <-TODO: Obvious.
                              -------------------
     begin                : Fri May 17 2002
     copyright            : (C) 2002 by Martin Pahl

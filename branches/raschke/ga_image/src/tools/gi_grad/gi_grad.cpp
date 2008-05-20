@@ -75,6 +75,6 @@ int main(int argc, char **argv)
   else
     im=Ga::gradient2D(im);
 
-  im.write(absfile,0);
-	im.write(anglefile,1);
+  im.getChannel(0).write(absfile);
+	im.getChannel(1).write(anglefile);
 }
