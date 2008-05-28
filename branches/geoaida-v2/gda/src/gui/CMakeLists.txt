@@ -21,6 +21,7 @@ SET(headers
   attributevalue.h
   attributevaluedelegate.h
   attributevalueeditor.h
+  taskviewer.h
   )
 
 SET(classheaders 
@@ -36,6 +37,7 @@ SET(classheaders
   BoolEditor
   EnumEditor
   MainWindow
+  TaskViewer
   )
 
 SET(mocheaders 
@@ -44,6 +46,7 @@ SET(mocheaders
   attributevaluedelegate.h
   attributevalueeditor.h
   mainwindow.h
+  taskviewer.h
   )
 
 SET(sources 
@@ -53,6 +56,7 @@ SET(sources
   attributevaluedelegate.cpp
   attributevalueeditor.cpp
   mainwindow.cpp
+  taskviewer.cpp
   )
 
 SET(uifiles mainwindow.ui)

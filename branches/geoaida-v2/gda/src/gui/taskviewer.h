@@ -26,25 +26,25 @@
 #ifndef TASKVIEWER_H
 #define TASKVIEWER_H
 
-#include <qwidget.h>
-#include <qlistview.h>
+#include <QWidget>
+#include <QListWidget>
 
 struct ProcessEntry;
 /**Shows the running tasks
   *@author Martin pahl
   */
-class TaskViewer:public QListView
+class TaskViewer:public QListWidget
 {
 Q_OBJECT public:
-  TaskViewer(QWidget * parent = 0, const char *name = 0);
+  TaskViewer(QWidget * parent = 0);
    ~TaskViewer();
   public slots:                 // Public slots
   /** Update taskItem */
-  void stateChanged(QListViewItem * taskItem, int pid, QString name,
+  void stateChanged(QListWidgetItem * taskItem, int pid, QString name,
                     QString cmd, float load);
   public slots:                 // Public slots
   /** remove taskItem from the TaskViewer */
-  void processFinished(QListViewItem * taskItem);
+  void processFinished(QListWidgetItem * taskItem);
   public slots:                 // Public slots
   /** register a new process */
   void newProcess(ProcessEntry *);
