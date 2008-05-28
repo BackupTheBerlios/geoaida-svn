@@ -1,11 +1,14 @@
-#FIND_PACKAGE(Qt4 REQUIRED)
+if(APPLE)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -I/opt/local/include")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I/opt/local/include")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L/opt/local/lib")
+endif(APPLE)
 
-
-ADD_SUBDIRECTORY(parser)
 ADD_SUBDIRECTORY(pfm)
+ADD_SUBDIRECTORY(ga_image)
+ADD_SUBDIRECTORY(parser)
 ADD_SUBDIRECTORY(gda)
 #add_subdirectory(doc)
 #add_subdirectory(qtguiapplication)
-#add_subdirectory(ga_image)
 #add_subdirectory(gad)
 #add_subdirectory(geoaidalib)
