@@ -358,7 +358,7 @@ void Task::setMaxJobs(int maxJobs)
 }
 
 /** No descriptions */
-void Task::setGuiPtr(ProcessEntry * pEntry, QListViewItem * ptr)
+void Task::setGuiPtr(ProcessEntry * pEntry, QListWidgetItem * ptr)
 {
   pEntry->guiPtr_ = ptr;
 }

@@ -311,6 +311,6 @@ GeoImageList::minResolution()
   return minRes_;
 }
 
-//GeoImageList geoImageList_;
+GeoImageList geoImageList_;
 //GeoImageList labelImageList_;
 

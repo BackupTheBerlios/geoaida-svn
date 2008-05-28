@@ -166,7 +166,7 @@ Attribute::set(ArgDict & attribs)
   MLParser::setString(tip_, &attribs, "tip");
   type_ = STRING;
   QString options[] =
-    { "STRING", "INT", "BOOL", "DOUBLE", "FORMULA", "ENUM", "OPERATOR", "IMAGE", "FILE", "" };
+    { "string", "int", "bool", "double", "formula", "enum", "operator", "image", "file", "" };
   MLParser::setOption(type_, &attribs, "type", options);
   qDebug("Type %d\n", type_);
   switch (type_) {
@@ -244,18 +244,16 @@ Attribute::type()
 }
 
 /** Returns the options for an enum attribute, otherwise 0 */
-QStringList *
-Attribute::options()
+const QStringList& Attribute::options()
 {
   if (type_ == ENUM)
-    return e_.options_;
+    return *e_.options_;
   else
-    return 0;
+    return emptyList_;
 }
 
 /** Returns the type of operator */
-QString
-Attribute::typeOfOperator()
+QString Attribute::typeOfOperator()
 {
   if (type_ == OPERATOR)
     return *(o_.typeOfOp_);
@@ -265,7 +263,7 @@ Attribute::typeOfOperator()
 
 /** Returns the image type */
 QString
-Attribute::imageType()
+Attribute::typeOfImage()
 {
   if (type_ == IMAGE)
     return *(im_.imageType_);
@@ -326,3 +324,5 @@ bool Attribute::isOn(QString val)
   if (type_ != BOOL) return false;
   return val==*b_.onValue_;
 }
+
+QStringList Attribute::emptyList_;

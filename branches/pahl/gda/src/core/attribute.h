@@ -73,11 +73,11 @@ public:
   /** Type of this attribute */
   int type();
   /** Returns the options for an enum attribute, otherwise 0 */
-  QStringList *options();
+  const QStringList& options();
   /** Returns the type of operator */
   QString typeOfOperator();
   /** Returns the image type */
-  QString imageType();
+  QString typeOfImage();
   /** Returns the file type */
   QString fileType();
   /** returns true, if changing this attribute requires an update of other attributes */
@@ -160,6 +160,8 @@ protected:                     // Protected attributes
 public: // Public attributes
   /** prefix describing the section this attribute is used in */
   QString prefix_;
+  static QStringList emptyList_;
+
 };
 
 /*!

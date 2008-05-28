@@ -8,9 +8,10 @@ ADD_DEFINITIONS(-DDEBUG_MSG)
 INCLUDE_DIRECTORIES(.
         ${CMAKE_SOURCE_DIR}/pfm/libpfm
 	${CMAKE_SOURCE_DIR}/parser
-#	${CMAKE_BINARY_DIR}
         ${PROJECT_SOURCE_DIR}/src/core
+	${PROJECT_BINARY_DIR}/src/gui
         ${QT_INCLUDES}
+#	${CMAKE_BINARY_DIR}
 )
 
 
@@ -29,7 +30,12 @@ SET(classheaders
   AttributeValueDelegate
   AttributeValueEditor
   StringEditor
+  FormulaEditor
   OperatorListEditor
+  ImageListEditor
+  BoolEditor
+  EnumEditor
+  MainWindow
   )
 
 SET(mocheaders 
@@ -37,6 +43,7 @@ SET(mocheaders
   attributeeditor.h
   attributevaluedelegate.h
   attributevalueeditor.h
+  mainwindow.h
   )
 
 SET(sources 
@@ -45,11 +52,18 @@ SET(sources
   attributevalue.cpp
   attributevaluedelegate.cpp
   attributevalueeditor.cpp
+  mainwindow.cpp
   )
- 
+
+SET(uifiles mainwindow.ui)
+
+SET(resources gda.qrc)
+
+QT4_WRAP_UI(uilib ${uifiles})
+QT4_ADD_RESOURCES(resourcelib ${resources})
 QT4_WRAP_CPP(moclib ${mocheaders})
 
-ADD_LIBRARY(gdagui ${sources} ${moclib})
+ADD_LIBRARY(gdagui ${sources} ${moclib} ${uilib} ${resourcelib} )
 
 INSTALL(TARGETS gdagui DESTINATION lib)
 #INSTALL(FILES ${headers} DESTINATION include)

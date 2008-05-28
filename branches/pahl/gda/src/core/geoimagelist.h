@@ -106,6 +106,6 @@ private:                       // Private attributes
   bool minMaxResUptodate_;
 };
 
-//extern GeoImageList geoImageList_;
+extern GeoImageList geoImageList_;
 //extern GeoImageList labelImageList_;
 #endif

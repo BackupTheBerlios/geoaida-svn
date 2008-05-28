@@ -20,31 +20,8 @@
 
 
 #include <QItemDelegate>
-#include <QWidget>
 
 class Attribute;
-
-#if 0
-class AttributeValueEditor : public QWidget
-{
-  Q_OBJECT
-public:
-  //  QSize sizeHint() const =0;
-  virtual void setValue(QString value) =0;
-  virtual QString value() =0;
-  
- signals:
-  void editingFinished();
-  
- protected:
-  //  void paintEvent(QPaintEvent *event) =0;
-  //  void mouseMoveEvent(QMouseEvent *event) =0;
-  //  void mouseReleaseEvent(QMouseEvent *event) =0;
- protected:
-  Attribute* attribute_;
-};
-
-#endif
 
 #include <QLineEdit>
 
@@ -61,6 +38,7 @@ public:
 };
 
 
+/******************************************************************************/
 #include <QComboBox>
 
 class OperatorListEditor : public QComboBox
@@ -74,6 +52,70 @@ public:
   void setValue(const QString& value);
   QString value();
 };
+
+/******************************************************************************/
+#include <QComboBox>
+
+class ImageListEditor : public QComboBox
+{
+  Q_OBJECT
+    
+public:
+  ImageListEditor(QWidget *parent, Attribute *attribute);
+  QSize sizeHint() const;
+  
+  void setValue(const QString& value);
+  QString value();
+};
+
+/******************************************************************************/
+#include <QComboBox>
+
+class EnumEditor : public QComboBox
+{
+  Q_OBJECT
+    
+public:
+  EnumEditor(QWidget *parent, Attribute *attribute);
+  QSize sizeHint() const;
+  
+  void setValue(const QString& value);
+  QString value();
+};
+
+
+/******************************************************************************/
+#include <QCheckBox>
+
+class BoolEditor : public QCheckBox
+{
+  Q_OBJECT
+    
+public:
+  BoolEditor(QWidget *parent, Attribute *attribute);
+  QSize sizeHint() const;
+  
+  void setValue(const QString& value);
+  QString value();
+};
+
+
+/******************************************************************************/
+#include <QTextEdit>
+
+class FormulaEditor : public QTextEdit
+{
+  Q_OBJECT
+    
+public:
+  FormulaEditor(QWidget *parent, Attribute *attribute);
+  QSize sizeHint() const;
+  
+  void setValue(const QString& value);
+  QString value();
+};
+
+
 
 
 #endif

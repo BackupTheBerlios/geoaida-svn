@@ -26,7 +26,7 @@ private:
   QString filename_;
   SemanticNet semanticNet_;
   InstanceNet instanceNet_;
-  GeoImageList geoImageList_;
+  //  GeoImageList geoImageList_; // is a global variable so far
   FileList fileList_;
   GeoImage *mapImage_;
 };

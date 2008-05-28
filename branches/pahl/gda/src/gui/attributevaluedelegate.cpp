@@ -20,7 +20,11 @@
 #include <QModelIndex>
 #include <QVariant>
 #include "StringEditor"
+#include "FormulaEditor"
 #include "OperatorListEditor"
+#include "ImageListEditor"
+#include "EnumEditor"
+#include "BoolEditor"
 #include "Attribute"
 
 AttributeValueDelegate::AttributeValueDelegate(QWidget *parent) 
@@ -43,6 +47,11 @@ QWidget *AttributeValueDelegate::createEditor(QWidget *parent,
 					    const QModelIndex &index) const
   
 {
+#define CreateEditor(EditorType) \
+      EditorType* editor=new EditorType(parent, attrib); \
+      connect(editor, SIGNAL(editingFinished()),         \
+	      this, SLOT(commitAndCloseEditor()));       
+
   if (qVariantCanConvert<AttributeValue>(index.data(Qt::EditRole))) {
     AttributeValue attribValue=qVariantValue<AttributeValue>(index.data(Qt::EditRole));
     Attribute* attrib=attribValue.attribute();
@@ -53,19 +62,29 @@ QWidget *AttributeValueDelegate::createEditor(QWidget *parent,
       return value.toInt();
     case Attribute::DOUBLE:
       return value.toDouble();
-    case Attribute::BOOL:
-      return value=="true";
 #endif
+    case Attribute::BOOL:{
+      CreateEditor(BoolEditor);
+      return editor;
+    }
+    case Attribute::FORMULA:{
+      CreateEditor(FormulaEditor);
+      return editor;
+    }
+    case Attribute::ENUM:{
+      CreateEditor(EnumEditor);
+      return editor;
+    }
     case Attribute::OPERATOR:{
-      OperatorListEditor* editor=new OperatorListEditor(parent, attrib);
-      connect(editor, SIGNAL(editingFinished()),
-	      this, SLOT(commitAndCloseEditor()));
+      CreateEditor(OperatorListEditor);
+      return editor;
+    }
+    case Attribute::IMAGE:{
+      CreateEditor(ImageListEditor);
       return editor;
     }
     default: {
-      StringEditor* editor=new StringEditor(parent, attrib);
-      connect(editor, SIGNAL(editingFinished()),
-	      this, SLOT(commitAndCloseEditor()));
+      CreateEditor(StringEditor);
       return editor;
     }
     }
@@ -73,6 +92,8 @@ QWidget *AttributeValueDelegate::createEditor(QWidget *parent,
   } else {
     return QItemDelegate::createEditor(parent, option, index);
   }
+
+#undef CreateEditor
 }
 
 void AttributeValueDelegate::commitAndCloseEditor()
@@ -85,6 +106,10 @@ void AttributeValueDelegate::commitAndCloseEditor()
 void AttributeValueDelegate::setEditorData(QWidget *editor,
 					   const QModelIndex &index) const
 {
+#define SetEditorData(EditorType) \
+      EditorType *attribeditor = qobject_cast<EditorType *>(editor); \
+      attribeditor->setValue(attribValue.value()); \
+
   if (qVariantCanConvert<AttributeValue>(index.data(Qt::EditRole))) {
     AttributeValue attribValue = qVariantValue<AttributeValue>(index.data(Qt::EditRole));
     Attribute* attrib=attribValue.attribute();
@@ -94,45 +119,78 @@ void AttributeValueDelegate::setEditorData(QWidget *editor,
       return value.toInt();
     case Attribute::DOUBLE:
       return value.toDouble();
-    case Attribute::BOOL:
-      return value=="true";
 #endif
+    case Attribute::BOOL:{
+      SetEditorData(BoolEditor);
+      return;
+    }
+    case Attribute::FORMULA:{
+      SetEditorData(FormulaEditor);
+      return;
+    }
+    case Attribute::ENUM:{
+      SetEditorData(EnumEditor);
+      return;
+    }
     case Attribute::OPERATOR:{
-      OperatorListEditor *attribeditor = qobject_cast<OperatorListEditor *>(editor);
-      attribeditor->setValue(attribValue.value());
+      SetEditorData(OperatorListEditor);
+      return;
+    }
+    case Attribute::IMAGE:{
+      SetEditorData(ImageListEditor);
       return;
     }
     default: {
-      StringEditor *attribeditor = qobject_cast<StringEditor *>(editor);
-      attribeditor->setValue(attribValue.value());
+      SetEditorData(StringEditor);
       return;
     }
     }
   } 
   else 
     QItemDelegate::setEditorData(editor, index);
-  
+
+#undef SetEditorData
 }
 
 void AttributeValueDelegate::setModelData(QWidget *editor, QAbstractItemModel *model,
 					  const QModelIndex &index) const
 {
+#define SetModelData(EditorType) \
+      EditorType *attribeditor = qobject_cast<EditorType *>(editor); \
+      model->setData(index, attribeditor->value(), Qt::EditRole);
+
   if (qVariantCanConvert<AttributeValue>(index.data(Qt::EditRole))) {
     AttributeValue attribValue = qVariantValue<AttributeValue>(index.data(Qt::EditRole));
     Attribute* attrib=attribValue.attribute();
     switch (attrib->type()) {
+    case Attribute::BOOL:{
+      SetModelData(BoolEditor);
+      return;
+    }
+    case Attribute::ENUM:{
+      SetModelData(EnumEditor);
+      return;
+    }
+    case Attribute::FORMULA:{
+      SetModelData(FormulaEditor);
+      return;
+    }
     case Attribute::OPERATOR:{
-      OperatorListEditor *attribeditor = qobject_cast<OperatorListEditor *>(editor);
-      model->setData(index, attribeditor->value(), Qt::EditRole);
+      SetModelData(OperatorListEditor);
+      return;
+    }
+    case Attribute::IMAGE:{
+      SetModelData(ImageListEditor);
       return;
     }
     default: {
-      StringEditor *attribeditor = static_cast<StringEditor*>(editor);
-      model->setData(index, attribeditor->value(), Qt::EditRole);
+      SetModelData(StringEditor);
       return;
     }
     }
   }
   else
     QItemDelegate::setModelData(editor,model,index);
+
+#undef SetModleData
 }
