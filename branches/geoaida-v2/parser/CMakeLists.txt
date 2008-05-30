@@ -34,14 +34,14 @@ ADD_LIBRARY(mlparser ${sources} ${moclib})
 ADD_EXECUTABLE(test_mlparser test_mlparser.cpp ${mlparser})
 TARGET_LINK_LIBRARIES(test_mlparser mlparser ${QT_QTCORE_LIBRARY} ${QT_QTXML_LIBRARY})
 
-ADD_EXECUTABLE(convert_xml convert_xml.cpp)
-TARGET_LINK_LIBRARIES(convert_xml ${QT_QTCORE_LIBRARY} ${QT_QTXML_LIBRARY})
+#ADD_EXECUTABLE(convert_xml convert_xml.cpp)
+#TARGET_LINK_LIBRARIES(convert_xml ${QT_QTCORE_LIBRARY} ${QT_QTXML_LIBRARY})
+#INSTALL(TARGETS convert_xml DESTINATION bin)
 
 
 INSTALL(TARGETS mlparser DESTINATION lib)
-INSTALL(TARGETS convert_xml DESTINATION bin)
 INSTALL(FILES ${headers} DESTINATION include)
-INSTALL(PROGRAMS convert-xml.py DESTINATION bin)
+INSTALL(PROGRAMS convert-xml.py convert-xml DESTINATION bin)
 
 
 #TARGET_LINK_LIBRARIES(mlparser

@@ -48,6 +48,7 @@ class MainWindow : public QMainWindow, private Ui::MainWindow
   void on_actionQuit_triggered();
   void on_actionNetLoad_triggered();
   void on_actionProjectLoad_triggered();
+  void on_actionStart_triggered();
  private:
   bool dirty_;	
   Project project_;

@@ -28,22 +28,15 @@
 #include "qregexp.h"
 
 TaskViewer::TaskViewer(QWidget * parent)
-:QListWidget(parent)
+:QTreeWidget(parent)
 {
-#if 0
-  setRootIsDecorated(true);
-  setSorting(-1);
-  addColumn("PID");
-  addColumn("Node");
-  addColumn("Command");
   connect(&taskTable, SIGNAL(newProcess(ProcessEntry *)),
           this, SLOT(newProcess(ProcessEntry *)));
   connect(&taskTable,
-          SIGNAL(stateChanged(QListWidgetItem *, int, QString, QString,float)), this,
-          SLOT(stateChanged(QListWidgetItem *, int, QString, QString,float)));
-  connect(&taskTable, SIGNAL(processFinished(QListWidgetItem *)), this,
-          SLOT(processFinished(QListWidgetItem *)));
-#endif
+          SIGNAL(stateChanged(QTreeWidgetItem *, int, QString, QString,float)), this,
+          SLOT(stateChanged(QTreeWidgetItem *, int, QString, QString,float)));
+  connect(&taskTable, SIGNAL(processFinished(QTreeWidgetItem *)), this,
+          SLOT(processFinished(QTreeWidgetItem *)));
 }
 
 TaskViewer::~TaskViewer()
@@ -54,30 +47,27 @@ TaskViewer::~TaskViewer()
 void
 TaskViewer::newProcess(ProcessEntry * p)
 {
-#if 0
-  QListWidgetItem *item = new QListWidgetItem(this, lastItem());
+  QTreeWidgetItem *item = new QTreeWidgetItem(this);
+  addTopLevelItem(item);
   taskTable.setGuiPtr((Task::ProcessEntry *) p, item);
-#endif
 }
 
 /** remove taskItem from the TaskViewer */
 void
-TaskViewer::processFinished(QListWidgetItem * taskItem)
+TaskViewer::processFinished(QTreeWidgetItem * taskItem)
 {
   if (taskItem)
     delete taskItem;
 }
 
 /** Update taskItem */
-void TaskViewer::stateChanged(QListWidgetItem * taskItem, int pid, QString name,
+void TaskViewer::stateChanged(QTreeWidgetItem * taskItem, int pid, QString name,
                               QString cmd, float load)
 {
   emit systemLoad(load);
   if (!taskItem)
     return;
-#if 0
   taskItem->setText(0, QString().sprintf("%5d", pid));
   taskItem->setText(1, name);
   taskItem->setText(2, cmd.replace(QRegExp("\n")," "));
-#endif
 }

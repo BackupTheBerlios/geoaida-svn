@@ -63,8 +63,8 @@ SET(uifiles mainwindow.ui)
 
 SET(resources gda.qrc)
 
-QT4_WRAP_UI(uilib ${uifiles})
 QT4_ADD_RESOURCES(resourcelib ${resources})
+QT4_WRAP_UI(uilib ${uifiles})
 QT4_WRAP_CPP(moclib ${mocheaders})
 
 ADD_LIBRARY(gdagui ${sources} ${moclib} ${uilib} ${resourcelib} )

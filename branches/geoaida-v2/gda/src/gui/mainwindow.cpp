@@ -11,7 +11,7 @@ MainWindow::MainWindow(int,char**,QWidget* parent)
   : QMainWindow(parent)
 {
   setupUi(this);
-
+  taskViewerDock_->hide();
 }
 	
 /*!
@@ -85,5 +85,9 @@ void MainWindow::on_actionProjectLoad_triggered()
 
 }
  
- 
+
+void MainWindow::on_actionStart_triggered()
+{
+  taskViewerDock_->show();
+} 
  

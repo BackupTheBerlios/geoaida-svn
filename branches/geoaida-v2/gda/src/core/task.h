@@ -34,7 +34,7 @@
 #include <QQueue>
 #include <QString>
 
-class QListWidgetItem;
+class QTreeWidgetItem;
 
 class Task:public QObject
 {
@@ -53,7 +53,7 @@ Q_OBJECT public:
   /** set the maximum number of jobs running parallel */
   void setMaxJobs(int maxJobs);
   /** No descriptions */
-  void setGuiPtr(ProcessEntry * pEntry, QListWidgetItem * ptr);
+  void setGuiPtr(ProcessEntry * pEntry, QTreeWidgetItem * ptr);
   /** return the system load on Linux-Systems */
   bool systemLoad();
 protected slots:
@@ -66,7 +66,7 @@ public:
     int status_;                // exit status
     QString cmd_;               // command line
     INode *node_;
-    QListWidgetItem *guiPtr_;
+    QTreeWidgetItem *guiPtr_;
   };
  protected:
   int execNext();
@@ -87,9 +87,9 @@ signals:                    // Signals
   void newProcess(ProcessEntry *);
   /** signal is emitted whenever the state of process changes.
     guiPtr, pid, nodename and commandline are transmitted */
-  void stateChanged(QListWidgetItem *, int, QString, QString, float load);
+  void stateChanged(QTreeWidgetItem *, int, QString, QString, float load);
   /** signal is emitted when a process is finished */
-  void processFinished(QListWidgetItem *);
+  void processFinished(QTreeWidgetItem *);
 };
 
 extern Task taskTable;

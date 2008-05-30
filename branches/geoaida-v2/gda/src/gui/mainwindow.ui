@@ -93,12 +93,12 @@
      </widget>
     </item>
     <item>
-     <widget class="QDockWidget" name="dockWidget_2" >
+     <widget class="QDockWidget" name="taskViewerDock_" >
       <property name="floating" >
        <bool>false</bool>
       </property>
       <property name="features" >
-       <set>QDockWidget::AllDockWidgetFeatures</set>
+       <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable|QDockWidget::NoDockWidgetFeatures</set>
       </property>
       <property name="windowTitle" >
        <string>Taskviewer</string>
@@ -106,10 +106,25 @@
       <widget class="QWidget" name="dockWidgetContents_2" >
        <layout class="QVBoxLayout" >
         <item>
-         <widget class="TaskViewer" name="listWidget" >
-          <property name="enabled" >
-           <bool>false</bool>
+         <widget class="TaskViewer" name="taskViewer_" >
+          <property name="columnCount" >
+           <number>3</number>
           </property>
+          <column>
+           <property name="text" >
+            <string>PID</string>
+           </property>
+          </column>
+          <column>
+           <property name="text" >
+            <string>Node</string>
+           </property>
+          </column>
+          <column>
+           <property name="text" >
+            <string>Command</string>
+           </property>
+          </column>
          </widget>
         </item>
        </layout>
@@ -155,9 +170,16 @@
     </property>
     <addaction name="action_About" />
    </widget>
+   <widget class="QMenu" name="menu_Analyze" >
+    <property name="title" >
+     <string>&amp;Analyze</string>
+    </property>
+    <addaction name="actionStart" />
+   </widget>
    <addaction name="menu_File" />
    <addaction name="menu_View" />
    <addaction name="menu_Help" />
+   <addaction name="menu_Analyze" />
   </widget>
   <widget class="QStatusBar" name="statusbar" />
   <widget class="QToolBar" name="toolBar" >
@@ -174,6 +196,8 @@
    <addaction name="actionNetLoad" />
    <addaction name="action_Save_Net" />
    <addaction name="separator" />
+   <addaction name="separator" />
+   <addaction name="actionStart" />
   </widget>
   <action name="action_New" >
    <property name="icon" >
@@ -255,6 +279,19 @@
     <string>&amp;About</string>
    </property>
   </action>
+  <action name="action_Analyze" >
+   <property name="text" >
+    <string>&amp;Analyze</string>
+   </property>
+  </action>
+  <action name="actionStart" >
+   <property name="icon" >
+    <iconset resource="gda.qrc" >:/gda/start.png</iconset>
+   </property>
+   <property name="text" >
+    <string>&amp;Start</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -264,8 +301,8 @@
   </customwidget>
   <customwidget>
    <class>TaskViewer</class>
-   <extends>QListWidget</extends>
-   <header>taskviewer.h</header>
+   <extends>QTreeWidget</extends>
+   <header>TaskViewer</header>
   </customwidget>
  </customwidgets>
  <resources>
