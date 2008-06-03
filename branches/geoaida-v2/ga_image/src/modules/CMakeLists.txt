@@ -1,0 +1,3 @@
+ADD_SUBDIRECTORY(painter)
+ADD_SUBDIRECTORY(regionsplitter)
+ADD_SUBDIRECTORY(vectorize)

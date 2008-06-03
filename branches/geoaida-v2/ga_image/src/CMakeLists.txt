@@ -1,2 +1,4 @@
-add_subdirectory(gaimage)
-add_subdirectory(tools)
+ADD_SUBDIRECTORY(image)
+ADD_SUBDIRECTORY(modules)
+
+#ADD_SUBDIRECTORY(tools)
