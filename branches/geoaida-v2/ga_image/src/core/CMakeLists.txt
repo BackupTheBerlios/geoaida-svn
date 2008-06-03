@@ -1,0 +1,73 @@
+include_directories(.
+        ${CMAKE_SOURCE_DIR}/pfm/libpfm)
+
+set(headers gaalgo.h
+           gacache.h
+           gaconvert.h
+           gadowindowt.h
+           gadraw.h
+           gadrawt.h
+           gagaussian.h
+           gagradient.h
+           gagradientt.h
+           gahough.h
+           gaimage.h
+           gaimagebase.h
+           gaimageio.h
+           gaimaget.h
+           gakirsch.h
+           garegion.h
+           garegionsplittert.h
+           garegiont.h
+           gashareddata.h
+           gashareddatat.h
+           gasplit2regionst.h
+           gaimaget.hpp
+           gavariance.h
+           gavectorizet.h
+	   
+	   gapainter.h
+)
+
+set(templateheaders
+           garegionsplittert.hpp
+           gasplit2regionst.hpp
+           gavectorizet.hpp
+)
+
+set(sources gacalchistogram.cpp
+           gacanny.cpp
+           gadraw.cpp 
+           gagaussian.cpp
+           gagradient.cpp
+           gahough.cpp
+           gaimage.cpp
+           gaimageio.cpp
+           gacache.cpp
+           gacachefile.cpp
+           garegion.cpp
+           gatohsv.cpp
+           gatoluminance.cpp
+           gatondvi.cpp
+           gavariance.cpp
+
+	   gapainter.cpp
+)
+
+set(classheaders
+          Image
+	  )
+add_library(gaimage STATIC ${sources})
+install(TARGETS gaimage DESTINATION lib)
+install(FILES ${headers} DESTINATION include)
+install(FILES ${classheaders} DESTINATION include)
+
+add_executable(painttest test_painter.cpp)
+target_link_libraries(painttest gaimage pfm netpbm)
+
+add_executable(test_cache test_cache.cpp)
+target_link_libraries(test_cache gaimage pfm netpbm)
+
+add_executable(test_image test_image.cpp)
+target_link_libraries(test_image gaimage pfm netpbm)
+
