@@ -19,62 +19,59 @@
 #ifndef STACK_H
 #define STACK_H
 
-#include <qstring.h>
-#ifdef WIN32
-#include <qtextstream.h>
-#include <qstack.h>
-#define  QPtrStack QStack
-#else
-#include <qptrstack.h>
-#endif
-#include "stackelem.h"
-#include <qmap.h>
-#include <MLParser.h>
+#include <QString>
+#include <QStack>
+#include "StackElement"
+#include <QMap>
+#include <MLParser>
+
+namespace BottomUp {
 
 class NodeList;
 class Node;
 
+/*
 template<class type> class QPtrStackIterator	
-: public QGListIterator	
+: public QVectorIterator	
 { 
 public:
 //WIN32:Compiler-Warnung (Stufe 1) C4243
 //'Konvertierungstyp' Konvertierung von 'Typ1' nach 'Typ2' existiert, ist aber nicht verfügbar
 //Ein Zeiger auf eine abgeleitete Klasse soll in einen Zeiger auf die Basisklasse konvertiert werden. 
 //Der Zugriff auf diese Konvertierung ist jedoch unzulässig, da die Ableitung mit private oder protected vorgenommen wurde.
-    QPtrStackIterator(const QPtrStack<type> &l) :QGListIterator((QGList &)l) {}
+    QPtrStackIterator(const QStack<type> &l) :QVectorIterator((QList &)l) {}
    ~QPtrStackIterator()        {}
     uint  count()   const     { return list->count(); }
     bool  isEmpty() const     { return list->count() == 0; }
-    bool  atFirst() const     { return QGListIterator::atFirst(); }
-    bool  atLast()  const     { return QGListIterator::atLast(); }
-    type *toFirst()           { return (type *)QGListIterator::toFirst(); }
-    type *toLast()            { return (type *)QGListIterator::toLast(); }
-    operator type *() const   { return (type *)QGListIterator::get(); }
-    type *operator*()         { return (type *)QGListIterator::get(); }
+    bool  atFirst() const     { return QVectorIterator::atFirst(); }
+    bool  atLast()  const     { return QVectorIterator::atLast(); }
+    type *toFirst()           { return (type *)QVectorIterator::toFirst(); }
+    type *toLast()            { return (type *)QVectorIterator::toLast(); }
+    operator type *() const   { return (type *)QVectorIterator::get(); }
+    type *operator*()         { return (type *)QVectorIterator::get(); }
 
     // No good, since QPtrStack<char> (ie. QStrList fails...
     //
     // MSVC++ gives warning
     // Sunpro C++ 4.1 gives error
-    //    type *operator->()        { return (type *)QGListIterator::get(); }
+    //    type *operator->()        { return (type *)QVectorIterator::get(); }
 
-    type *current()   const   { return (type *)QGListIterator::get(); }
-    type *operator()()        { return (type *)QGListIterator::operator()();}
-    type *operator++()        { return (type *)QGListIterator::operator++(); }
-    type *operator+=(uint j)  { return (type *)QGListIterator::operator+=(j);}
-    type *operator--()        { return (type *)QGListIterator::operator--(); }
-    type *operator-=(uint j)  { return (type *)QGListIterator::operator-=(j);}
+    type *current()   const   { return (type *)QVectorIterator::get(); }
+    type *operator()()        { return (type *)QVectorIterator::operator()();}
+    type *operator++()        { return (type *)QVectorIterator::operator++(); }
+    type *operator+=(uint j)  { return (type *)QVectorIterator::operator+=(j);}
+    type *operator--()        { return (type *)QVectorIterator::operator--(); }
+    type *operator-=(uint j)  { return (type *)QVectorIterator::operator-=(j);}
     QPtrStackIterator<type>& operator=(const QPtrStackIterator<type>&it)
-                              { QGListIterator::operator=(it); return *this; }
+                              { QVectorIterator::operator=(it); return *this; }
 };
+*/
 
-
-/**A stack holding objects of type StackElem
+/**A stack holding objects of type StackElement
   *@author Martin Pahl
   */
 
-class Stack : public QPtrStack<StackElem>  {
+class Stack : public QStack<StackElement>  {
 public:
 	Stack(NodeList* nl=0, QString filename="");
   Stack(const Stack& stack);
@@ -233,4 +230,5 @@ protected:
   static ArgDict attribList_;
 };
 
+} // namespace BottomUp
 #endif

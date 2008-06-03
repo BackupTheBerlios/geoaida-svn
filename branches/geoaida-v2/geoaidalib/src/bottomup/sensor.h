@@ -15,13 +15,14 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef GASENSOR_H
-#define GASENSOR_H
+#ifndef SENSOR_H
+#define SENSOR_H
 
-#include <qstring.h>
-#include "node.h"
-#include "gaimage.h"
+#include <QString>
+#include "Region"
+#include "Image"
 
+namespace BottomUp {
 class GaBase;
 
 /**
@@ -30,12 +31,12 @@ class GaBase;
   *vitual function calc must be overloaded
   */
 
-class GASensor {
+class Sensor {
 public: 
-	GASensor() {id_=0;};
-	virtual ~GASensor(){;};
-	/** calculate the attribute 's_name' and insert the result in the 'node'*/
-	virtual void calc(QString s_name="") {};
+  Sensor() {id_=0;};
+  virtual ~Sensor(){;};
+  /** calculate the attribute 's_name' and insert the result in the 'node'*/
+  virtual void calc(QString s_name="") {};
 	
   /** return label nr. */
   unsigned long int id();
@@ -62,7 +63,7 @@ protected: // Protected attributes
 };
 
 //ONLY TEST
-class op0815 : public GASensor {
+class op0815 : public Sensor {
 public:
 	op0815(){;};
 	virtual ~op0815(){;};
@@ -72,4 +73,5 @@ public:
 	};
 };
 
+} // namespace BottomUp
 #endif

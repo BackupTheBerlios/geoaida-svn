@@ -1,5 +1,5 @@
 /***************************************************************************
-                          stackelemnodelist.cpp  -  description
+                          stackelemnumber.h  -  description
                              -------------------
     begin                : Wed Aug 1 2001
     copyright            : (C) 2001 by Martin Pahl
@@ -15,44 +15,33 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "stackelemnodelist.h"
+#ifndef STACKELEMNUMBER_H
+#define STACKELEMNUMBER_H
 
-/** constructs a stack element containing the given nodelist */
-StackElemNodeList::StackElemNodeList(const NodeList& list)
-{
-  data_=list;
-}
+#include "StackElement"
 
-StackElemNodeList::StackElemNodeList(const StackElemNodeList& elem)
-{
- data_=elem.data_;
-}
+namespace BottomUp {
+/**Stack element holding a number
+  *@author Martin Pahl
+  */
 
+class StackElementNumber : public StackElement  {
+public: 
+	StackElementNumber(double v);
+	StackElementNumber(const StackElementNumber& elem);
+	~StackElementNumber();
+  /** returns the type (NUMBER) of this stack element  */
+  int type();
+  const char* typeName();
+  /** Returns a copy of this stack element */
+  StackElement* copy();
+  /** Returns the contained numeric value from this stack element */
+  double data();
 
-StackElemNodeList::~StackElemNodeList()
-{
-}
+private: // Private attributes
+  /** Data */
+  double data_;
+};
 
-/** returns the type (NODELIST) of this stack element  */
-int StackElemNodeList::type()
-{
-  return NODELIST;
-}
-
-const char* StackElemNodeList::typeName()
-{
-  return "nodelist";
-}
-
-/** Returns a copy of this stack element */
-StackElem* StackElemNodeList::copy()
-{
-  NodeList nl=((StackElemNodeList*)this)->data(); //liste holen
-  return (new StackElemNodeList(nl));
-}
-
-/** return the data in the stack element */
-NodeList& StackElemNodeList::data()
-{
-  return data_;
-}
+} // namespace BottomUp
+#endif

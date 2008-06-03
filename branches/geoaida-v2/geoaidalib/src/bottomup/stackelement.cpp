@@ -15,14 +15,18 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "stackelem.h"
+#include "stackelement.h"
 
-StackElem::StackElem(){
+using BottomUp;
+
+StackElement::StackElement(){
 }
-StackElem::~StackElem(){
+
+StackElement::~StackElement(){
 }
+
 /** Type of stack element */
-int StackElem::type()
+int StackElement::type()
 {
   return UNKNOWN;
 }

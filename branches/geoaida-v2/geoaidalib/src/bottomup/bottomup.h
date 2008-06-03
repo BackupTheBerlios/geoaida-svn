@@ -18,15 +18,15 @@
 #ifndef BUTTONUP_H
 #define BUTTONUP_H
 
-#include "qdict.h"
-#include "qfile.h"
-#include <MLParser.h>
-#include "nodelist.h"
+#include <QHash>
+#include <QFile>
+#include "RegionList"
 
+namespace BottomUp {
 /**
   *@author jürgen bückner
   */
-/** node list class */
+/** region list class */
 class BottomUp {
 public: 
 	/** default constructor */
@@ -45,16 +45,17 @@ public:
   /** return the number of classes read into 'arglist'  */
   int number_of_classes();
 	/** show info */
-	void node_info() {nodelist_->info();};
+	void region_info() {regionlist_->info();};
   /** return a list of pointer to the objects of specified class type */
-  NodeList* selectClass (QString classname);
+  RegionList* selectClass (QString classname);
   /** return a list of pointer to the objects of specified class type */
   int calcForSelect (QString classname);
 
 protected: // Protected attributes
   /** list of class description */
-  NodeList* nodelist_;
+  RegionList* regionlist_;
 };
 
+} // namespace BottomUp
 #endif
 

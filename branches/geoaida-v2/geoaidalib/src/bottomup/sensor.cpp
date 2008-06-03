@@ -1,8 +1,8 @@
 /***************************************************************************
-                          stackelemstack.cpp  -  description
+                          gasensor.cpp  -  description
                              -------------------
-    begin                : Tue Nov 13 2001
-    copyright            : (C) 2001 by Martin Pahl
+    begin                : Mon Jan 22 2001
+    copyright            : (C) 2001 by jürgen bückner
     email                : bueckner@tnt.uni-hannover.de
  ***************************************************************************/
 
@@ -15,42 +15,25 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "stackelemstack.h"
 
+#include "sensor.h"
 
-StackElemStack::StackElemStack(const Stack& stack){
-  //stack_=stack;
-  QPtrStackIterator<StackElem> it(stack);
-  for (;it.current();++it) {
-    stack_.push((*it)->copy());
-  }
+using BottomUp;
+
+/** return label   */
+unsigned long int GASensor::id(void) {
+	return id_;
 }
 
-StackElemStack::StackElemStack(const StackElemStack& elem){
-  //stack_=elem.stack_;
-  QPtrStackIterator<StackElem> it(elem.stack_);
-  for (;it.current();++it) {
-    stack_.push((*it)->copy());
-  }
+/** return node pointer   */
+Node* GASensor::node(void) {
+	return node_;
 }
 
-StackElemStack::~StackElemStack(){
+/** set node pointer   */
+void GASensor::node(Node* n){
+	node_=n;
+	id_ =((*node_)["id"])->toInt(); //get region ID
 }
 
-Stack& StackElemStack::data(){
-  return stack_;
-}
 
-int StackElemStack::type(){
-  return STACK;
-}
-
-const char* StackElemStack::typeName()
-{
-  return "stack";
-}
-
-StackElem* StackElemStack::copy() {
-  Stack val=((StackElemStack*)this)->data(); //liste holen
-  return (new StackElemStack(val));
-}

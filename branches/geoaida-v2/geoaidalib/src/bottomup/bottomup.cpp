@@ -17,6 +17,8 @@
 
 #include "bottomup.h"
 
+using BottomUp;
+
 BottomUp::BottomUp(){
 	init();
 }

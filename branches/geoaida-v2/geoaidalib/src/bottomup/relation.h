@@ -1,5 +1,5 @@
 /***************************************************************************
-                          garelation.h  -  description
+                          relation.h  -  description
                              -------------------
     begin                : Fri Feb 2 2001
     copyright            : (C) 2001 by jürgen bückner
@@ -15,20 +15,22 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef GARELATION_H
-#define GARELATION_H
+#ifndef RELATION_H
+#define RELATION_H
 
-
+namespace BottomUp {
 /**
   *@author jürgen bückner
   *basic class for all relation classes
   *vitual function calc must be overloaded
   */
 
-class GARelation {
+class Relation {
 public: 
-	GARelation();
-	~GARelation();
+	Relation();
+	~Relation();
 };
+
+} 
 
 #endif

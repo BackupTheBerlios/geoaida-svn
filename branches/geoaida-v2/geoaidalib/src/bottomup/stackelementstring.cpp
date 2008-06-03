@@ -17,40 +17,42 @@
 
 #include "stackelemstring.h"
 
-StackElemString::StackElemString(QString s)
+using BottomUp;
+
+StackElementString::StackElementString(QString s)
 {
   data_=s;
 }
 
-StackElemString::StackElemString(const StackElemString& elem)
+StackElementString::StackElementString(const StackElementString& elem)
 {
   data_=elem.data_;
 }
 
-StackElemString::~StackElemString()
+StackElementString::~StackElementString()
 {
 }
 
 /** returns the type (STRING) of this stack element  */
-int StackElemString::type()
+int StackElementString::type()
 {
   return STRING;
 }
 
-const char* StackElemString::typeName()
+const char* StackElementString::typeName()
 {
   return "string";
 }
 
 /** Returns a copy of this stack element */
-StackElem* StackElemString::copy()
+StackElement* StackElementString::copy()
 {
-  QString val=((StackElemString*)this)->data(); //liste holen
-  return (new StackElemString(val));
+  QString val=((StackElementString*)this)->data(); //liste holen
+  return (new StackElementString(val));
 }
 
 /** Returns the contained string from this stack element */
-QString StackElemString::data()
+QString StackElementString::data()
 {
   return data_;
 }

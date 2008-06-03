@@ -1,7 +1,7 @@
 /***************************************************************************
-                          stackelemstack.h  -  description
+                          stackelemnodelist.h  -  description
                              -------------------
-    begin                : Tue Nov 13 2001
+    begin                : Wed Aug 1 2001
     copyright            : (C) 2001 by Martin Pahl
     email                : pahl@tnt.uni-hannover.de
  ***************************************************************************/
@@ -15,33 +15,37 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef STACKELEMSTACK_H
-#define STACKELEMSTACK_H
+#ifndef STACKELEMNODELIST_H
+#define STACKELEMNODELIST_H
 
-#ifdef WIN32
-#include "stack.h"
-#include "stackelem.h"
-#else
-#include <stack.h>
-#include <stackelem.h>
-#endif
+#include "StackElement"
+#include "NodeList"
 
-/**This stack element holds a stack
+namespace BottomUp {
+
+
+/**Stack element holding a node list
   *@author Martin Pahl
   */
 
-class StackElemStack : public StackElem  {
+class StackElementNodeList : public StackElement  {
 public: 
-	StackElemStack(const Stack& stack);
-	StackElemStack(const StackElemStack& elem);
-	~StackElemStack();
-	StackElem* copy();
-	Stack& data();
-	int type();
+  /** constructs a stack element containing the given nodelist */
+  StackElementNodeList(const NodeList& list);
+  /** Copy constructor */
+  StackElementNodeList(const StackElementNodeList& list);
+	~StackElementNodeList();
+  /** returns the type (NODELIST) of this stack element  */
+  int type();
   const char* typeName();
-protected: // Protected attributes
-  /** Data */
-  Stack stack_;
+  /** Returns a copy of this stack element */
+  StackElement* copy();
+  /** return the data in the stack element */
+  NodeList& data();
+private: // Private attributes
+  /**  Data */
+  NodeList data_;
 };
 
+} // namespace BottomUp
 #endif

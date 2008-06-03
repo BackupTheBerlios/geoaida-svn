@@ -15,9 +15,11 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "garelation.h"
+#include "relation.h"
+using BottomUp;
 
-GARelation::GARelation(){
+Relation::Relation(){
 }
-GARelation::~GARelation(){
+
+Relation::~Relation(){
 }

@@ -1,5 +1,5 @@
 /***************************************************************************
-                          stackelemnodelist.h  -  description
+                          stackelemstring.h  -  description
                              -------------------
     begin                : Wed Aug 1 2001
     copyright            : (C) 2001 by Martin Pahl
@@ -15,38 +15,33 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef STACKELEMNODELIST_H
-#define STACKELEMNODELIST_H
+#ifndef STACKELEMSTRING_H
+#define STACKELEMSTRING_H
 
-#ifdef WIN32
-#include "stackelem.h"
-#else
-#include <stackelem.h>
-#endif
-#include "nodelist.h"
-//#include "regionsensor.h"
+#include <QString>
+#include "StackElement"
 
-/**Stack element holding a node list
+namespace BottomUp {
+/**Stack element holding a string
   *@author Martin Pahl
   */
 
-class StackElemNodeList : public StackElem  {
+class StackElementString : public StackElement  {
 public: 
-  /** constructs a stack element containing the given nodelist */
-  StackElemNodeList(const NodeList& list);
-  /** Copy constructor */
-  StackElemNodeList(const StackElemNodeList& list);
-	~StackElemNodeList();
-  /** returns the type (NODELIST) of this stack element  */
+	StackElementString(QString s);
+	StackElementString(const StackElementString& elem);
+	~StackElementString();
+  /** returns the type (STRING) of this stack element  */
   int type();
   const char* typeName();
   /** Returns a copy of this stack element */
-  StackElem* copy();
-  /** return the data in the stack element */
-  NodeList& data();
+  StackElement* copy();
+  /** Returns the contained string from this stack element */
+  QString data();
 private: // Private attributes
-  /**  Data */
-  NodeList data_;
+  /** Data */
+  QString data_;
 };
 
+} // namespace BottomUp
 #endif

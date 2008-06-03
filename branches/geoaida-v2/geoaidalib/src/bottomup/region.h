@@ -1,5 +1,5 @@
 /***************************************************************************
-                          node.h  -  description
+                          region.h  -  description
                              -------------------
     begin                : Thu Oct 19 2000
     copyright            : (C) 2000 by Jürgen Bückner
@@ -16,47 +16,37 @@
  ***************************************************************************/
 
 
-#ifndef NODE_H
-#define NODE_H
+#ifndef REGION_H
+#define REGION_H
 
-#include "gaimage.h"
-#include <qstring.h>
-#include <qpoint.h>
-#include <qfile.h>
-#include "MLParser.h"
-#if 0
-extern "C" {
-#include <pbm.h>
-#include <pgm.h>
-#include <ppm.h>
-#include <pnm.h>
-#include "pfm.h"
-}
-#endif
+#include <QString>
+#include <QPoint>
+#include <QFile>
 
-#include <qdatastream.h>
-#ifdef WIN32
-#include "stack.h"
-#else
-#include <stack.h>
-#endif
+#include <MLParser>
+#include <Image>
+#include "Stack"
+
+class Ga::Image;
+
+namespace BottomUp {
+
+class RegionList;
 
 /**class to handel the infos for one image
   *@author Jürgen Bückner
   */
-class NodeList;
-class Ga::Image;
 
-class Node : public ArgDict {
+class Region : public ArgDict {
 public: 
   /** default constructor */
-  Node();
+  Region();
   
-  /** constructor read attributes for this Node through parser*/
-  Node(MLParser& parser);
+  /** constructor read attributes for this Region through parser*/
+  Region(MLParser& parser);
   
   /** denstructor */
-  ~Node();
+  ~Region();
   
  protected: // Protected attributes
   enum IMGTYPE {
@@ -75,14 +65,14 @@ public:
   /** init routine */
   void init();
   
-  /** read attributes for this Node through parser */
+  /** read attributes for this Region through parser */
   void read(MLParser& parser);
   
   /** load image info - not the data */
-  void load(NodeList& nodeList);
+  void load(RegionList& regionList);
   
   /** write data to file */
-  void write(QTextStream& fp, QString keyword="node");
+  void write(QTextStream& fp, QString keyword="region");
   
   /** return the image filename */
   QString filename();
@@ -92,18 +82,11 @@ public:
   
   /** return data */
   Ga::Image* data();
-#if 0	
-  /** write a scrap of the data.
-   * return the filename.
-   * if the file exist do nothing .
-   * argument fname is optional .
-   * the coordinates of the image part are geodata e.g. Gauss Krueger */
-  QString part(float north, float south, float west, float east, QString fname = "");
-#endif	
-  //** set value in node */
+
+  //** set value in region */
   void setValue(QString key, QString val);
 
-  //** get value from node */
+  //** get value from region */
   QString* getValue(const QString key);
 
   /** return data label id */
@@ -162,24 +145,25 @@ public:
   QString classname() {return class_;}
   /** return identifier name*/
   QString name() {return name_;}
-  /** return node address*/
+  /** return region address*/
   QString addr() {return addr_;}
-  /** return node address*/
+  /** return region address*/
   QString key() {return key_;}
-  /** return info about this node*/
+  /** return info about this region*/
   void info() {
-    QDictIterator<QString> it(*this);
-    for (;it.current(); ++it)
-      if(it.currentKey())
-	printf("%s=\"%s\" ",it.currentKey().latin1(),(it.current())->latin1() );
-      else qWarning("(WARNING) Node::info - currentKey() is unreadably");
+    ArgDictIterator it = iterator();
+    for (it = begin(); it != end(); ++it){
+      const QString& key = it.key();
+      const QString& val = it.value();
+      printf("%s=\"%s\"", key.toStdString().c_str(), val.toStdString().c_str());
+    }
   };
   /** return stack - for bottom-up */
   Stack& stack(void);
   /** Removes the top item from the local stack and returns it. */
-  StackElem* stackPop();
+  StackElement* stackPop();
   /** Adds an element d to the top of the local stack. */
-  void stackPush(const StackElem* d);
+  void stackPush(const StackElement* d);
   /** Returns the number of items in the local stack.  */
   uint stackCount(void);
   /** Returns TRUE is the local stack contains no elements to be popped; otherwise returns FALSE.  */
@@ -194,7 +178,7 @@ public:
   
   //Operatoren:
   /** return class name*/
-  //friend ostream& operator<< (ostream& os, Node& node);
+  //friend ostream& operator<< (ostream& os, Region& region);
   
  protected: // Protected attributes
   QString filename_, class_, name_, addr_, key_;
@@ -212,6 +196,8 @@ private:	 // Private attributes
   Stack stack_;
   
 };
+
+}  // namespace BottomUp
 
 #endif
 

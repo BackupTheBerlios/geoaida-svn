@@ -17,14 +17,15 @@
 //  #define DEBUGMSG
 
 using namespace std;
+using namespace BottomUp;
 #include <iostream>
 
 #include "stack.h"
-#include "stackelemnodelist.h"
-#include "stackelemnumber.h"
-#include "stackelemstring.h"
-#include "stackelemstack.h"
-#include "regionsensor.h"
+#include "StackElementNodeList"
+#include "StackElementNumber"
+#include "StackELementString"
+#include "StackElementStack"
+#include "RegionSensor"
 #include "qregexp.h"
 #include <qmap.h>
 #include <cstdio>
@@ -35,37 +36,37 @@ using namespace std;
 //######### NUMERIC FUNCTION  #########
 bool Stack::numfkt(double f(double, double))
 {
-  StackElem *el1 = 0;
-  StackElem *el2 = 0;
+  StackElement *el1 = 0;
+  StackElement *el2 = 0;
   try {
     if (count() < 2)
       throw CleanUp(false);     //sind noch genug da?
     el1 = pop();                //von stack holen
     el2 = pop();                //von stack holen
-    if (el1->type() == StackElem::NUMBER && el2->type() == StackElem::NODELIST) {       //value + list
-      double d = ((StackElemNumber *) el1)->data();     //wert holen
-      NodeList & nl = ((StackElemNodeList *) el2)->data();      //liste holen
+    if (el1->type() == StackElement::NUMBER && el2->type() == StackElement::NODELIST) {       //value + list
+      double d = ((StackElementNumber *) el1)->data();     //wert holen
+      NodeList & nl = ((StackElementNodeList *) el2)->data();      //liste holen
       QDictIterator < Node > it(nl);
       while (it.current()) {
         Node *node = it.current();      //nl.find(*it);
         if (node->stackCount() < 1)
           throw CleanUp(false); //sind noch genug da?
-        StackElem *nse = node->stackPop();      //pop value from node
-        if (nse->type() != StackElem::NUMBER)
+        StackElement *nse = node->stackPop();      //pop value from node
+        if (nse->type() != StackElement::NUMBER)
           throw CleanUp(false);
-        double nd = ((StackElemNumber *) nse)->data();
-        node->stackPush(new StackElemNumber(f(nd, d))); //push value to node
+        double nd = ((StackElementNumber *) nse)->data();
+        node->stackPush(new StackElementNumber(f(nd, d))); //push value to node
 #ifdef DEBUGMSG
         printf("<<< >>> %f * %f = %f\n", nd, d, f(nd, d));
 #endif //DEBUGMSG
         ++it;
       }
-      push(new StackElemNodeList(nl));
+      push(new StackElementNodeList(nl));
       throw CleanUp(true);
     }
-    else if (el1->type() == StackElem::NODELIST && el2->type() == StackElem::NODELIST) {        // 2 lists
-      NodeList & nl1 = ((StackElemNodeList *) el1)->data();     //liste holen
-      NodeList & nl2 = ((StackElemNodeList *) el2)->data();     //liste holen
+    else if (el1->type() == StackElement::NODELIST && el2->type() == StackElement::NODELIST) {        // 2 lists
+      NodeList & nl1 = ((StackElementNodeList *) el1)->data();     //liste holen
+      NodeList & nl2 = ((StackElementNodeList *) el2)->data();     //liste holen
       if (nl1.size() != nl2.size())
         throw CleanUp(false);   //unterschiedliche Listengroesse
       QDictIterator < Node > it1(nl1);
@@ -77,27 +78,27 @@ bool Stack::numfkt(double f(double, double))
           throw CleanUp(false); //sind noch genug da?
         if (node2->stackCount() < 1)
           throw CleanUp(false); //sind noch genug da?
-        StackElem *nse1 = node1->stackPop();    //pop value from node
-        StackElem *nse2 = node2->stackPop();    //pop value from node
-        if (nse1->type() != StackElem::NUMBER
-            || nse2->type() != StackElem::NUMBER)
+        StackElement *nse1 = node1->stackPop();    //pop value from node
+        StackElement *nse2 = node2->stackPop();    //pop value from node
+        if (nse1->type() != StackElement::NUMBER
+            || nse2->type() != StackElement::NUMBER)
           throw CleanUp(false);
-        double nd1 = ((StackElemNumber *) nse1)->data();
-        double nd2 = ((StackElemNumber *) nse2)->data();
-        node2->stackPush(new StackElemNumber(f(nd2, nd1)));     //push value to node
+        double nd1 = ((StackElementNumber *) nse1)->data();
+        double nd2 = ((StackElementNumber *) nse2)->data();
+        node2->stackPush(new StackElementNumber(f(nd2, nd1)));     //push value to node
 #ifdef DEBUGMSG
         printf("<<< >> %f * %f = %f\n", nd2, nd1, f(nd2, nd1));
 #endif //DEBUGMSG
         ++it1;
         ++it2;
       }
-      push(new StackElemNodeList(nl2));
+      push(new StackElementNodeList(nl2));
       throw CleanUp(true);
     }
-    else if (el1->type() == StackElem::NUMBER && el2->type() == StackElem::NUMBER) {    //value + value
-      double d1 = ((StackElemNumber *) el1)->data();
-      double d2 = ((StackElemNumber *) el2)->data();
-      push(new StackElemNumber(f(d1, d2)));
+    else if (el1->type() == StackElement::NUMBER && el2->type() == StackElement::NUMBER) {    //value + value
+      double d1 = ((StackElementNumber *) el1)->data();
+      double d2 = ((StackElementNumber *) el2)->data();
+      push(new StackElementNumber(f(d1, d2)));
 #ifdef DEBUGMSG
       printf("<< >> %f (?) %f = %f\n", d1, d2, f(d2, d1));
 #endif //DEBUGMSG
@@ -206,18 +207,18 @@ bool Stack::div()
 /** logic operator for numeric values to mange the stack (eq, neq, gt, lt, get, let) */
 bool Stack::lofkt(bool f(double, double), bool sf(QString, QString))
 {
-  StackElem *el1 = 0;
-  StackElem *el2 = 0;
+  StackElement *el1 = 0;
+  StackElement *el2 = 0;
   try {
     if (count() < 2)
       throw CleanUp(false);     //sind noch genug da?
     el1 = pop();                //von stack holen
     el2 = pop();                //von stack holen
-    if (el1->type() == StackElem::NUMBER && el2->type() == StackElem::NODELIST) {       //value + list
+    if (el1->type() == StackElement::NUMBER && el2->type() == StackElement::NODELIST) {       //value + list
       cout << "Stack::lofkt: el1 =" << el1->type() << " el2=" << el2->
         type() << endl;
-      double d = ((StackElemNumber *) el1)->data();     //wert holen
-      NodeList & nl = ((StackElemNodeList *) el2)->data();      //liste holen
+      double d = ((StackElementNumber *) el1)->data();     //wert holen
+      NodeList & nl = ((StackElementNodeList *) el2)->data();      //liste holen
       //NodeList* selected=new NodeList;// new nodelist for result
       QDictIterator < Node > it(nl);
       while (it.current()) {
@@ -226,15 +227,15 @@ bool Stack::lofkt(bool f(double, double), bool sf(QString, QString))
           cerr << "Not enough elements on local stack " << endl;
           throw CleanUp(false);
         }
-        StackElem *nse = node->stackPop();      //pop value from node
-        if (nse->type() != StackElem::NUMBER) {
+        StackElement *nse = node->stackPop();      //pop value from node
+        if (nse->type() != StackElement::NUMBER) {
           cerr << "Wrong element type (" << nse->type()
-            << ") on local stack - expected " << StackElem::NUMBER << endl;
+            << ") on local stack - expected " << StackElement::NUMBER << endl;
           throw CleanUp(false);
         }
-        double nd = ((StackElemNumber *) nse)->data();
+        double nd = ((StackElementNumber *) nse)->data();
         //if ((f(nd,d)))
-        node->stackPush(new StackElemNumber(f(nd, d))); //push value to node
+        node->stackPush(new StackElementNumber(f(nd, d))); //push value to node
         //selected->insert(it.currentKey(),node);
 #ifdef DEBUGMSG
         printf(".<< > (lofkt nu-no) %f ? %f = %d\n", d, nd, f(nd, d));
@@ -245,12 +246,12 @@ bool Stack::lofkt(bool f(double, double), bool sf(QString, QString))
       cout << "SIZE nl (lofkt nu-no): " << nl.size() << endl;
       //nl.info();
 #endif //DEBUGMSG
-      push(new StackElemNodeList(nl));
+      push(new StackElementNodeList(nl));
       throw CleanUp(true);
     }
-    else if (el1->type() == StackElem::NODELIST && el2->type() == StackElem::NODELIST) {        //value + list
-      NodeList & nl1 = ((StackElemNodeList *) el1)->data();     //liste holen
-      NodeList & nl2 = ((StackElemNodeList *) el2)->data();     //liste holen
+    else if (el1->type() == StackElement::NODELIST && el2->type() == StackElement::NODELIST) {        //value + list
+      NodeList & nl1 = ((StackElementNodeList *) el1)->data();     //liste holen
+      NodeList & nl2 = ((StackElementNodeList *) el2)->data();     //liste holen
       if (nl1.size() != nl2.size())
         throw CleanUp(false);   //unterschiedliche Listengroesse
       QDictIterator < Node > it1(nl1);
@@ -262,15 +263,15 @@ bool Stack::lofkt(bool f(double, double), bool sf(QString, QString))
           throw CleanUp(false); //sind noch genug da?
         if (node2->stackCount() < 1)
           throw CleanUp(false); //sind noch genug da?
-        StackElem *nse1 = node1->stackPop();    //pop value from node
-        StackElem *nse2 = node2->stackPop();    //pop value from node
-        if (nse1->type() != StackElem::NUMBER
-            || nse2->type() != StackElem::NUMBER)
+        StackElement *nse1 = node1->stackPop();    //pop value from node
+        StackElement *nse2 = node2->stackPop();    //pop value from node
+        if (nse1->type() != StackElement::NUMBER
+            || nse2->type() != StackElement::NUMBER)
           throw CleanUp(false);
-        double nd1 = ((StackElemNumber *) nse1)->data();
-        double nd2 = ((StackElemNumber *) nse2)->data();
+        double nd1 = ((StackElementNumber *) nse1)->data();
+        double nd2 = ((StackElementNumber *) nse2)->data();
         //if ((f(nd1,nd2)))
-        node2->stackPush(new StackElemNumber((f) (nd2, nd1)));  //push value to node
+        node2->stackPush(new StackElementNumber((f) (nd2, nd1)));  //push value to node
 #ifdef DEBUGMSG
         printf(".<<< >> (lofkt no-no) %f ? %f = %d\n", nd2, nd1,
                (*f) (nd2, nd1));
@@ -278,27 +279,27 @@ bool Stack::lofkt(bool f(double, double), bool sf(QString, QString))
         ++it1;
         ++it2;
       }
-      push(new StackElemNodeList(nl2));
+      push(new StackElementNodeList(nl2));
       throw CleanUp(true);
     }
-    else if (el1->type() == StackElem::NUMBER && el2->type() == StackElem::NUMBER) {    //value + value
-      double d1 = ((StackElemNumber *) el1)->data();
-      double d2 = ((StackElemNumber *) el2)->data();
-      push(new StackElemNumber((*f) (d2, d1)));
+    else if (el1->type() == StackElement::NUMBER && el2->type() == StackElement::NUMBER) {    //value + value
+      double d1 = ((StackElementNumber *) el1)->data();
+      double d2 = ((StackElementNumber *) el2)->data();
+      push(new StackElementNumber((*f) (d2, d1)));
 #ifdef DEBUGMSG
       printf(".<< >> (lofkt no-no) %f * %f = %d\n", d2, d1, (f) (d2, d1));
 #endif //DEBUGMSG
       throw CleanUp(true);
     }
-    else if (el1->type() == StackElem::STRING && el2->type() == StackElem::NODELIST) {  //string + list
-      QString d = ((StackElemString *) el1)->data();    //wert holen
-      NodeList & nl = ((StackElemNodeList *) el2)->data();      //liste holen
+    else if (el1->type() == StackElement::STRING && el2->type() == StackElement::NODELIST) {  //string + list
+      QString d = ((StackElementString *) el1)->data();    //wert holen
+      NodeList & nl = ((StackElementNodeList *) el2)->data();      //liste holen
       NodeList *selected = new NodeList;        // new nodelist for result
       QDictIterator < Node > it(nl);
       while (it.current()) {
         Node *node = it.current();
         QString name = node->classname();
-        node->stackPush(new StackElemNumber(sf(name, d)));      //push value to node
+        node->stackPush(new StackElementNumber(sf(name, d)));      //push value to node
         // if ((sf(node->classname(),d)))
         selected->insert(it.currentKey(), node);        //XYXY
 #ifdef DEBUGMSG
@@ -311,7 +312,7 @@ bool Stack::lofkt(bool f(double, double), bool sf(QString, QString))
       cout << "SIZE (lofkt s-no) selected: " << selected->size() << endl;
       //nl.info();
 #endif //DEBUGMSG
-      push(new StackElemNodeList(*selected));
+      push(new StackElementNodeList(*selected));
       throw CleanUp(true);
     }
     else
@@ -628,7 +629,7 @@ Stack & Stack::copy(const Stack & stack)
 {
   if (this != &stack) {
     clear();
-    QPtrStackIterator < StackElem > it(stack);
+    QPtrStackIterator < StackElement *> it(stack);
     for (; it.current(); ++it) {
       push((*it)->copy());
     }
@@ -642,7 +643,7 @@ bool Stack::dup()
 {
   if (isEmpty())
     return false;
-  StackElem *el = pop();
+  StackElement *el = pop();
   push(el);
   el = el->copy();
   push(el);
@@ -655,7 +656,7 @@ bool Stack::drop()
 {
   if (isEmpty())
     return false;
-  StackElem *el = pop();
+  StackElement *el = pop();
   if (el)
     delete el;
   return true;
@@ -666,8 +667,8 @@ bool Stack::swap()
 {
   if (count() < 2)
     return false;
-  StackElem *el1 = pop();
-  StackElem *el2 = pop();
+  StackElement *el1 = pop();
+  StackElement *el2 = pop();
   push(el1);
   push(el2);
   return true;
@@ -677,62 +678,62 @@ bool Stack::swap()
 /** Filter the nodes in nodelist with local stack entry 1=TRUE */
 bool Stack::select()
 {
-  StackElem *el1 = 0;
-  StackElem *el2 = 0;
+  StackElement *el1 = 0;
+  StackElement *el2 = 0;
   try {
     if (count() < 1)
       throw CleanUp(false);
     el1 = pop();
-    if (el1->type() == StackElem::NODELIST) {
-      NodeList & nl = ((StackElemNodeList *) el1)->data();
+    if (el1->type() == StackElement::NODELIST) {
+      NodeList & nl = ((StackElementNodeList *) el1)->data();
       NodeList *selected = new NodeList;        // new nodelist for result
       QDictIterator < Node > it(nl);
       while (it.current()) {
         Node *node = it.current();
         if (node->stackCount() < 1)
           throw CleanUp(false); //sind noch genug da?
-        StackElem *nse = node->stackPop();      //pop value from node
-        if (nse->type() != StackElem::NUMBER)
+        StackElement *nse = node->stackPop();      //pop value from node
+        if (nse->type() != StackElement::NUMBER)
           throw CleanUp(false);
-        //double nd=((StackElemNumber*)nse)->data();
-        if (((StackElemNumber *) nse)->data() == 1)
+        //double nd=((StackElementNumber*)nse)->data();
+        if (((StackElementNumber *) nse)->data() == 1)
           selected->insert(it.currentKey(), node);      //XYXY
 #ifdef DEBUGMSG
-        printf("(select) %f\n", ((StackElemNumber *) nse)->data());
+        printf("(select) %f\n", ((StackElementNumber *) nse)->data());
 #endif //DEBUGMSG
         ++it;
       }
 #ifdef DEBUGMSG
       cout << "SIZE selected (select.): " << selected->size() << endl;
 #endif //DEBUGMSG
-      push(new StackElemNodeList(*selected));
+      push(new StackElementNodeList(*selected));
       throw CleanUp(true);
     }
-    else if (el1->type() == StackElem::NUMBER
-             || el2->type() == StackElem::NODELIST) {
-      double d1 = ((StackElemNumber *) el1)->data();
-      NodeList & nl = ((StackElemNodeList *) el2)->data();
+    else if (el1->type() == StackElement::NUMBER
+             || el2->type() == StackElement::NODELIST) {
+      double d1 = ((StackElementNumber *) el1)->data();
+      NodeList & nl = ((StackElementNodeList *) el2)->data();
       NodeList *selected = new NodeList;        // new nodelist for result
       QDictIterator < Node > it(nl);
       while (it.current()) {
         Node *node = it.current();
         if (node->stackCount() < 1)
           throw CleanUp(false); //sind noch genug da?
-        StackElem *nse = node->stackPop();      //pop value from node
-        if (nse->type() != StackElem::NUMBER)
+        StackElement *nse = node->stackPop();      //pop value from node
+        if (nse->type() != StackElement::NUMBER)
           throw CleanUp(false);
-        //double nd=((StackElemNumber*)nse)->data();
-        if (((StackElemNumber *) nse)->data() == d1)
+        //double nd=((StackElementNumber*)nse)->data();
+        if (((StackElementNumber *) nse)->data() == d1)
           selected->insert(it.currentKey(), node);      //XYXY
 #ifdef DEBUGMSG
-        printf("(select) %f %f\n", d1, ((StackElemNumber *) nse)->data());
+        printf("(select) %f %f\n", d1, ((StackElementNumber *) nse)->data());
 #endif //DEBUGMSG
         ++it;
       }
 #ifdef DEBUGMSG
       cout << "SIZE selected (select..): " << selected->size() << endl;
 #endif //DEBUGMSG
-      push(new StackElemNodeList(*selected));
+      push(new StackElementNodeList(*selected));
       throw CleanUp(true);
     }
     else
@@ -750,63 +751,63 @@ bool Stack::select()
 /** Filter the nodes in nodelist with local stack entry 1=FALSE */
 bool Stack::selectInvers()
 {
-  StackElem *el1 = 0;
-  StackElem *el2 = 0;
+  StackElement *el1 = 0;
+  StackElement *el2 = 0;
   try {
     if (count() < 1)
       throw CleanUp(false);
     el1 = pop();
-    if (el1->type() == StackElem::NODELIST) {
-      NodeList & nl = ((StackElemNodeList *) el1)->data();
+    if (el1->type() == StackElement::NODELIST) {
+      NodeList & nl = ((StackElementNodeList *) el1)->data();
       NodeList *selected = new NodeList;        // new nodelist for result
       QDictIterator < Node > it(nl);
       while (it.current()) {
         Node *node = it.current();
         if (node->stackCount() < 1)
           throw CleanUp(false); //sind noch genug da?
-        StackElem *nse = node->stackPop();      //pop value from node
-        if (nse->type() != StackElem::NUMBER)
+        StackElement *nse = node->stackPop();      //pop value from node
+        if (nse->type() != StackElement::NUMBER)
           throw CleanUp(false);
-        //double nd=((StackElemNumber*)nse)->data();
-        if (((StackElemNumber *) nse)->data() != 1)
+        //double nd=((StackElementNumber*)nse)->data();
+        if (((StackElementNumber *) nse)->data() != 1)
           selected->insert(it.currentKey(), node);      //XYXY
 #ifdef DEBUGMSG
-        printf("(selectInvers) %f\n", ((StackElemNumber *) nse)->data());
+        printf("(selectInvers) %f\n", ((StackElementNumber *) nse)->data());
 #endif //DEBUGMSG
         ++it;
       }
 #ifdef DEBUGMSG
       cout << "SIZE selected (selectInvers): " << selected->size() << endl;
 #endif //DEBUGMSG
-      push(new StackElemNodeList(*selected));
+      push(new StackElementNodeList(*selected));
       throw CleanUp(true);
     }
-    else if (el1->type() == StackElem::NUMBER
-             || el2->type() == StackElem::NODELIST) {
-      double d1 = ((StackElemNumber *) el1)->data();
-      NodeList & nl = ((StackElemNodeList *) el2)->data();
+    else if (el1->type() == StackElement::NUMBER
+             || el2->type() == StackElement::NODELIST) {
+      double d1 = ((StackElementNumber *) el1)->data();
+      NodeList & nl = ((StackElementNodeList *) el2)->data();
       NodeList *selected = new NodeList;        // new nodelist for result
       QDictIterator < Node > it(nl);
       while (it.current()) {
         Node *node = it.current();
         if (node->stackCount() < 1)
           throw CleanUp(false); //sind noch genug da?
-        StackElem *nse = node->stackPop();      //pop value from node
-        if (nse->type() != StackElem::NUMBER)
+        StackElement *nse = node->stackPop();      //pop value from node
+        if (nse->type() != StackElement::NUMBER)
           throw CleanUp(false);
-        //double nd=((StackElemNumber*)nse)->data();
-        if (((StackElemNumber *) nse)->data() != d1)
+        //double nd=((StackElementNumber*)nse)->data();
+        if (((StackElementNumber *) nse)->data() != d1)
           selected->insert(it.currentKey(), node);      //XYXY
 #ifdef DEBUGMSG
         printf("(selectInvers) %f %f\n", d1,
-               ((StackElemNumber *) nse)->data());
+               ((StackElementNumber *) nse)->data());
 #endif //DEBUGMSG
         ++it;
       }
 #ifdef DEBUGMSG
       cout << "SIZE selected (selectInvers): " << selected->size() << endl;
 #endif //DEBUGMSG
-      push(new StackElemNodeList(*selected));
+      push(new StackElementNodeList(*selected));
       throw CleanUp(true);
     }
     else
@@ -825,23 +826,23 @@ bool Stack::selectInvers()
 /** Filter all the nodelist in elem 2 with the classname in elemen 1 */
 bool Stack::selectClass()
 {
-  StackElem *el1 = 0;
-  StackElem *el2 = 0;
+  StackElement *el1 = 0;
+  StackElement *el2 = 0;
   try {
     if (count() < 2)
       throw CleanUp(false);
     el1 = pop();
     el2 = pop();
-    if (el1->type() != StackElem::STRING
-        || el2->type() != StackElem::NODELIST)
+    if (el1->type() != StackElement::STRING
+        || el2->type() != StackElement::NODELIST)
       throw CleanUp(false);
-    QString s = ((StackElemString *) el1)->data();
-    NodeList & nl = ((StackElemNodeList *) el2)->data();
+    QString s = ((StackElementString *) el1)->data();
+    NodeList & nl = ((StackElementNodeList *) el2)->data();
     NodeList *selected = nl.selectClass(s);
     if (!selected)
       throw CleanUp(false);
     //selected->info();
-    push(new StackElemNodeList(*selected));
+    push(new StackElementNodeList(*selected));
     //XXXXXXXXXXXXX delete selected;
     throw CleanUp(true);
   }
@@ -876,21 +877,21 @@ bool Stack::selectClass()
 */
 bool Stack::calcAttribute()
 {
-  StackElem *el1 = 0;
-  StackElem *el2 = 0;
+  StackElement *el1 = 0;
+  StackElement *el2 = 0;
   try {
     RegionSensor *rs = new RegionSensor();
     if (count() < 2)
       throw CleanUp(false);
     el1 = pop();
     el2 = pop();
-    if (el1->type() != StackElem::STRING
-        && el2->type() != StackElem::NODELIST)
+    if (el1->type() != StackElement::STRING
+        && el2->type() != StackElement::NODELIST)
       throw CleanUp(false);
-    QString s = ((StackElemString *) el1)->data();
-    NodeList & nl = ((StackElemNodeList *) el2)->data();
+    QString s = ((StackElementString *) el1)->data();
+    NodeList & nl = ((StackElementNodeList *) el2)->data();
     nl.calcForSelect("ALL", s, rs);
-    push(new StackElemNodeList(nl));
+    push(new StackElementNodeList(nl));
     if (rs)
       delete rs;
     throw CleanUp(true);
@@ -922,7 +923,7 @@ bool Stack::run(QString cmd)
     // Debug Stack types
     cout << "(" << count() << "): ";
     {
-      QPtrStackIterator < StackElem > it(*this);
+      QPtrStackIterator < StackElement > it(*this);
       for (; it.current(); ++it) {
         cout << (*it)->typeName() << " ";
       }
@@ -967,7 +968,7 @@ bool Stack::run(QString cmd)
       s = s.mid(1, s.length() - 2);
       s = s.replace(QRegExp("\\\\\""), "\"");
       cout << "(" << count() << ") String:" << s << endl;
-      push(new StackElemString(s));
+      push(new StackElementString(s));
       continue;
     }
     bool ok;
@@ -977,7 +978,7 @@ bool Stack::run(QString cmd)
       return false;
     }
     cout << "(" << count() << ") Num:" << *it << endl;
-    push(new StackElemNumber(v));
+    push(new StackElementNumber(v));
   }
   return true;
 }
@@ -986,7 +987,7 @@ bool Stack::run(QString cmd)
 bool Stack::pushNodeList()
 {
   if (nodeList_) {
-    push(new StackElemNodeList(*nodeList_));
+    push(new StackElementNodeList(*nodeList_));
     return true;
   }
   else
@@ -997,13 +998,13 @@ bool Stack::pushNodeList()
 /** write the topmost stackelement, which should be a nodelist or a stack of nodlist, to the given textstream */
 bool Stack::write(QTextStream & fp, QString keyword)
 {
-  StackElem *el1 = 0;
+  StackElement *el1 = 0;
   try {
     if (count() < 1)
       throw CleanUp(false);
     el1 = pop();
-    if (el1->type() == StackElem::NODELIST) {
-      NodeList & nl = ((StackElemNodeList *) el1)->data();
+    if (el1->type() == StackElement::NODELIST) {
+      NodeList & nl = ((StackElementNodeList *) el1)->data();
       //nl.merge(false);
       if (keyword == "node") {
         nl.genGroupImage();
@@ -1015,8 +1016,8 @@ bool Stack::write(QTextStream & fp, QString keyword)
 
       throw CleanUp(true);
     }
-    if (el1->type() == StackElem::STACK) {
-      Stack & stack = ((StackElemStack *) el1)->data();
+    if (el1->type() == StackElement::STACK) {
+      Stack & stack = ((StackElementStack *) el1)->data();
       while (stack.count()) {
         if (!stack.write(fp, keyword))
           throw CleanUp(false);
@@ -1049,21 +1050,21 @@ void Stack::write(QString filename, QString keyword)
 /** concatenate the both topmost lists in stack */
 bool Stack::concat()
 {
-  StackElem *el1 = 0;
-  StackElem *el2 = 0;
+  StackElement *el1 = 0;
+  StackElement *el2 = 0;
 
   try {
     if (count() < 2)
       throw CleanUp(false);
     el1 = pop();
     el2 = pop();
-    if (el1->type() != StackElem::NODELIST
-        && el2->type() != StackElem::NODELIST)
+    if (el1->type() != StackElement::NODELIST
+        && el2->type() != StackElement::NODELIST)
       throw CleanUp(false);
-    NodeList & nl1 = ((StackElemNodeList *) el1)->data();
-    NodeList & nl2 = ((StackElemNodeList *) el2)->data();
+    NodeList & nl1 = ((StackElementNodeList *) el1)->data();
+    NodeList & nl2 = ((StackElementNodeList *) el2)->data();
     nl2 += nl1;
-    push(new StackElemNodeList(nl2));
+    push(new StackElementNodeList(nl2));
     throw CleanUp(true);
   }
   catch(CleanUp e) {
@@ -1078,15 +1079,15 @@ bool Stack::concat()
 /** push n lists from stack to a 'seperate stack' on stack */
 bool Stack::list2stack()
 {
-  StackElem *el1 = 0;
-  StackElem *el2 = 0;
+  StackElement *el1 = 0;
+  StackElement *el2 = 0;
   try {
     if (count() < 1)
       throw CleanUp(false);
     el1 = pop();
-    if (el1->type() != StackElem::NUMBER)
+    if (el1->type() != StackElement::NUMBER)
       throw CleanUp(false);
-    int d1 = int (((StackElemNumber *) el1)->data());   //Anzahl der Listen
+    int d1 = int (((StackElementNumber *) el1)->data());   //Anzahl der Listen
     if (d1 < 0)
       throw CleanUp(false);
     Stack *se = new Stack();
@@ -1094,12 +1095,12 @@ bool Stack::list2stack()
       if (count() < 1)
         throw CleanUp(false);
       el2 = pop();
-      if (el2->type() != StackElem::NODELIST)
+      if (el2->type() != StackElement::NODELIST)
         throw CleanUp(false);
       se->push(el2);
-      //se->insertAt(0,new StackElemList(el2));
+      //se->insertAt(0,new StackElementList(el2));
     }
-    insertAt(0, new StackElemStack(*se));       //stack mag kein insertAt!
+    insertAt(0, new StackElementStack(*se));       //stack mag kein insertAt!
     throw CleanUp(true);
   }
   catch(CleanUp e) {
@@ -1114,17 +1115,17 @@ bool Stack::list2stack()
 /** push n lists from the 'seperate stack' and the numbers of lists to stack  */
 bool Stack::stack2list()
 {
-  StackElem *el1 = 0;
-  StackElem *el2 = 0;
+  StackElement *el1 = 0;
+  StackElement *el2 = 0;
   try {
     if (count() < 1)
       throw CleanUp(false);
     el1 = pop();
-    if (el1->type() != StackElem::STACK)
+    if (el1->type() != StackElement::STACK)
       throw CleanUp(false);
-    Stack & st = ((StackElemStack *) el1)->data();      //stack vom stack
+    Stack & st = ((StackElementStack *) el1)->data();      //stack vom stack
     int v(st.count());
-    QPtrStackIterator < StackElem > it(st);
+    QPtrStackIterator < StackElement > it(st);
     for (; it.current(); ++it) {
       push((*it)->copy());
     }
@@ -1132,11 +1133,11 @@ bool Stack::stack2list()
        while (!st.isEmpty()) { //über alle elemente
        if (st.count()<1) throw CleanUp(false);
        el2=st.pop();
-       if (el2->type()!=StackElem::NODELIST) throw CleanUp(false);
+       if (el2->type()!=StackElement::NODELIST) throw CleanUp(false);
        push(el2);
        }
      */
-    push(new StackElemNumber(v));
+    push(new StackElementNumber(v));
     throw CleanUp(true);
   }
   catch(CleanUp e) {
@@ -1152,29 +1153,29 @@ bool Stack::stack2list()
   make only a copy - don't change the local stack*/
 bool Stack::nodeSet()
 {
-  StackElem *el1 = 0;
-  StackElem *el2 = 0;
+  StackElement *el1 = 0;
+  StackElement *el2 = 0;
   try {
     if (count() < 2)
       throw CleanUp(false);     //sind noch genug da?
     el1 = pop();                //von stack holen
     el2 = pop();                //von stack holen
-    if (el1->type() == StackElem::STRING && el2->type() == StackElem::NODELIST) {       //value + list
-      QString attribName = ((StackElemString *) el1)->data();   //wert holen
-      NodeList & nl = ((StackElemNodeList *) el2)->data();      //liste holen
+    if (el1->type() == StackElement::STRING && el2->type() == StackElement::NODELIST) {       //value + list
+      QString attribName = ((StackElementString *) el1)->data();   //wert holen
+      NodeList & nl = ((StackElementNodeList *) el2)->data();      //liste holen
       QDictIterator < Node > it(nl);
       while (it.current()) {
         Node *node = it.current();      //nl.find(*it);
         if (node->stackCount() < 1)
           throw CleanUp(false); //sind noch genug da?
-        StackElem *nse = node->stackPop();      //pop value from node
+        StackElement *nse = node->stackPop();      //pop value from node
         QString val;
         switch (nse->type()) {
-        case StackElem::STRING:
-          val = ((StackElemString *) nse)->data();
+        case StackElement::STRING:
+          val = ((StackElementString *) nse)->data();
           break;
-        case StackElem::NUMBER:{
-            double nd = ((StackElemNumber *) nse)->data();
+        case StackElement::NUMBER:{
+            double nd = ((StackElementNumber *) nse)->data();
             val.sprintf("%f", nd);
           }
           break;
@@ -1187,7 +1188,7 @@ bool Stack::nodeSet()
 //                  node->stackPush(nse);
         ++it;
       }
-      push(new StackElemNodeList(nl));
+      push(new StackElementNodeList(nl));
       throw CleanUp(true);
     }
     else
@@ -1204,26 +1205,26 @@ bool Stack::nodeSet()
 
 bool Stack::nlSet()
 {
-  StackElem *el1 = 0;
-  StackElem *el2 = 0;
+  StackElement *el1 = 0;
+  StackElement *el2 = 0;
   try {
     if (count() < 2)
       throw CleanUp(false);     //sind noch genug da?
     el1 = pop();                //von stack holen
     el2 = pop();                //von stack holen
-    if (el1->type() == StackElem::STRING && el2->type() == StackElem::NODELIST) {       //value + list
-      QString attribName = ((StackElemString *) el1)->data();   //wert holen
-      NodeList & nl = ((StackElemNodeList *) el2)->data();      //liste holen
+    if (el1->type() == StackElement::STRING && el2->type() == StackElement::NODELIST) {       //value + list
+      QString attribName = ((StackElementString *) el1)->data();   //wert holen
+      NodeList & nl = ((StackElementNodeList *) el2)->data();      //liste holen
       if (nl.stackCount() < 1)
         throw CleanUp(false);   //sind noch genug da?
-      StackElem *nse = nl.stackPop();   //pop value from node
+      StackElement *nse = nl.stackPop();   //pop value from node
       QString val;
       switch (nse->type()) {
-      case StackElem::STRING:
-        val = ((StackElemString *) nse)->data();
+      case StackElement::STRING:
+        val = ((StackElementString *) nse)->data();
         break;
-      case StackElem::NUMBER:{
-          double nd = ((StackElemNumber *) nse)->data();
+      case StackElement::NUMBER:{
+          double nd = ((StackElementNumber *) nse)->data();
           val.sprintf("%f", nd);
         }
         break;
@@ -1234,7 +1235,7 @@ bool Stack::nlSet()
       nl.set(attribName, val);
       delete nse;
 //          nl.stackPush(nse);
-      push(new StackElemNodeList(nl));
+      push(new StackElementNodeList(nl));
       throw CleanUp(true);
     }
     else
@@ -1251,22 +1252,22 @@ bool Stack::nlSet()
 
 bool Stack::setAttrib()
 {
-  StackElem *el1 = 0;
-  StackElem *el2 = 0;
+  StackElement *el1 = 0;
+  StackElement *el2 = 0;
   try {
     if (count() < 2)
       throw CleanUp(false);     //sind noch genug da?
     el1 = pop();                //von stack holen
     el2 = pop();                //von stack holen
-    if (el1->type() == StackElem::STRING) {     //value + list
-      QString attribName = ((StackElemString *) el1)->data();   //wert holen
+    if (el1->type() == StackElement::STRING) {     //value + list
+      QString attribName = ((StackElementString *) el1)->data();   //wert holen
       QString val;
       switch (el2->type()) {
-      case StackElem::STRING:
-        val = ((StackElemString *) el2)->data();
+      case StackElement::STRING:
+        val = ((StackElementString *) el2)->data();
         break;
-      case StackElem::NUMBER:{
-          double nd = ((StackElemNumber *) el2)->data();
+      case StackElement::NUMBER:{
+          double nd = ((StackElementNumber *) el2)->data();
           val.sprintf("%f", nd);
         }
         break;
@@ -1293,17 +1294,17 @@ bool Stack::setAttrib()
 /** get an attribute */
 bool Stack::nodeGet()
 {
-  StackElem *el1 = 0;
-  StackElem *el2 = 0;
+  StackElement *el1 = 0;
+  StackElement *el2 = 0;
 
   try {
     if (count() < 2)
       throw CleanUp(false);     //sind noch genug da?
     el1 = pop();                //von stack holen
     el2 = pop();                //von stack holen
-    if (el1->type() == StackElem::STRING && el2->type() == StackElem::NODELIST) {       //value + list
-      QString attribName = ((StackElemString *) el1)->data();   //wert holen
-      NodeList & nl = ((StackElemNodeList *) el2)->data();      //liste holen
+    if (el1->type() == StackElement::STRING && el2->type() == StackElement::NODELIST) {       //value + list
+      QString attribName = ((StackElementString *) el1)->data();   //wert holen
+      NodeList & nl = ((StackElementNodeList *) el2)->data();      //liste holen
       QDictIterator < Node > it(nl);
       while (it.current()) {
         Node *node = it.current();      //nl.find(*it);
@@ -1319,12 +1320,12 @@ bool Stack::nodeGet()
         bool ok;
         double d = v.toDouble(&ok);
         if (ok)
-          node->stackPush(new StackElemNumber(d));
+          node->stackPush(new StackElementNumber(d));
         else
-          node->stackPush(new StackElemString(v));
+          node->stackPush(new StackElementString(v));
         ++it;
       }
-      push(new StackElemNodeList(nl));
+      push(new StackElementNodeList(nl));
      throw CleanUp(true);
     }
     else
@@ -1343,16 +1344,16 @@ bool Stack::nodeGet()
 /** get an attribute */
 bool Stack::nlGet()
 {
-  StackElem *el1 = 0;
-  StackElem *el2 = 0;
+  StackElement *el1 = 0;
+  StackElement *el2 = 0;
   try {
     if (count() < 2)
       throw CleanUp(false);     //sind noch genug da?
     el1 = pop();                //von stack holen
     el2 = pop();                //von stack holen
-    if (el1->type() == StackElem::STRING && el2->type() == StackElem::NODELIST) {       //value + list
-      QString attribName = ((StackElemString *) el1)->data();   //wert holen
-      NodeList & nl = ((StackElemNodeList *) el2)->data();      //liste holen
+    if (el1->type() == StackElement::STRING && el2->type() == StackElement::NODELIST) {       //value + list
+      QString attribName = ((StackElementString *) el1)->data();   //wert holen
+      NodeList & nl = ((StackElementNodeList *) el2)->data();      //liste holen
       QString val = nl.get(attribName);
 #ifdef DEBUGMSG
       cout << "val="<<val<<endl;
@@ -1360,10 +1361,10 @@ bool Stack::nlGet()
       bool ok;
       double d = val.toDouble(&ok);
       if (ok)
-        nl.stackPush(new StackElemNumber(d));
+        nl.stackPush(new StackElementNumber(d));
       else
-        nl.stackPush(new StackElemString(val));
-      push(new StackElemNodeList(nl));
+        nl.stackPush(new StackElementString(val));
+      push(new StackElementNodeList(nl));
       throw CleanUp(true);
     }
     else
@@ -1381,21 +1382,21 @@ bool Stack::nlGet()
 /** get an attribute */
 bool Stack::getAttrib()
 {
-  StackElem *el1 = 0;
+  StackElement *el1 = 0;
   try {
     if (count() < 2)
       throw CleanUp(false);     //sind noch genug da?
     el1 = pop();                //von stack holen
-    if (el1->type() == StackElem::STRING) {     //value + list
-      QString attribName = ((StackElemString *) el1)->data();   //wert holen
+    if (el1->type() == StackElement::STRING) {     //value + list
+      QString attribName = ((StackElementString *) el1)->data();   //wert holen
       QString val;
       MLParser::setString(val, &attribList_, attribName);
       bool ok;
       double d = val.toDouble(&ok);
       if (ok)
-        push(new StackElemNumber(d));
+        push(new StackElementNumber(d));
       else
-        push(new StackElemString(val));
+        push(new StackElementString(val));
       throw CleanUp(true);
     }
     else
@@ -1415,36 +1416,36 @@ bool Stack::getAttrib()
 */
 bool Stack::merge()
 {
-  StackElem *el1 = 0;
+  StackElement *el1 = 0;
   try {
     if (count() < 1)
       throw CleanUp(false);     //sind noch genug da?
     el1 = pop();                //von stack holen
-    if (el1->type() == StackElem::NODELIST) {   //value + list
-      NodeList & nl = ((StackElemNodeList *) el1)->data();      //liste holen
+    if (el1->type() == StackElement::NODELIST) {   //value + list
+      NodeList & nl = ((StackElementNodeList *) el1)->data();      //liste holen
       nodeList_ = nl.merge(false, filename_ + ".bu.node.plm");
-      push(new StackElemNodeList(*nodeList_));
+      push(new StackElementNodeList(*nodeList_));
       throw CleanUp(true);
     }
-    else if (el1->type() == StackElem::STACK) { //      value + stack
+    else if (el1->type() == StackElement::STACK) { //      value + stack
 #ifdef DEBUGMSG
       cout << "merge mit stack" << endl;
 #endif //DEBUGMSG
-      Stack & st = ((StackElemStack *) el1)->data();    //      stack holen
+      Stack & st = ((StackElementStack *) el1)->data();    //      stack holen
       Stack *backst_ = new Stack;       // Ergebnis stack anlegen
       NodeList res_list;
       while (st.count() >= 1) {
-        StackElem *el = st.pop();
-        if (el->type() != StackElem::NODELIST)
+        StackElement *el = st.pop();
+        if (el->type() != StackElement::NODELIST)
           throw(CleanUp(false));
-        NodeList & nl = ((StackElemNodeList *) el)->data();     //      liste holen;
+        NodeList & nl = ((StackElementNodeList *) el)->data();     //      liste holen;
         NodeList *part_list = nl.merge(false, filename_ + ".bu.node.plm");
         res_list += *part_list;
-        backst_->push(new StackElemNodeList(*part_list));
+        backst_->push(new StackElementNodeList(*part_list));
        delete el;
        delete part_list;
       }
-      push(new StackElemStack(*backst_));
+      push(new StackElementStack(*backst_));
       *nodeList_ = res_list;
       delete backst_;
       throw CleanUp(true);
@@ -1468,17 +1469,17 @@ bool Stack::merge()
 */
 bool Stack::merge_nn()          //merge with New Nodes
 {
-  StackElem *el1 = 0;
+  StackElement *el1 = 0;
   try {
     if (count() < 1)
       throw CleanUp(false);     //sind noch genug da?
     el1 = pop();                //von stack holen
-    if (el1->type() == StackElem::NODELIST) {   //value + list
-      NodeList & nl = ((StackElemNodeList *) el1)->data();      //liste holen
+    if (el1->type() == StackElement::NODELIST) {   //value + list
+      NodeList & nl = ((StackElementNodeList *) el1)->data();      //liste holen
       //NodeList* newNL = nl.merge(true,filename_+".bu.node.plm");
       nodeList_ = nl.merge(true, filename_ + ".bu.node.plm");
-      push(new StackElemNodeList(*nodeList_));
-      //push(new StackElemNodeList(*newNL));
+      push(new StackElementNodeList(*nodeList_));
+      //push(new StackElementNodeList(*newNL));
       throw CleanUp(true);
     }
     else
@@ -1494,23 +1495,23 @@ bool Stack::merge_nn()          //merge with New Nodes
 /** run a command on the local stacks */
 bool Stack::runLocal()
 {
-  StackElem *el1 = 0;
-  StackElem *el2 = 0;
+  StackElement *el1 = 0;
+  StackElement *el2 = 0;
   try {
     if (count() < 2)
       throw CleanUp(false);     //sind noch genug da?
     el1 = pop();                //von stack holen
     el2 = pop();                //von stack holen
-    if (el1->type() == StackElem::STRING && el2->type() == StackElem::NODELIST) {       //value + list
-      QString command = ((StackElemString *) el1)->data();      //wert holen
-      NodeList & nl = ((StackElemNodeList *) el2)->data();      //liste holen
+    if (el1->type() == StackElement::STRING && el2->type() == StackElement::NODELIST) {       //value + list
+      QString command = ((StackElementString *) el1)->data();      //wert holen
+      NodeList & nl = ((StackElementNodeList *) el2)->data();      //liste holen
       QDictIterator < Node > it(nl);
       while (it.current()) {
         Node *node = it.current();      //nl.find(*it);
         (node->stack()).run(command);
         ++it;
       }
-      push(new StackElemNodeList(nl));
+      push(new StackElementNodeList(nl));
       throw CleanUp(true);
     }
     else
@@ -1529,18 +1530,18 @@ bool Stack::runLocal()
 /** run a command on the local stacks */
 bool Stack::nlRun()
 {
-  StackElem *el1 = 0;
-  StackElem *el2 = 0;
+  StackElement *el1 = 0;
+  StackElement *el2 = 0;
   try {
     if (count() < 2)
       throw CleanUp(false);     //sind noch genug da?
     el1 = pop();                //von stack holen
     el2 = pop();                //von stack holen
-    if (el1->type() == StackElem::STRING && el2->type() == StackElem::NODELIST) {       //value + list
-      QString command = ((StackElemString *) el1)->data();      //wert holen
-      NodeList & nl = ((StackElemNodeList *) el2)->data();      //liste holen
+    if (el1->type() == StackElement::STRING && el2->type() == StackElement::NODELIST) {       //value + list
+      QString command = ((StackElementString *) el1)->data();      //wert holen
+      NodeList & nl = ((StackElementNodeList *) el2)->data();      //liste holen
       nl.stack().run(command);
-      push(new StackElemNodeList(nl));
+      push(new StackElementNodeList(nl));
       throw CleanUp(true);
     }
     else
@@ -1559,22 +1560,22 @@ bool Stack::nlRun()
 /** push a stackelement on the local stacks */
 bool Stack::pushLocal()
 {
-  StackElem *el1 = 0;
-  StackElem *el2 = 0;
+  StackElement *el1 = 0;
+  StackElement *el2 = 0;
   try {
     if (count() < 2)
       throw CleanUp(false);     //sind noch genug da?
     el1 = pop();                //von stack holen
     el2 = pop();                //von stack holen
-    if (el2->type() == StackElem::NODELIST) {   //value + list
-      NodeList & nl = ((StackElemNodeList *) el2)->data();      //liste holen
+    if (el2->type() == StackElement::NODELIST) {   //value + list
+      NodeList & nl = ((StackElementNodeList *) el2)->data();      //liste holen
       QDictIterator < Node > it(nl);
       while (it.current()) {
         Node *node = it.current();      //nl.find(*it);
         (node->stack()).push(el1->copy());
         ++it;
       }
-      push(new StackElemNodeList(nl));
+      push(new StackElementNodeList(nl));
       throw CleanUp(true);
     }
     else
@@ -1593,17 +1594,17 @@ bool Stack::pushLocal()
 /** push a stackelement on the local stacks */
 bool Stack::nlPush()
 {
-  StackElem *el1 = 0;
-  StackElem *el2 = 0;
+  StackElement *el1 = 0;
+  StackElement *el2 = 0;
   try {
     if (count() < 2)
       throw CleanUp(false);     //sind noch genug da?
     el1 = pop();                //von stack holen
     el2 = pop();                //von stack holen
-    if (el2->type() == StackElem::NODELIST) {   //value + list
-      NodeList & nl = ((StackElemNodeList *) el2)->data();      //liste holen
+    if (el2->type() == StackElement::NODELIST) {   //value + list
+      NodeList & nl = ((StackElementNodeList *) el2)->data();      //liste holen
       nl.stackPush(el1);
-      push(new StackElemNodeList(nl));
+      push(new StackElementNodeList(nl));
       throw CleanUp(true);
     }
     else
@@ -1619,15 +1620,15 @@ bool Stack::nlPush()
 /** pop a stackelement on the local stacks */
 bool Stack::nlPop()
 {
-  StackElem *el1 = 0;
+  StackElement *el1 = 0;
   try {
     if (count() < 1)
       throw CleanUp(false);     //sind noch genug da?
     el1 = pop();                //von stack holen
-    if (el1->type() == StackElem::NODELIST) {   //value + list
-      NodeList & nl = ((StackElemNodeList *) el1)->data();      //liste holen
-      StackElem *el = nl.stackPop();
-      push(new StackElemNodeList(nl));
+    if (el1->type() == StackElement::NODELIST) {   //value + list
+      NodeList & nl = ((StackElementNodeList *) el1)->data();      //liste holen
+      StackElement *el = nl.stackPop();
+      push(new StackElementNodeList(nl));
       push(el);
       throw CleanUp(true);
     }
@@ -1647,18 +1648,18 @@ input: [nodelist] [value]
 output: [stack of lists] */
 bool Stack::maxDist()
 {
-  StackElem *el1 = 0;
-  StackElem *el2 = 0;
+  StackElement *el1 = 0;
+  StackElement *el2 = 0;
   try {
     if (count() < 2)
       throw CleanUp(false);     //sind noch genug da?
     el1 = pop();                //von stack holen
     el2 = pop();                //von stack holen
-    if (el1->type() != StackElem::NUMBER
-        || el2->type() != StackElem::NODELIST)
+    if (el1->type() != StackElement::NUMBER
+        || el2->type() != StackElement::NODELIST)
       throw CleanUp(false);
-    double maxdist = ((StackElemNumber *) el1)->data(); //wert holen
-    NodeList & nl = ((StackElemNodeList *) el2)->data();        //liste holen
+    double maxdist = ((StackElementNumber *) el1)->data(); //wert holen
+    NodeList & nl = ((StackElementNodeList *) el2)->data();        //liste holen
     RegionSensor *rs = new RegionSensor();
     nl.calcForSelect("ALL", "xGeoCenter", rs);
     nl.calcForSelect("ALL", "yGeoCenter", rs);
@@ -1725,7 +1726,7 @@ bool Stack::maxDist()
         GeoPos *gx = grl->take();
         rnl->insert(gx->key(), gx->node());
       }
-      st->push(new StackElemNodeList(*rnl));
+      st->push(new StackElementNodeList(*rnl));
     }
     if (gpList)
       delete gpList;
@@ -1733,7 +1734,7 @@ bool Stack::maxDist()
       delete gpt;
     if (rs)
       delete rs;
-    push(new StackElemStack(*st));
+    push(new StackElementStack(*st));
     throw CleanUp(true);
   }
   catch(CleanUp e) {
@@ -1749,18 +1750,18 @@ bool Stack::maxDist()
  */
 bool Stack::set_judgement()
 {
-  StackElem *el1 = 0;
-  StackElem *el2 = 0;
+  StackElement *el1 = 0;
+  StackElement *el2 = 0;
   try {
     if (count() < 1)
       throw CleanUp(false);     //sind noch genug da?
     el1 = pop();                //von stack holen
-    if (el1->type() == StackElem::NODELIST) {   //value
-      NodeList & nl = ((StackElemNodeList *) el1)->data();      //liste holen
+    if (el1->type() == StackElement::NODELIST) {   //value
+      NodeList & nl = ((StackElementNodeList *) el1)->data();      //liste holen
       el2 = nl.stackPop();      //ele. vom listenstack holen
       //nl.judgement(nl.stackPop());
-      if (el2->type() == StackElem::NUMBER) {
-        float f = ((StackElemNumber *) el2)->data();    //Wert holen
+      if (el2->type() == StackElement::NUMBER) {
+        float f = ((StackElementNumber *) el2)->data();    //Wert holen
         nl.set("p", QString().sprintf("%f", f));
 #if 0
         nl.judgement(f);
@@ -1768,7 +1769,7 @@ bool Stack::set_judgement()
       }
       else
         throw CleanUp(false);   //wrong type
-      push(new StackElemNodeList(nl));  // nodelist back to stack
+      push(new StackElementNodeList(nl));  // nodelist back to stack
       throw CleanUp(true);
     }
     else
@@ -1789,14 +1790,14 @@ see also function 'set_judgement' of class 'stack' */
 //... [nodelist] -> [nodelist]
 bool Stack::nl_average()
 {
-  StackElem *el1 = 0;
-  StackElem *el2 = 0;
+  StackElement *el1 = 0;
+  StackElement *el2 = 0;
   try {
     if (count() < 1)
       throw CleanUp(false);     //sind noch genug da?
     el1 = pop();                //von stack holen
-    if (el1->type() == StackElem::NODELIST) {   //list
-      NodeList & nl = ((StackElemNodeList *) el1)->data();      //liste holen
+    if (el1->type() == StackElement::NODELIST) {   //list
+      NodeList & nl = ((StackElementNodeList *) el1)->data();      //liste holen
       NodeList *selected = new NodeList;        // new nodelist for result
       QDictIterator < Node > it(nl);
       float sum = 0.0, val = 0.0;
@@ -1807,17 +1808,17 @@ bool Stack::nl_average()
         if (node->stackCount() < 1)
           throw CleanUp(false); //sind noch genug da?
         el2 = node->stackPop();
-        if (el2->type() == StackElem::NUMBER) {
-          val = ((StackElemNumber *) el2)->data();      //Wert holen
+        if (el2->type() == StackElement::NUMBER) {
+          val = ((StackElementNumber *) el2)->data();      //Wert holen
           count++;
           sum += val;
         }
         ++it;
       }
-      //Y nl.stackPush(new StackElemNumber(sum/float(val))); //average to nodelist stack
-      selected->stackPush(new StackElemNumber(sum / float (count)));    //average to nodelist stack
-      push(new StackElemNodeList(*selected));
-      //Y push(new StackElemNodeList(nl));// nodelist back to stack
+      //Y nl.stackPush(new StackElementNumber(sum/float(val))); //average to nodelist stack
+      selected->stackPush(new StackElementNumber(sum / float (count)));    //average to nodelist stack
+      push(new StackElementNodeList(*selected));
+      //Y push(new StackElementNodeList(nl));// nodelist back to stack
       throw CleanUp(true);
     }
     else
@@ -1838,14 +1839,14 @@ see also function 'set_judgement' of class 'stack' */
 //... [nodelist] -> [nodelist]
 bool Stack::nl_max()
 {
-  StackElem *el1 = 0;
-  StackElem *el2 = 0;
+  StackElement *el1 = 0;
+  StackElement *el2 = 0;
   try {
     if (count() < 1)
       throw CleanUp(false);     //sind noch genug da?
     el1 = pop();                //von stack holen
-    if (el1->type() == StackElem::NODELIST) {   //list
-      NodeList & nl = ((StackElemNodeList *) el1)->data();      //liste holen
+    if (el1->type() == StackElement::NODELIST) {   //list
+      NodeList & nl = ((StackElementNodeList *) el1)->data();      //liste holen
       NodeList *selected = new NodeList;        // new nodelist for result
       QDictIterator < Node > it(nl);
       float val = 0.0, max = -9999999.0;
@@ -1855,17 +1856,17 @@ bool Stack::nl_max()
         if (node->stackCount() < 1)
           throw CleanUp(false); //sind noch genug da?
         el2 = node->stackPop();
-        if (el2->type() == StackElem::NUMBER) {
-          val = ((StackElemNumber *) el2)->data();      //Wert holen
+        if (el2->type() == StackElement::NUMBER) {
+          val = ((StackElementNumber *) el2)->data();      //Wert holen
           if (val > max)
             max = val;
         }
         ++it;
       }
-      //Y nl.stackPush(new StackElemNumber(max));//max to nodelist stack
-      selected->stackPush(new StackElemNumber(max));    //max to nodelist stack
-      push(new StackElemNodeList(*selected));
-      //Y push(new StackElemNodeList(nl));// nodelist back to stack
+      //Y nl.stackPush(new StackElementNumber(max));//max to nodelist stack
+      selected->stackPush(new StackElementNumber(max));    //max to nodelist stack
+      push(new StackElementNodeList(*selected));
+      //Y push(new StackElementNodeList(nl));// nodelist back to stack
       throw CleanUp(true);
     }
     else
@@ -1886,14 +1887,14 @@ see also function 'set_judgement' of class 'stack' */
 //... [nodelist] -> [nodelist]
 bool Stack::nl_sum()
 {
-  StackElem *el1 = 0;
-  StackElem *el2 = 0;
+  StackElement *el1 = 0;
+  StackElement *el2 = 0;
   try {
     if (count() < 1)
       throw CleanUp(false);     //sind noch genug da?
     el1 = pop();                //von stack holen
-    if (el1->type() == StackElem::NODELIST) {   //list
-      NodeList & nl = ((StackElemNodeList *) el1)->data();      //liste holen
+    if (el1->type() == StackElement::NODELIST) {   //list
+      NodeList & nl = ((StackElementNodeList *) el1)->data();      //liste holen
       NodeList *selected = new NodeList;        // new nodelist for result
       QDictIterator < Node > it(nl);
       float sum = 0.0, val = 0.0;
@@ -1904,8 +1905,8 @@ bool Stack::nl_sum()
         if (node->stackCount() < 1)
           throw CleanUp(false); //sind noch genug da?
         el2 = node->stackPop();
-        if (el2->type() == StackElem::NUMBER) {
-          val = ((StackElemNumber *) el2)->data();      //Wert holen
+        if (el2->type() == StackElement::NUMBER) {
+          val = ((StackElementNumber *) el2)->data();      //Wert holen
           count++;
           sum += val;
         }
@@ -1915,8 +1916,8 @@ bool Stack::nl_sum()
       cout << "sum= " << sum << endl;
 #endif //DEBUGMSG
 
-      selected->stackPush(new StackElemNumber(sum));    //       sum to nodelist stack
-      push(new StackElemNodeList(*selected));
+      selected->stackPush(new StackElementNumber(sum));    //       sum to nodelist stack
+      push(new StackElementNodeList(*selected));
       throw CleanUp(true);
     }
     else
@@ -1937,29 +1938,29 @@ see also function 'set_judgement' of class 'stack' */
 //... [nodelist] -> [nodelist]
 bool Stack::nl_div()
 {
-  StackElem *el1 = 0;
-  StackElem *el2 = 0;
-  StackElem *el3 = 0;
-  StackElem *el4 = 0;
+  StackElement *el1 = 0;
+  StackElement *el2 = 0;
+  StackElement *el3 = 0;
+  StackElement *el4 = 0;
   try {
     if (count() < 2)
       throw CleanUp(false);     //sind noch genug da?
     el1 = pop();                //von stack holen
     el2 = pop();                //von stack holen        
-    if ((el1->type() == StackElem::NODELIST) && (el1->type() == StackElem::NODELIST)) { // 2 lists
-      NodeList & nl1 = ((StackElemNodeList *) el1)->data();     //       liste 1 holen
-      NodeList & nl2 = ((StackElemNodeList *) el2)->data();     //       liste 2 holen
+    if ((el1->type() == StackElement::NODELIST) && (el1->type() == StackElement::NODELIST)) { // 2 lists
+      NodeList & nl1 = ((StackElementNodeList *) el1)->data();     //       liste 1 holen
+      NodeList & nl2 = ((StackElementNodeList *) el2)->data();     //       liste 2 holen
       NodeList *selected = new NodeList;        // new nodelist for result
       //      2 values from nodelists
       float div1, div2, div;
       el3 = nl1.stackPop();
       el4 = nl2.stackPop();
-      if (el3->type() == StackElem::NUMBER)
-        div1 = ((StackElemNumber *) el3)->data();
+      if (el3->type() == StackElement::NUMBER)
+        div1 = ((StackElementNumber *) el3)->data();
       else
         throw CleanUp(false);
-      if (el4->type() == StackElem::NUMBER)
-        div2 = ((StackElemNumber *) el4)->data();
+      if (el4->type() == StackElement::NUMBER)
+        div2 = ((StackElementNumber *) el4)->data();
       else
         throw CleanUp(false);
       //      nodelists empty
@@ -1971,7 +1972,7 @@ bool Stack::nl_div()
       cout << div1 << " / " << div1+div2 << "=Ergebnis= " << div << endl;
 #endif
       //      compose result
-      selected->stackPush(new StackElemNumber(div));
+      selected->stackPush(new StackElementNumber(div));
 
       QDictIterator < Node > it1(nl1);
       while (it1.current()) {
@@ -1986,7 +1987,7 @@ bool Stack::nl_div()
         ++it2;
       }
 
-      push(new StackElemNodeList(*selected));
+      push(new StackElementNodeList(*selected));
       throw CleanUp(true);
     }
     else
@@ -2006,13 +2007,13 @@ write result to nodelist stack */
 //... [nodelist] -> [nodelist]
 bool Stack::nl_count()
 {
-  StackElem *el1 = 0;
+  StackElement *el1 = 0;
   try {
     if (count() < 1)
       throw CleanUp(false);     //sind noch genug da?
     el1 = pop();                //von stack holen
-    if (el1->type() == StackElem::NODELIST) {   // 1 lists
-      NodeList & nl1 = ((StackElemNodeList *) el1)->data();     //       liste 1 holen
+    if (el1->type() == StackElement::NODELIST) {   // 1 lists
+      NodeList & nl1 = ((StackElementNodeList *) el1)->data();     //       liste 1 holen
       NodeList *selected = new NodeList;        // new nodelist for result
       //       values from nodelists
       int sum = 0;
@@ -2025,13 +2026,13 @@ bool Stack::nl_count()
         ++it1;
       }
 
-      selected->stackPush(new StackElemNumber(sum));
+      selected->stackPush(new StackElementNumber(sum));
 
 #ifdef DEBUGMSG
       cout << "in nl_count: Anzahl=" << sum << endl;
 #endif
 
-      push(new StackElemNodeList(*selected));
+      push(new StackElementNodeList(*selected));
       throw CleanUp(true);
     }
     else

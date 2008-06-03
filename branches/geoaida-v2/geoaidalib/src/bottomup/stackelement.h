@@ -1,7 +1,7 @@
 /***************************************************************************
-                          stackelemnumber.cpp  -  description
+                          stackelem.h  -  description
                              -------------------
-    begin                : Wed Aug 1 2001
+    begin                : Tue Jul 31 2001
     copyright            : (C) 2001 by Martin Pahl
     email                : pahl@tnt.uni-hannover.de
  ***************************************************************************/
@@ -15,36 +15,33 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "stackelemnumber.h"
+#ifndef STACKELEM_H
+#define STACKELEM_H
 
-StackElemNumber::StackElemNumber(double v) {
-  data_=v;
-}
+namespace BottomUp {
 
-StackElemNumber::StackElemNumber(const StackElemNumber& elem) {
-  data_=elem.data_;
-}
+/**Stack Element
+  *@author Martin Pahl
+  */
 
-StackElemNumber::~StackElemNumber() {
-}
+class StackElement {
+public:
+	StackElement();
+	virtual ~StackElement();
+  /** Type of stack element */
+  virtual int type()=0;
+  virtual const char* typeName()=0;
+  /** Returns a copy of this stack element */
+  virtual StackElement* copy() = 0;
+  enum {
+    UNKNOWN,
+    ERROR,
+    NODELIST,
+    STRING,
+    NUMBER,
+    STACK
+  };
+};
 
-/** returns the type (NUMBER) of this stack element  */
-int StackElemNumber::type() {
-  return NUMBER;
 }
-
-const char* StackElemNumber::typeName()
-{
-  return "number";
-}
-
-/** Returns a copy of this stack element */
-StackElem* StackElemNumber::copy() {
-  double val=((StackElemNumber*)this)->data(); //liste holen
-  return (new StackElemNumber(val));
-}
-
-/** Returns the contained numeric value from this stack element */
-double StackElemNumber::data() {
-  return data_;
-}
+#endif

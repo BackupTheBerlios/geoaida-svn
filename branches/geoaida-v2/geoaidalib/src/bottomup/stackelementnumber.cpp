@@ -1,5 +1,5 @@
 /***************************************************************************
-                          stackelemnumber.h  -  description
+                          stackelemnumber.cpp  -  description
                              -------------------
     begin                : Wed Aug 1 2001
     copyright            : (C) 2001 by Martin Pahl
@@ -15,35 +15,37 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef STACKELEMNUMBER_H
-#define STACKELEMNUMBER_H
+#include "stackelementnumber.h"
 
-#ifdef WIN32
-#include "stackelem.h"
-#else
-#include <stackelem.h>
-#endif
+using BottomUp;
+StackElementNumber::StackElementNumber(double v) {
+  data_=v;
+}
 
-/**Stack element holding a number
-  *@author Martin Pahl
-  */
+StackElementNumber::StackElementNumber(const StackElementNumber& elem) {
+  data_=elem.data_;
+}
 
-class StackElemNumber : public StackElem  {
-public: 
-	StackElemNumber(double v);
-	StackElemNumber(const StackElemNumber& elem);
-	~StackElemNumber();
-  /** returns the type (NUMBER) of this stack element  */
-  int type();
-  const char* typeName();
-  /** Returns a copy of this stack element */
-  StackElem* copy();
-  /** Returns the contained numeric value from this stack element */
-  double data();
+StackElementNumber::~StackElementNumber() {
+}
 
-private: // Private attributes
-  /** Data */
-  double data_;
-};
+/** returns the type (NUMBER) of this stack element  */
+int StackElementNumber::type() {
+  return NUMBER;
+}
 
-#endif
+const char* StackElementNumber::typeName()
+{
+  return "number";
+}
+
+/** Returns a copy of this stack element */
+StackElement* StackElementNumber::copy() {
+  double val=((StackElementNumber*)this)->data(); //liste holen
+  return (new StackElementNumber(val));
+}
+
+/** Returns the contained numeric value from this stack element */
+double StackElementNumber::data() {
+  return data_;
+}

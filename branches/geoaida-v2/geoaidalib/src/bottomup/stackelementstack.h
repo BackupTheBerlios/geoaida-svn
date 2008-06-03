@@ -1,7 +1,7 @@
 /***************************************************************************
-                          stackelem.h  -  description
+                          stackelemstack.h  -  description
                              -------------------
-    begin                : Tue Jul 31 2001
+    begin                : Tue Nov 13 2001
     copyright            : (C) 2001 by Martin Pahl
     email                : pahl@tnt.uni-hannover.de
  ***************************************************************************/
@@ -15,30 +15,30 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef STACKELEM_H
-#define STACKELEM_H
+#ifndef STACKELEMSTACK_H
+#define STACKELEMSTACK_H
 
-/**Stack Element
+#include "Stack"
+#include "StackElement"
+
+namespace BottomUp {
+/**This stack element holds a stack
   *@author Martin Pahl
   */
 
-class StackElem {
-public:
-	StackElem();
-	virtual ~StackElem();
-  /** Type of stack element */
-  virtual int type()=0;
-  virtual const char* typeName()=0;
-  /** Returns a copy of this stack element */
-  virtual StackElem* copy() = 0;
-  enum {
-    UNKNOWN,
-    ERROR,
-    NODELIST,
-    STRING,
-    NUMBER,
-    STACK
-  };
+class StackElementStack : public StackElement  {
+public: 
+	StackElementStack(const Stack& stack);
+	StackElementStack(const StackElementStack& elem);
+	~StackElementStack();
+	StackElement* copy();
+	Stack& data();
+	int type();
+  const char* typeName();
+protected: // Protected attributes
+  /** Data */
+  Stack stack_;
 };
 
+} // namespace BottomUp
 #endif
