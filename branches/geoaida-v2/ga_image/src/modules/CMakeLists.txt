@@ -1,4 +1,4 @@
 ADD_SUBDIRECTORY(painter)
 ADD_SUBDIRECTORY(regionsplitter)
 ADD_SUBDIRECTORY(vectorize)
-#ADD_SUBDIRECTORY(geoimage)
+ADD_SUBDIRECTORY(geoimage)

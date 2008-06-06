@@ -60,22 +60,6 @@ namespace Ga
 TODO: Move these algorithms into separate .cpp files as well, only put the function
 signature here.
 
-template <class PixTyp>
-void ImageT<PixTyp>::merge(ImageBase& image, double img_label, double new_label) {
-	ImageT<PixTyp>& img=(ImageT<PixTyp>&)image;
-	PixTyp label=(PixTyp)img_label;
-	PixTyp newLabel=(PixTyp)new_label;
-  PixTyp *p_img = img.begin();
-  PixTyp *p_data = this->begin();
-  int size = this->noPixels();
-  if (size == img.noPixels())
-    for (int i=0; i<=size; i++) {
-      if (*p_img == label) *p_data = newLabel;
-      p_img++;
-      p_data++;
-    }
-}
-
 
 /** resample the current image to size (x, y) */
 template <class PixTyp>
