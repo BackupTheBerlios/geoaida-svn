@@ -33,10 +33,20 @@ namespace Ga
     _PFM_UINT,
     _PFM_SINT16,
     _PFM_UINT16,
-		_PGM,
-		_PBM,
-		_PPM,
-		_UNKNOWN 
+    _PGM,
+    _PBM,
+    _PPM,
+
+    _TIFF_FLOAT,
+    _TIFF_DOUBLE,
+    _TIFF_SINT32,
+    _TIFF_UINT32,
+    _TIFF_SINT16,
+    _TIFF_UINT16,
+    _TIFF_SINT8,
+    _TIFF_UINT8,
+
+    _UNKNOWN
   };
   
   // Abstract base class that provides an interface for initiating the read/write

@@ -35,20 +35,20 @@ void ImageT<PixTyp>::setPixelToDouble(int x, int y, double val, int channel, boo
 template <class PixTyp>
 int ImageT<PixTyp>::segmentsX() const
 {
-  return static_cast<int>(ceil(1.0 * sizeX() / segSizeX_));
+  return static_cast<int>(ceil((double)sizeX() / (double)segSizeX_));
 }
 
 template <class PixTyp>
 int ImageT<PixTyp>::segmentsY() const
 {
-  return static_cast<int>(ceil(1.0 * sizeY() / segSizeY_));
+	return static_cast<int>(ceil((double)sizeY() / (double)segSizeY_));
 }
 
 template <class PixTyp>
 LargeSize ImageT<PixTyp>::segmentSizeX(int row) const
 {
-  if (row == segmentsY() - 1)
-    return segSizeX_ - (sizeX() % segSizeX_);
+  if (sizeX() != segSizeX_ && row == segmentsX() - 1)
+    return (sizeX() % segSizeX_);
   else
     return segSizeX_;
 }
@@ -56,8 +56,8 @@ LargeSize ImageT<PixTyp>::segmentSizeX(int row) const
 template <class PixTyp>
 LargeSize ImageT<PixTyp>::segmentSizeY(int col) const
 {
-  if (col == segmentsX() - 1)
-    return segSizeY_ - (sizeY() % segSizeY_);
+  if (sizeY() != segSizeY_ && col == segmentsY() - 1)
+    return (sizeY() % segSizeY_);
   else
     return segSizeY_;
 }

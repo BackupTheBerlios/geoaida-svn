@@ -19,6 +19,7 @@
 #include "gaimageio.h"
 #include "gaimageio_libnetpbm.h"
 #include "gaimageio_libpfm.h"
+#include "gaimageio_libtiff.h"
 #include "gaimageio_split.h"
 #include <stdexcept>
 
@@ -112,41 +113,52 @@ std::auto_ptr<Ga::ImageIO> Ga::ImageIO::create(const std::string& filename,
 
 std::auto_ptr<Ga::ImageIO> Ga::ImageIO::reopen(const std::string& filename)
 {
-  // Proof of concept tiled image implementation, enabled for images
-  // whose filename is prefixed with "split:".
-  if (filename.find("split:") == 0)
-  {
-    std::auto_ptr<SplitImpl> impl(new SplitImpl(filename.substr(6, std::string::npos)));
-    return std::auto_ptr<ImageIO>(new ImageIOAdapter<SplitImpl>(filename, impl));
-  }
-
-  FILE* fp = fopen(filename.c_str(), "rb+");
-  if (!fp)
-    throw std::runtime_error("Could not reopen " + filename);
-  
-  // Try libpfm.
-  int sizeX, sizeY;
-  float min, max;
-  int pfmStorageType;
-  if (pfm_readpfm_header(fp, &sizeX, &sizeY, &min, &max, &pfmStorageType))
-  {
-    std::auto_ptr<LibPFMImpl> impl(new LibPFMImpl(fp, static_cast<FileType>(pfmStorageType), sizeX, sizeY));
-    return std::auto_ptr<ImageIO>(new ImageIOAdapter<LibPFMImpl>(filename, impl));
-  }
-  fseek(fp, 0, SEEK_SET);
-  
-  // Try libnetpbm.
-  xelval max_x;
-  int pnmType;
-  pnm_readpnminit(fp, &sizeX, &sizeY, &max_x, &pnmType);
-  fseek(fp, 0, SEEK_SET);  
-  if (pnmType == PBM_FORMAT || pnmType == RPBM_FORMAT)
-  {
-    std::auto_ptr<LibNetPBMImpl> impl(new LibNetPBMImpl(fp, _PBM, sizeX, sizeY));
-    return std::auto_ptr<ImageIO>(new ImageIOAdapter<LibNetPBMImpl>(filename, impl));
-  }
-  
-  throw std::runtime_error("Unknown image type in " + filename);
+	int sizeX, sizeY;
+	FileType storageType;
+	
+	if (checkTIFF(filename, sizeX, sizeY, storageType))
+	{
+		std::auto_ptr<LibTIFFImpl> impl(new LibTIFFImpl(filename, storageType, sizeX, sizeY));
+		return std::auto_ptr<ImageIO>(new ImageIOAdapter<LibTIFFImpl>(filename, impl));
+	}
+	else
+	{
+		// Proof of concept tiled image implementation, enabled for images
+		// whose filename is prefixed with "split:".
+		if (filename.find("split:") == 0)
+		{
+			std::auto_ptr<SplitImpl> impl(new SplitImpl(filename.substr(6, std::string::npos)));
+			return std::auto_ptr<ImageIO>(new ImageIOAdapter<SplitImpl>(filename, impl));
+		}
+		
+		FILE* fp = fopen(filename.c_str(), "rb+");
+		if (!fp)
+			throw std::runtime_error("Could not reopen " + filename);
+		
+		// Try libpfm.
+		int sizeX, sizeY;
+		float min, max;
+		int pfmStorageType;
+		if (pfm_readpfm_header(fp, &sizeX, &sizeY, &min, &max, &pfmStorageType))
+		{
+			std::auto_ptr<LibPFMImpl> impl(new LibPFMImpl(fp, static_cast<FileType>(pfmStorageType), sizeX, sizeY));
+			return std::auto_ptr<ImageIO>(new ImageIOAdapter<LibPFMImpl>(filename, impl));
+		}
+		fseek(fp, 0, SEEK_SET);
+		
+		// Try libnetpbm.
+		xelval max_x;
+		int pnmType;
+		pnm_readpnminit(fp, &sizeX, &sizeY, &max_x, &pnmType);
+		fseek(fp, 0, SEEK_SET);
+		if (pnmType == PBM_FORMAT || pnmType == RPBM_FORMAT)
+		{
+			std::auto_ptr<LibNetPBMImpl> impl(new LibNetPBMImpl(fp, _PBM, sizeX, sizeY));
+			return std::auto_ptr<ImageIO>(new ImageIOAdapter<LibNetPBMImpl>(filename, impl));
+		}
+	}
+	
+	throw std::runtime_error("Unknown image type in " + filename);
 }
 
 Ga::ImageIO::~ImageIO()
