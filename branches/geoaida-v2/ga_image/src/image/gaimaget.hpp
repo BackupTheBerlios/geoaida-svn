@@ -47,8 +47,11 @@ int ImageT<PixTyp>::segmentsY() const
 template <class PixTyp>
 LargeSize ImageT<PixTyp>::segmentSizeX(int row) const
 {
-  if (sizeX() != segSizeX_ && row == segmentsX() - 1)
-    return (sizeX() % segSizeX_);
+  if (row == segmentsX() - 1)
+  {
+    int edgeSize = sizeX() % segSizeX_;
+	return (edgeSize > 0 ? edgeSize : segSizeX_);
+  }
   else
     return segSizeX_;
 }
@@ -56,8 +59,11 @@ LargeSize ImageT<PixTyp>::segmentSizeX(int row) const
 template <class PixTyp>
 LargeSize ImageT<PixTyp>::segmentSizeY(int col) const
 {
-  if (sizeY() != segSizeY_ && col == segmentsY() - 1)
-    return (sizeY() % segSizeY_);
+  if (col == segmentsY() - 1)
+  {
+    int edgeSize = sizeY() % segSizeY_;
+    return (edgeSize > 0 ? edgeSize : segSizeY_);
+  }
   else
     return segSizeY_;
 }
