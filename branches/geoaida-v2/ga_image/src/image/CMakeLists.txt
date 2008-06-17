@@ -8,6 +8,7 @@ SET(headers
            gaimagebase.h
            gaimageio.h
            gaimaget.h
+           gaimageio_libtiff.h
            garegion.h
            garegiont.h
            gashareddata.h
