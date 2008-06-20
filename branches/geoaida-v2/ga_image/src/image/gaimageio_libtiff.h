@@ -127,7 +127,7 @@ namespace Ga
 		
 		public:
 			LibTIFFImpl(const std::string &filename, FileType fileType, int sizeX, int sizeY, int channels, bool writeMode = false)
-			: type(fileType), sizeX_(sizeX), sizeY_(sizeY), channels_(channels), _writeMode_(writeMode)
+			: type(fileType), sizeX_(sizeX), sizeY_(sizeY), channels_(channels), writeMode_(writeMode)
 			{
 				unsigned short usValue = 0;
 				

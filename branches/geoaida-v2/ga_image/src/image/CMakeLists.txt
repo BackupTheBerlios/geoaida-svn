@@ -33,7 +33,6 @@ ADD_LIBRARY(gaimage STATIC ${sources})
 INSTALL(TARGETS gaimage DESTINATION lib)
 INSTALL(FILES ${headers} DESTINATION include)
 INSTALL(FILES ${classheaders} DESTINATION include/Ga)
-TARGET_LINK_LIBRARIES(gaimage tiff)
 
 ADD_EXECUTABLE(test_cache test_cache.cpp)
 TARGET_LINK_LIBRARIES(test_cache gaimage pfm netpbm tiff)

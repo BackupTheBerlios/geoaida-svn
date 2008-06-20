@@ -118,7 +118,7 @@ std::auto_ptr<Ga::ImageIO> Ga::ImageIO::reopen(const std::string& filename)
 	
 	if (checkTIFF(filename, sizeX, sizeY, storageType))
 	{
-		std::auto_ptr<LibTIFFImpl> impl(new LibTIFFImpl(filename, storageType, sizeX, sizeY));
+		std::auto_ptr<LibTIFFImpl> impl(new LibTIFFImpl(filename, storageType, sizeX, sizeY, 0));
 		return std::auto_ptr<ImageIO>(new ImageIOAdapter<LibTIFFImpl>(filename, impl));
 	}
 	else

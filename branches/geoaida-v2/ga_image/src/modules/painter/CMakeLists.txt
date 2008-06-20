@@ -23,7 +23,7 @@ install(FILES ${headers} DESTINATION include)
 install(FILES ${classheaders} DESTINATION include/Ga)
 
 add_executable(painttest test_painter.cpp)
-target_link_libraries(painttest gaimage gapainter pfm netpbm)
+target_link_libraries(painttest gaimage gapainter pfm netpbm tiff)
 
 
 
