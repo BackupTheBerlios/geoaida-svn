@@ -182,19 +182,17 @@ It ImageT<PixTyp>::iteratorForElem(unsigned channel, LargeSize elem) const
 }
 
 template <class PixTyp>
-ImageT<PixTyp>::ImageT(int sizeX, int sizeY, int noChannels, int segSizeX, int segSizeY) : ImageBase()
+ImageT<PixTyp>::ImageT(int sizeX, int sizeY, int noChannels) : ImageBase()
 {
 	// Unsigned values would make more sense, but can be dangerous as well.
 	// Let's put our fate into good, old assert's hand.
 	assert(sizeX >= 0);
 	assert(sizeY >= 0);
-	assert(segSizeX >= 0);
-	assert(segSizeY >= 0);
 
 	sizeX_ = sizeX;
 	sizeY_ = sizeY;
-	segSizeX_ = 256;
-	segSizeY_ = 256;
+	segSizeX_ = SEGMENT_SIZE;
+	segSizeY_ = SEGMENT_SIZE;
 	channels.resize(noChannels);
 
 	// Reservation for later segments.
@@ -205,23 +203,6 @@ ImageT<PixTyp>::ImageT(int sizeX, int sizeY, int noChannels, int segSizeX, int s
 	fileMin_ = std::numeric_limits<PixTyp>::min();
 	fileMax_ = std::numeric_limits<PixTyp>::max();
 
-	/*if (noChannels == 3 && typeid(PixTyp) == typeid(unsigned char))
-		setFileType(_PPM);
-	if (noChannels != 1)
-		return;
-	if (typeid(PixTyp) == typeid(unsigned char))
-		setFileType(_PFM_FLOAT);
-	else if (typeid(PixTyp) == typeid(signed))
-		setFileType(_PFM_SINT);
-	else if (typeid(PixTyp) == typeid(unsigned))
-		setFileType(_PFM_UINT);
-	else if (typeid(PixTyp) == typeid(signed short))
-		setFileType(_PFM_SINT16);
-	else if (typeid(PixTyp) == typeid(unsigned short))
-		setFileType(_PFM_UINT16);
-	else if (typeid(PixTyp) == typeid(float))
-		// Min, max for float?
-	setFileType(_PGM);*/
 	if (typeid(PixTyp) == typeid(unsigned char))
 		setFileType(_TIFF_UINT8);
 	else if (typeid(PixTyp) == typeid(signed char))

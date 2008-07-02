@@ -79,7 +79,7 @@ public:
   
   // Create wih ImageT representation of the given type, and given metrics.
   explicit Image(const class std::type_info& t, int sizeX = 0, int sizeY = 0,
-    int noChannels=1, int segSizeX=0, int segSizeY=0);
+    int noChannels=1);
   // Load from file.
   explicit Image(const std::string& filename);
   

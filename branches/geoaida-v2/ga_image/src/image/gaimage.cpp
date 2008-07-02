@@ -29,12 +29,12 @@
 namespace Ga
 {
 
-Image::Image(const std::type_info& t, int sizeX, int sizeY, int noChannels, int segSizeX, int segSizeY)
+Image::Image(const std::type_info& t, int sizeX, int sizeY, int noChannels)
 {
   // FORMAT: Mapping from type_info to possible pixel types
   
   #define TRY_TYPE(type) \
-    if (t == typeid(type)) pImage_ = new ImageT<type>(sizeX, sizeY, noChannels, segSizeX, segSizeY);
+    if (t == typeid(type)) pImage_ = new ImageT<type>(sizeX, sizeY, noChannels);
 
   TRY_TYPE(bool) else
   TRY_TYPE(char) else
@@ -65,7 +65,7 @@ Image::Image(const std::string& filename)
   // temporary Image away.
   // This looks strange, but if you think about it, swap() is a great tool. No
   // need to think about cleanup in case of an exception! ;) -- jlnr
-  Image(io->pixType(), io->sizeX(), io->sizeY(), io->channels(), io->segmentSizeX(), io->segmentSizeY()).swap(*this);
+  Image(io->pixType(), io->sizeX(), io->sizeY(), io->channels()).swap(*this);
   
   try
   {

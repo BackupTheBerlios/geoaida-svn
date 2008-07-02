@@ -212,6 +212,8 @@ namespace std
 
 namespace Ga
 {
+  const int SEGMENT_SIZE = 256;
+
   template <class PixTyp>
   class ImageT : public ImageBase
   {
@@ -245,7 +247,7 @@ namespace Ga
     typedef Ga::Iterator<PixTyp, true> Iterator;
     typedef Ga::Iterator<const PixTyp, false> ConstIterator;
 
-    ImageT(int sizeX, int sizeY, int noChannels=1, int segSizeX=0, int segSizeY=0);
+    ImageT(int sizeX, int sizeY, int noChannels=1);
     virtual ImageBase* copyObject();
 
     // Metrics.
