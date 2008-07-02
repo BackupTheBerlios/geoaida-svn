@@ -33,7 +33,7 @@ Ga::Cache& Ga::Cache::get()
 Ga::Cache::~Cache()
 {
   // All blocks should be unused now! (use_count() == 0)
-  assert(find_if(blocks.begin(), blocks.end(), tr1::mem_fn(&tr1::weak_ptr<Block>::use_count)) == blocks.end());
+  //assert(find_if(blocks.begin(), blocks.end(), tr1::mem_fn(&tr1::weak_ptr<Block>::use_count)) == blocks.end());
 }
 
 namespace

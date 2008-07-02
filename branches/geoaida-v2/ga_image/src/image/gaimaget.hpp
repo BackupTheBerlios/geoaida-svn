@@ -72,98 +72,188 @@ template <class PixTyp>
 template <typename It>
 It ImageT<PixTyp>::iteratorForElem(unsigned channel, LargeSize elem) const
 {
-  BlockHandle* handle;
-  LargeSize offset;
-  LargeSize rangeBegin, rangeEnd;
-  
-  if (elem < noPixels())
-  {
-    unsigned col = elem % sizeX(), row = elem / sizeX();
-    unsigned segX = col / segSizeX_, segY = row / segSizeY_;
+	BlockHandle* handle;
+	LargeSize offset;
+	LargeSize rangeBegin, rangeEnd;
 
-    handle = &channels.at(channel).segments.at(segY * segmentsX() + segX);
-    
-    if (handle->isEmpty())
-    {
-      // Protection against integer overflows.
-      *handle = Cache::get().alloc(segmentSizeX(segX) * segmentSizeY(segY) * sizeof(PixTyp));
-      
-      if (source_)
-      {
-        // File source open: We need to load the file data now.
-        
-        handle->lockRW();
-        BlockLock lock(*handle);
-        source_->readRect(channel, segX * segmentSizeX(), segY * segmentSizeY(),
-          segmentSizeX(segX), segmentSizeY(segY), static_cast<PixTyp*>(handle->getData()));
-      }
-    }
-    
-    offset = (row % segSizeY_) * segSizeX_;
-    
-    rangeBegin = row * sizeX() + segX * segSizeX_;
-    rangeEnd = rangeBegin + segmentSizeX(segX);
-  }
-  else
-  {
-    // Special case for end iterators etc.: If the elem is out of range, the
-    // iterator is given an empty range.
-    handle = 0;
-    offset = rangeBegin = rangeEnd = 0;
-  }
-  
-  return It(handle, elem, offset, rangeBegin, rangeEnd,
-    std::tr1::bind(&ImageT<PixTyp>::template iteratorForElem<It>, this, channel, std::tr1::placeholders::_1));
+	if (elem < noPixels())
+	{
+		int col = elem % sizeX();
+		int row = elem / sizeX();
+		int segX = col / segSizeX_;
+		int segY = row / segSizeY_;
+
+		handle = &channels.at(channel).segments.at(segY * segmentsX() + segX);
+
+		if (handle->isEmpty())
+		{
+			// Protection against integer overflows.
+			*handle = Cache::get().alloc(segmentSizeX(segX) * segmentSizeY(segY) * sizeof(PixTyp));
+
+			if (source_)
+			{
+				// File source open: We need to load the file data now.
+				int srcSegSizeX = source_->segmentSizeX();
+				int srcSegSizeY = source_->segmentSizeY();
+
+				// Lock output buffer
+				handle->lockRW();
+				BlockLock lock(*handle);
+
+				//Special case: input/output segment sizes are identical
+				if (segSizeX_ == srcSegSizeX && segSizeY_ == srcSegSizeY)
+				{
+					source_->readRect(channel, segX * segmentSizeX(), segY * segmentSizeY(),
+						segmentSizeX(segX), segmentSizeY(segY), static_cast<PixTyp*>(handle->getData()));
+				}
+				else
+				{
+					// Load all required input segments and copy them into the output buffer
+					PixTyp *inputBuffer = new PixTyp[srcSegSizeX * srcSegSizeY];
+					PixTyp *outputBuffer = static_cast<PixTyp *>(handle->getData());
+
+					int srcSegsPerRow = sizeX() / srcSegSizeX + (sizeX() % srcSegSizeX != 0 ? 1 : 0);
+					int srcSegsPerCol = sizeY() / srcSegSizeY + (sizeY() % srcSegSizeY != 0 ? 1 : 0);
+					int srcSegSizeXEdge = (sizeX() % srcSegSizeX != 0) ? (sizeX() % srcSegSizeX) : srcSegSizeX;
+					int srcSegSizeYEdge = (sizeY() % srcSegSizeY != 0) ? (sizeY() % srcSegSizeY) : srcSegSizeY;
+
+					int srcSegLeft = (segX * segSizeX_) / srcSegSizeX;
+					int srcSegRight = (segX * segSizeX_ + (int)segmentSizeX(segX) - 1) / srcSegSizeX;
+					int srcSegTop = (segY * segSizeY_) / srcSegSizeY;
+					int srcSegBottom = (segY * segSizeY_ + (int)segmentSizeY(segY) - 1) / srcSegSizeY;
+
+					for (int curSegY = srcSegTop; curSegY <= srcSegBottom; curSegY++)
+					{
+						for (int curSegX = srcSegLeft; curSegX <= srcSegRight; curSegX++)
+						{
+							// Read input segment
+							int x = curSegX * srcSegSizeX;
+							int y = curSegY * srcSegSizeY;
+							int segSizeX = (curSegX == srcSegsPerRow - 1) ? srcSegSizeXEdge  : srcSegSizeX;
+							int segSizeY = (curSegY == srcSegsPerCol - 1) ? srcSegSizeYEdge  : srcSegSizeY;
+
+							source_->readRect(channel, x, y, segSizeX, segSizeY, inputBuffer);
+
+							// Copy all relevant parts into the output buffer
+							int offX = segX * segSizeX_ - curSegX * srcSegSizeX;
+							int offY = segY * segSizeY_ - curSegY * srcSegSizeY;
+
+							int inputOffsetX = std::max(0, offX);
+							int inputOffsetY = std::max(0, offY);
+							int inputLineSkip = segSizeX;
+
+							int outputOffsetX = std::max(0, -offX);
+							int outputOffsetY = std::max(0, -offY);
+							int outputLineSkip = segmentSizeX(segX);
+
+							int lineLength = segSizeX - inputOffsetX - std::max(0, -offX + segSizeX - (int)segmentSizeX(segX));
+							int lineCount = segSizeY - inputOffsetY - std::max(0, -offY + segSizeY - (int)segmentSizeY(segY));
+							PixTyp *inputPixel = &inputBuffer[inputOffsetY * inputLineSkip + inputOffsetX];
+							PixTyp *outputPixel = &outputBuffer[outputOffsetY * outputLineSkip + outputOffsetX];
+
+							while (lineCount--)
+							{
+								memcpy(outputPixel, inputPixel, sizeof(PixTyp) * lineLength);
+								inputPixel += inputLineSkip;
+								outputPixel += outputLineSkip;
+							}
+						}
+					}
+
+					delete[] inputBuffer;
+				}
+			}
+		}
+
+		offset = (row % segSizeY_) * segmentSizeX(segX);
+		rangeBegin = row * sizeX() + segX * segSizeX_;
+		rangeEnd = rangeBegin + segmentSizeX(segX);
+	}
+	else
+	{
+		// Special case for end iterators etc.: If the elem is out of range, the
+		// iterator is given an empty range.
+		handle = 0;
+		offset = rangeBegin = rangeEnd = 0;
+	}
+
+	return It(handle, elem, offset, rangeBegin, rangeEnd,
+		std::tr1::bind(&ImageT<PixTyp>::template iteratorForElem<It>, this, channel, std::tr1::placeholders::_1));
 }
 
 template <class PixTyp>
-ImageT<PixTyp>::ImageT(int sizeX, int sizeY, int noChannels, int segSizeX, int segSizeY) : ImageBase() {
-  // Unsigned values would make more sense, but can be dangerous as well.
-  // Let's put our fate into good, old assert's hand.
-  assert(sizeX >= 0);
-  assert(sizeY >= 0);
-  assert(segSizeX >= 0);
-  assert(segSizeY >= 0);
-  
-  sizeX_ = sizeX;
-  sizeY_ = sizeY;
-  segSizeX_ = segSizeX ? segSizeX : sizeX;
-  segSizeY_ = segSizeY ? segSizeY : sizeY;
-  channels.resize(noChannels);
-  
-  // Reservation for later segments.
-  for (int i = 0; i < noChannels; ++i)
-    channels[i].segments.resize(segmentsX() * segmentsY());
-  
-  // Try to guess the filetype.
-  
-  fileMin_ = 0;
-  fileMax_ = 255;
-  
-  // FORMAT: File type guessing!
-  setFileType(_UNKNOWN);
-  if (noChannels == 3 && typeid(PixTyp) == typeid(unsigned char))
-    setFileType(_PPM);
-  if (noChannels != 1)
-    return;
-  if (typeid(PixTyp) == typeid(unsigned char))
-    setFileType(_PFM_FLOAT);
-  else if (typeid(PixTyp) == typeid(signed))
-    setFileType(_PFM_SINT);
-  else if (typeid(PixTyp) == typeid(unsigned))
-    setFileType(_PFM_UINT);
-  else if (typeid(PixTyp) == typeid(signed short))
-    setFileType(_PFM_SINT16);
-  else if (typeid(PixTyp) == typeid(unsigned short))
-    setFileType(_PFM_UINT16);
-  else if (typeid(PixTyp) == typeid(float))
-    // Min, max for float?
-    setFileType(_PGM);
-  else if (typeid(PixTyp) == typeid(bool))
-  {
-    fileMax_ = 1;
-    setFileType(_PBM);
-  }
+ImageT<PixTyp>::ImageT(int sizeX, int sizeY, int noChannels, int segSizeX, int segSizeY) : ImageBase()
+{
+	// Unsigned values would make more sense, but can be dangerous as well.
+	// Let's put our fate into good, old assert's hand.
+	assert(sizeX >= 0);
+	assert(sizeY >= 0);
+	assert(segSizeX >= 0);
+	assert(segSizeY >= 0);
+
+	sizeX_ = sizeX;
+	sizeY_ = sizeY;
+	segSizeX_ = 256;
+	segSizeY_ = 256;
+	channels.resize(noChannels);
+
+	// Reservation for later segments.
+	for (int i = 0; i < noChannels; ++i)
+		channels[i].segments.resize(segmentsX() * segmentsY());
+
+	// Try to guess the filetype.
+	fileMin_ = std::numeric_limits<PixTyp>::min();
+	fileMax_ = std::numeric_limits<PixTyp>::max();
+
+	/*if (noChannels == 3 && typeid(PixTyp) == typeid(unsigned char))
+		setFileType(_PPM);
+	if (noChannels != 1)
+		return;
+	if (typeid(PixTyp) == typeid(unsigned char))
+		setFileType(_PFM_FLOAT);
+	else if (typeid(PixTyp) == typeid(signed))
+		setFileType(_PFM_SINT);
+	else if (typeid(PixTyp) == typeid(unsigned))
+		setFileType(_PFM_UINT);
+	else if (typeid(PixTyp) == typeid(signed short))
+		setFileType(_PFM_SINT16);
+	else if (typeid(PixTyp) == typeid(unsigned short))
+		setFileType(_PFM_UINT16);
+	else if (typeid(PixTyp) == typeid(float))
+		// Min, max for float?
+	setFileType(_PGM);*/
+	if (typeid(PixTyp) == typeid(unsigned char))
+		setFileType(_TIFF_UINT8);
+	else if (typeid(PixTyp) == typeid(signed char))
+		setFileType(_TIFF_SINT8);
+	else if (typeid(PixTyp) == typeid(unsigned short))
+		setFileType(_TIFF_UINT16);
+	else if (typeid(PixTyp) == typeid(signed short))
+		setFileType(_TIFF_SINT16);
+	else if (typeid(PixTyp) == typeid(unsigned int))
+		setFileType(_TIFF_UINT32);
+	else if (typeid(PixTyp) == typeid(signed int))
+		setFileType(_TIFF_SINT32);
+	else if (typeid(PixTyp) == typeid(float))
+	{
+		fileMin_ = 0;
+		fileMax_ = 1;
+		setFileType(_TIFF_FLOAT);
+	}
+	else if (typeid(PixTyp) == typeid(double))
+	{
+		fileMin_ = 0;
+		fileMax_ = 1;
+		setFileType(_TIFF_DOUBLE);
+	}
+	else if (typeid(PixTyp) == typeid(bool))
+	{
+		fileMin_ = 0;
+		fileMax_ = 1;
+		setFileType(_PBM);
+	}
+	else
+		setFileType(_UNKNOWN);
 }
 
 template <class PixTyp>
@@ -301,62 +391,51 @@ void ImageT<PixTyp>::getChannel(ImageBase& resultImg, int channel)
 }
 
 template <class PixTyp>
-void ImageT<PixTyp>::read(ImageIOPtr io) {
-  source_ = io;
-  setComment(io->comment());
-  setFileMin(io->fileMin());
-  setFileMax(io->fileMax());
+void ImageT<PixTyp>::preload()
+{
+	if (!source_)
+		return;
+
+	// Load all segments (implicitly)
+	for (int segY = 0; segY < segmentsY(); ++segY)
+		for (int segX = 0; segX < segmentsX(); ++segX)
+			for (int c = 0; c < noChannels(); ++c)
+				getPixel(segX * segmentSizeX(), segY * segmentSizeY(), c);
+
+	// The source file can now be released
+	source_.reset();
 }
 
 template <class PixTyp>
-void ImageT<PixTyp>::write(ImageIOPtr io) {
-  io->setComment(comment());
-  io->setFileMin(fileMin());
-  io->setFileMax(fileMax());
-  
-  if (io == source_)
-  {
-    // Same file: Only write changed segments
-    for (int c = 0; c < noChannels(); ++c)
-      for (int segY = 0; segY < segmentsY(); ++segY)
-        for (int segX = 0; segX < segmentsX(); ++segX)
-        {
-          BlockHandle& handle = channels[c].segments[segY * segmentsX() + segX];
-          if (!handle.isEmpty() && handle.isDirty())
-          {
-            handle.lockR();
-            BlockLock lock(handle);
-            io->replaceRect(c, segX * segmentSizeX(), segY * segmentSizeY(),
-              segmentSizeX(segX), segmentSizeY(segY),
-              static_cast<PixTyp*>(handle.getData()));
-            handle.markClean();
-          }
-        }
-        
-    // Do not continue, would screw things up :)
-    return;
-  }
-  
-  // Load all segments (implicitly)
-  for (int c = 0; c < noChannels(); ++c)
-    for (int segY = 0; segY < segmentsY(); ++segY)
-      for (int segX = 0; segX < segmentsX(); ++segX)
-        getPixel(segX * segmentSizeX(), segY * segmentSizeY(), c);
+void ImageT<PixTyp>::read(ImageIOPtr io)
+{
+	source_ = io;
+	setComment(io->comment());
+	setFileMin(io->fileMin());
+	setFileMax(io->fileMax());
+}
 
-  // Now write all segments back to disk
-  for (int c = 0; c < noChannels(); ++c)
-    for (int segY = 0; segY < segmentsY(); ++segY)
-      for (int segX = 0; segX < segmentsX(); ++segX)
-      {
-        BlockHandle& handle = channels[c].segments[segY * segmentsX() + segX];
-        assert(!handle.isEmpty());
-        handle.lockR();
-        BlockLock lock(handle);
-        io->replaceRect(c, segX * segmentSizeX(), segY * segmentSizeY(),
-          segmentSizeX(segX), segmentSizeY(segY),
-          static_cast<PixTyp*>(handle.getData()));
-        handle.markClean();
-      }
+template <class PixTyp>
+void ImageT<PixTyp>::write(ImageIOPtr io)
+{
+	io->setComment(comment());
+	io->setFileMin(fileMin());
+	io->setFileMax(fileMax());
+
+	// Write all segments back to disk
+	for (int segY = 0; segY < segmentsY(); ++segY)
+		for (int segX = 0; segX < segmentsX(); ++segX)
+			for (int c = 0; c < noChannels(); ++c)
+			{
+				BlockHandle& handle = channels[c].segments[segY * segmentsX() + segX];
+				assert(!handle.isEmpty());
+				handle.lockR();
+				BlockLock lock(handle);
+				io->replaceRect(c, segX * segmentSizeX(), segY * segmentSizeY(),
+				segmentSizeX(segX), segmentSizeY(segY),
+				static_cast<PixTyp*>(handle.getData()));
+				handle.markClean();
+			}
 }
 
 } // namespace Ga

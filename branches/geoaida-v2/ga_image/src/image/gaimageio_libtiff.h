@@ -21,11 +21,12 @@
 #include "gaimage.h"
 #include <algorithm>
 #include <vector>
+#include <map>
 #include <stdexcept>
 
 namespace Ga
 {
-	bool checkTIFF(const std::string &filename, int &sizeX, int &sizeY, FileType &storageType)
+	bool checkTIFF(const std::string &filename, int &sizeX, int &sizeY, int &channels, int &segSizeX, int &segSizeY, FileType &storageType)
 	{
 		TIFF *tiff;
 		
@@ -34,14 +35,19 @@ namespace Ga
 			return false;
 		
 		// Determine image dimensions
+		sizeX = 0;
+		sizeY = 0;
 		TIFFGetFieldDefaulted(tiff, TIFFTAG_IMAGEWIDTH, &sizeX);
 		TIFFGetFieldDefaulted(tiff, TIFFTAG_IMAGELENGTH, &sizeY);
 		
 		// Determine the sample-type
-		unsigned short sampleFormat;
-		unsigned short sampleBits;
+		unsigned short sampleFormat = 0;
+		unsigned short sampleBits = 0;
+		channels = 0;
+		
 		TIFFGetFieldDefaulted(tiff, TIFFTAG_SAMPLEFORMAT, &sampleFormat);
 		TIFFGetFieldDefaulted(tiff, TIFFTAG_BITSPERSAMPLE, &sampleBits);
+		TIFFGetFieldDefaulted(tiff, TIFFTAG_SAMPLESPERPIXEL, &channels);
 		
 		switch (sampleFormat)
 		{
@@ -78,6 +84,21 @@ namespace Ga
 					
 			default:
 				throw std::logic_error("Unsupported Tiff sample format");
+		}
+		
+		// Determine segment sizes
+		segSizeX = 0;
+		segSizeY = 0;
+					
+		if (TIFFIsTiled(tiff))	// Tiles
+		{
+			TIFFGetFieldDefaulted(tiff, TIFFTAG_TILEWIDTH, &segSizeX);
+			TIFFGetFieldDefaulted(tiff, TIFFTAG_TILELENGTH, &segSizeY);
+		}
+		else					// Strips
+		{
+			TIFFGetFieldDefaulted(tiff, TIFFTAG_IMAGEWIDTH, &segSizeX);
+			TIFFGetFieldDefaulted(tiff, TIFFTAG_ROWSPERSTRIP, &segSizeY);
 		}
 		
 		// Close file
@@ -123,11 +144,12 @@ namespace Ga
 		std::string comment_;
 		float fileMin_, fileMax_;
 		int sizeX_, sizeY_;
+		int segSizeX_, segSizeY_;
 		int channels_;
 		
 		public:
-			LibTIFFImpl(const std::string &filename, FileType fileType, int sizeX, int sizeY, int channels, bool writeMode = false)
-			: type(fileType), sizeX_(sizeX), sizeY_(sizeY), channels_(channels), writeMode_(writeMode)
+			LibTIFFImpl(const std::string &filename, FileType fileType, int sizeX, int sizeY, int channels = 1, int segSizeX = 64, int segSizeY = 64, bool writeMode = false)
+			: type(fileType), sizeX_(sizeX), sizeY_(sizeY), channels_(channels), segSizeX_(segSizeX), segSizeY_(segSizeY), writeMode_(writeMode)
 			{
 				unsigned short usValue = 0;
 				
@@ -154,10 +176,240 @@ namespace Ga
 					// Open tiff-image for writing
 					tiff = TIFFOpen(filename.c_str(), "w");
 					
+					// Always tiled
+					tiffmode = TiffModeTiles;
+					
 					// Set important tags
+					TIFFSetField(tiff, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
+					TIFFSetField(tiff, TIFFTAG_PHOTOMETRIC, (((fileType == _TIFF_UINT8) && ((channels == 3) || (channels == 4))) ? PHOTOMETRIC_RGB : PHOTOMETRIC_MINISBLACK));
 					TIFFSetField(tiff, TIFFTAG_IMAGEWIDTH, sizeX);
 					TIFFSetField(tiff, TIFFTAG_IMAGELENGTH, sizeY);
 					TIFFSetField(tiff, TIFFTAG_SAMPLESPERPIXEL, channels);
+					
+					// Set BitsPerSample, MinMaxValues
+					short bpp = 0;
+					short sampleformat = 0;
+					
+					switch (fileType)
+					{
+						case _TIFF_UINT8:
+						{
+							sampleformat = 1;
+							bpp = 8;
+							
+							TIFFSetField(tiff, TIFFTAG_BITSPERSAMPLE, bpp);
+							TIFFSetField(tiff, TIFFTAG_SAMPLEFORMAT, sampleformat);
+							
+							unsigned char *min = new unsigned char[channels];
+							unsigned char *max = new unsigned char[channels];
+							
+							for (int i=0; i<channels; i++)
+							{
+								min[i] = std::numeric_limits<unsigned char>::min();
+								max[i] = std::numeric_limits<unsigned char>::max();
+							}
+							
+							TIFFSetField(tiff, TIFFTAG_SMINSAMPLEVALUE, min);
+							TIFFSetField(tiff, TIFFTAG_SMAXSAMPLEVALUE, max);
+							
+							delete[] min;
+							delete[] max;
+							
+							break;
+						}
+						
+						case _TIFF_SINT8:
+						{
+							sampleformat = 2;
+							bpp = 8;
+							
+							TIFFSetField(tiff, TIFFTAG_BITSPERSAMPLE, bpp);
+							TIFFSetField(tiff, TIFFTAG_SAMPLEFORMAT, sampleformat);
+							
+							signed char *min = new signed char[channels];
+							signed char *max = new signed char[channels];
+							
+							for (int i=0; i<channels; i++)
+							{
+								min[i] = std::numeric_limits<signed char>::min();
+								max[i] = std::numeric_limits<signed char>::max();
+							}
+							
+							TIFFSetField(tiff, TIFFTAG_SMINSAMPLEVALUE, min);
+							TIFFSetField(tiff, TIFFTAG_SMAXSAMPLEVALUE, max);
+							
+							delete[] min;
+							delete[] max;
+							
+							break;
+						}
+						
+						case _TIFF_UINT16:
+						{
+							sampleformat = 1;
+							bpp = 16;
+							
+							TIFFSetField(tiff, TIFFTAG_BITSPERSAMPLE, bpp);
+							TIFFSetField(tiff, TIFFTAG_SAMPLEFORMAT, sampleformat);
+							
+							unsigned short *min = new unsigned short[channels];
+							unsigned short *max = new unsigned short[channels];
+							
+							for (int i=0; i<channels; i++)
+							{
+								min[i] = std::numeric_limits<unsigned short>::min();
+								max[i] = std::numeric_limits<unsigned short>::max();
+							}
+							
+							TIFFSetField(tiff, TIFFTAG_SMINSAMPLEVALUE, min);
+							TIFFSetField(tiff, TIFFTAG_SMAXSAMPLEVALUE, max);
+							
+							delete[] min;
+							delete[] max;
+							
+							break;
+						}
+						
+						case _TIFF_SINT16:
+						{
+							sampleformat = 2;
+							bpp = 16;
+							
+							TIFFSetField(tiff, TIFFTAG_BITSPERSAMPLE, bpp);
+							TIFFSetField(tiff, TIFFTAG_SAMPLEFORMAT, sampleformat);
+							
+							signed short *min = new signed short[channels];
+							signed short *max = new signed short[channels];
+							
+							for (int i=0; i<channels; i++)
+							{
+								min[i] = std::numeric_limits<signed short>::min();
+								max[i] = std::numeric_limits<signed short>::max();
+							}
+							
+							TIFFSetField(tiff, TIFFTAG_SMINSAMPLEVALUE, min);
+							TIFFSetField(tiff, TIFFTAG_SMAXSAMPLEVALUE, max);
+							
+							delete[] min;
+							delete[] max;
+							
+							break;
+						}
+						
+						case _TIFF_UINT32:
+						{
+							sampleformat = 1;
+							bpp = 32;
+							
+							TIFFSetField(tiff, TIFFTAG_BITSPERSAMPLE, bpp);
+							TIFFSetField(tiff, TIFFTAG_SAMPLEFORMAT, sampleformat);
+							
+							unsigned int *min = new unsigned int[channels];
+							unsigned int *max = new unsigned int[channels];
+							
+							for (int i=0; i<channels; i++)
+							{
+								min[i] = std::numeric_limits<unsigned int>::min();
+								max[i] = std::numeric_limits<unsigned int>::max();
+							}
+							
+							TIFFSetField(tiff, TIFFTAG_SMINSAMPLEVALUE, min);
+							TIFFSetField(tiff, TIFFTAG_SMAXSAMPLEVALUE, max);
+							
+							delete[] min;
+							delete[] max;
+							
+							break;
+						}
+						
+						case _TIFF_SINT32:
+						{
+							sampleformat = 2;
+							bpp = 32;
+							
+							TIFFSetField(tiff, TIFFTAG_BITSPERSAMPLE, bpp);
+							TIFFSetField(tiff, TIFFTAG_SAMPLEFORMAT, sampleformat);
+							
+							signed int *min = new signed int[channels];
+							signed int *max = new signed int[channels];
+							
+							for (int i=0; i<channels; i++)
+							{
+								min[i] = std::numeric_limits<signed int>::min();
+								max[i] = std::numeric_limits<signed int>::max();
+							}
+							
+							TIFFSetField(tiff, TIFFTAG_SMINSAMPLEVALUE, min);
+							TIFFSetField(tiff, TIFFTAG_SMAXSAMPLEVALUE, max);
+							
+							delete[] min;
+							delete[] max;
+							
+							break;
+						}
+						
+						case _TIFF_FLOAT:
+						{
+							sampleformat = 3;
+							bpp = 32;
+							
+							TIFFSetField(tiff, TIFFTAG_BITSPERSAMPLE, bpp);
+							TIFFSetField(tiff, TIFFTAG_SAMPLEFORMAT, sampleformat);
+							
+							float *min = new float[channels];
+							float *max = new float[channels];
+							
+							for (int i=0; i<channels; i++)
+							{
+								min[i] = 0.0f;
+								max[i] = 1.0f;
+							}
+							
+							TIFFSetField(tiff, TIFFTAG_SMINSAMPLEVALUE, min);
+							TIFFSetField(tiff, TIFFTAG_SMAXSAMPLEVALUE, max);
+							
+							delete[] min;
+							delete[] max;
+							
+							break;
+						}
+						
+						case _TIFF_DOUBLE:
+						{
+							sampleformat = 3;
+							bpp = 64;
+							
+							TIFFSetField(tiff, TIFFTAG_BITSPERSAMPLE, bpp);
+							TIFFSetField(tiff, TIFFTAG_SAMPLEFORMAT, sampleformat);
+							
+							double *min = new double[channels];
+							double *max = new double[channels];
+							
+							for (int i=0; i<channels; i++)
+							{
+								min[i] = 0.0;
+								max[i] = 1.0;
+							}
+							
+							TIFFSetField(tiff, TIFFTAG_SMINSAMPLEVALUE, min);
+							TIFFSetField(tiff, TIFFTAG_SMAXSAMPLEVALUE, max);
+							
+							delete[] min;
+							delete[] max;
+							
+							break;
+						}
+						
+						default:
+							throw std::logic_error("Unsupported Tiff storage type");
+					}
+					
+					// Set segment sizes
+					assert((segSizeX & 15) == 0);	// Must be a multiple of 16
+					assert((segSizeY & 15) == 0);
+					
+					TIFFSetField(tiff, TIFFTAG_TILEWIDTH, segSizeX);
+					TIFFSetField(tiff, TIFFTAG_TILELENGTH, segSizeY);
 				}
 			}
 			
@@ -169,10 +421,6 @@ namespace Ga
 			template<typename Dest>
 					void readRect(int channel, int x, int y, int width, int height, Dest* buffer)
 			{
-				//std::cout << std::endl;
-				//std::cout << "channel = " << channel << "\nx = " << x << "\ny = " << y << "\nwidth = " << width << "\nheight = " << height << std::endl;
-				//std::cout << "SegmentWidth = " << segmentSizeX() << "\nSegmentHeight = " << segmentSizeY() << std::endl;
-				
 				assert(writeMode_ == false);
 				assert(width <= segmentSizeX() && height <= segmentSizeY());
 				assert(x % segmentSizeX() == 0 && y % segmentSizeY() == 0);
@@ -195,7 +443,7 @@ namespace Ga
 						
 						// Read strip
 						tsize_t sizeRead = TIFFReadEncodedStrip(tiff, TIFFComputeStrip(tiff, y, 0), dataBuffer, stripSize);
-						assert(sizeRead > 0);
+						assert(sizeRead == (width * height * channels_ * sizeof(Dest)));
 						
 						// Extract channel and write to destination buffer
 						int pixelcount = width * height;
@@ -222,24 +470,52 @@ namespace Ga
 						}
 						
 						// Read tile
-						tsize_t sizeRead = TIFFReadTile(tiff, dataBuffer, x, y, 0, 0);
-						assert(sizeRead > 0);
+						tsize_t sizeRead = TIFFReadEncodedTile(tiff, TIFFComputeTile(tiff, x, y, 0, 0), dataBuffer, tileSize);
+						assert(sizeRead == tileSize);
 						
 						// Extract channel and write to destination buffer
-						int pixelcount = width * height;
+						int lineCount = height;
+						int lineLength = width;
+						int lineSkip = segmentSizeX() - lineLength;
 						Dest *destBufferPixel = buffer;
 						Dest *tileBufferPixel = (Dest *)dataBuffer + channel;
-						
-						while (pixelcount--)
+				
+						for (int y=0; y<lineCount; y++)
 						{
-							*destBufferPixel = *tileBufferPixel;
-							destBufferPixel++;
-							tileBufferPixel += channels_;
+							for (int x=0; x<lineLength; x++)
+							{
+								*destBufferPixel = *tileBufferPixel;
+								destBufferPixel++;
+								tileBufferPixel += channels_;
+							}
+							tileBufferPixel += lineSkip * channels_;
 						}
 					}
 					break;
 				}
 			}
+			
+			template<typename Src>
+			struct TileCacheEntry
+			{
+				int channels;
+				bool *channelMarker;
+				tdata_t dataBuffer;
+				
+				TileCacheEntry()
+					: channels(1), channelMarker(0), dataBuffer(0)
+				{
+				}
+				
+				bool isFinished()
+				{
+					for (int i=0; i<channels; i++)
+						if (!channelMarker[i])
+							return false;
+					
+					return true;
+				}
+			};
 			
 			template<typename Src>
 					void replaceRect(int channel, int x, int y, int width, int height, const Src* buffer)
@@ -249,8 +525,57 @@ namespace Ga
 				assert(x % segmentSizeX() == 0 && y % segmentSizeY() == 0);
 				assert(channel < channels_);
 				
-				static int dataBufferSize = 0;
-				static tdata_t dataBuffer = _TIFFmalloc(dataBufferSize);
+				// Initialize the static tile cache
+				static std::map<ttile_t, TileCacheEntry<Src> > tileCache;
+				
+				// Compute the tile-id and create new cache entry (if it's a new tile)
+				ttile_t tileid = TIFFComputeTile(tiff, x, y, 0, 0);
+				
+				typename std::map<ttile_t, TileCacheEntry<Src> >::iterator entryIter = tileCache.find(tileid);
+				if (entryIter == tileCache.end())
+				{
+					TileCacheEntry<Src> entry;
+					entry.channels = channels_;
+					entry.channelMarker = new bool[channels_];
+					entry.dataBuffer = _TIFFmalloc(TIFFTileSize(tiff));
+					
+					tileCache[tileid] = entry;
+					entryIter = tileCache.find(tileid);
+				}
+				
+				// Write tile-data into the cache
+				int lineCount = height;
+				int lineLength = width;
+				int lineSkip = segmentSizeX() - lineLength;
+				const Src *srcBufferPixel = buffer;
+				Src *tileBufferPixel = (Src *)entryIter->second.dataBuffer + channel;
+				
+				for (int y=0; y<lineCount; y++)
+				{
+					for (int x=0; x<lineLength; x++)
+					{
+						*tileBufferPixel = *srcBufferPixel;
+						srcBufferPixel++;
+						tileBufferPixel += channels_;
+					}
+					tileBufferPixel += lineSkip * channels_;
+				}
+				
+				entryIter->second.channelMarker[channel] = true;
+				
+				// If the tile was finished, write it into the tiff and remove the cache entry
+				if (entryIter->second.isFinished())
+				{
+					// Write tile into tiff file
+					tsize_t sizeExpected = TIFFTileSize(tiff);//segmentSizeX() * segmentSizeY() * sizeof(Src) * channels_;
+					tsize_t sizeWritten = TIFFWriteEncodedTile(tiff, tileid, entryIter->second.dataBuffer, sizeExpected);
+					assert(sizeWritten == sizeExpected);
+					
+					// Release cache entry
+					delete[] entryIter->second.channelMarker;
+					_TIFFfree(entryIter->second.dataBuffer);
+					tileCache.erase(entryIter);
+				}
 			}
 			
 			FileType fileType() const
@@ -270,46 +595,12 @@ namespace Ga
 			
 			int segmentSizeX() const
 			{
-				switch (tiffmode)
-				{
-					case TiffModeStrips:
-					{
-						long imageWidth = 0;
-						TIFFGetFieldDefaulted(tiff, TIFFTAG_IMAGEWIDTH, &imageWidth);
-						
-						return imageWidth;
-					}
-					
-					case TiffModeTiles:
-					{
-						unsigned int tileWidth = 0;
-						TIFFGetFieldDefaulted(tiff, TIFFTAG_TILEWIDTH, &tileWidth);
-						
-						return tileWidth;
-					}
-				}
+				return segSizeX_;
 			}
 			
 			int segmentSizeY() const
 			{
-				switch (tiffmode)
-				{
-					case TiffModeStrips:
-					{
-						long rowsPerStrip = 0;
-						TIFFGetFieldDefaulted(tiff, TIFFTAG_ROWSPERSTRIP, &rowsPerStrip);
-						
-						return rowsPerStrip;
-					}
-					
-					case TiffModeTiles:
-					{
-						unsigned int tileLength = 0;
-						TIFFGetFieldDefaulted(tiff, TIFFTAG_TILELENGTH, &tileLength);
-						
-						return tileLength;
-					}
-				}
+				return segSizeY_;
 			}
 			
 			int channels() const

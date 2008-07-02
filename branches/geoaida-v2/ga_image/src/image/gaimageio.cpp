@@ -75,50 +75,68 @@ namespace Ga
   };
 }
 
-std::auto_ptr<Ga::ImageIO> Ga::ImageIO::create(const std::string& filename,
-  FileType fileType, int sizeX, int sizeY, int channels)
+std::auto_ptr<Ga::ImageIO> Ga::ImageIO::create(const std::string& filename, FileType fileType, int sizeX, int sizeY, int channels)
 {
-  // TODO: For tiled images, create a directory representation.
-
-  FILE* fp = fopen(filename.c_str(), "w+b");
-  if (!fp)
-    throw std::runtime_error("Could not create/overwrite file " + filename);
-  
-  switch (fileType)
-  {
-  case _PFM_FLOAT:
-  case _PFM_SINT:
-  case _PFM_UINT:
-  case _PFM_SINT16:
-  case _PFM_UINT16:
-  case _PGM:
-  case _PPM:
-  {
-    std::auto_ptr<LibPFMImpl> impl(new LibPFMImpl(fp, fileType, sizeX, sizeY));
-    return std::auto_ptr<ImageIO>(new ImageIOAdapter<LibPFMImpl>(filename, impl));
-  }
-  
-	case _PBM:
+	switch (fileType)
 	{
-    std::auto_ptr<LibNetPBMImpl> impl(new LibNetPBMImpl(fp, _PBM, sizeX, sizeY));
-    return std::auto_ptr<ImageIO>(new ImageIOAdapter<LibNetPBMImpl>(filename, impl));
+		case _PFM_FLOAT:
+		case _PFM_SINT:
+		case _PFM_UINT:
+		case _PFM_SINT16:
+		case _PFM_UINT16:
+		case _PGM:
+		case _PPM:
+		{
+			FILE* fp = fopen(filename.c_str(), "w+b");
+			if (!fp)
+				throw std::runtime_error("Could not create/overwrite file " + filename);
+			
+			std::auto_ptr<LibPFMImpl> impl(new LibPFMImpl(fp, fileType, sizeX, sizeY));
+			return std::auto_ptr<ImageIO>(new ImageIOAdapter<LibPFMImpl>(filename, impl));
+		}
+		
+		case _PBM:
+		{
+			FILE* fp = fopen(filename.c_str(), "w+b");
+			if (!fp)
+				throw std::runtime_error("Could not create/overwrite file " + filename);
+			
+			std::auto_ptr<LibNetPBMImpl> impl(new LibNetPBMImpl(fp, _PBM, sizeX, sizeY));
+			return std::auto_ptr<ImageIO>(new ImageIOAdapter<LibNetPBMImpl>(filename, impl));
+		}
+		
+		case _TIFF_UINT8:
+		case _TIFF_SINT8:
+		case _TIFF_UINT16:
+		case _TIFF_SINT16:
+		case _TIFF_UINT32:
+		case _TIFF_SINT32:
+		case _TIFF_FLOAT:
+		case _TIFF_DOUBLE:
+		{
+			std::auto_ptr<LibTIFFImpl> impl(new LibTIFFImpl(filename, fileType, sizeX, sizeY, channels, 256, 256, true));
+			return std::auto_ptr<ImageIO>(new ImageIOAdapter<LibTIFFImpl>(filename, impl));
+		}
+			
+		default:
+		{
+			char buf[1024];
+			sprintf(buf, "Invalid file type in ImageIO::create: %d", fileType);
+			throw std::logic_error(buf);
+		}
 	}
-  
-  default:
-    char buf[1024];
-    sprintf(buf, "Invalid file type in ImageIO::create: %d", fileType);
-    throw std::logic_error(buf);
-  }
 }
 
 std::auto_ptr<Ga::ImageIO> Ga::ImageIO::reopen(const std::string& filename)
 {
 	int sizeX, sizeY;
+	int segSizeX, segSizeY;
+	int channels;
 	FileType storageType;
 	
-	if (checkTIFF(filename, sizeX, sizeY, storageType))
+	if (checkTIFF(filename, sizeX, sizeY, channels, segSizeX, segSizeY, storageType))
 	{
-		std::auto_ptr<LibTIFFImpl> impl(new LibTIFFImpl(filename, storageType, sizeX, sizeY, 0));
+		std::auto_ptr<LibTIFFImpl> impl(new LibTIFFImpl(filename, storageType, sizeX, sizeY, channels, segSizeX, segSizeY, false));
 		return std::auto_ptr<ImageIO>(new ImageIOAdapter<LibTIFFImpl>(filename, impl));
 	}
 	else

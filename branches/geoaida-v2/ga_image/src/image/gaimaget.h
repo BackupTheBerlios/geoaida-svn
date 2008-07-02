@@ -108,7 +108,8 @@ namespace Ga
       swap(rangeEnd, other.rangeEnd);
       swap(relocator, other.relocator);
     }
-    
+
+	
     Pix& operator*()
     {
       if (elem < rangeBegin || elem >= rangeEnd)
@@ -119,7 +120,7 @@ namespace Ga
       }
 
       Pix* data = static_cast<Pix*>(handle->getData());
-      return data[elem - rangeBegin + offset];
+	  return data[elem - rangeBegin + offset];
     }
     
     Pix& operator[](LargeSize index) const
@@ -256,8 +257,10 @@ namespace Ga
     void setFileMax(double fileMax) { fileMax_ = fileMax; }
     
     // I/O.
-    void read(ImageIOPtr io);
-    void write(ImageIOPtr io);
+	void preload();
+	void read(ImageIOPtr io);
+	void write(ImageIOPtr io);
+	
     // Using declarations to avoid that our overrides hide the inherited overloads.
     using ImageBase::read;
     using ImageBase::write;
