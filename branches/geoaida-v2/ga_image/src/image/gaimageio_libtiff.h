@@ -410,6 +410,10 @@ namespace Ga
 					
 					TIFFSetField(tiff, TIFFTAG_TILEWIDTH, segSizeX);
 					TIFFSetField(tiff, TIFFTAG_TILELENGTH, segSizeY);
+					
+					// Set compression algorithm
+					TIFFSetField(tiff, TIFFTAG_COMPRESSION, COMPRESSION_DEFLATE);
+					//TIFFSetField(tiff, TIFFTAG_COMPRESSION, COMPRESSION_JPEG);
 				}
 			}
 			
@@ -442,8 +446,15 @@ namespace Ga
 						}
 						
 						// Read strip
-						tsize_t sizeRead = TIFFReadEncodedStrip(tiff, TIFFComputeStrip(tiff, y, 0), dataBuffer, stripSize);
-						assert(sizeRead == (width * height * channels_ * sizeof(Dest)));
+						static tstrip_t lastStripID = -1;
+						tstrip_t stripID = TIFFComputeStrip(tiff, y, 0);
+						
+						if (stripID != lastStripID)
+						{
+							tsize_t sizeRead = TIFFReadEncodedStrip(tiff, stripID, dataBuffer, stripSize);
+							lastStripID = stripID;
+							assert(sizeRead == (width * height * channels_ * sizeof(Dest)));
+						}
 						
 						// Extract channel and write to destination buffer
 						int pixelcount = width * height;
@@ -470,8 +481,15 @@ namespace Ga
 						}
 						
 						// Read tile
-						tsize_t sizeRead = TIFFReadEncodedTile(tiff, TIFFComputeTile(tiff, x, y, 0, 0), dataBuffer, tileSize);
-						assert(sizeRead == tileSize);
+						static ttile_t lastTileID = -1;
+						ttile_t tileID = TIFFComputeTile(tiff, x, y, 0, 0);
+						
+						if (tileID != lastTileID)
+						{
+							tsize_t sizeRead = TIFFReadEncodedTile(tiff, tileID, dataBuffer, tileSize);
+							lastTileID = tileID;
+							assert(sizeRead == tileSize);
+						}
 						
 						// Extract channel and write to destination buffer
 						int lineCount = height;
@@ -567,7 +585,7 @@ namespace Ga
 				if (entryIter->second.isFinished())
 				{
 					// Write tile into tiff file
-					tsize_t sizeExpected = TIFFTileSize(tiff);//segmentSizeX() * segmentSizeY() * sizeof(Src) * channels_;
+					tsize_t sizeExpected = TIFFTileSize(tiff);
 					tsize_t sizeWritten = TIFFWriteEncodedTile(tiff, tileid, entryIter->second.dataBuffer, sizeExpected);
 					assert(sizeWritten == sizeExpected);
 					
