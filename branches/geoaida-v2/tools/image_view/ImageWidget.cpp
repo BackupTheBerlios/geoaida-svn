@@ -28,7 +28,7 @@
 ***************************************/
 
 ImageWidget::ImageWidget(QWidget *parent)
-	: QWidget(parent), _image(0), _affineTransformation(new float[9]), _invAffineTransformation(new float[9]), _currentTimestamp(0)
+	: QWidget(parent), _image(0), _affineTransformation(new float[9]), _invAffineTransformation(new float[9]), _currentTimestamp(0), _contrast(1.0), _brightness(0.0)
 {
 	_cmMode = CM_OneChannelMode;
 	_channelMapping[0] = _channelMapping[1] = _channelMapping[2] = 0;
@@ -63,6 +63,9 @@ void ImageWidget::Clear()
 
 	_bounds = QRect();
 	_offset = QPoint();
+
+	_contrast = 1.0;
+	_brightness = 0.0;
 
 	_selection = QRect();
 
@@ -247,8 +250,6 @@ void ImageWidget::ClearTileCache()
 	_currentTimestamp = 0;
 	_currentTiles.clear();
 	_loadingTiles.clear();
-
-	update();
 }
 
 void ImageWidget::LoadNextTile()
@@ -283,7 +284,9 @@ retry:
 	Ga::ImageBase *pImage = _image->pImage();
 	double fMin = pImage->fileMin();
 	double fMax = pImage->fileMax();
-	double fScale = 255.0 / (fMax - fMin);
+	//double fScale = (255.0 / (fMax - fMin)) * _contrast;
+	double fScale = 1.0 * _contrast;
+	double fAdd = fMin + _brightness;
 
 	switch (_cmMode)
 	{
@@ -298,7 +301,7 @@ retry:
 					int posx = static_cast<int>(px * _affineTransformation[0] + py * _affineTransformation[1] + _affineTransformation[2]);
 					int posy = static_cast<int>(px * _affineTransformation[3] + py * _affineTransformation[4] + _affineTransformation[5]);
 
-					g = static_cast<quint8>(std::max(0.0, std::min((pImage->getPixelAsDouble(posx, posy, _channelMapping[0]) + fMin) * fScale, 255.0)));
+					g = static_cast<quint8>(std::max(0.0, std::min((pImage->getPixelAsDouble(posx, posy, _channelMapping[0]) + fAdd) * fScale, 255.0)));
 
 					tmpImage.setPixel(x, y, qRgb(g, g, g));
 				}
@@ -317,9 +320,9 @@ retry:
 					int posx = static_cast<int>(px * _affineTransformation[0] + py * _affineTransformation[1] + _affineTransformation[2]);
 					int posy = static_cast<int>(px * _affineTransformation[3] + py * _affineTransformation[4] + _affineTransformation[5]);
 
-					r = static_cast<quint8>(std::max(0.0, std::min((pImage->getPixelAsDouble(posx, posy, _channelMapping[0]) + fMin) * fScale, 255.0)));
-					g = static_cast<quint8>(std::max(0.0, std::min((pImage->getPixelAsDouble(posx, posy, _channelMapping[1]) + fMin) * fScale, 255.0)));
-					b = static_cast<quint8>(std::max(0.0, std::min((pImage->getPixelAsDouble(posx, posy, _channelMapping[2]) + fMin) * fScale, 255.0)));
+					r = static_cast<quint8>(std::max(0.0, std::min((pImage->getPixelAsDouble(posx, posy, _channelMapping[0]) + fAdd) * fScale, 255.0)));
+					g = static_cast<quint8>(std::max(0.0, std::min((pImage->getPixelAsDouble(posx, posy, _channelMapping[1]) + fAdd) * fScale, 255.0)));
+					b = static_cast<quint8>(std::max(0.0, std::min((pImage->getPixelAsDouble(posx, posy, _channelMapping[2]) + fAdd) * fScale, 255.0)));
 
 					tmpImage.setPixel(x, y, qRgb(r, g, b));
 				}
@@ -539,5 +542,23 @@ void ImageWidget::ChangeOffsetX(int offsetX)
 void ImageWidget::ChangeOffsetY(int offsetY)
 {
 	_offset.setY(offsetY);
+	update();
+}
+
+void ImageWidget::setContrast(double contrast)
+{
+	_contrast = contrast;
+	Redraw();
+}
+
+void ImageWidget::setBrightness(double brightness)
+{
+	_brightness = brightness;
+	Redraw();
+}
+
+void ImageWidget::Redraw()
+{
+	ClearTileCache();
 	update();
 }

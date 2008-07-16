@@ -25,6 +25,7 @@
 #include <QStatusBar>
 
 #include "ChannelMappingDialog.h"
+#include "CBDialog.h"
 
 /**************************************
 *
@@ -68,7 +69,10 @@ MainWindow::MainWindow(const QString &filename, QWidget *parent)
 
 	// Load image from command-line
 	if (!filename.isEmpty())
+	{
 		_imageWidget->Open(filename);
+		setWindowTitle(QFileInfo(filename).fileName());
+	}
 }
 
 QMenuBar *MainWindow::createMenuBar()
@@ -89,8 +93,13 @@ QMenuBar *MainWindow::createMenuBar()
 	// Channel menu
 	QMenu *channelMenu = menuBar->addMenu(tr("&Farbkanäle"));
 
-	QAction *channelMappingAction = channelMenu->addAction(tr("Mapping &Ändern"));
+	QAction *channelMappingAction = channelMenu->addAction(tr("&Mapping Ändern..."));
 	connect(channelMappingAction, SIGNAL(triggered()), this, SLOT(ChangeChannelMapping()));
+
+	channelMenu->addSeparator();
+
+	QAction *channelContrastBrightnessAction = channelMenu->addAction(tr("Kontrast / Helligkeit &Ändern..."));
+	connect(channelContrastBrightnessAction, SIGNAL(triggered()), this, SLOT(ChangeContrastBrightness()));
 
 	// View menu
 	QMenu *viewMenu = menuBar->addMenu(tr("&Ansicht"));
@@ -130,6 +139,7 @@ void MainWindow::LoadFileDialog()
 		return;
 
 	_imageWidget->Open(filename);
+	setWindowTitle(QFileInfo(filename).fileName());
 }
 
 void MainWindow::QuitApplication()
@@ -139,7 +149,7 @@ void MainWindow::QuitApplication()
 
 void MainWindow::ChangeChannelMapping()
 {
-	if (_imageWidget->channelCount() == 0)
+	if (!_imageWidget->isValidImage())
 		return;
 
 	ChannelMappingDialog dialog((int)_imageWidget->channelMappingMode(), _imageWidget->channelMapping(0), _imageWidget->channelMapping(1), _imageWidget->channelMapping(2), _imageWidget->channelCount(), this);
@@ -152,6 +162,20 @@ void MainWindow::ChangeChannelMapping()
 		else
 			_imageWidget->setChannelMapping((ChannelMappingMode)dialog.mode(), dialog.mapping(0), dialog.mapping(1), dialog.mapping(2));
 	}
+}
+
+void MainWindow::ChangeContrastBrightness()
+{
+	if (!_imageWidget->isValidImage())
+		return;
+
+	CBDialog *dialog = new CBDialog(_imageWidget->contrast(), _imageWidget->brightness(), this);
+	dialog->setModal(true);
+
+	connect(dialog, SIGNAL(contrastChanged(double)), _imageWidget, SLOT(setContrast(double)));
+	connect(dialog, SIGNAL(brightnessChanged(double)), _imageWidget, SLOT(setBrightness(double)));
+
+	dialog->show();
 }
 
 void MainWindow::ResetView()

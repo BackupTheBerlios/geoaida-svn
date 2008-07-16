@@ -34,10 +34,6 @@ class ChannelMappingDialog : public QDialog
 		int mode();
 		int mapping(int nr);
 
-	protected:
-
-	public slots:
-
 	private slots:
 		void oneChannelGroupClicked(bool status=false);
 		void threeChannelGroupClicked(bool status=false);

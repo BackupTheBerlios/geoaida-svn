@@ -1,7 +1,7 @@
 /***************************************************************************
-                          MainWindow.h  -  
+                          CBDialog.h  -
                              -------------------
-    begin                : Mon Jul 07 2008
+    begin                : Wed Jul 16 2008
     copyright            : (C) 2008 TNT, Uni Hannover
     authors              : Karsten Vogt
 
@@ -17,46 +17,32 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef _MAINWINDOW_H_
-#define _MAINWINDOW_H_
+#ifndef _CBDIALOG_H_
+#define _CBDIALOG_H_
 
-#include <QMainWindow>
-#include <QMenuBar>
-#include <QScrollBar>
+#include <QDialog>
+#include <QDoubleSpinBox>
 
-#include "ImageWidget.h"
-
-class MainWindow : public QMainWindow
+class CBDialog : public QDialog
 {
 	Q_OBJECT
 
 	public:
-		MainWindow(const QString &filename=QString(), QWidget *parent=0);
+		CBDialog(double startContrast, double startBrightness, QWidget *parent=0);
 
-	protected:
+	signals:
+		void contrastChanged(double contrast=1.0);
+		void brightnessChanged(double brightness=0.0);
 
 	private slots:
-		void LoadFileDialog();
-		void QuitApplication();
-
-		void ChangeChannelMapping();
-		void ChangeContrastBrightness();
-
-		void ResetView();
-		void ZoomPlus();
-		void ZoomMinus();
-		void RotatePlus();
-		void RotateMinus();
-
-		void RecalculateScrollbarProperties();
+		void resetValues();
 
 	private:
-		QWidget *_centralWidget;
-		QScrollBar *_horizontalScrollbar;
-		QScrollBar *_verticalScrollbar;
-		ImageWidget *_imageWidget;
+		QDoubleSpinBox *_contrastSpin;
+		QDoubleSpinBox *_brightnessSpin;
 
-		QMenuBar *createMenuBar();
+		double _startContrast;
+		double _startBrightness;
 };
 
 #endif

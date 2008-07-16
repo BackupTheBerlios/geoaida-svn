@@ -65,6 +65,7 @@ class ImageWidget : public QWidget
 		void Clear();
 		void Open(QString filename);
 
+		bool isValidImage()	{ return (_image != 0); }
 		int imageWidth()	{ return _bounds.width(); }
 		int imageHeight()	{ return _bounds.height(); }
 		int offsetX()		{ return _offset.x(); }
@@ -80,8 +81,11 @@ class ImageWidget : public QWidget
 			_channelMapping[1] = mapping2;
 			_channelMapping[2] = mapping3;
 
-			ClearTileCache();
+			Redraw();
 		}
+
+		double contrast()						{ return _contrast; }
+		double brightness()						{ return _brightness; }
 
 	protected:
 		void resizeEvent(QResizeEvent *event);
@@ -101,10 +105,15 @@ class ImageWidget : public QWidget
 		void ChangeOffsetX(int offsetX);
 		void ChangeOffsetY(int offsetY);
 
+		void setContrast(double contrast);
+		void setBrightness(double brightness);
+
 		void ResetView(bool recalc=true);
 		void ZoomView(float zoomX, float zoomY, bool recalc=true);
 		void RotateView(float angle, bool recalc=true);
 		void TranslateView(float transX, float transY, bool recalc=true);
+
+		void Redraw();
 
 	private slots:
 		void ClearTileCache();
@@ -128,6 +137,9 @@ class ImageWidget : public QWidget
 
 		ChannelMappingMode _cmMode;
 		int _channelMapping[3];
+
+		double _contrast;
+		double _brightness;
 
 		QRect _selection;
 
