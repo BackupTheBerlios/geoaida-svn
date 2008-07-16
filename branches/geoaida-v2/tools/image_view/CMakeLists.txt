@@ -5,9 +5,9 @@ include_directories(${gaimage_SOURCE_DIR}/src/image)
 
 include(${QT_USE_FILE})
 
-set(image_view_SRCS main.cpp MainWindow.cpp ImageWidget.cpp)
+set(image_view_SRCS main.cpp MainWindow.cpp ImageWidget.cpp ChannelMappingDialog.cpp)
 
-set(image_view_MOC_HDRS MainWindow.h ImageWidget.h)
+set(image_view_MOC_HDRS MainWindow.h ImageWidget.h ChannelMappingDialog.h)
 
 QT4_WRAP_CPP(image_view_MOC_SRCS ${image_view_MOC_HDRS})
 

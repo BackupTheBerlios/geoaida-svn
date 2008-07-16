@@ -1,3 +1,22 @@
+/***************************************************************************
+                          ImageWidget.cpp  -
+                             -------------------
+    begin                : Mon Jul 07 2008
+    copyright            : (C) 2008 TNT, Uni Hannover
+    authors              : Karsten Vogt
+
+    email                : vogt@tnt.uni-hannover.de
+ ***************************************************************************/
+
+/***************************************************************************
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ ***************************************************************************/
+
 #include "ImageWidget.h"
 
 #include <QtGui>
@@ -11,6 +30,15 @@
 ImageWidget::ImageWidget(QWidget *parent)
 	: QWidget(parent), _image(0), _affineTransformation(new float[9]), _invAffineTransformation(new float[9]), _currentTimestamp(0)
 {
+	_cmMode = CM_OneChannelMode;
+	_channelMapping[0] = _channelMapping[1] = _channelMapping[2] = 0;
+
+	QPalette palette;
+	palette.setColor(QPalette::Background, Qt::black);
+	setPalette(palette);
+	setAutoFillBackground(true);
+	setMouseTracking(true);
+
 	connect(this, SIGNAL(UpdateTileCacheExpand()), this, SLOT(LoadNextTile()));
 	connect(this, SIGNAL(UpdateTileCacheShrink()), this, SLOT(RemoveOldTiles()));
 }
@@ -49,6 +77,19 @@ void ImageWidget::Open(QString filename)
 {
 	Clear();
 	_image = new Ga::Image(filename.toStdString());
+
+	if (_image->noChannels() < 3)
+	{
+		_cmMode = CM_OneChannelMode;
+		_channelMapping[0] = _channelMapping[1] = _channelMapping[2] = 0;
+	}
+	else
+	{
+		_cmMode = CM_ThreeChannelMode;
+		_channelMapping[0] = 0;
+		_channelMapping[1] = 1;
+		_channelMapping[2] = 2;
+	}
 
 	ResetView();
 	update();
@@ -143,24 +184,56 @@ void ImageWidget::paintEvent(QPaintEvent *event)
 
 void ImageWidget::mousePressEvent(QMouseEvent *event)
 {
-	_selection.setTopLeft(event->pos() + _offset);
-	_selection.setBottomRight(event->pos() + _offset);
+	// Selection rectangle
+	if (event->buttons() & Qt::LeftButton)
+	{
+		_selection.setTopLeft(event->pos() + _offset);
+		_selection.setBottomRight(event->pos() + _offset);
 
-	update();
+		update();
+	}
 }
 
 void ImageWidget::mouseMoveEvent(QMouseEvent *event)
 {
-	_selection.setBottomRight(event->pos() + _offset);
+	// Selection rectangle
+	if (event->buttons() & Qt::LeftButton)
+	{
+		_selection.setBottomRight(event->pos() + _offset);
 
-	update();
+		update();
+	}
+
+	// Current pixel value
+	if (_image)
+	{
+		int px = event->x() + _offset.x();
+		int py = event->y() + _offset.y();
+		int posx = static_cast<int>(px * _affineTransformation[0] + py * _affineTransformation[1] + _affineTransformation[2]);
+		int posy = static_cast<int>(px * _affineTransformation[3] + py * _affineTransformation[4] + _affineTransformation[5]);
+
+		switch (_cmMode)
+		{
+			case CM_OneChannelMode:
+				emit ShowMessage(tr("Pixel an Position (%1, %2) = %3").arg(posx).arg(posy).arg(_image->getPixel(posx, posy, _channelMapping[0])));
+				break;
+
+			case CM_ThreeChannelMode:
+				emit ShowMessage(tr("Pixel an Position (%1, %2) = (%3, %4, %5)").arg(posx).arg(posy).arg(_image->getPixel(posx, posy, _channelMapping[0])).arg(_image->getPixel(posx, posy, _channelMapping[1])).arg(_image->getPixel(posx, posy, _channelMapping[2])));
+				break;
+		}
+	}
 }
 
 void ImageWidget::mouseReleaseEvent(QMouseEvent *event)
 {
-	_selection.setBottomRight(event->pos() + _offset);
+	// Selection rectangle
+	if (event->buttons() & Qt::LeftButton)
+	{
+		_selection.setBottomRight(event->pos() + _offset);
 
-	update();
+		update();
+	}
 }
 
 /**************************************
@@ -174,6 +247,8 @@ void ImageWidget::ClearTileCache()
 	_currentTimestamp = 0;
 	_currentTiles.clear();
 	_loadingTiles.clear();
+
+	update();
 }
 
 void ImageWidget::LoadNextTile()
@@ -210,13 +285,9 @@ retry:
 	double fMax = pImage->fileMax();
 	double fScale = 255.0 / (fMax - fMin);
 
-	switch (_image->noChannels())
+	switch (_cmMode)
 	{
-		case 0:
-			break;
-
-		case 3:
-		case 4:
+		case CM_OneChannelMode:
 		{
 			for (int y = 0; y < TileSize; y++)
 			{
@@ -227,17 +298,15 @@ retry:
 					int posx = static_cast<int>(px * _affineTransformation[0] + py * _affineTransformation[1] + _affineTransformation[2]);
 					int posy = static_cast<int>(px * _affineTransformation[3] + py * _affineTransformation[4] + _affineTransformation[5]);
 
-					r = static_cast<quint8>(std::max(0.0, std::min((pImage->getPixelAsDouble(posx, posy, 0) + fMin) * fScale, 255.0)));
-					g = static_cast<quint8>(std::max(0.0, std::min((pImage->getPixelAsDouble(posx, posy, 1) + fMin) * fScale, 255.0)));
-					b = static_cast<quint8>(std::max(0.0, std::min((pImage->getPixelAsDouble(posx, posy, 2) + fMin) * fScale, 255.0)));
+					g = static_cast<quint8>(std::max(0.0, std::min((pImage->getPixelAsDouble(posx, posy, _channelMapping[0]) + fMin) * fScale, 255.0)));
 
-					tmpImage.setPixel(x, y, qRgb(r, g, b));
+					tmpImage.setPixel(x, y, qRgb(g, g, g));
 				}
 			}
 			break;
 		}
 
-		default:
+		case CM_ThreeChannelMode:
 		{
 			for (int y = 0; y < TileSize; y++)
 			{
@@ -248,11 +317,14 @@ retry:
 					int posx = static_cast<int>(px * _affineTransformation[0] + py * _affineTransformation[1] + _affineTransformation[2]);
 					int posy = static_cast<int>(px * _affineTransformation[3] + py * _affineTransformation[4] + _affineTransformation[5]);
 
-					g = static_cast<quint8>(std::max(0.0, std::min((pImage->getPixelAsDouble(posx, posy, 0) + fMin) * fScale, 255.0)));
+					r = static_cast<quint8>(std::max(0.0, std::min((pImage->getPixelAsDouble(posx, posy, _channelMapping[0]) + fMin) * fScale, 255.0)));
+					g = static_cast<quint8>(std::max(0.0, std::min((pImage->getPixelAsDouble(posx, posy, _channelMapping[1]) + fMin) * fScale, 255.0)));
+					b = static_cast<quint8>(std::max(0.0, std::min((pImage->getPixelAsDouble(posx, posy, _channelMapping[2]) + fMin) * fScale, 255.0)));
 
-					tmpImage.setPixel(x, y, qRgb(g, g, g));
+					tmpImage.setPixel(x, y, qRgb(r, g, b));
 				}
 			}
+			break;
 		}
 	}
 

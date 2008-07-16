@@ -1,7 +1,7 @@
 /***************************************************************************
-                          main.cpp  -
+                          ChannelMappingDialog.h  -
                              -------------------
-    begin                : Mon Jul 07 2008
+    begin                : Wed Jul 16 2008
     copyright            : (C) 2008 TNT, Uni Hannover
     authors              : Karsten Vogt
 
@@ -17,19 +17,39 @@
  *                                                                         *
  ***************************************************************************/
 
-#include <QApplication>
+#ifndef _CHANNELMAPPINGDIALOG_H_
+#define _CHANNELMAPPINGDIALOG_H_
 
-#include "MainWindow.h"
+#include <QDialog>
+#include <QGroupBox>
+#include <QSpinBox>
 
-int main(int argc, char *argv[])
+class ChannelMappingDialog : public QDialog
 {
-	//Q_INIT_RESOURCE(application);
+	Q_OBJECT
 
-	QApplication app(argc, argv);
+	public:
+		ChannelMappingDialog(int mode, int mapping1, int mapping2, int mapping3, int channelCount, QWidget *parent=0);
 
-	QString filename = (argc > 1) ? argv[1] : QString();
-	MainWindow window(filename);
-	window.show();
+		int mode();
+		int mapping(int nr);
 
-	return app.exec();
-}
+	protected:
+
+	public slots:
+
+	private slots:
+		void oneChannelGroupClicked(bool status=false);
+		void threeChannelGroupClicked(bool status=false);
+
+	private:
+		QGroupBox *_oneChannelGroup;
+		QGroupBox *_threeChannelGroup;
+
+		QSpinBox *_oneChannel1Spin;
+		QSpinBox *_threeChannel1Spin;
+		QSpinBox *_threeChannel2Spin;
+		QSpinBox *_threeChannel3Spin;
+};
+
+#endif

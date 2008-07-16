@@ -1,8 +1,30 @@
+/***************************************************************************
+                          MainWindow.cpp  -
+                             -------------------
+    begin                : Mon Jul 07 2008
+    copyright            : (C) 2008 TNT, Uni Hannover
+    authors              : Karsten Vogt
+
+    email                : vogt@tnt.uni-hannover.de
+ ***************************************************************************/
+
+/***************************************************************************
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ ***************************************************************************/
+
 #include "MainWindow.h"
 
 #include <QApplication>
 #include <QGridLayout>
 #include <QFileDialog>
+#include <QStatusBar>
+
+#include "ChannelMappingDialog.h"
 
 /**************************************
 *
@@ -10,7 +32,7 @@
 *
 ***************************************/
 
-MainWindow::MainWindow(QWidget *parent)
+MainWindow::MainWindow(const QString &filename, QWidget *parent)
 	: QMainWindow(parent)
 {
 	// Create central widget
@@ -34,11 +56,19 @@ MainWindow::MainWindow(QWidget *parent)
 	// Create menu bar
 	setMenuBar(createMenuBar());
 
+	// Create status bar
+	setStatusBar(new QStatusBar(this));
+
 	// Create connections
 	connect(_imageWidget, SIGNAL(UpdateScrollBars()), this, SLOT(RecalculateScrollbarProperties()));
+	connect(_imageWidget, SIGNAL(ShowMessage(const QString &, int)), this->statusBar(), SLOT(showMessage(const QString &, int)));
 
 	connect(_horizontalScrollbar, SIGNAL(valueChanged(int)), _imageWidget, SLOT(ChangeOffsetX(int)));
 	connect(_verticalScrollbar, SIGNAL(valueChanged(int)), _imageWidget, SLOT(ChangeOffsetY(int)));
+
+	// Load image from command-line
+	if (!filename.isEmpty())
+		_imageWidget->Open(filename);
 }
 
 QMenuBar *MainWindow::createMenuBar()
@@ -55,6 +85,12 @@ QMenuBar *MainWindow::createMenuBar()
 
 	QAction *fileQuitAction = fileMenu->addAction(tr("&Beenden"));
 	connect(fileQuitAction, SIGNAL(triggered()), this, SLOT(QuitApplication()));
+
+	// Channel menu
+	QMenu *channelMenu = menuBar->addMenu(tr("&Farbkanäle"));
+
+	QAction *channelMappingAction = channelMenu->addAction(tr("Mapping &Ändern"));
+	connect(channelMappingAction, SIGNAL(triggered()), this, SLOT(ChangeChannelMapping()));
 
 	// View menu
 	QMenu *viewMenu = menuBar->addMenu(tr("&Ansicht"));
@@ -99,6 +135,23 @@ void MainWindow::LoadFileDialog()
 void MainWindow::QuitApplication()
 {
 	QApplication::exit(0);
+}
+
+void MainWindow::ChangeChannelMapping()
+{
+	if (_imageWidget->channelCount() == 0)
+		return;
+
+	ChannelMappingDialog dialog((int)_imageWidget->channelMappingMode(), _imageWidget->channelMapping(0), _imageWidget->channelMapping(1), _imageWidget->channelMapping(2), _imageWidget->channelCount(), this);
+	int result = dialog.exec();
+
+	if (result == QDialog::Accepted)
+	{
+		if (dialog.mode() == 0)
+			_imageWidget->setChannelMapping((ChannelMappingMode)dialog.mode(), dialog.mapping(0), 0, 0);
+		else
+			_imageWidget->setChannelMapping((ChannelMappingMode)dialog.mode(), dialog.mapping(0), dialog.mapping(1), dialog.mapping(2));
+	}
 }
 
 void MainWindow::ResetView()
