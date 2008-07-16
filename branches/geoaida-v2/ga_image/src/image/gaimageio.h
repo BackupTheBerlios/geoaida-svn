@@ -3,7 +3,7 @@
                              -------------------
     begin                : 2007-10-29
     copyright            : (C) 2007 TNT, Uni Hannover
-    authors              : Julian Raschke
+    authors              : Julian Raschke, Karsten Vogt
     email                : raschke@tnt.uni-hannover.de
  ***************************************************************************/
 

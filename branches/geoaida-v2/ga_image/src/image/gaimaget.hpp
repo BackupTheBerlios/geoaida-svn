@@ -4,7 +4,7 @@
     begin                : Thu Jan 11 2001
     copyright            : (C) 2001 TNT, Uni Hannover
     authors              : J¸rgen B¸ckner, Oliver Stahlhut, Martin Pahl,
-                           Julian Raschke
+                           Julian Raschke, Karsten Vogt
     email                : bueckner@tnt.uni-hannover.de
  ***************************************************************************/
 
