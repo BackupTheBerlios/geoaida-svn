@@ -30,20 +30,23 @@ typedef quint32 TileID;
 typedef quint32 TimeStamp;
 
 const int TileSize = 128;
+const int SmallTileSize = 8;
+const int TileSizeShift = 4;
 
 struct TileInfo
 {
 	TileID id;
 	TimeStamp timestamp;
+	bool thumbnail;
 	QPixmap pixmap;
 
 	TileInfo()
-		: id(-1), timestamp(0), pixmap()
+		: id(-1), timestamp(0), thumbnail(true), pixmap()
 	{
 	}
 
 	TileInfo(TileID id, TimeStamp timestamp, const QImage &image)
-		: id(id), timestamp(timestamp), pixmap(QPixmap::fromImage(image))
+		: id(id), timestamp(timestamp), thumbnail(true), pixmap(QPixmap::fromImage(image))
 	{
 	}
 };
@@ -66,8 +69,10 @@ class ImageWidget : public QWidget
 		void Open(QString filename);
 
 		bool isValidImage()	{ return (_image != 0); }
-		int imageWidth()	{ return _bounds.width(); }
-		int imageHeight()	{ return _bounds.height(); }
+		int imageWidth()	{ return (isValidImage() ? _image->sizeX() : 0); }
+		int imageHeight()	{ return (isValidImage() ? _image->sizeY() : 0); }
+		int boundsWidth()	{ return _bounds.width(); }
+		int boundsHeight()	{ return _bounds.height(); }
 		int offsetX()		{ return _offset.x(); }
 		int offsetY()		{ return _offset.y(); }
 
@@ -105,6 +110,7 @@ class ImageWidget : public QWidget
 		void ChangeOffsetX(int offsetX);
 		void ChangeOffsetY(int offsetY);
 
+		void setRandomMapping(bool activate);
 		void setContrast(double contrast);
 		void setBrightness(double brightness);
 
@@ -137,6 +143,8 @@ class ImageWidget : public QWidget
 
 		ChannelMappingMode _cmMode;
 		int _channelMapping[3];
+		bool _randomMapping;
+		QMap<double, int> _randomMap;
 
 		double _contrast;
 		double _brightness;

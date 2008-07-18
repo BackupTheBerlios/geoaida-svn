@@ -32,6 +32,7 @@ ImageWidget::ImageWidget(QWidget *parent)
 {
 	_cmMode = CM_OneChannelMode;
 	_channelMapping[0] = _channelMapping[1] = _channelMapping[2] = 0;
+	_randomMapping = false;
 
 	QPalette palette;
 	palette.setColor(QPalette::Background, Qt::black);
@@ -167,10 +168,18 @@ void ImageWidget::paintEvent(QPaintEvent *event)
 			{
 				TileInfo &tinfo = _currentTiles[id];
 				tinfo.timestamp = _currentTimestamp;
-				painter.drawPixmap(x * TileSize - _offset.x(), y * TileSize - _offset.y(), tinfo.pixmap);
+
+				if (tinfo.thumbnail)
+				{
+					painter.drawPixmap(x * TileSize - _offset.x(), y * TileSize - _offset.y(), TileSize, TileSize, tinfo.pixmap);
+					if (!_loadingTiles.contains(id))
+						_loadingTiles.push_back(id);
+				}
+				else
+					painter.drawPixmap(x * TileSize - _offset.x(), y * TileSize - _offset.y(), tinfo.pixmap);
 			}
 			else if (!_loadingTiles.contains(id))
-				_loadingTiles.push_back(id);
+				_loadingTiles.push_front(id);
 		}
 	}
 
@@ -268,7 +277,7 @@ retry:
 	// Get next tile-id from list and check if it needs to be loaded
 	TileID id = _loadingTiles.takeFirst();
 
-	if (_currentTiles.contains(id))
+	if (_currentTiles.contains(id) && !_currentTiles[id].thumbnail)
 		goto retry;
 
 	QPoint tilePosition = PositionFromId(id) * TileSize;
@@ -277,33 +286,66 @@ retry:
 		goto retry;
 
 	// Load tile data and generate pixmap
-	QImage tmpImage(TileSize, TileSize, QImage::Format_RGB32);
 	int offx = tilePosition.x(), offy = tilePosition.y();
 	quint8 r, g, b;
 
 	Ga::ImageBase *pImage = _image->pImage();
 	double fMin = pImage->fileMin();
 	double fMax = pImage->fileMax();
-	//double fScale = (255.0 / (fMax - fMin)) * _contrast;
-	double fScale = 1.0 * _contrast;
+	double fScale = (255.0 / (fMax - fMin)) * _contrast;
+	//double fScale = 1.0 * _contrast;
 	double fAdd = fMin + _brightness;
+
+	bool createThumbnail = !_currentTiles.contains(id);
+	int tileSize = createThumbnail ? SmallTileSize : TileSize;
+	int scaleShift = createThumbnail ? TileSizeShift : 0;
+	QImage tmpImage(tileSize, tileSize, QImage::Format_RGB32);
 
 	switch (_cmMode)
 	{
 		case CM_OneChannelMode:
 		{
-			for (int y = 0; y < TileSize; y++)
+			if (_randomMapping)
 			{
-				for (int x = 0; x < TileSize; x++)
+				double value;
+				int color;
+				for (int y = 0; y < tileSize; y++)
 				{
-					int px = x + offx;
-					int py = y + offy;
-					int posx = static_cast<int>(px * _affineTransformation[0] + py * _affineTransformation[1] + _affineTransformation[2]);
-					int posy = static_cast<int>(px * _affineTransformation[3] + py * _affineTransformation[4] + _affineTransformation[5]);
-
-					g = static_cast<quint8>(std::max(0.0, std::min((pImage->getPixelAsDouble(posx, posy, _channelMapping[0]) + fAdd) * fScale, 255.0)));
-
-					tmpImage.setPixel(x, y, qRgb(g, g, g));
+					for (int x = 0; x < tileSize; x++)
+					{
+						int px = (x << scaleShift) + offx;
+						int py = (y << scaleShift) + offy;
+						int posx = static_cast<int>(px * _affineTransformation[0] + py * _affineTransformation[1] + _affineTransformation[2]);
+						int posy = static_cast<int>(px * _affineTransformation[3] + py * _affineTransformation[4] + _affineTransformation[5]);
+	
+						value = pImage->getPixelAsDouble(posx, posy, _channelMapping[0]);
+						if (_randomMap.contains(value))
+							color = _randomMap[value];
+						else
+						{
+							color = qRgb(rand() % 256, rand() % 256, rand() % 256);
+							_randomMap[value] = color;
+						}
+	
+						tmpImage.setPixel(x, y, color);
+					}
+				}
+			}
+			else
+			{
+				for (int y = 0; y < tileSize; y++)
+				{
+					for (int x = 0; x < tileSize; x++)
+					{
+						int px = (x << scaleShift) + offx;
+						int py = (y << scaleShift) + offy;
+						int posx = static_cast<int>(px * _affineTransformation[0] + py * _affineTransformation[1] + _affineTransformation[2]);
+						int posy = static_cast<int>(px * _affineTransformation[3] + py * _affineTransformation[4] + _affineTransformation[5]);
+	
+						g = static_cast<quint8>(std::max(0.0, std::min((pImage->getPixelAsDouble(posx, posy, _channelMapping[0]) + fAdd) * fScale, 255.0)));
+	
+						tmpImage.setPixel(x, y, qRgb(g, g, g));
+					}
 				}
 			}
 			break;
@@ -311,12 +353,12 @@ retry:
 
 		case CM_ThreeChannelMode:
 		{
-			for (int y = 0; y < TileSize; y++)
+			for (int y = 0; y < tileSize; y++)
 			{
-				for (int x = 0; x < TileSize; x++)
+				for (int x = 0; x < tileSize; x++)
 				{
-					int px = x + offx;
-					int py = y + offy;
+					int px = (x << scaleShift) + offx;
+					int py = (y << scaleShift) + offy;
 					int posx = static_cast<int>(px * _affineTransformation[0] + py * _affineTransformation[1] + _affineTransformation[2]);
 					int posy = static_cast<int>(px * _affineTransformation[3] + py * _affineTransformation[4] + _affineTransformation[5]);
 
@@ -331,7 +373,15 @@ retry:
 		}
 	}
 
-	_currentTiles.insert(id, TileInfo(id, _currentTimestamp, tmpImage));
+	if (createThumbnail)
+	{
+		_currentTiles.insert(id, TileInfo(id, _currentTimestamp, tmpImage));
+	}
+	else
+	{
+		_currentTiles[id].pixmap = QPixmap::fromImage(tmpImage);
+		_currentTiles[id].thumbnail = false;
+	}
 
 	QRect updateRect = tileRect.translated(-_offset) & this->rect();
 	update(updateRect);
@@ -543,6 +593,15 @@ void ImageWidget::ChangeOffsetY(int offsetY)
 {
 	_offset.setY(offsetY);
 	update();
+}
+
+void ImageWidget::setRandomMapping(bool activate)
+{
+	_randomMapping = activate;
+	_randomMap.clear();
+
+	if (_cmMode == CM_OneChannelMode)
+		Redraw();
 }
 
 void ImageWidget::setContrast(double contrast)

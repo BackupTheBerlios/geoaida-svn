@@ -71,7 +71,7 @@ MainWindow::MainWindow(const QString &filename, QWidget *parent)
 	if (!filename.isEmpty())
 	{
 		_imageWidget->Open(filename);
-		setWindowTitle(QFileInfo(filename).fileName());
+		setWindowTitle(QFileInfo(filename).fileName() + tr(" (%1 x %2)").arg(_imageWidget->imageWidth()).arg(_imageWidget->imageHeight()));
 	}
 }
 
@@ -95,6 +95,10 @@ QMenuBar *MainWindow::createMenuBar()
 
 	QAction *channelMappingAction = channelMenu->addAction(tr("&Mapping Ändern..."));
 	connect(channelMappingAction, SIGNAL(triggered()), this, SLOT(ChangeChannelMapping()));
+
+	QAction *channelLabelMappingAction = channelMenu->addAction(tr("&Labelbild darstellen"));
+	channelLabelMappingAction->setCheckable(true);
+	connect(channelLabelMappingAction, SIGNAL(triggered(bool)), _imageWidget, SLOT(setRandomMapping(bool)));
 
 	channelMenu->addSeparator();
 
@@ -134,12 +138,16 @@ QMenuBar *MainWindow::createMenuBar()
 
 void MainWindow::LoadFileDialog()
 {
-	QString filename = QFileDialog::getOpenFileName(this, tr("Bild öffnen"), QString(), tr("Bilder (*.tif *.tiff *.pfm *.pgm *.pbm); Alle (*.*)"));
+	static QString directory;
+
+	QString filename = QFileDialog::getOpenFileName(this, tr("Bild öffnen"), directory, tr("Bilder (*.tif *.tiff *.ppm *.pgm *.pfm *.pbm) ;; Alle (*.*)"));
 	if (filename.isEmpty())
 		return;
 
+	directory = QFileInfo(filename).absolutePath();
 	_imageWidget->Open(filename);
-	setWindowTitle(QFileInfo(filename).fileName());
+
+	setWindowTitle(QFileInfo(filename).fileName() + tr(" (%1 x %2)").arg(_imageWidget->imageWidth()).arg(_imageWidget->imageHeight()));
 }
 
 void MainWindow::QuitApplication()
@@ -211,16 +219,16 @@ void MainWindow::RotateMinus()
 void MainWindow::RecalculateScrollbarProperties()
 {
 	int width = _imageWidget->width();
-	int imageWidth = _imageWidget->imageWidth();
+	int boundsWidth = _imageWidget->boundsWidth();
 	_horizontalScrollbar->setMinimum(0);
-	_horizontalScrollbar->setMaximum(std::max(0, imageWidth - width));
+	_horizontalScrollbar->setMaximum(std::max(0, boundsWidth - width));
 	_horizontalScrollbar->setPageStep(width);
 	_horizontalScrollbar->setValue(_imageWidget->offsetX());
 
 	int height = _imageWidget->height();
-	int imageHeight = _imageWidget->imageHeight();
+	int boundsHeight = _imageWidget->boundsHeight();
 	_verticalScrollbar->setMinimum(0);
-	_verticalScrollbar->setMaximum(std::max(0, imageHeight - height));
+	_verticalScrollbar->setMaximum(std::max(0, boundsHeight - height));
 	_verticalScrollbar->setPageStep(height);
 	_verticalScrollbar->setValue(_imageWidget->offsetY());
 }

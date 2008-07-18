@@ -3,7 +3,7 @@
                              -------------------
     begin                : 2007-10-29
     copyright            : (C) 2007 TNT, Uni Hannover
-    authors              : Julian Raschke
+    authors              : Julian Raschke, Karsten Vogt
     email                : raschke@tnt.uni-hannover.de
  ***************************************************************************/
 
@@ -84,7 +84,45 @@ namespace Ga
     LibPFMImpl(FILE* fp, FileType fileType, int sizeX, int sizeY)
     : fp(fp), type(fileType), sizeX_(sizeX), sizeY_(sizeY)
     {
-    }
+		switch (fileType)
+		{
+			case _PFM_FLOAT:
+				fileMin_ = 0.0f;
+				fileMax_ = 1.0f;
+				break;
+				
+			case _PFM_SINT:
+				fileMin_ = std::numeric_limits<signed int>::min();
+				fileMax_ = std::numeric_limits<signed int>::max();
+				break;
+				
+			case _PFM_UINT:
+				fileMin_ = std::numeric_limits<unsigned int>::min();
+				fileMax_ = std::numeric_limits<unsigned int>::max();
+				break;
+				
+			case _PFM_SINT16:
+				fileMin_ = std::numeric_limits<signed short>::min();
+				fileMax_ = std::numeric_limits<signed short>::max();
+				break;
+				
+			case _PFM_UINT16:
+				fileMin_ = std::numeric_limits<unsigned short>::min();
+				fileMax_ = std::numeric_limits<unsigned short>::max();
+				break;
+				
+			case _PBM:
+				fileMin_ = 0;
+				fileMax_ = 1;
+				break;
+
+			case _PGM:
+			case _PPM:
+				fileMin_ = std::numeric_limits<unsigned char>::min();
+				fileMax_ = std::numeric_limits<unsigned char>::max();
+				break;
+		}
+	}
     
     template<typename Dest>
     void readRect(int channel, int x, int y, int width, int height,
