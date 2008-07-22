@@ -41,27 +41,18 @@ CBDialog::CBDialog(double startContrast, double startBrightness, QWidget *parent
 
 	cbControlsLayout->addWidget(new QLabel(tr("Helligkeit: "), this), 0, 0, 1, 1);
 
-	//QSlider *brightnessSlider = new QSlider(Qt::Horizontal, this);
-	//cbControlsLayout->addWidget(brightnessSlider, 0, 0, 1, 1);
-
 	_brightnessSpin = new QDoubleSpinBox(this);
-	_brightnessSpin->setRange(-256.0, 256.0);
+	_brightnessSpin->setRange(-10000.0, 10000.0);
 	_brightnessSpin->setValue(startBrightness);
 	cbControlsLayout->addWidget(_brightnessSpin, 0, 1, 1, 1);
-
 	connect(_brightnessSpin, SIGNAL(valueChanged(double)), this, SIGNAL(brightnessChanged(double)));
 
 	cbControlsLayout->addWidget(new QLabel(tr("Kontrast: "), this), 1, 0, 1, 1);
 
-	//QSlider *contrastSlider = new QSlider(Qt::Horizontal, this);
-	//cbControlsLayout->addWidget(contrastSlider, 1, 0, 1, 1);
-
 	_contrastSpin = new QDoubleSpinBox(this);
-	_contrastSpin->setRange(0.0, 100.0);
+	_contrastSpin->setRange(-10000.0, 10000.0);
 	_contrastSpin->setValue(startContrast);
-
 	cbControlsLayout->addWidget(_contrastSpin, 1, 1, 1, 1);
-
 	connect(_contrastSpin, SIGNAL(valueChanged(double)), this, SIGNAL(contrastChanged(double)));
 
 	mainLayout->addLayout(cbControlsLayout);

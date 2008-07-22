@@ -110,9 +110,10 @@ class ImageWidget : public QWidget
 		void ChangeOffsetX(int offsetX);
 		void ChangeOffsetY(int offsetY);
 
-		void setRandomMapping(bool activate);
-		void setContrast(double contrast);
-		void setBrightness(double brightness);
+		void CalculateAutoCB(float coverage=1.0f);
+		void SetRandomMapping(bool activate);
+		void SetContrast(double contrast);
+		void SetBrightness(double brightness);
 
 		void ResetView(bool recalc=true);
 		void ZoomView(float zoomX, float zoomY, bool recalc=true);
@@ -154,6 +155,8 @@ class ImageWidget : public QWidget
 		TileID IdFromPosition(int x, int y) const;
 		TileID IdFromPosition(const QPoint &point) const;
 		QPoint PositionFromId(const TileID id) const;
+
+		QList<double> CalculateHistogram(float coverage, int channel=0);
 
 		void MultiplyMatrixRight(float *matrix, bool target);
 		void MultiplyMatrixLeft(float *matrix, bool target);

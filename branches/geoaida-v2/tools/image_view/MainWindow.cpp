@@ -98,12 +98,18 @@ QMenuBar *MainWindow::createMenuBar()
 
 	QAction *channelLabelMappingAction = channelMenu->addAction(tr("&Labelbild darstellen"));
 	channelLabelMappingAction->setCheckable(true);
-	connect(channelLabelMappingAction, SIGNAL(triggered(bool)), _imageWidget, SLOT(setRandomMapping(bool)));
+	connect(channelLabelMappingAction, SIGNAL(triggered(bool)), _imageWidget, SLOT(SetRandomMapping(bool)));
 
 	channelMenu->addSeparator();
 
+	QAction *channelResetContrastBrightnessAction = channelMenu->addAction(tr("Kontrast / Helligkeit &Zurücksetzen"));
+	connect(channelResetContrastBrightnessAction, SIGNAL(triggered()), this, SLOT(ResetContrastBrightness()));
+
 	QAction *channelContrastBrightnessAction = channelMenu->addAction(tr("Kontrast / Helligkeit &Ändern..."));
 	connect(channelContrastBrightnessAction, SIGNAL(triggered()), this, SLOT(ChangeContrastBrightness()));
+
+	QAction *channelAutoContrastBrightnessAction = channelMenu->addAction(tr("&Auto Kontrast / Helligkeit"));
+	connect(channelAutoContrastBrightnessAction, SIGNAL(triggered()), _imageWidget, SLOT(CalculateAutoCB()));
 
 	// View menu
 	QMenu *viewMenu = menuBar->addMenu(tr("&Ansicht"));
@@ -172,6 +178,12 @@ void MainWindow::ChangeChannelMapping()
 	}
 }
 
+void MainWindow::ResetContrastBrightness()
+{
+	_imageWidget->SetContrast(1.0);
+	_imageWidget->SetBrightness(0.0);
+}
+
 void MainWindow::ChangeContrastBrightness()
 {
 	if (!_imageWidget->isValidImage())
@@ -180,8 +192,8 @@ void MainWindow::ChangeContrastBrightness()
 	CBDialog *dialog = new CBDialog(_imageWidget->contrast(), _imageWidget->brightness(), this);
 	dialog->setModal(true);
 
-	connect(dialog, SIGNAL(contrastChanged(double)), _imageWidget, SLOT(setContrast(double)));
-	connect(dialog, SIGNAL(brightnessChanged(double)), _imageWidget, SLOT(setBrightness(double)));
+	connect(dialog, SIGNAL(contrastChanged(double)), _imageWidget, SLOT(SetContrast(double)));
+	connect(dialog, SIGNAL(brightnessChanged(double)), _imageWidget, SLOT(SetBrightness(double)));
 
 	dialog->show();
 }

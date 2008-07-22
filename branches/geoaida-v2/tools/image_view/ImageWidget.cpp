@@ -240,12 +240,13 @@ void ImageWidget::mouseMoveEvent(QMouseEvent *event)
 void ImageWidget::mouseReleaseEvent(QMouseEvent *event)
 {
 	// Selection rectangle
-	if (event->buttons() & Qt::LeftButton)
-	{
-		_selection.setBottomRight(event->pos() + _offset);
+	_selection.setBottomRight(event->pos() + _offset);
+	_selection = _selection.normalized();
 
-		update();
-	}
+	if (_selection.width() * _selection.height() < 4)
+		_selection = QRect();
+
+	update();
 }
 
 /**************************************
@@ -293,7 +294,6 @@ retry:
 	double fMin = pImage->fileMin();
 	double fMax = pImage->fileMax();
 	double fScale = (255.0 / (fMax - fMin)) * _contrast;
-	//double fScale = 1.0 * _contrast;
 	double fAdd = fMin + _brightness;
 
 	bool createThumbnail = !_currentTiles.contains(id);
@@ -537,6 +537,7 @@ void ImageWidget::RecalculateBounds()
 
 	TranslateView(-minX, -minY, false);
 	_bounds = QRect(0, 0, maxX - minX, maxY - minY);
+	_selection = QRect();
 
 	ClearTileCache();
 
@@ -579,6 +580,47 @@ void ImageWidget::MultiplyMatrixLeft(float *matrix, bool target)
 
 /**************************************
 *
+*	Histogram and selection
+*
+***************************************/
+
+QList<double> ImageWidget::CalculateHistogram(float coverage, int channel)
+{
+	assert(_image);
+	assert((channel >= 0) && (channel < _image->noChannels()));
+	assert((coverage > 0.0f) && (coverage <= 1.0f));
+
+	QList<double> returnList;
+
+	float skip = 1.0f / coverage;
+
+	QRect selection = _selection.normalized();
+	if (!selection.isValid() || selection.isNull() || selection.isEmpty())
+		selection = _bounds;
+
+	float left = selection.x();
+	float right = selection.x() + selection.width();
+	float top = selection.y();
+	float bottom = selection.y() + selection.height();
+
+	for (float y = top; y <= bottom; y += skip)
+	{
+		for (float x = left; x <= right; x += skip)
+		{
+			float px = x * _affineTransformation[0] + y * _affineTransformation[1] + _affineTransformation[2];
+			float py = x * _affineTransformation[3] + y * _affineTransformation[4] + _affineTransformation[5];
+
+			double g = _image->getPixel(px, py, channel);
+			returnList.push_back(g);
+		}
+	}
+
+	qSort(returnList);
+	return returnList;
+}
+
+/**************************************
+*
 *	Misc
 *
 ***************************************/
@@ -595,7 +637,60 @@ void ImageWidget::ChangeOffsetY(int offsetY)
 	update();
 }
 
-void ImageWidget::setRandomMapping(bool activate)
+void ImageWidget::CalculateAutoCB(float coverage)
+{
+	if (!_image)
+		return;
+
+	if ((coverage <= 0.0f) || (coverage > 1.0f))
+		return;
+
+	Ga::ImageBase *pImage = _image->pImage();
+	double fMin = pImage->fileMin();
+	double fMax = pImage->fileMax();
+
+	switch (_cmMode)
+	{
+		case CM_OneChannelMode:
+		{
+			QList<double> histogram = CalculateHistogram(coverage, _channelMapping[0]);
+
+			if (histogram.size() < 2)
+				return;
+
+			double minValue = (histogram.first() - fMin) / (fMax - fMin);
+			double maxValue = (histogram.last() - fMin) / (fMax - fMin);
+
+			_brightness = -minValue * (fMax - fMin);
+			_contrast = 1.0 / (maxValue - minValue);
+
+			break;
+		}
+
+		case CM_ThreeChannelMode:
+		{
+			QList<double> histogram0 = CalculateHistogram(coverage, _channelMapping[0]);
+			QList<double> histogram1 = CalculateHistogram(coverage, _channelMapping[1]);
+			QList<double> histogram2 = CalculateHistogram(coverage, _channelMapping[2]);
+
+			assert((histogram0.size() == histogram1.size()) && (histogram1.size() == histogram2.size()));
+			if (histogram0.size() < 2)
+				return;
+
+			double minValue = (std::min(histogram0.first(), std::min(histogram1.first(), histogram2.first())) - fMin) / (fMax - fMin);
+			double maxValue = (std::max(histogram0.last(), std::max(histogram1.last(), histogram2.last())) - fMin) / (fMax - fMin);
+
+			_brightness = -minValue * (fMax - fMin);
+			_contrast = 1.0 / (maxValue - minValue);
+
+			break;
+		}
+	}
+
+	Redraw();
+}
+
+void ImageWidget::SetRandomMapping(bool activate)
 {
 	_randomMapping = activate;
 	_randomMap.clear();
@@ -604,13 +699,13 @@ void ImageWidget::setRandomMapping(bool activate)
 		Redraw();
 }
 
-void ImageWidget::setContrast(double contrast)
+void ImageWidget::SetContrast(double contrast)
 {
 	_contrast = contrast;
 	Redraw();
 }
 
-void ImageWidget::setBrightness(double brightness)
+void ImageWidget::SetBrightness(double brightness)
 {
 	_brightness = brightness;
 	Redraw();

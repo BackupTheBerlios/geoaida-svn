@@ -40,6 +40,7 @@ class MainWindow : public QMainWindow
 		void QuitApplication();
 
 		void ChangeChannelMapping();
+		void ResetContrastBrightness();
 		void ChangeContrastBrightness();
 
 		void ResetView();
