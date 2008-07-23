@@ -184,8 +184,26 @@ void ImageWidget::paintEvent(QPaintEvent *event)
 	}
 
 	// Draw the selection rectangle
+	QPointF points[4];
+	points[0] = QPointF(
+			_selection.left() * _invAffineTransformation[0] + _selection.top() * _invAffineTransformation[1] + _invAffineTransformation[2] - _offset.x(),
+			_selection.left() * _invAffineTransformation[3] + _selection.top() * _invAffineTransformation[4] + _invAffineTransformation[5] - _offset.y()
+	);
+	points[1] = QPointF(
+			_selection.right() * _invAffineTransformation[0] + _selection.top() * _invAffineTransformation[1] + _invAffineTransformation[2] - _offset.x(),
+			_selection.right() * _invAffineTransformation[3] + _selection.top() * _invAffineTransformation[4] + _invAffineTransformation[5] - _offset.y()
+	);
+	points[2] = QPointF(
+			_selection.right() * _invAffineTransformation[0] + _selection.bottom() * _invAffineTransformation[1] + _invAffineTransformation[2] - _offset.x(),
+			_selection.right() * _invAffineTransformation[3] + _selection.bottom() * _invAffineTransformation[4] + _invAffineTransformation[5] - _offset.y()
+	);
+	points[3] = QPointF(
+			_selection.left() * _invAffineTransformation[0] + _selection.bottom() * _invAffineTransformation[1] + _invAffineTransformation[2] - _offset.x(),
+			_selection.left() * _invAffineTransformation[3] + _selection.bottom() * _invAffineTransformation[4] + _invAffineTransformation[5] - _offset.y()
+	);
+	
 	painter.setPen(QPen(QBrush(QColor(255, 0, 0)), 2, Qt::DashDotLine));
-	painter.drawRect(_selection.translated(-_offset));
+	painter.drawConvexPolygon(points, 4);
 
 	painter.end();
 	_currentTimestamp++;
@@ -199,8 +217,14 @@ void ImageWidget::mousePressEvent(QMouseEvent *event)
 	// Selection rectangle
 	if (event->buttons() & Qt::LeftButton)
 	{
-		_selection.setTopLeft(event->pos() + _offset);
-		_selection.setBottomRight(event->pos() + _offset);
+		QPoint pos = event->pos() + _offset;
+		QPoint transformedPoint(
+				pos.x() * _affineTransformation[0] + pos.y() * _affineTransformation[1] + _affineTransformation[2] + 0.5,
+				pos.x() * _affineTransformation[3] + pos.y() * _affineTransformation[4] + _affineTransformation[5] + 0.5
+		);
+
+		_selection.setTopLeft(transformedPoint);
+		_selection.setBottomRight(transformedPoint);
 
 		update();
 	}
@@ -211,7 +235,13 @@ void ImageWidget::mouseMoveEvent(QMouseEvent *event)
 	// Selection rectangle
 	if (event->buttons() & Qt::LeftButton)
 	{
-		_selection.setBottomRight(event->pos() + _offset);
+		QPoint pos = event->pos() + _offset;
+		QPoint transformedPoint(
+				pos.x() * _affineTransformation[0] + pos.y() * _affineTransformation[1] + _affineTransformation[2] + 0.5,
+				pos.x() * _affineTransformation[3] + pos.y() * _affineTransformation[4] + _affineTransformation[5] + 0.5
+		);
+
+		_selection.setBottomRight(transformedPoint);
 
 		update();
 	}
@@ -221,8 +251,8 @@ void ImageWidget::mouseMoveEvent(QMouseEvent *event)
 	{
 		int px = event->x() + _offset.x();
 		int py = event->y() + _offset.y();
-		int posx = static_cast<int>(px * _affineTransformation[0] + py * _affineTransformation[1] + _affineTransformation[2]);
-		int posy = static_cast<int>(px * _affineTransformation[3] + py * _affineTransformation[4] + _affineTransformation[5]);
+		int posx = static_cast<int>(px * _affineTransformation[0] + py * _affineTransformation[1] + _affineTransformation[2] + 0.5);
+		int posy = static_cast<int>(px * _affineTransformation[3] + py * _affineTransformation[4] + _affineTransformation[5] + 0.5);
 
 		switch (_cmMode)
 		{
@@ -240,7 +270,13 @@ void ImageWidget::mouseMoveEvent(QMouseEvent *event)
 void ImageWidget::mouseReleaseEvent(QMouseEvent *event)
 {
 	// Selection rectangle
-	_selection.setBottomRight(event->pos() + _offset);
+	QPoint pos = event->pos() + _offset;
+	QPoint transformedPoint(
+			pos.x() * _affineTransformation[0] + pos.y() * _affineTransformation[1] + _affineTransformation[2] + 0.5,
+			pos.x() * _affineTransformation[3] + pos.y() * _affineTransformation[4] + _affineTransformation[5] + 0.5
+	);
+
+	_selection.setBottomRight(transformedPoint);
 	_selection = _selection.normalized();
 
 	if (_selection.width() * _selection.height() < 4)
@@ -537,7 +573,6 @@ void ImageWidget::RecalculateBounds()
 
 	TranslateView(-minX, -minY, false);
 	_bounds = QRect(0, 0, maxX - minX, maxY - minY);
-	_selection = QRect();
 
 	ClearTileCache();
 
@@ -584,19 +619,20 @@ void ImageWidget::MultiplyMatrixLeft(float *matrix, bool target)
 *
 ***************************************/
 
-QList<double> ImageWidget::CalculateHistogram(float coverage, int channel)
+QVector<double> ImageWidget::CalculateHistogram(float coverage, int channel)
 {
 	assert(_image);
 	assert((channel >= 0) && (channel < _image->noChannels()));
 	assert((coverage > 0.0f) && (coverage <= 1.0f));
 
-	QList<double> returnList;
+	QVector<double> returnList;
+	returnList.reserve((_selection.width() + 1) * (_selection.height() + 1) * coverage * coverage);
 
 	float skip = 1.0f / coverage;
 
 	QRect selection = _selection.normalized();
 	if (!selection.isValid() || selection.isNull() || selection.isEmpty())
-		selection = _bounds;
+		selection = QRect(0, 0, _image->sizeX(), _image->sizeY());
 
 	float left = selection.x();
 	float right = selection.x() + selection.width();
@@ -607,10 +643,7 @@ QList<double> ImageWidget::CalculateHistogram(float coverage, int channel)
 	{
 		for (float x = left; x <= right; x += skip)
 		{
-			float px = x * _affineTransformation[0] + y * _affineTransformation[1] + _affineTransformation[2];
-			float py = x * _affineTransformation[3] + y * _affineTransformation[4] + _affineTransformation[5];
-
-			double g = _image->getPixel(px, py, channel);
+			double g = _image->getPixel(x, y, channel);
 			returnList.push_back(g);
 		}
 	}
@@ -653,7 +686,7 @@ void ImageWidget::CalculateAutoCB(float coverage)
 	{
 		case CM_OneChannelMode:
 		{
-			QList<double> histogram = CalculateHistogram(coverage, _channelMapping[0]);
+			QVector<double> histogram = CalculateHistogram(coverage, _channelMapping[0]);
 
 			if (histogram.size() < 2)
 				return;
@@ -669,9 +702,9 @@ void ImageWidget::CalculateAutoCB(float coverage)
 
 		case CM_ThreeChannelMode:
 		{
-			QList<double> histogram0 = CalculateHistogram(coverage, _channelMapping[0]);
-			QList<double> histogram1 = CalculateHistogram(coverage, _channelMapping[1]);
-			QList<double> histogram2 = CalculateHistogram(coverage, _channelMapping[2]);
+			QVector<double> histogram0 = CalculateHistogram(coverage, _channelMapping[0]);
+			QVector<double> histogram1 = CalculateHistogram(coverage, _channelMapping[1]);
+			QVector<double> histogram2 = CalculateHistogram(coverage, _channelMapping[2]);
 
 			assert((histogram0.size() == histogram1.size()) && (histogram1.size() == histogram2.size()));
 			if (histogram0.size() < 2)

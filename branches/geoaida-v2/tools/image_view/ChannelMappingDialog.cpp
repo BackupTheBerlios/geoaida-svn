@@ -94,6 +94,8 @@ ChannelMappingDialog::ChannelMappingDialog(int mode, int mapping1, int mapping2,
 	QPushButton *cancelButton = new QPushButton(tr("&Abbrechen"), this);
 	mainLayout->addWidget(cancelButton, 1, 1, 1, 1);
 	connect(cancelButton, SIGNAL(clicked()), this, SLOT(reject()));
+
+	acceptButton->setDefault(true);
 }
 
 int ChannelMappingDialog::mode()

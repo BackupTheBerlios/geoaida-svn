@@ -68,6 +68,8 @@ CBDialog::CBDialog(double startContrast, double startBrightness, QWidget *parent
 	buttonsLayout->addWidget(closeButton);
 	connect(closeButton, SIGNAL(clicked()), this, SLOT(accept()));
 
+	closeButton->setDefault(true);
+
 	mainLayout->addLayout(buttonsLayout);
 }
 

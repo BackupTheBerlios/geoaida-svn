@@ -21,6 +21,7 @@
 #define _IMAGEWIDGET_H_
 
 #include <QWidget>
+#include <QVector>
 #include <QMap>
 #include <QLinkedList>
 
@@ -75,6 +76,7 @@ class ImageWidget : public QWidget
 		int boundsHeight()	{ return _bounds.height(); }
 		int offsetX()		{ return _offset.x(); }
 		int offsetY()		{ return _offset.y(); }
+		QRect selection()	{ return _selection; }
 
 		int channelCount()						{ return (_image ? _image->noChannels() : 0); }
 		ChannelMappingMode channelMappingMode()	{ return _cmMode; }
@@ -156,7 +158,7 @@ class ImageWidget : public QWidget
 		TileID IdFromPosition(const QPoint &point) const;
 		QPoint PositionFromId(const TileID id) const;
 
-		QList<double> CalculateHistogram(float coverage, int channel=0);
+		QVector<double> CalculateHistogram(float coverage, int channel=0);
 
 		void MultiplyMatrixRight(float *matrix, bool target);
 		void MultiplyMatrixLeft(float *matrix, bool target);

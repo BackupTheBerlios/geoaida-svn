@@ -26,6 +26,7 @@
 
 #include "ChannelMappingDialog.h"
 #include "CBDialog.h"
+#include "AutoCBDialog.h"
 
 /**************************************
 *
@@ -108,8 +109,8 @@ QMenuBar *MainWindow::createMenuBar()
 	QAction *channelContrastBrightnessAction = channelMenu->addAction(tr("Kontrast / Helligkeit &Ändern..."));
 	connect(channelContrastBrightnessAction, SIGNAL(triggered()), this, SLOT(ChangeContrastBrightness()));
 
-	QAction *channelAutoContrastBrightnessAction = channelMenu->addAction(tr("&Auto Kontrast / Helligkeit"));
-	connect(channelAutoContrastBrightnessAction, SIGNAL(triggered()), _imageWidget, SLOT(CalculateAutoCB()));
+	QAction *channelAutoContrastBrightnessAction = channelMenu->addAction(tr("&Auto Kontrast / Helligkeit..."));
+	connect(channelAutoContrastBrightnessAction, SIGNAL(triggered()), this, SLOT(CalculateAutoContrastBrightness()));
 
 	// View menu
 	QMenu *viewMenu = menuBar->addMenu(tr("&Ansicht"));
@@ -196,6 +197,31 @@ void MainWindow::ChangeContrastBrightness()
 	connect(dialog, SIGNAL(brightnessChanged(double)), _imageWidget, SLOT(SetBrightness(double)));
 
 	dialog->show();
+}
+
+void MainWindow::CalculateAutoContrastBrightness()
+{
+	if (!_imageWidget->isValidImage())
+		return;
+
+	// Calculate start coverage value
+	double expectedPixelCount = 100000.0;
+	double startCoverage;
+
+	QRect selection = _imageWidget->selection();
+	if (!selection.isValid() || selection.isEmpty() || selection.isNull())
+		startCoverage = expectedPixelCount / static_cast<double>(_imageWidget->imageWidth() * _imageWidget->imageHeight());
+	else
+		startCoverage = expectedPixelCount / static_cast<double>(selection.width() * selection.height());
+
+	startCoverage = std::max(0.01, std::min(startCoverage, 1.0));
+
+	// Show dialog
+	AutoCBDialog dialog(startCoverage * 100.0, this);
+	int result = dialog.exec();
+
+	if (result == QDialog::Accepted)
+		_imageWidget->CalculateAutoCB(dialog.coverage());
 }
 
 void MainWindow::ResetView()

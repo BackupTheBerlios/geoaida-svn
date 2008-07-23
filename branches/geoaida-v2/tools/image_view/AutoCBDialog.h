@@ -1,7 +1,7 @@
 /***************************************************************************
-                          MainWindow.h  -  
+                          AutoCBDialog.h  -
                              -------------------
-    begin                : Mon Jul 07 2008
+    begin                : Wed Jul 23 2008
     copyright            : (C) 2008 TNT, Uni Hannover
     authors              : Karsten Vogt
 
@@ -17,48 +17,27 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef _MAINWINDOW_H_
-#define _MAINWINDOW_H_
+#ifndef _AUTOCBDIALOG_H_
+#define _AUTOCBDIALOG_H_
 
-#include <QMainWindow>
-#include <QMenuBar>
-#include <QScrollBar>
+#include <QDialog>
+#include <QDoubleSpinBox>
 
-#include "ImageWidget.h"
-
-class MainWindow : public QMainWindow
+class AutoCBDialog : public QDialog
 {
 	Q_OBJECT
 
 	public:
-		MainWindow(const QString &filename=QString(), QWidget *parent=0);
+		AutoCBDialog(double startCoverage, QWidget *parent=0);
 
-	protected:
+		double coverage() { return (_coverageSpin->value() / 100.0); }
+
+	signals:
 
 	private slots:
-		void LoadFileDialog();
-		void QuitApplication();
-
-		void ChangeChannelMapping();
-		void ResetContrastBrightness();
-		void ChangeContrastBrightness();
-		void CalculateAutoContrastBrightness();
-
-		void ResetView();
-		void ZoomPlus();
-		void ZoomMinus();
-		void RotatePlus();
-		void RotateMinus();
-
-		void RecalculateScrollbarProperties();
 
 	private:
-		QWidget *_centralWidget;
-		QScrollBar *_horizontalScrollbar;
-		QScrollBar *_verticalScrollbar;
-		ImageWidget *_imageWidget;
-
-		QMenuBar *createMenuBar();
+		QDoubleSpinBox *_coverageSpin;
 };
 
 #endif
