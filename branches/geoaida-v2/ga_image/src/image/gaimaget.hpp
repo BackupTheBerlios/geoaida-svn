@@ -33,6 +33,31 @@ void ImageT<PixTyp>::setPixelToDouble(int x, int y, double val, int channel, boo
 }
 
 template <class PixTyp>
+double ImageT<PixTyp>::getPixelAsDoubleFast(int x, int y, int channel, double neutral) const {
+	assert(channel>=0);
+	assert(channel<noChannels());
+
+	if (x>=0 && x<sizeX() && y>=0 && y<sizeY())
+	{
+		int segX = x / segSizeX_;
+		int segY = y / segSizeY_;
+		BlockHandle *handle = getBlockHandle(segX, segY, channel);
+
+		// Read pixel data
+		handle->lockRW();
+		BlockLock lock(*handle);
+		PixTyp *outputBuffer = static_cast<PixTyp *>(handle->getData());
+
+		int xo = x % segSizeX_;
+		int yo = y % segSizeY_;
+
+		return outputBuffer[yo * segmentSizeX(segX) + xo];
+	}
+	else
+		return neutral;
+}
+
+template <class PixTyp>
 int ImageT<PixTyp>::segmentsX() const
 {
   return static_cast<int>(ceil((double)sizeX() / (double)segSizeX_));
@@ -69,6 +94,94 @@ LargeSize ImageT<PixTyp>::segmentSizeY(int col) const
 }
 
 template <class PixTyp>
+BlockHandle *ImageT<PixTyp>::getBlockHandle(int segX, int segY, int channel) const
+{
+	BlockHandle *handle = &channels.at(channel).segments.at(segY * segmentsX() + segX);
+
+	if (handle->isEmpty())
+	{
+		// Protection against integer overflows.
+		*handle = Cache::get().alloc(segmentSizeX(segX) * segmentSizeY(segY) * sizeof(PixTyp));
+
+		if (source_)
+		{
+			// File source open: We need to load the file data now.
+			int srcSegSizeX = source_->segmentSizeX();
+			int srcSegSizeY = source_->segmentSizeY();
+
+			// Lock output buffer
+			handle->lockRW();
+			BlockLock lock(*handle);
+
+			//Special case: input/output segment sizes are identical
+			if (segSizeX_ == srcSegSizeX && segSizeY_ == srcSegSizeY)
+			{
+				source_->readRect(channel, segX * segmentSizeX(), segY * segmentSizeY(),
+					segmentSizeX(segX), segmentSizeY(segY), static_cast<PixTyp*>(handle->getData()));
+			}
+			else
+			{
+				// Load all required input segments and copy them into the output buffer
+				PixTyp *inputBuffer = new PixTyp[srcSegSizeX * srcSegSizeY];
+				PixTyp *outputBuffer = static_cast<PixTyp *>(handle->getData());
+
+				int srcSegsPerRow = sizeX() / srcSegSizeX + (sizeX() % srcSegSizeX != 0 ? 1 : 0);
+				int srcSegsPerCol = sizeY() / srcSegSizeY + (sizeY() % srcSegSizeY != 0 ? 1 : 0);
+				int srcSegSizeXEdge = (sizeX() % srcSegSizeX != 0) ? (sizeX() % srcSegSizeX) : srcSegSizeX;
+				int srcSegSizeYEdge = (sizeY() % srcSegSizeY != 0) ? (sizeY() % srcSegSizeY) : srcSegSizeY;
+
+				int srcSegLeft = (segX * segSizeX_) / srcSegSizeX;
+				int srcSegRight = (segX * segSizeX_ + (int)segmentSizeX(segX) - 1) / srcSegSizeX;
+				int srcSegTop = (segY * segSizeY_) / srcSegSizeY;
+				int srcSegBottom = (segY * segSizeY_ + (int)segmentSizeY(segY) - 1) / srcSegSizeY;
+
+				for (int curSegY = srcSegTop; curSegY <= srcSegBottom; curSegY++)
+				{
+					for (int curSegX = srcSegLeft; curSegX <= srcSegRight; curSegX++)
+					{
+						// Read input segment
+						int x = curSegX * srcSegSizeX;
+						int y = curSegY * srcSegSizeY;
+						int segSizeX = (curSegX == srcSegsPerRow - 1) ? srcSegSizeXEdge  : srcSegSizeX;
+						int segSizeY = (curSegY == srcSegsPerCol - 1) ? srcSegSizeYEdge  : srcSegSizeY;
+
+						source_->readRect(channel, x, y, segSizeX, segSizeY, inputBuffer);
+
+						// Copy all relevant parts into the output buffer
+						int offX = segX * segSizeX_ - curSegX * srcSegSizeX;
+						int offY = segY * segSizeY_ - curSegY * srcSegSizeY;
+
+						int inputOffsetX = std::max(0, offX);
+						int inputOffsetY = std::max(0, offY);
+						int inputLineSkip = segSizeX;
+
+						int outputOffsetX = std::max(0, -offX);
+						int outputOffsetY = std::max(0, -offY);
+						int outputLineSkip = segmentSizeX(segX);
+
+						int lineLength = segSizeX - inputOffsetX - std::max(0, -offX + segSizeX - (int)segmentSizeX(segX));
+						int lineCount = segSizeY - inputOffsetY - std::max(0, -offY + segSizeY - (int)segmentSizeY(segY));
+						PixTyp *inputPixel = &inputBuffer[inputOffsetY * inputLineSkip + inputOffsetX];
+						PixTyp *outputPixel = &outputBuffer[outputOffsetY * outputLineSkip + outputOffsetX];
+
+						while (lineCount--)
+						{
+							memcpy(outputPixel, inputPixel, sizeof(PixTyp) * lineLength);
+							inputPixel += inputLineSkip;
+							outputPixel += outputLineSkip;
+						}
+					}
+				}
+
+				delete[] inputBuffer;
+			}
+		}
+	}
+
+	return handle;
+}
+
+template <class PixTyp>
 template <typename It>
 It ImageT<PixTyp>::iteratorForElem(unsigned channel, LargeSize elem) const
 {
@@ -83,88 +196,7 @@ It ImageT<PixTyp>::iteratorForElem(unsigned channel, LargeSize elem) const
 		int segX = col / segSizeX_;
 		int segY = row / segSizeY_;
 
-		handle = &channels.at(channel).segments.at(segY * segmentsX() + segX);
-
-		if (handle->isEmpty())
-		{
-			// Protection against integer overflows.
-			*handle = Cache::get().alloc(segmentSizeX(segX) * segmentSizeY(segY) * sizeof(PixTyp));
-
-			if (source_)
-			{
-				// File source open: We need to load the file data now.
-				int srcSegSizeX = source_->segmentSizeX();
-				int srcSegSizeY = source_->segmentSizeY();
-
-				// Lock output buffer
-				handle->lockRW();
-				BlockLock lock(*handle);
-
-				//Special case: input/output segment sizes are identical
-				if (segSizeX_ == srcSegSizeX && segSizeY_ == srcSegSizeY)
-				{
-					source_->readRect(channel, segX * segmentSizeX(), segY * segmentSizeY(),
-						segmentSizeX(segX), segmentSizeY(segY), static_cast<PixTyp*>(handle->getData()));
-				}
-				else
-				{
-					// Load all required input segments and copy them into the output buffer
-					PixTyp *inputBuffer = new PixTyp[srcSegSizeX * srcSegSizeY];
-					PixTyp *outputBuffer = static_cast<PixTyp *>(handle->getData());
-
-					int srcSegsPerRow = sizeX() / srcSegSizeX + (sizeX() % srcSegSizeX != 0 ? 1 : 0);
-					int srcSegsPerCol = sizeY() / srcSegSizeY + (sizeY() % srcSegSizeY != 0 ? 1 : 0);
-					int srcSegSizeXEdge = (sizeX() % srcSegSizeX != 0) ? (sizeX() % srcSegSizeX) : srcSegSizeX;
-					int srcSegSizeYEdge = (sizeY() % srcSegSizeY != 0) ? (sizeY() % srcSegSizeY) : srcSegSizeY;
-
-					int srcSegLeft = (segX * segSizeX_) / srcSegSizeX;
-					int srcSegRight = (segX * segSizeX_ + (int)segmentSizeX(segX) - 1) / srcSegSizeX;
-					int srcSegTop = (segY * segSizeY_) / srcSegSizeY;
-					int srcSegBottom = (segY * segSizeY_ + (int)segmentSizeY(segY) - 1) / srcSegSizeY;
-
-					for (int curSegY = srcSegTop; curSegY <= srcSegBottom; curSegY++)
-					{
-						for (int curSegX = srcSegLeft; curSegX <= srcSegRight; curSegX++)
-						{
-							// Read input segment
-							int x = curSegX * srcSegSizeX;
-							int y = curSegY * srcSegSizeY;
-							int segSizeX = (curSegX == srcSegsPerRow - 1) ? srcSegSizeXEdge  : srcSegSizeX;
-							int segSizeY = (curSegY == srcSegsPerCol - 1) ? srcSegSizeYEdge  : srcSegSizeY;
-
-							source_->readRect(channel, x, y, segSizeX, segSizeY, inputBuffer);
-
-							// Copy all relevant parts into the output buffer
-							int offX = segX * segSizeX_ - curSegX * srcSegSizeX;
-							int offY = segY * segSizeY_ - curSegY * srcSegSizeY;
-
-							int inputOffsetX = std::max(0, offX);
-							int inputOffsetY = std::max(0, offY);
-							int inputLineSkip = segSizeX;
-
-							int outputOffsetX = std::max(0, -offX);
-							int outputOffsetY = std::max(0, -offY);
-							int outputLineSkip = segmentSizeX(segX);
-
-							int lineLength = segSizeX - inputOffsetX - std::max(0, -offX + segSizeX - (int)segmentSizeX(segX));
-							int lineCount = segSizeY - inputOffsetY - std::max(0, -offY + segSizeY - (int)segmentSizeY(segY));
-							PixTyp *inputPixel = &inputBuffer[inputOffsetY * inputLineSkip + inputOffsetX];
-							PixTyp *outputPixel = &outputBuffer[outputOffsetY * outputLineSkip + outputOffsetX];
-
-							while (lineCount--)
-							{
-								memcpy(outputPixel, inputPixel, sizeof(PixTyp) * lineLength);
-								inputPixel += inputLineSkip;
-								outputPixel += outputLineSkip;
-							}
-						}
-					}
-
-					delete[] inputBuffer;
-				}
-			}
-		}
-
+		handle = getBlockHandle(segX, segY, channel);
 		offset = (row % segSizeY_) * segmentSizeX(segX);
 		rangeBegin = row * sizeX() + segX * segSizeX_;
 		rangeEnd = rangeBegin + segmentSizeX(segX);

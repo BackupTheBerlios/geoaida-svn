@@ -222,7 +222,10 @@ namespace Ga
     // be used when using ImageT directly.
     double getPixelAsDouble(int x, int y, int channel, double neutral) const;
     void setPixelToDouble(int x, int y, double val, int channel, bool clip);
-    
+	double getPixelAsDoubleFast(int x, int y, int channel, double neutral) const;
+
+	BlockHandle *getBlockHandle(int segX, int segY, int channel) const;
+
     double fileMin_, fileMax_;
     int segSizeX_, segSizeY_;
     struct Channel

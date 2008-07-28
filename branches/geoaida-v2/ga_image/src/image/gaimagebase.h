@@ -111,6 +111,7 @@ public:
 	virtual void setPixelToDouble(int x, int y, double val, int channel=0, bool clip=false)=0;
 	virtual void fillRow(int row, int startX, int endX, double val, int channel = 0) =0;
 	virtual void fill(double value)=0;
+	virtual double getPixelAsDoubleFast(int x, int y, int channel=0, double neutral=0) const=0;
 
 	// -> Auslagern
 	virtual double findMaxValue(int ch=0) =0;
