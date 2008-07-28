@@ -27,6 +27,7 @@
 #include "ChannelMappingDialog.h"
 #include "CBDialog.h"
 #include "AutoCBDialog.h"
+#include "HistogramDialog.h"
 
 /**************************************
 *
@@ -74,6 +75,8 @@ MainWindow::MainWindow(const QString &filename, QWidget *parent)
 		_imageWidget->Open(filename);
 		setWindowTitle(QFileInfo(filename).fileName() + tr(" (%1 x %2)").arg(_imageWidget->imageWidth()).arg(_imageWidget->imageHeight()));
 	}
+
+	resize(800, 600);
 }
 
 QMenuBar *MainWindow::createMenuBar()
@@ -112,6 +115,11 @@ QMenuBar *MainWindow::createMenuBar()
 	QAction *channelAutoContrastBrightnessAction = channelMenu->addAction(tr("&Auto Kontrast / Helligkeit..."));
 	connect(channelAutoContrastBrightnessAction, SIGNAL(triggered()), this, SLOT(CalculateAutoContrastBrightness()));
 
+	channelMenu->addSeparator();
+
+	QAction *channelShowHistogramAction = channelMenu->addAction(tr("&Histogramm Anzeigen..."));
+	connect(channelShowHistogramAction, SIGNAL(triggered()), this, SLOT(ShowHistogram()));
+
 	// View menu
 	QMenu *viewMenu = menuBar->addMenu(tr("&Ansicht"));
 
@@ -147,7 +155,7 @@ void MainWindow::LoadFileDialog()
 {
 	static QString directory;
 
-	QString filename = QFileDialog::getOpenFileName(this, tr("Bild öffnen"), directory, tr("Bilder (*.tif *.tiff *.ppm *.pgm *.pfm *.pbm) ;; Alle (*.*)"));
+	QString filename = QFileDialog::getOpenFileName(this, tr("Bild öffnen"), directory, tr("Bilder ( *.tif *.tiff *.ppm *.pgm *.pfm *.pbm ) ;; Alle ( *.* )"));
 	if (filename.isEmpty())
 		return;
 
@@ -222,6 +230,49 @@ void MainWindow::CalculateAutoContrastBrightness()
 
 	if (result == QDialog::Accepted)
 		_imageWidget->CalculateAutoCB(dialog.coverage());
+}
+
+void MainWindow::ShowHistogram()
+{
+	if (!_imageWidget->isValidImage())
+		return;
+
+	// Calculate start coverage value
+	double expectedPixelCount = 100000.0;
+	double startCoverage;
+
+	QRect selection = _imageWidget->selection();
+	if (!selection.isValid() || selection.isEmpty() || selection.isNull())
+		startCoverage = expectedPixelCount / static_cast<double>(_imageWidget->imageWidth() * _imageWidget->imageHeight());
+	else
+		startCoverage = expectedPixelCount / static_cast<double>(selection.width() * selection.height());
+
+	startCoverage = std::max(0.01, std::min(startCoverage, 1.0));
+
+	if (_imageWidget->channelMappingMode() == 0)
+	{
+		// Get histogram
+		QVector<double> histogram1 = _imageWidget->GetHistogram(0, startCoverage);
+
+		// Show dialog
+		HistogramDialog *dialog = new HistogramDialog(histogram1, this);
+		dialog->setModal(true);
+
+		dialog->show();
+	}
+	else if (_imageWidget->channelMappingMode() == 1)
+	{
+		// Get histograms
+		QVector<double> histogram1 = _imageWidget->GetHistogram(0, startCoverage);
+		QVector<double> histogram2 = _imageWidget->GetHistogram(1, startCoverage);
+		QVector<double> histogram3 = _imageWidget->GetHistogram(2, startCoverage);
+
+		// Show dialog
+		HistogramDialog *dialog = new HistogramDialog(histogram1, histogram2, histogram3, this);
+		dialog->setModal(true);
+
+		dialog->show();
+	}
 }
 
 void MainWindow::ResetView()

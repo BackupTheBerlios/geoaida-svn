@@ -94,6 +94,11 @@ class ImageWidget : public QWidget
 		double contrast()						{ return _contrast; }
 		double brightness()						{ return _brightness; }
 
+		QVector<double> GetHistogram(int nr, double coverage=0.1)
+		{
+			return CalculateHistogram(coverage, _channelMapping[nr]);
+		}
+
 	protected:
 		void resizeEvent(QResizeEvent *event);
 		void paintEvent(QPaintEvent *event);

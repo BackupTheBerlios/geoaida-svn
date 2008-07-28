@@ -1,7 +1,7 @@
 /***************************************************************************
-                          MainWindow.h  -  
+                          HistogramDialog.h  -
                              -------------------
-    begin                : Mon Jul 07 2008
+    begin                : Wed Jul 25 2008
     copyright            : (C) 2008 TNT, Uni Hannover
     authors              : Karsten Vogt
 
@@ -17,49 +17,48 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef _MAINWINDOW_H_
-#define _MAINWINDOW_H_
+#ifndef _HISTOGRAMDIALOG_H_
+#define _HISTOGRAMDIALOG_H_
 
-#include <QMainWindow>
-#include <QMenuBar>
-#include <QScrollBar>
+#include <QDialog>
+#include <QPaintEvent>
+#include <QVector>
 
-#include "ImageWidget.h"
-
-class MainWindow : public QMainWindow
+class HistogramWidget : public QWidget
 {
 	Q_OBJECT
 
 	public:
-		MainWindow(const QString &filename=QString(), QWidget *parent=0);
+		HistogramWidget(QWidget *parent=0);
+
+		void SetHistogram(QVector<double> hist);
+		void SetHistogram(QVector<double> hist1, QVector<double> hist2, QVector<double> hist3);
+
+	public slots:
+		void SetBucketCount(int count);
 
 	protected:
-
-	private slots:
-		void LoadFileDialog();
-		void QuitApplication();
-
-		void ChangeChannelMapping();
-		void ResetContrastBrightness();
-		void ChangeContrastBrightness();
-		void CalculateAutoContrastBrightness();
-		void ShowHistogram();
-
-		void ResetView();
-		void ZoomPlus();
-		void ZoomMinus();
-		void RotatePlus();
-		void RotateMinus();
-
-		void RecalculateScrollbarProperties();
+		void paintEvent(QPaintEvent *event);
 
 	private:
-		QWidget *_centralWidget;
-		QScrollBar *_horizontalScrollbar;
-		QScrollBar *_verticalScrollbar;
-		ImageWidget *_imageWidget;
+		int _mode, _bucketCount;
+		QVector<double> _hist1, _hist2, _hist3;
 
-		QMenuBar *createMenuBar();
+		QVector<int> CalculateBuckets(QVector<double> histogram, double minValue, double maxValue);
+};
+
+class HistogramDialog : public QDialog
+{
+	Q_OBJECT
+
+	public:
+		HistogramDialog(QVector<double> hist, QWidget *parent=0);
+		HistogramDialog(QVector<double> hist1, QVector<double> hist2, QVector<double> hist3, QWidget *parent=0);
+
+	private:
+		HistogramWidget *_histogramWidget;
+
+		QLayout *CreateLayout();
 };
 
 #endif
