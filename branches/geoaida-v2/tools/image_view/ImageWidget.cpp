@@ -332,7 +332,8 @@ retry:
 	double fScale = (255.0 / (fMax - fMin)) * _contrast;
 	double fAdd = fMin + _brightness;
 
-	bool createThumbnail = !_currentTiles.contains(id);
+	//bool createThumbnail = !_currentTiles.contains(id);
+	bool createThumbnail = false;
 	int tileSize = createThumbnail ? SmallTileSize : TileSize;
 	int scaleShift = createThumbnail ? TileSizeShift : 0;
 	QImage tmpImage(tileSize, tileSize, QImage::Format_RGB32);
@@ -354,7 +355,7 @@ retry:
 						int posx = static_cast<int>(px * _affineTransformation[0] + py * _affineTransformation[1] + _affineTransformation[2]);
 						int posy = static_cast<int>(px * _affineTransformation[3] + py * _affineTransformation[4] + _affineTransformation[5]);
 	
-						value = pImage->getPixelAsDouble(posx, posy, _channelMapping[0]);
+						value = pImage->getPixelAsDoubleFast(posx, posy, _channelMapping[0]);
 						if (_randomMap.contains(value))
 							color = _randomMap[value];
 						else
@@ -378,7 +379,7 @@ retry:
 						int posx = static_cast<int>(px * _affineTransformation[0] + py * _affineTransformation[1] + _affineTransformation[2]);
 						int posy = static_cast<int>(px * _affineTransformation[3] + py * _affineTransformation[4] + _affineTransformation[5]);
 	
-						g = static_cast<quint8>(std::max(0.0, std::min((pImage->getPixelAsDouble(posx, posy, _channelMapping[0]) + fAdd) * fScale, 255.0)));
+						g = static_cast<quint8>(std::max(0.0, std::min((pImage->getPixelAsDoubleFast(posx, posy, _channelMapping[0]) + fAdd) * fScale, 255.0)));
 	
 						tmpImage.setPixel(x, y, qRgb(g, g, g));
 					}
@@ -398,9 +399,9 @@ retry:
 					int posx = static_cast<int>(px * _affineTransformation[0] + py * _affineTransformation[1] + _affineTransformation[2]);
 					int posy = static_cast<int>(px * _affineTransformation[3] + py * _affineTransformation[4] + _affineTransformation[5]);
 
-					r = static_cast<quint8>(std::max(0.0, std::min((pImage->getPixelAsDouble(posx, posy, _channelMapping[0]) + fAdd) * fScale, 255.0)));
-					g = static_cast<quint8>(std::max(0.0, std::min((pImage->getPixelAsDouble(posx, posy, _channelMapping[1]) + fAdd) * fScale, 255.0)));
-					b = static_cast<quint8>(std::max(0.0, std::min((pImage->getPixelAsDouble(posx, posy, _channelMapping[2]) + fAdd) * fScale, 255.0)));
+					r = static_cast<quint8>(std::max(0.0, std::min((pImage->getPixelAsDoubleFast(posx, posy, _channelMapping[0]) + fAdd) * fScale, 255.0)));
+					g = static_cast<quint8>(std::max(0.0, std::min((pImage->getPixelAsDoubleFast(posx, posy, _channelMapping[1]) + fAdd) * fScale, 255.0)));
+					b = static_cast<quint8>(std::max(0.0, std::min((pImage->getPixelAsDoubleFast(posx, posy, _channelMapping[2]) + fAdd) * fScale, 255.0)));
 
 					tmpImage.setPixel(x, y, qRgb(r, g, b));
 				}
@@ -409,7 +410,7 @@ retry:
 		}
 	}
 
-	if (createThumbnail)
+	/*if (createThumbnail)
 	{
 		_currentTiles.insert(id, TileInfo(id, _currentTimestamp, tmpImage));
 	}
@@ -417,7 +418,10 @@ retry:
 	{
 		_currentTiles[id].pixmap = QPixmap::fromImage(tmpImage);
 		_currentTiles[id].thumbnail = false;
-	}
+	}*/
+
+	_currentTiles.insert(id, TileInfo(id, _currentTimestamp, tmpImage));
+	_currentTiles[id].thumbnail = false;
 
 	QRect updateRect = tileRect.translated(-_offset) & this->rect();
 	update(updateRect);
@@ -639,11 +643,12 @@ QVector<double> ImageWidget::CalculateHistogram(float coverage, int channel)
 	float top = selection.y();
 	float bottom = selection.y() + selection.height();
 
+	Ga::ImageBase *pImage = _image->pImage();
 	for (float y = top; y <= bottom; y += skip)
 	{
 		for (float x = left; x <= right; x += skip)
 		{
-			double g = _image->getPixel(x, y, channel);
+			double g = pImage->getPixelAsDoubleFast(x, y, channel);
 			returnList.push_back(g);
 		}
 	}
