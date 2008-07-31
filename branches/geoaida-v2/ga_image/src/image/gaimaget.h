@@ -30,6 +30,7 @@
 #include "gaimagebase.h"
 #include <algorithm>
 #include <vector>
+#include <deque>
 #include <tr1/functional>
 
 namespace Ga
@@ -213,6 +214,7 @@ namespace std
 namespace Ga
 {
   const int SEGMENT_SIZE = 256;
+  const int TILE_CACHE_SIZE = 16;
 
   template <class PixTyp>
   class ImageT : public ImageBase
@@ -234,7 +236,9 @@ namespace Ga
     };
     // mutable because ConstIterator needs a non-const BlockHandle to lock/unlock it.
     mutable std::vector<Channel> channels;
-    
+
+	mutable std::vector<std::deque<std::pair<unsigned int, PixTyp *> > > tileCache_;
+
     int segmentsX() const;
     int segmentsY() const;
 

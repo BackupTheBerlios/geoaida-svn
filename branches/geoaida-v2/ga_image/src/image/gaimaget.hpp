@@ -122,7 +122,7 @@ BlockHandle *ImageT<PixTyp>::getBlockHandle(int segX, int segY, int channel) con
 			else
 			{
 				// Load all required input segments and copy them into the output buffer
-				PixTyp *inputBuffer = new PixTyp[srcSegSizeX * srcSegSizeY];
+				PixTyp *inputBuffer;// = new PixTyp[srcSegSizeX * srcSegSizeY];
 				PixTyp *outputBuffer = static_cast<PixTyp *>(handle->getData());
 
 				int srcSegsPerRow = sizeX() / srcSegSizeX + (sizeX() % srcSegSizeX != 0 ? 1 : 0);
@@ -139,13 +139,48 @@ BlockHandle *ImageT<PixTyp>::getBlockHandle(int segX, int segY, int channel) con
 				{
 					for (int curSegX = srcSegLeft; curSegX <= srcSegRight; curSegX++)
 					{
-						// Read input segment
 						int x = curSegX * srcSegSizeX;
 						int y = curSegY * srcSegSizeY;
 						int segSizeX = (curSegX == srcSegsPerRow - 1) ? srcSegSizeXEdge  : srcSegSizeX;
 						int segSizeY = (curSegY == srcSegsPerCol - 1) ? srcSegSizeYEdge  : srcSegSizeY;
 
-						source_->readRect(channel, x, y, segSizeX, segSizeY, inputBuffer);
+						// Check if the input segment is already in the cache
+						unsigned int tileID = curSegY * srcSegsPerRow + curSegX;
+
+						typename std::deque<std::pair<unsigned int, PixTyp *> >::iterator iter;
+						for (iter = tileCache_[channel].begin(); iter != tileCache_[channel].end(); iter++)
+							if (iter->first == tileID)
+								break;
+
+						if (iter == tileCache_[channel].end())
+						{
+							// Read input segment
+							inputBuffer = new PixTyp[segSizeX * segSizeY];
+							source_->readRect(channel, x, y, segSizeX, segSizeY, inputBuffer);
+
+							// Add tile to cache
+							tileCache_[channel].push_front(std::pair<unsigned int, PixTyp *>(tileID, inputBuffer));
+						}
+						else
+						{
+							// Get input segment from cache
+							inputBuffer = iter->second;
+
+							// Move cache entry to the front
+							tileCache_[channel].erase(iter);
+							tileCache_[channel].push_front(std::pair<unsigned int, PixTyp *>(tileID, inputBuffer));
+						}
+
+						// Trim tile cache
+						if (tileCache_[channel].size() > TILE_CACHE_SIZE)
+						{
+							// Release memory
+							for (int i = TILE_CACHE_SIZE; i < tileCache_[channel].size(); i++)
+								delete[] tileCache_[channel][i].second;
+
+							// Trim cache
+							tileCache_[channel].resize(TILE_CACHE_SIZE);
+						}
 
 						// Copy all relevant parts into the output buffer
 						int offX = segX * segSizeX_ - curSegX * srcSegSizeX;
@@ -172,8 +207,6 @@ BlockHandle *ImageT<PixTyp>::getBlockHandle(int segX, int segY, int channel) con
 						}
 					}
 				}
-
-				delete[] inputBuffer;
 			}
 		}
 	}
@@ -230,6 +263,9 @@ ImageT<PixTyp>::ImageT(int sizeX, int sizeY, int noChannels) : ImageBase()
 	// Reservation for later segments.
 	for (int i = 0; i < noChannels; ++i)
 		channels[i].segments.resize(segmentsX() * segmentsY());
+
+	// Initialize tile cache
+	tileCache_.resize(noChannels);
 
 	// Try to guess the filetype.
 	fileMin_ = std::numeric_limits<PixTyp>::min();
