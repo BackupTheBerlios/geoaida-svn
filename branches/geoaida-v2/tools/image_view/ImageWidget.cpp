@@ -469,6 +469,14 @@ void ImageWidget::RemoveOldTiles()
 
 void ImageWidget::ResetView(bool recalc)
 {
+	// Save center pixel
+	if (recalc)
+	{
+		_tempCenterPixel.setX((_offset.x() + width()/2) * _affineTransformation[0] + (_offset.y() + height()/2) * _affineTransformation[1] + _affineTransformation[2]);
+		_tempCenterPixel.setY((_offset.x() + width()/2) * _affineTransformation[3] + (_offset.y() + height()/2) * _affineTransformation[4] + _affineTransformation[5]);
+	}
+
+	// Apply transformation
 	_affineTransformation[0] = 1.0f;
 	_affineTransformation[1] = 0.0f;
 	_affineTransformation[2] = 0.0f;
@@ -487,6 +495,14 @@ void ImageWidget::ResetView(bool recalc)
 
 void ImageWidget::ZoomView(float zoomX, float zoomY, bool recalc)
 {
+	// Save center pixel
+	if (recalc)
+	{
+		_tempCenterPixel.setX((_offset.x() + width()/2) * _affineTransformation[0] + (_offset.y() + height()/2) * _affineTransformation[1] + _affineTransformation[2]);
+		_tempCenterPixel.setY((_offset.x() + width()/2) * _affineTransformation[3] + (_offset.y() + height()/2) * _affineTransformation[4] + _affineTransformation[5]);
+	}
+
+	// Apply transformation
 	float matrix[9] = {
 		1.0f / zoomX, 0.0f, 0.0f,
 		0.0f, 1.0f / zoomY, 0.0f,
@@ -508,6 +524,14 @@ void ImageWidget::ZoomView(float zoomX, float zoomY, bool recalc)
 
 void ImageWidget::RotateView(float angle, bool recalc)
 {
+	// Save center pixel
+	if (recalc)
+	{
+		_tempCenterPixel.setX((_offset.x() + width()/2) * _affineTransformation[0] + (_offset.y() + height()/2) * _affineTransformation[1] + _affineTransformation[2]);
+		_tempCenterPixel.setY((_offset.x() + width()/2) * _affineTransformation[3] + (_offset.y() + height()/2) * _affineTransformation[4] + _affineTransformation[5]);
+	}
+
+	// Apply transformation
 	float sina = sin(angle);
 	float cosa = cos(angle);
 
@@ -532,6 +556,14 @@ void ImageWidget::RotateView(float angle, bool recalc)
 
 void ImageWidget::TranslateView(float transX, float transY, bool recalc)
 {
+	// Save center pixel
+	if (recalc)
+	{
+		_tempCenterPixel.setX((_offset.x() + width()/2) * _affineTransformation[0] + (_offset.y() + height()/2) * _affineTransformation[1] + _affineTransformation[2]);
+		_tempCenterPixel.setY((_offset.x() + width()/2) * _affineTransformation[3] + (_offset.y() + height()/2) * _affineTransformation[4] + _affineTransformation[5]);
+	}
+
+	// Apply transformation
 	float matrix[9] = {
 		1.0f, 0.0f, -transX,
 		0.0f, 1.0f, -transY,
@@ -578,8 +610,12 @@ void ImageWidget::RecalculateBounds()
 	TranslateView(-minX, -minY, false);
 	_bounds = QRect(0, 0, maxX - minX, maxY - minY);
 
-	ClearTileCache();
+	// Restore center pixel
+	_offset.setX(_tempCenterPixel.x() * _invAffineTransformation[0] + _tempCenterPixel.y() * _invAffineTransformation[1] + _invAffineTransformation[2] - width()/2);
+	_offset.setY(_tempCenterPixel.x() * _invAffineTransformation[3] + _tempCenterPixel.y() * _invAffineTransformation[4] + _invAffineTransformation[5] - height()/2);
 
+	// Redraw and update scrollbars
+	ClearTileCache();
 	emit UpdateScrollBars();
 }
 

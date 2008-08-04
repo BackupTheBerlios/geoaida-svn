@@ -100,7 +100,7 @@ namespace Ga
 			TIFFGetFieldDefaulted(tiff, TIFFTAG_IMAGEWIDTH, &segSizeX);
 			TIFFGetFieldDefaulted(tiff, TIFFTAG_ROWSPERSTRIP, &segSizeY);
 		}
-		
+
 		// Close file
 		TIFFClose(tiff);
 		
@@ -156,7 +156,7 @@ namespace Ga
 				if (!writeMode)
 				{
 					// Open tiff-image for reading
-					tiff = TIFFOpen(filename.c_str(), "r");
+					tiff = TIFFOpen(filename.c_str(), "rM");
 					
 					// Determine pixel-organisation (stripes or tiles?)
 					tiffmode = TIFFIsTiled(tiff) ? TiffModeTiles : TiffModeStrips;
@@ -430,8 +430,8 @@ namespace Ga
 				assert(x % segmentSizeX() == 0 && y % segmentSizeY() == 0);
 				assert(channel < channels_);
 				
-				static int dataBufferSize = 0;
-				static tdata_t dataBuffer = _TIFFmalloc(dataBufferSize);
+				static long dataBufferSize = 0;
+				static tdata_t dataBuffer = _TIFFmalloc(0);
 				
 				switch (tiffmode)
 				{
@@ -441,20 +441,14 @@ namespace Ga
 						tsize_t stripSize = TIFFStripSize(tiff);
 						if (stripSize > dataBufferSize)
 						{
+							dataBuffer = _TIFFrealloc(dataBuffer, stripSize);
 							dataBufferSize = stripSize;
-							dataBuffer = _TIFFrealloc(dataBuffer, dataBufferSize);
 						}
 						
 						// Read strip
-						static tstrip_t lastStripID = -1;
 						tstrip_t stripID = TIFFComputeStrip(tiff, y, 0);
-						
-						if (stripID != lastStripID)
-						{
-							tsize_t sizeRead = TIFFReadEncodedStrip(tiff, stripID, dataBuffer, stripSize);
-							lastStripID = stripID;
-							assert(sizeRead == (width * height * channels_ * sizeof(Dest)));
-						}
+						tsize_t sizeRead = TIFFReadEncodedStrip(tiff, stripID, dataBuffer, stripSize);
+						assert(sizeRead == (width * height * channels_ * sizeof(Dest)));
 						
 						// Extract channel and write to destination buffer
 						int pixelcount = width * height;
@@ -476,20 +470,14 @@ namespace Ga
 						tsize_t tileSize = TIFFTileSize(tiff);
 						if (tileSize > dataBufferSize)
 						{
-							dataBufferSize = tileSize;
 							dataBuffer = _TIFFrealloc(dataBuffer, dataBufferSize);
+							dataBufferSize = tileSize;
 						}
 						
 						// Read tile
-						static ttile_t lastTileID = -1;
 						ttile_t tileID = TIFFComputeTile(tiff, x, y, 0, 0);
-						
-						if (tileID != lastTileID)
-						{
-							tsize_t sizeRead = TIFFReadEncodedTile(tiff, tileID, dataBuffer, tileSize);
-							lastTileID = tileID;
-							assert(sizeRead == tileSize);
-						}
+						tsize_t sizeRead = TIFFReadEncodedTile(tiff, tileID, dataBuffer, tileSize);
+						assert(sizeRead == tileSize);
 						
 						// Extract channel and write to destination buffer
 						int lineCount = height;
@@ -497,7 +485,7 @@ namespace Ga
 						int lineSkip = segmentSizeX() - lineLength;
 						Dest *destBufferPixel = buffer;
 						Dest *tileBufferPixel = (Dest *)dataBuffer + channel;
-				
+						
 						for (int y=0; y<lineCount; y++)
 						{
 							for (int x=0; x<lineLength; x++)

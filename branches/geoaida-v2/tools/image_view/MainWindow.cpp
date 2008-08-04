@@ -308,16 +308,23 @@ void MainWindow::RotateMinus()
 void MainWindow::RecalculateScrollbarProperties()
 {
 	int width = _imageWidget->width();
-	int boundsWidth = _imageWidget->boundsWidth();
-	_horizontalScrollbar->setMinimum(0);
-	_horizontalScrollbar->setMaximum(std::max(0, boundsWidth - width));
-	_horizontalScrollbar->setPageStep(width);
-	_horizontalScrollbar->setValue(_imageWidget->offsetX());
-
 	int height = _imageWidget->height();
+
+	int currentOffsetX = _imageWidget->offsetX();
+	int currentOffsetY = _imageWidget->offsetY();
+
+	int boundsWidth = _imageWidget->boundsWidth();
 	int boundsHeight = _imageWidget->boundsHeight();
-	_verticalScrollbar->setMinimum(0);
-	_verticalScrollbar->setMaximum(std::max(0, boundsHeight - height));
+	
+	_horizontalScrollbar->setRange(0, std::max(0, boundsWidth - width));
+	_horizontalScrollbar->setPageStep(width);
+	_horizontalScrollbar->setValue(currentOffsetX);
+	//_horizontalScrollbar->setValue(std::max(_horizontalScrollbar->minimum(), std::min(currentOffsetX, _horizontalScrollbar->maximum())));
+	_imageWidget->ChangeOffsetX(_horizontalScrollbar->value());
+
+	_verticalScrollbar->setRange(0, std::max(0, boundsHeight - height));
 	_verticalScrollbar->setPageStep(height);
-	_verticalScrollbar->setValue(_imageWidget->offsetY());
+	_verticalScrollbar->setValue(currentOffsetY);
+	//_verticalScrollbar->setValue(std::max(_verticalScrollbar->minimum(), std::min(currentOffsetY, _verticalScrollbar->maximum())));
+	_imageWidget->ChangeOffsetY(_verticalScrollbar->value());
 }

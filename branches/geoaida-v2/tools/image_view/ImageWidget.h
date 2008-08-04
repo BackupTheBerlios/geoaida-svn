@@ -141,6 +141,7 @@ class ImageWidget : public QWidget
 
 		QRect _bounds;
 		QPoint _offset;
+		QPoint _tempCenterPixel;
 		float *_affineTransformation;
 		float *_invAffineTransformation;
 
@@ -164,6 +165,7 @@ class ImageWidget : public QWidget
 		QPoint PositionFromId(const TileID id) const;
 
 		QVector<double> CalculateHistogram(float coverage, int channel=0);
+		void CalculateHistogram3(float coverage, int channel1, QVector<double> &histogram1, int channel2, QVector<double> &histogram2, int channel3, QVector<double> &histogram3);
 
 		void MultiplyMatrixRight(float *matrix, bool target);
 		void MultiplyMatrixLeft(float *matrix, bool target);
