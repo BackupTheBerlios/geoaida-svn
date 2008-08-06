@@ -89,6 +89,9 @@ QMenuBar *MainWindow::createMenuBar()
 	QAction *fileLoadAction = fileMenu->addAction(tr("Bild &Laden..."));
 	connect(fileLoadAction, SIGNAL(triggered()), this, SLOT(LoadFileDialog()));
 
+	QAction *fileAddChannelsAction = fileMenu->addAction(tr("Kanäle &Hinzufügen..."));
+	connect(fileAddChannelsAction, SIGNAL(triggered()), this, SLOT(AddChannelsDialog()));
+
 	fileMenu->addSeparator();
 
 	QAction *fileQuitAction = fileMenu->addAction(tr("&Beenden"));
@@ -163,6 +166,18 @@ void MainWindow::LoadFileDialog()
 	_imageWidget->Open(filename);
 
 	setWindowTitle(QFileInfo(filename).fileName() + tr(" (%1 x %2)").arg(_imageWidget->imageWidth()).arg(_imageWidget->imageHeight()));
+}
+
+void MainWindow::AddChannelsDialog()
+{
+	static QString directory;
+
+	QString filename = QFileDialog::getOpenFileName(this, tr("Bild öffnen"), directory, tr("Bilder ( *.tif *.tiff *.ppm *.pgm *.pfm *.pbm ) ;; Alle ( *.* )"));
+	if (filename.isEmpty())
+		return;
+
+	directory = QFileInfo(filename).absolutePath();
+	_imageWidget->AddChannels(filename);
 }
 
 void MainWindow::QuitApplication()

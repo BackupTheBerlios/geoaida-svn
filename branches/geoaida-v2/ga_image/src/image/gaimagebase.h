@@ -78,6 +78,7 @@ public:
 
 	virtual int noChannels() const=0;
 	virtual void getChannel(ImageBase& pic, int channel=0) = 0;
+	virtual void addChannels(ImageBase& pic) = 0;
 
 	// TODO: Remove; unclear that it creates a new image (but it does!)
 	virtual void resize(int rx, int ry, int noChannels=1)=0;

@@ -302,6 +302,7 @@ namespace Ga
     int getInt(const void *ptr) const;
 
     void getChannel(ImageBase& pic, int channel=0);
+    void addChannels(ImageBase& pic);
 
     void swap(ImageT& other) {
       using std::swap;

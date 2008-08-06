@@ -37,6 +37,7 @@ class MainWindow : public QMainWindow
 
 	private slots:
 		void LoadFileDialog();
+		void AddChannelsDialog();
 		void QuitApplication();
 
 		void ChangeChannelMapping();

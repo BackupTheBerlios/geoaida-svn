@@ -99,6 +99,22 @@ void ImageWidget::Open(QString filename)
 	update();
 }
 
+void ImageWidget::AddChannels(QString filename)
+{
+	Ga::Image *addImage = new Ga::Image(filename.toStdString());
+
+	if ((_image->sizeX() != addImage->sizeX()) || (_image->sizeY() != addImage->sizeY()))
+	{
+		emit ShowMessage(tr("Fehler: Das neue Bild muss dieselbe Größe haben!"));
+	}
+	else
+	{
+		_image->pImage()->addChannels(*(addImage->pImage()));
+	}
+
+	delete addImage;
+}
+
 /**************************************
 *
 *	Tile ID calculation

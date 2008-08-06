@@ -44,14 +44,15 @@ double ImageT<PixTyp>::getPixelAsDoubleFast(int x, int y, int channel, double ne
 		BlockHandle *handle = getBlockHandle(segX, segY, channel);
 
 		// Read pixel data
-		handle->lockRW();
-		BlockLock lock(*handle);
+		handle->lockR();
 		PixTyp *outputBuffer = static_cast<PixTyp *>(handle->getData());
 
 		int xo = x % segSizeX_;
 		int yo = y % segSizeY_;
+		double pixelValue = outputBuffer[yo * segmentSizeX(segX) + xo];
 
-		return outputBuffer[yo * segmentSizeX(segX) + xo];
+		handle->unlock();
+		return pixelValue;
 	}
 	else
 		return neutral;
@@ -437,6 +438,47 @@ void ImageT<PixTyp>::getChannel(ImageBase& resultImg, int channel)
   ImageT<PixTyp> channelCopy(sizeX(), sizeY(), 1);
   channelCopy.channels[0] = channels.at(channel);
   pic.swap(channelCopy);
+}
+
+template <class PixTyp>
+void ImageT<PixTyp>::addChannels(ImageBase& pic)
+{
+	assert(this->sizeX() == pic.sizeX());
+	assert(this->sizeY() == pic.sizeY());
+
+	// Preload the input image (we don't want to bother with the source impl)
+	pic.preload();
+
+	// Expand the channels vector and copy all blocks
+	int currentChannelCount = this->noChannels();
+	int newChannelCount = this->noChannels() + pic.noChannels();
+	channels.resize(newChannelCount);
+
+	for (int c = 0; c < pic.noChannels(); c++)
+	{
+		int nc = c + currentChannelCount;
+		channels[nc].segments.reserve(segmentsX() * segmentsY());
+
+		for (int y = 0; y < segmentsY(); y++)
+		{
+			for (int x = 0; x < segmentsX(); x++)
+			{
+				// Get new block memory
+				BlockHandle dstHandle = Cache::get().alloc(segmentSizeX(x) * segmentSizeY(y) * sizeof(PixTyp));
+
+				// Copy block
+				dstHandle.lockRW();
+				PixTyp *data = (PixTyp *)dstHandle.getData();
+
+				for (int sy = 0; sy < segmentSizeY(y); sy++)
+					for (int sx = 0; sx < segmentSizeX(x); sx++)
+						data[sy * segmentSizeX(x) + sx] = pic.getPixelAsDoubleFast(x * SEGMENT_SIZE + sx, y * SEGMENT_SIZE + sy, c);
+
+				dstHandle.unlock();
+				channels[nc].segments.push_back(dstHandle);
+			}
+		}
+	}
 }
 
 template <class PixTyp>

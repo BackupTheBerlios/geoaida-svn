@@ -68,6 +68,7 @@ class ImageWidget : public QWidget
 
 		void Clear();
 		void Open(QString filename);
+		void AddChannels(QString filename);
 
 		bool isValidImage()	{ return (_image != 0); }
 		int imageWidth()	{ return (isValidImage() ? _image->sizeX() : 0); }
