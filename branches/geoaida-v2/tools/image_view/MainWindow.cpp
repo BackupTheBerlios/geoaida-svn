@@ -222,7 +222,7 @@ void MainWindow::CalculateAutoContrastBrightness()
 	else
 		startCoverage = expectedPixelCount / static_cast<double>(selection.width() * selection.height());
 
-	startCoverage = std::max(0.01, std::min(startCoverage, 1.0));
+	startCoverage = std::max(0.25, std::min(startCoverage, 1.0));
 
 	// Show dialog
 	AutoCBDialog dialog(startCoverage * 100.0, this);
@@ -247,7 +247,7 @@ void MainWindow::ShowHistogram()
 	else
 		startCoverage = expectedPixelCount / static_cast<double>(selection.width() * selection.height());
 
-	startCoverage = std::max(0.01, std::min(startCoverage, 1.0));
+	startCoverage = std::max(0.25, std::min(startCoverage, 1.0));
 
 	if (_imageWidget->channelMappingMode() == 0)
 	{
@@ -319,12 +319,10 @@ void MainWindow::RecalculateScrollbarProperties()
 	_horizontalScrollbar->setRange(0, std::max(0, boundsWidth - width));
 	_horizontalScrollbar->setPageStep(width);
 	_horizontalScrollbar->setValue(currentOffsetX);
-	//_horizontalScrollbar->setValue(std::max(_horizontalScrollbar->minimum(), std::min(currentOffsetX, _horizontalScrollbar->maximum())));
 	_imageWidget->ChangeOffsetX(_horizontalScrollbar->value());
 
 	_verticalScrollbar->setRange(0, std::max(0, boundsHeight - height));
 	_verticalScrollbar->setPageStep(height);
 	_verticalScrollbar->setValue(currentOffsetY);
-	//_verticalScrollbar->setValue(std::max(_verticalScrollbar->minimum(), std::min(currentOffsetY, _verticalScrollbar->maximum())));
 	_imageWidget->ChangeOffsetY(_verticalScrollbar->value());
 }

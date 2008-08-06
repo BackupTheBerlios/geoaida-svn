@@ -665,27 +665,59 @@ QVector<double> ImageWidget::CalculateHistogram(float coverage, int channel)
 	assert((channel >= 0) && (channel < _image->noChannels()));
 	assert((coverage > 0.0f) && (coverage <= 1.0f));
 
-	QVector<double> returnList;
-	returnList.reserve((_selection.width() + 1) * (_selection.height() + 1) * coverage * coverage);
-
 	float skip = 1.0f / coverage;
+	QVector<double> returnList;
 
 	QRect selection = _selection.normalized();
 	if (!selection.isValid() || selection.isNull() || selection.isEmpty())
-		selection = QRect(0, 0, _image->sizeX(), _image->sizeY());
-
-	float left = selection.x();
-	float right = selection.x() + selection.width();
-	float top = selection.y();
-	float bottom = selection.y() + selection.height();
-
-	Ga::ImageBase *pImage = _image->pImage();
-	for (float y = top; y <= bottom; y += skip)
 	{
-		for (float x = left; x <= right; x += skip)
+		// Read image block-wise (faster)
+		int expectedPixelsX = _image->sizeX() * coverage;
+		int tileCountX = (_image->sizeX() + TileSize - 1) / TileSize;
+		int expectedTilesX = (expectedPixelsX + TileSize - 1) / TileSize;
+
+		int expectedPixelsY = _image->sizeY() * coverage;
+		int tileCountY = (_image->sizeY() + TileSize - 1) / TileSize;
+		int expectedTilesY = (expectedPixelsY + TileSize - 1) / TileSize;
+
+		int tileWidth, tileHeight;
+		Ga::ImageBase *pImage = _image->pImage();
+		returnList.reserve(expectedTilesX * expectedTilesY * TileSize * TileSize);
+
+		for (float ty = 0; ty < tileCountY; ty += skip)
 		{
-			double g = pImage->getPixelAsDoubleFast(x, y, channel);
-			returnList.push_back(g);
+			tileHeight = ((int)ty == (tileCountY - 1)) ? (_image->sizeY() % TileSize) : TileSize;
+			tileHeight = (tileHeight == 0) ? TileSize : tileHeight;
+
+			for (float tx = 0; tx < tileCountX; tx += skip)
+			{
+				tileWidth = ((int)tx == (tileCountX - 1)) ? (_image->sizeX() % TileSize) : TileSize;
+				tileWidth = (tileWidth == 0) ? TileSize : tileWidth;
+
+				for (int y = (int)ty * TileSize; y < (int)ty * TileSize + tileHeight; y++)
+					for (int x = (int)tx * TileSize; x < (int)tx * TileSize + tileWidth; x++)
+						returnList.push_back(pImage->getPixelAsDoubleFast(x, y, channel));
+			}
+		}
+	}
+	else
+	{
+		// Read image pixel-wise (more accurate, only for small selections)
+		float left = selection.x();
+		float right = selection.x() + selection.width();
+		float top = selection.y();
+		float bottom = selection.y() + selection.height();
+
+		Ga::ImageBase *pImage = _image->pImage();
+		returnList.reserve((selection.width() + 1) * (selection.height() + 1) * coverage * coverage);
+
+		for (float y = top; y <= bottom; y += skip)
+		{
+			for (float x = left; x <= right; x += skip)
+			{
+				double g = pImage->getPixelAsDoubleFast(x, y, channel);
+				returnList.push_back(g);
+			}
 		}
 	}
 
@@ -732,8 +764,9 @@ void ImageWidget::CalculateAutoCB(float coverage)
 			if (histogram.size() < 2)
 				return;
 
-			double minValue = (histogram.first() - fMin) / (fMax - fMin);
-			double maxValue = (histogram.last() - fMin) / (fMax - fMin);
+			int histogramFrame = histogram.size() * 0.01;
+			double minValue = (histogram[histogramFrame] - fMin) / (fMax - fMin);
+			double maxValue = (histogram[histogram.size() - 1 - histogramFrame] - fMin) / (fMax - fMin);
 
 			_brightness = -minValue * (fMax - fMin);
 			_contrast = 1.0 / (maxValue - minValue);
@@ -751,8 +784,9 @@ void ImageWidget::CalculateAutoCB(float coverage)
 			if (histogram0.size() < 2)
 				return;
 
-			double minValue = (std::min(histogram0.first(), std::min(histogram1.first(), histogram2.first())) - fMin) / (fMax - fMin);
-			double maxValue = (std::max(histogram0.last(), std::max(histogram1.last(), histogram2.last())) - fMin) / (fMax - fMin);
+			int histogramFrame = histogram0.size() * 0.01;
+			double minValue = (std::min(histogram0[histogramFrame], std::min(histogram1[histogramFrame], histogram2[histogramFrame])) - fMin) / (fMax - fMin);
+			double maxValue = (std::max(histogram0[histogram0.size() - 1 - histogramFrame], std::max(histogram1[histogram0.size() - 1 - histogramFrame], histogram2[histogram0.size() - 1 - histogramFrame])) - fMin) / (fMax - fMin);
 
 			_brightness = -minValue * (fMax - fMin);
 			_contrast = 1.0 / (maxValue - minValue);
