@@ -69,6 +69,7 @@ class ImageWidget : public QWidget
 		void Clear();
 		void Open(QString filename);
 		void AddChannels(QString filename);
+		void Save(QString filename);
 
 		bool isValidImage()	{ return (_image != 0); }
 		int imageWidth()	{ return (isValidImage() ? _image->sizeX() : 0); }
@@ -113,6 +114,7 @@ class ImageWidget : public QWidget
 		void UpdateTileCacheShrink();
 		void UpdateScrollBars();
 		void ShowMessage(const QString &message, int timeout=0);
+		void ShowWarning(const QString &message);
 
 	public slots:
 		void ChangeOffsetX(int offsetX);

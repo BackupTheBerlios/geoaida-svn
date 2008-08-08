@@ -23,6 +23,7 @@
 #include <QGridLayout>
 #include <QFileDialog>
 #include <QStatusBar>
+#include <QMessageBox>
 
 #include "ChannelMappingDialog.h"
 #include "CBDialog.h"
@@ -65,6 +66,7 @@ MainWindow::MainWindow(const QString &filename, QWidget *parent)
 	// Create connections
 	connect(_imageWidget, SIGNAL(UpdateScrollBars()), this, SLOT(RecalculateScrollbarProperties()));
 	connect(_imageWidget, SIGNAL(ShowMessage(const QString &, int)), this->statusBar(), SLOT(showMessage(const QString &, int)));
+	connect(_imageWidget, SIGNAL(ShowWarning(const QString &)), this, SLOT(ShowWarningBox(const QString &)));
 
 	connect(_horizontalScrollbar, SIGNAL(valueChanged(int)), _imageWidget, SLOT(ChangeOffsetX(int)));
 	connect(_verticalScrollbar, SIGNAL(valueChanged(int)), _imageWidget, SLOT(ChangeOffsetY(int)));
@@ -91,6 +93,9 @@ QMenuBar *MainWindow::createMenuBar()
 
 	QAction *fileAddChannelsAction = fileMenu->addAction(tr("Kanäle &Hinzufügen..."));
 	connect(fileAddChannelsAction, SIGNAL(triggered()), this, SLOT(AddChannelsDialog()));
+
+	QAction *fileSaveAction = fileMenu->addAction(tr("Bild &Speichern..."));
+	connect(fileSaveAction, SIGNAL(triggered()), this, SLOT(SaveFileDialog()));
 
 	fileMenu->addSeparator();
 
@@ -156,13 +161,11 @@ QMenuBar *MainWindow::createMenuBar()
 
 void MainWindow::LoadFileDialog()
 {
-	static QString directory;
-
-	QString filename = QFileDialog::getOpenFileName(this, tr("Bild öffnen"), directory, tr("Bilder ( *.tif *.tiff *.ppm *.pgm *.pfm *.pbm ) ;; Alle ( *.* )"));
+	QString filename = QFileDialog::getOpenFileName(this, tr("Bild öffnen"), _currentDirectory, tr("Bilder ( *.tif *.tiff *.ppm *.pgm *.pfm *.pbm ) ;; Alle ( *.* )"));
 	if (filename.isEmpty())
 		return;
 
-	directory = QFileInfo(filename).absolutePath();
+	_currentDirectory = QFileInfo(filename).absolutePath();
 	_imageWidget->Open(filename);
 
 	setWindowTitle(QFileInfo(filename).fileName() + tr(" (%1 x %2)").arg(_imageWidget->imageWidth()).arg(_imageWidget->imageHeight()));
@@ -170,14 +173,22 @@ void MainWindow::LoadFileDialog()
 
 void MainWindow::AddChannelsDialog()
 {
-	static QString directory;
-
-	QString filename = QFileDialog::getOpenFileName(this, tr("Bild öffnen"), directory, tr("Bilder ( *.tif *.tiff *.ppm *.pgm *.pfm *.pbm ) ;; Alle ( *.* )"));
+	QString filename = QFileDialog::getOpenFileName(this, tr("Bild öffnen"), _currentDirectory, tr("Bilder ( *.tif *.tiff *.ppm *.pgm *.pfm *.pbm ) ;; Alle ( *.* )"));
 	if (filename.isEmpty())
 		return;
 
-	directory = QFileInfo(filename).absolutePath();
+	_currentDirectory = QFileInfo(filename).absolutePath();
 	_imageWidget->AddChannels(filename);
+}
+
+void MainWindow::SaveFileDialog()
+{
+	QString filename = QFileDialog::getSaveFileName(this, tr("Bild speichern"), _currentDirectory, tr("Bilder ( *.tif *.tiff *.ppm *.pgm *.pfm *.pbm ) ;; Alle ( *.* )"));
+	if (filename.isEmpty())
+		return;
+
+	_currentDirectory = QFileInfo(filename).absolutePath();
+	_imageWidget->Save(filename);
 }
 
 void MainWindow::QuitApplication()
@@ -340,4 +351,9 @@ void MainWindow::RecalculateScrollbarProperties()
 	_verticalScrollbar->setPageStep(height);
 	_verticalScrollbar->setValue(currentOffsetY);
 	_imageWidget->ChangeOffsetY(_verticalScrollbar->value());
+}
+
+void MainWindow::ShowWarningBox(const QString &message)
+{
+	QMessageBox::warning(this, tr("Warnung"), message);
 }

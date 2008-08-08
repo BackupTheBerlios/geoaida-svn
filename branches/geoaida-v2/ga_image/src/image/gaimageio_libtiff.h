@@ -20,7 +20,6 @@
 #include "gaimageio.h"
 #include "gaimage.h"
 #include <algorithm>
-#include <vector>
 #include <map>
 #include <stdexcept>
 
@@ -100,7 +99,7 @@ namespace Ga
 			TIFFGetFieldDefaulted(tiff, TIFFTAG_IMAGEWIDTH, &segSizeX);
 			TIFFGetFieldDefaulted(tiff, TIFFTAG_ROWSPERSTRIP, &segSizeY);
 		}
-
+		
 		// Close file
 		TIFFClose(tiff);
 		
@@ -470,7 +469,7 @@ namespace Ga
 						tsize_t tileSize = TIFFTileSize(tiff);
 						if (tileSize > dataBufferSize)
 						{
-							dataBuffer = _TIFFrealloc(dataBuffer, dataBufferSize);
+							dataBuffer = _TIFFrealloc(dataBuffer, tileSize);
 							dataBufferSize = tileSize;
 						}
 						
@@ -541,9 +540,11 @@ namespace Ga
 				if (entryIter == tileCache.end())
 				{
 					TileCacheEntry<Src> entry;
+					entry.dataBuffer = _TIFFmalloc(TIFFTileSize(tiff));
 					entry.channels = channels_;
 					entry.channelMarker = new bool[channels_];
-					entry.dataBuffer = _TIFFmalloc(TIFFTileSize(tiff));
+					for (int i=0; i<channels_; i++)
+						entry.channelMarker[i] = false;
 					
 					tileCache[tileid] = entry;
 					entryIter = tileCache.find(tileid);

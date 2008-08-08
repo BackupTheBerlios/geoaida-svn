@@ -38,6 +38,7 @@ class MainWindow : public QMainWindow
 	private slots:
 		void LoadFileDialog();
 		void AddChannelsDialog();
+		void SaveFileDialog();
 		void QuitApplication();
 
 		void ChangeChannelMapping();
@@ -53,12 +54,14 @@ class MainWindow : public QMainWindow
 		void RotateMinus();
 
 		void RecalculateScrollbarProperties();
+		void ShowWarningBox(const QString &message);
 
 	private:
 		QWidget *_centralWidget;
 		QScrollBar *_horizontalScrollbar;
 		QScrollBar *_verticalScrollbar;
 		ImageWidget *_imageWidget;
+		QString _currentDirectory;
 
 		QMenuBar *createMenuBar();
 };

@@ -101,11 +101,14 @@ void ImageWidget::Open(QString filename)
 
 void ImageWidget::AddChannels(QString filename)
 {
+	if (!_image)
+		return;
+
 	Ga::Image *addImage = new Ga::Image(filename.toStdString());
 
 	if ((_image->sizeX() != addImage->sizeX()) || (_image->sizeY() != addImage->sizeY()))
 	{
-		emit ShowMessage(tr("Fehler: Das neue Bild muss dieselbe Größe haben!"));
+		emit ShowWarning(tr("Das neue Bild muss dieselbe Größe haben wie das bereits geladene!"));
 	}
 	else
 	{
@@ -113,6 +116,14 @@ void ImageWidget::AddChannels(QString filename)
 	}
 
 	delete addImage;
+}
+
+void ImageWidget::Save(QString filename)
+{
+	if (!_image)
+		return;
+
+	_image->write(filename.toStdString().c_str());
 }
 
 /**************************************
