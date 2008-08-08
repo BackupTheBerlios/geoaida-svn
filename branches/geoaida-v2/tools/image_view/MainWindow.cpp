@@ -71,6 +71,27 @@ MainWindow::MainWindow(const QString &filename, QWidget *parent)
 	connect(_horizontalScrollbar, SIGNAL(valueChanged(int)), _imageWidget, SLOT(ChangeOffsetX(int)));
 	connect(_verticalScrollbar, SIGNAL(valueChanged(int)), _imageWidget, SLOT(ChangeOffsetY(int)));
 
+	// Create new actions for keyboard scrolling
+	QAction *scrollUpAction = new QAction(this);
+	scrollUpAction->setShortcut(QKeySequence::MoveToPreviousLine);
+	addAction(scrollUpAction);
+	connect(scrollUpAction, SIGNAL(triggered()), this, SLOT(ScrollUp()));
+
+	QAction *scrollDownAction = new QAction(this);
+	scrollDownAction->setShortcut(QKeySequence::MoveToNextLine);
+	addAction(scrollDownAction);
+	connect(scrollDownAction, SIGNAL(triggered()), this, SLOT(ScrollDown()));
+
+	QAction *scrollLeftAction = new QAction(this);
+	scrollLeftAction->setShortcut(QKeySequence::MoveToPreviousChar);
+	addAction(scrollLeftAction);
+	connect(scrollLeftAction, SIGNAL(triggered()), this, SLOT(ScrollLeft()));
+
+	QAction *scrollRightAction = new QAction(this);
+	scrollRightAction->setShortcut(QKeySequence::MoveToNextChar);
+	addAction(scrollRightAction);
+	connect(scrollRightAction, SIGNAL(triggered()), this, SLOT(ScrollRight()));
+
 	// Load image from command-line
 	if (!filename.isEmpty())
 	{
@@ -106,10 +127,12 @@ QMenuBar *MainWindow::createMenuBar()
 	QMenu *channelMenu = menuBar->addMenu(tr("&Farbkanäle"));
 
 	QAction *channelMappingAction = channelMenu->addAction(tr("&Mapping Ändern..."));
+	channelMappingAction->setShortcut(Qt::CTRL + Qt::Key_M);
 	connect(channelMappingAction, SIGNAL(triggered()), this, SLOT(ChangeChannelMapping()));
 
 	QAction *channelLabelMappingAction = channelMenu->addAction(tr("&Labelbild darstellen"));
 	channelLabelMappingAction->setCheckable(true);
+	channelLabelMappingAction->setShortcut(Qt::CTRL + Qt::Key_L);
 	connect(channelLabelMappingAction, SIGNAL(triggered(bool)), _imageWidget, SLOT(SetRandomMapping(bool)));
 
 	channelMenu->addSeparator();
@@ -121,6 +144,7 @@ QMenuBar *MainWindow::createMenuBar()
 	connect(channelContrastBrightnessAction, SIGNAL(triggered()), this, SLOT(ChangeContrastBrightness()));
 
 	QAction *channelAutoContrastBrightnessAction = channelMenu->addAction(tr("&Auto Kontrast / Helligkeit..."));
+	channelAutoContrastBrightnessAction->setShortcut(Qt::CTRL + Qt::Key_A);
 	connect(channelAutoContrastBrightnessAction, SIGNAL(triggered()), this, SLOT(CalculateAutoContrastBrightness()));
 
 	channelMenu->addSeparator();
@@ -137,17 +161,21 @@ QMenuBar *MainWindow::createMenuBar()
 	viewMenu->addSeparator();
 
 	QAction *viewZoomPAction = viewMenu->addAction(tr("Zoom +"));
+	viewZoomPAction->setShortcut(Qt::Key_Plus);
 	connect(viewZoomPAction, SIGNAL(triggered()), this, SLOT(ZoomPlus()));
 
 	QAction *viewZoomMAction = viewMenu->addAction(tr("Zoom -"));
+	viewZoomMAction->setShortcut(Qt::Key_Minus);
 	connect(viewZoomMAction, SIGNAL(triggered()), this, SLOT(ZoomMinus()));
 
 	viewMenu->addSeparator();
 
 	QAction *viewRotatePAction = viewMenu->addAction(tr("Rotate +"));
+	viewRotatePAction->setShortcut(Qt::Key_PageDown);
 	connect(viewRotatePAction, SIGNAL(triggered()), this, SLOT(RotatePlus()));
 
 	QAction *viewRotateMAction = viewMenu->addAction(tr("Rotate -"));
+	viewRotateMAction->setShortcut(Qt::Key_PageUp);
 	connect(viewRotateMAction, SIGNAL(triggered()), this, SLOT(RotateMinus()));
 
 	return menuBar;
@@ -329,6 +357,30 @@ void MainWindow::RotateMinus()
 {
 	_imageWidget->RotateView(3.14159265f / 4.0f);
 	_imageWidget->update();
+}
+
+void MainWindow::ScrollUp()
+{
+	_verticalScrollbar->setValue(_verticalScrollbar->value() - _verticalScrollbar->pageStep());
+	_imageWidget->ChangeOffsetY(_verticalScrollbar->value());
+}
+
+void MainWindow::ScrollDown()
+{
+	_verticalScrollbar->setValue(_verticalScrollbar->value() + _verticalScrollbar->pageStep());
+	_imageWidget->ChangeOffsetY(_verticalScrollbar->value());
+}
+
+void MainWindow::ScrollLeft()
+{
+	_horizontalScrollbar->setValue(_horizontalScrollbar->value() - _horizontalScrollbar->pageStep());
+	_imageWidget->ChangeOffsetX(_horizontalScrollbar->value());
+}
+
+void MainWindow::ScrollRight()
+{
+	_horizontalScrollbar->setValue(_horizontalScrollbar->value() + _horizontalScrollbar->pageStep());
+	_imageWidget->ChangeOffsetX(_horizontalScrollbar->value());
 }
 
 void MainWindow::RecalculateScrollbarProperties()

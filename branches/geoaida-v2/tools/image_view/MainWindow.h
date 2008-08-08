@@ -53,6 +53,11 @@ class MainWindow : public QMainWindow
 		void RotatePlus();
 		void RotateMinus();
 
+		void ScrollUp();
+		void ScrollDown();
+		void ScrollLeft();
+		void ScrollRight();
+
 		void RecalculateScrollbarProperties();
 		void ShowWarningBox(const QString &message);
 
