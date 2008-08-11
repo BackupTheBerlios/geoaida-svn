@@ -20,6 +20,7 @@
 #include "gaimageio_libnetpbm.h"
 #include "gaimageio_libpfm.h"
 #include "gaimageio_libtiff.h"
+#include "gaimageio_libjpeg.h"
 #include "gaimageio_split.h"
 #include <stdexcept>
 
@@ -117,7 +118,7 @@ std::auto_ptr<Ga::ImageIO> Ga::ImageIO::create(const std::string& filename, File
 			std::auto_ptr<LibTIFFImpl> impl(new LibTIFFImpl(filename, fileType, sizeX, sizeY, channels, 256, 256, true));
 			return std::auto_ptr<ImageIO>(new ImageIOAdapter<LibTIFFImpl>(filename, impl));
 		}
-			
+		
 		default:
 		{
 			char buf[1024];
@@ -133,8 +134,13 @@ std::auto_ptr<Ga::ImageIO> Ga::ImageIO::reopen(const std::string& filename)
 	int segSizeX, segSizeY;
 	int channels;
 	FileType storageType;
-	
-	if (checkTIFF(filename, sizeX, sizeY, channels, segSizeX, segSizeY, storageType))
+
+	if (checkJPEG(filename, sizeX, sizeY, channels, storageType))
+	{
+		std::auto_ptr<LibJPEGImpl> impl(new LibJPEGImpl(filename, storageType, sizeX, sizeY, channels));
+		return std::auto_ptr<ImageIO>(new ImageIOAdapter<LibJPEGImpl>(filename, impl));
+	}
+	else if (checkTIFF(filename, sizeX, sizeY, channels, segSizeX, segSizeY, storageType))
 	{
 		std::auto_ptr<LibTIFFImpl> impl(new LibTIFFImpl(filename, storageType, sizeX, sizeY, channels, segSizeX, segSizeY, false));
 		return std::auto_ptr<ImageIO>(new ImageIOAdapter<LibTIFFImpl>(filename, impl));

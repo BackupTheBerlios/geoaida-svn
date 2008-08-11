@@ -1,5 +1,5 @@
 /****************************************************************************
-                          gaimageio.h - Image I/O implementation
+                          gaimageio_libtiff.h -
                              -------------------
     begin                : 2008-06-04
     copyright            : (C) 2008 TNT, Uni Hannover

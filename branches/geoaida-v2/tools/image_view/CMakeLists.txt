@@ -13,6 +13,6 @@ QT4_WRAP_CPP(image_view_MOC_SRCS ${image_view_MOC_HDRS})
 
 add_executable(image_view ${image_view_SRCS} ${image_view_MOC_SRCS})
 
-target_link_libraries(image_view ${QT_LIBRARIES} gaimage pfm netpbm tiff)
+target_link_libraries(image_view ${QT_LIBRARIES} gaimage pfm netpbm tiff jpeg)
 
 install(TARGETS image_view DESTINATION bin)

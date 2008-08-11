@@ -189,7 +189,7 @@ QMenuBar *MainWindow::createMenuBar()
 
 void MainWindow::LoadFileDialog()
 {
-	QString filename = QFileDialog::getOpenFileName(this, tr("Bild öffnen"), _currentDirectory, tr("Bilder ( *.tif *.tiff *.ppm *.pgm *.pfm *.pbm ) ;; Alle ( *.* )"));
+	QString filename = QFileDialog::getOpenFileName(this, tr("Bild öffnen"), _currentDirectory, tr("Bilder ( *.tif *.tiff *.jpg *.jpeg *.ppm *.pgm *.pfm *.pbm ) ;; Alle ( *.* )"));
 	if (filename.isEmpty())
 		return;
 
@@ -201,7 +201,7 @@ void MainWindow::LoadFileDialog()
 
 void MainWindow::AddChannelsDialog()
 {
-	QString filename = QFileDialog::getOpenFileName(this, tr("Bild öffnen"), _currentDirectory, tr("Bilder ( *.tif *.tiff *.ppm *.pgm *.pfm *.pbm ) ;; Alle ( *.* )"));
+	QString filename = QFileDialog::getOpenFileName(this, tr("Bild öffnen"), _currentDirectory, tr("Bilder ( *.tif *.tiff *.jpg *.jpeg *.ppm *.pgm *.pfm *.pbm ) ;; Alle ( *.* )"));
 	if (filename.isEmpty())
 		return;
 
@@ -211,7 +211,7 @@ void MainWindow::AddChannelsDialog()
 
 void MainWindow::SaveFileDialog()
 {
-	QString filename = QFileDialog::getSaveFileName(this, tr("Bild speichern"), _currentDirectory, tr("Bilder ( *.tif *.tiff *.ppm *.pgm *.pfm *.pbm ) ;; Alle ( *.* )"));
+	QString filename = QFileDialog::getSaveFileName(this, tr("Bild speichern"), _currentDirectory, tr("Bilder ( *.tif *.tiff *.jpg *.jpeg *.ppm *.pgm *.pfm *.pbm ) ;; Alle ( *.* )"));
 	if (filename.isEmpty())
 		return;
 

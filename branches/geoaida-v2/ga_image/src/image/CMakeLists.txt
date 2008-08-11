@@ -9,6 +9,7 @@ SET(headers
            gaimageio.h
            gaimaget.h
            gaimageio_libtiff.h
+           gaimageio_libjpeg.h
            garegion.h
            garegiont.h
            gashareddata.h
@@ -35,8 +36,8 @@ INSTALL(FILES ${headers} DESTINATION include)
 INSTALL(FILES ${classheaders} DESTINATION include/Ga)
 
 ADD_EXECUTABLE(test_cache test_cache.cpp)
-TARGET_LINK_LIBRARIES(test_cache gaimage pfm netpbm tiff)
+TARGET_LINK_LIBRARIES(test_cache gaimage pfm netpbm tiff jpeg)
 
 ADD_EXECUTABLE(test_image test_image.cpp)
-TARGET_LINK_LIBRARIES(test_image gaimage pfm netpbm tiff)
+TARGET_LINK_LIBRARIES(test_image gaimage pfm netpbm tiff jpeg)
 

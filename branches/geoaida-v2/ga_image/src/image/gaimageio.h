@@ -46,6 +46,8 @@ namespace Ga
     _TIFF_SINT8,
     _TIFF_UINT8,
 
+    _JPEG_UINT8,
+
     _UNKNOWN
   };
   
