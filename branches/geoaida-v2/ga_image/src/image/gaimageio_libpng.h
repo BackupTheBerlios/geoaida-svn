@@ -73,6 +73,9 @@ namespace Ga
 				channels = 1;
 				switch (bit_depth)
 				{
+					case 1:
+					case 2:
+					case 4:
 					case 8:
 						storageType = _PNG_UINT8;
 						break;
@@ -246,7 +249,7 @@ namespace Ga
 				png_set_sig_bytes(png_ptr, 0);
 				
 				// Read image data
-				png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_EXPAND, NULL);
+				png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_EXPAND | PNG_TRANSFORM_SWAP_ENDIAN, NULL);
 				png_bytep *row_pointers = png_get_rows(png_ptr, info_ptr);
 				
 				Dest *destBufferPixel = buffer;
