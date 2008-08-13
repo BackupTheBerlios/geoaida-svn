@@ -48,6 +48,9 @@ namespace Ga
 
     _JPEG_UINT8,
 
+	_PNG_UINT8,
+	_PNG_UINT16,
+
     _UNKNOWN
   };
   

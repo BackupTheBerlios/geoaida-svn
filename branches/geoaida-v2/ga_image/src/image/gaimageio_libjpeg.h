@@ -28,8 +28,11 @@ namespace Ga
 	bool checkJPEG(const std::string &filename, int &sizeX, int &sizeY, int &channels, FileType &storageType)
 	{
 		// Open jpeg file handle and check for magic number
-		unsigned short magicnumber;
 		FILE *file = fopen(filename.c_str(), "rb");
+		if (!file)
+			return false;
+		
+		unsigned short magicnumber;
 		fread(&magicnumber, sizeof(magicnumber), 1, file);
 		fseek(file, 0, SEEK_SET);
 		

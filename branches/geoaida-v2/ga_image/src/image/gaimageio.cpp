@@ -21,6 +21,7 @@
 #include "gaimageio_libpfm.h"
 #include "gaimageio_libtiff.h"
 #include "gaimageio_libjpeg.h"
+#include "gaimageio_libpng.h"
 #include "gaimageio_split.h"
 #include <stdexcept>
 
@@ -139,6 +140,11 @@ std::auto_ptr<Ga::ImageIO> Ga::ImageIO::reopen(const std::string& filename)
 	{
 		std::auto_ptr<LibJPEGImpl> impl(new LibJPEGImpl(filename, storageType, sizeX, sizeY, channels));
 		return std::auto_ptr<ImageIO>(new ImageIOAdapter<LibJPEGImpl>(filename, impl));
+	}
+	else if (checkPNG(filename, sizeX, sizeY, channels, storageType))
+	{
+		std::auto_ptr<LibPNGImpl> impl(new LibPNGImpl(filename, storageType, sizeX, sizeY, channels));
+		return std::auto_ptr<ImageIO>(new ImageIOAdapter<LibPNGImpl>(filename, impl));
 	}
 	else if (checkTIFF(filename, sizeX, sizeY, channels, segSizeX, segSizeY, storageType))
 	{
