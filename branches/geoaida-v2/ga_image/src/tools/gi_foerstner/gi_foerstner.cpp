@@ -41,10 +41,10 @@ void Usage(int argc, char **argv)
 
 Ga::Image *image;
 Ga::Image *result;
-int *Gu, *Gv, *Guv;
+float *Gu, *Gv, *Guv;
 
-void computeStructureTensor(int *, int *, int *);
-void computeBoxFilter(int *, int);
+void computeStructureTensor(float *, float *, float *);
+void computeBoxFilter(float *, int);
 void suppressNonMaxima(int);
 
 int main(int argc, char **argv)
@@ -72,9 +72,9 @@ int main(int argc, char **argv)
 	image = new Ga::Image(inputFilename);
 
 	// Calculate tensor
-	Gu = new int[image->sizeX() * image->sizeY()];
-	Gv = new int[image->sizeX() * image->sizeY()];
-	Guv = new int[image->sizeX() * image->sizeY()];
+	Gu = new float[image->sizeX() * image->sizeY()];
+	Gv = new float[image->sizeX() * image->sizeY()];
+	Guv = new float[image->sizeX() * image->sizeY()];
 
 	computeStructureTensor(Gu, Gv, Guv);
 
@@ -149,7 +149,7 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-void computeStructureTensor(int *destU, int *destV, int *destUV)
+void computeStructureTensor(float *destU, float *destV, float *destUV)
 {
 	Ga::ImageBase *pimage = image->pImage();
 
@@ -166,13 +166,13 @@ void computeStructureTensor(int *destU, int *destV, int *destUV)
 			for (int c = 0; c < image->noChannels(); c++)
 			{
 				// Roberts cross
-				int du = pimage->getPixelAsDoubleFast(x, y, c) - pimage->getPixelAsDoubleFast(x + 1, y + 1, c);
-				int dv = pimage->getPixelAsDoubleFast(x + 1, y, c) - pimage->getPixelAsDoubleFast(x, y + 1, c);
+				float du = pimage->getPixelAsDoubleFast(x, y, c) - pimage->getPixelAsDoubleFast(x + 1, y + 1, c);
+				float dv = pimage->getPixelAsDoubleFast(x + 1, y, c) - pimage->getPixelAsDoubleFast(x, y + 1, c);
 
 				// Sobel operator
-				//int du =	(pimage->getPixelAsDoubleFast(x - 1, y - 1, c) + 2*pimage->getPixelAsDoubleFast(x - 1, y, c) + pimage->getPixelAsDoubleFast(x - 1, y + 1, c)) -
+				//float du =	(pimage->getPixelAsDoubleFast(x - 1, y - 1, c) + 2*pimage->getPixelAsDoubleFast(x - 1, y, c) + pimage->getPixelAsDoubleFast(x - 1, y + 1, c)) -
 				//			(pimage->getPixelAsDoubleFast(x + 1, y - 1, c) + 2*pimage->getPixelAsDoubleFast(x + 1, y, c) + pimage->getPixelAsDoubleFast(x + 1, y + 1, c));
-				//int dv =	(pimage->getPixelAsDoubleFast(x - 1, y - 1, c) + 2*pimage->getPixelAsDoubleFast(x, y - 1, c) + pimage->getPixelAsDoubleFast(x + 1, y - 1, c)) -
+				//float dv =	(pimage->getPixelAsDoubleFast(x - 1, y - 1, c) + 2*pimage->getPixelAsDoubleFast(x, y - 1, c) + pimage->getPixelAsDoubleFast(x + 1, y - 1, c)) -
 				//			(pimage->getPixelAsDoubleFast(x - 1, y + 1, c) + 2*pimage->getPixelAsDoubleFast(x, y + 1, c) + pimage->getPixelAsDoubleFast(x + 1, y + 1, c));
 
 				destU[index] += du * du;
@@ -183,7 +183,7 @@ void computeStructureTensor(int *destU, int *destV, int *destUV)
 	}
 }
 
-void computeBoxFilter(int *dest, int filtersize)
+void computeBoxFilter(float *dest, int filtersize)
 {
 	int filtersize2 = filtersize >> 1;
 
@@ -193,7 +193,7 @@ void computeBoxFilter(int *dest, int filtersize)
 		int index = y * image->sizeX();
 
 		// Init cbuffer
-		int cbuffer[filtersize];
+		float cbuffer[filtersize];
 		int cbufferpos = 0;
 
 		for (int i = 0; i < filtersize; i++)
@@ -203,7 +203,7 @@ void computeBoxFilter(int *dest, int filtersize)
 			cbuffer[cbufferpos++] = dest[index + i];
 
 		// Calculate sum
-		int sum = 0;
+		float sum = 0;
 		for (int i = 0; i < filtersize; i++)
 			sum += cbuffer[i];
 
@@ -227,7 +227,7 @@ void computeBoxFilter(int *dest, int filtersize)
 		int index = x;
 
 		// Init cbuffer
-		int cbuffer[filtersize];
+		float cbuffer[filtersize];
 		int cbufferpos = 0;
 
 		for (int i = 0; i < filtersize; i++)
@@ -237,7 +237,7 @@ void computeBoxFilter(int *dest, int filtersize)
 			cbuffer[cbufferpos++] = dest[index + i * image->sizeX()];
 
 		// Calculate sum
-		int sum = 0;
+		float sum = 0;
 		for (int i = 0; i < filtersize; i++)
 			sum += cbuffer[i];
 
