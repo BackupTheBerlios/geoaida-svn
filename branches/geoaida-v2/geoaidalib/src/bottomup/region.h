@@ -24,7 +24,7 @@
 #include <QFile>
 
 #include <MLParser>
-#include <Image>
+#include <vips/vips>
 #include "Stack"
 
 class Ga::Image;

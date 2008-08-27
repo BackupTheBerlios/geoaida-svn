@@ -1,4 +1,7 @@
+INCLUDE(UsePkgConfig)
 find_package(Qt4 REQUIRED)
+
+PKGCONFIG(vips-7.14 VIPS_INC VIPS_LIB VIPS_LINK VIPS_CFLAGS)
 
 add_definitions(${QT_DEFINITIONS})
 
@@ -8,7 +11,9 @@ include_directories(.
         ${CMAKE_SOURCE_DIR}/ga_image/src/gaimage
         ${CMAKE_SOURCE_DIR}/parser
         ${QT_INCLUDES}
+	${VIPS_INC}
 	)
+
 set(headers bottomup.h
            relation.h
            sensor.h
@@ -54,7 +59,11 @@ set(sources  bottomup.cpp
            stackelementstring.cpp
 )
 
+
 add_library(bottomup STATIC ${sources})
+
+#TARGET_LINK_LIBRARIES(bottomup ${VIPS_LIB})
+
 install(TARGETS bottomup DESTINATION lib)
 install(FILES ${headers} DESTINATION include)
 install(FILES ${classheaders} DESTINATION include/BottomUp)
