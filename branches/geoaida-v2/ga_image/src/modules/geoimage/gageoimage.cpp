@@ -21,18 +21,23 @@
 
 
 #include "gageoimage.h"
-#include <ImageT>
+#include <vips/vips>
+#include <vips/VMask.h>
+#include <vips/rect.h>
+
 
 //using Ga::Image;
+using namespace vips;
 
 namespace GaGeoImage {
 //--- constructor/destructor -----------------------------------------//
-  GeoImage::GeoImage(Ga::Image& img):
+  GeoImage::GeoImage(VImage& img):
     image_(img)
   {
 
   }
-  GeoImage::GeoImage(Ga::Image& img, double gW, double gN, double gE, double gS):
+
+  GeoImage::GeoImage(VImage& img, double gW, double gN, double gE, double gS):
     image_(img){
     setGeoCoordinates(gW, gN, gE, gS);
   }
@@ -63,20 +68,20 @@ namespace GaGeoImage {
   }
     
   /** set a pixel using geocoordinates */
-  void GeoImage::setGeoPixel(const double gx, const double gy, const double val, const int channel) {
+  void GeoImage::setGeoPixel(const double gx, const double gy, const double val, const int band) {
     int x = geo2ImageX(gx);
     int y = geo2ImageY(gy);
-    image_.setPixel(x, y, val, channel);
+//     image_(x, y, band) = val;
   }
   
   /** get a pixel using geocoordinates */
-  double GeoImage::getGeoPixel(const double gx, const double gy, const int channel) const{
+  double GeoImage::getGeoPixel(const double gx, const double gy, const int band) const{
     int x = geo2ImageX(gx);
     int y = geo2ImageY(gy);
-    return image_.getPixel(x, y, channel);
+//    return image_(x, y, band);
   }
 
-
+#if 0
   /** copies label from source image. The label is selected with source_labelValue and inserted as dest_labelValue
    *  
    * */    
@@ -141,49 +146,28 @@ namespace GaGeoImage {
     if(nury) nury=dury;
   }
     
-  // ++++++++++++++ Intern Template Functions ++++++++++++++++
+#endif
 
+  // ++++++++++++++ Intern Functions ++++++++++++++++
 
+    void GeoImage::copyLabelFromImage(VImage& source, 
+				      const int  source_labelValue, 
+				      const int dest_labelValue, 
+				      const int offsetX, const int offsetY)
+    {
+        
+ 
 
-  
-  template<typename PixType>
-  void GeoImage::copyLabelFromImageT(const Ga::ImageBase* source, const double& source_labelValue, const double& dest_labelValue, const int& channel)
-  {
-    Ga::ImageBase* destImageB=image_.pImage();
-
-    const Ga::ImageT<PixType>* sourceImage = dynamic_cast<const Ga::ImageT<PixType>*> (source);
-    Ga::ImageT<PixType>* destImage = dynamic_cast<Ga::ImageT<PixType>*> (destImageB);
-    
-    if ((channel + 1 > destImage->noChannels()) || (channel + 1 > sourceImage->noChannels()))
-      return;
-    if (destImage->typeId() != sourceImage->typeId())
-      return;
-    if (destImage->noPixels() != sourceImage->noPixels())
-      return;
-    
-     
-
-    
-  
-    PixType label=(PixType)source_labelValue;
-    PixType newLabel=(PixType)dest_labelValue;
-  
-    typename Ga::ImageT<PixType>::ConstIterator pSourceImage=sourceImage->constBegin(0,0);
-    typename Ga::ImageT<PixType>::Iterator pDestImage=destImage->begin(0,0);
-
-    for (int i = 0; i < sourceImage->noPixels(); ++i, ++pSourceImage, ++pDestImage) {
-      PixType sourceValue = *pSourceImage;
-      if (sourceValue == label){
-	*pDestImage = newLabel;
-      }
-      
+	VIMask mask = source.equal(source_labelValue);
+	int width=mask.xsize();
+	int height=mask.ysize();
+	Rect rect;
+	rect.left=offsetX;
+	rect.top = offsetY;
+	rect.height=height;
+	rect.width=width;
+	image_.plotmask(offsetX, offsetY, &dest_labelValue, mask, &rect)
     }
-  }
-
-  void GeoImage::copyLabelFromImage(const Ga::Image& source, const double source_labelValue, const double dest_labelValue, const int channel)
-  {
-    ForEachTypeDo(image_.typeId(), copyLabelFromImageT, (source.pImage(), source_labelValue, dest_labelValue, channel));
-  }
 
 } //namespace GaGeoImage
 

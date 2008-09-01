@@ -21,7 +21,7 @@
 #define __GA_GEOIMAGE_H
 
 #include <typeinfo>
-#include <Image>
+#include <vips/vips>
 
 namespace GaGeoImage
 {
@@ -51,13 +51,15 @@ namespace GaGeoImage
   {
   public:
     //--- constructor/destructor -----------------------------------------//
-    GeoImage(Ga::Image& img);
-    GeoImage(Ga::Image& img, const double gW, const double gN, const double gE, const double gS);
+      GeoImage(vips::VImage& img);
+
+      GeoImage(vips::VImage& img, const double gW, const double gN, const double gE, const double gS);
     
     //--- methods --------------------------------------------------------//
-    
+
+
     void setGeoCoordinates(const double gW, const double gN, const double gE, const double gS);
-    
+
     /** get west/left geocoordinate */
     inline double geoWest() const{
       return coordinates_.west;
@@ -127,30 +129,34 @@ namespace GaGeoImage
     double pixel2geodist(const int pix) const;
 
     /** set a pixel using geocoordinates */
-    void setGeoPixel(const  double gx,  const double gy, const double val, const int channel=0);
+    void setGeoPixel(const  double gx,  const double gy, const double val, const int band=0);
 
     /** get a pixel using geocoordinates */
-    double getGeoPixel(const double gx, const double gy, const int channel=0) const;
+    double getGeoPixel(const double gx, const double gy, const int band=0) const;
     
     /** resets geo coordiantes to 0 */
     void clearGeo();
 
 
-    
+    #if 0
     /** copies label from source image. The label is selected with source_labelValue and inserted as dest_labelValue
      * */
     void geoCopyLabelFromImage(const GeoImage& sourceImage, const int source_labelValue, const int dest_labelValue,
 			       const int sllx, const int slly, const int surx, const int sury,
 			       int& nllx, int& nlly, int& nurx, int& nury, int changeVec[]);
+#endif
   protected:
-    Ga::Image& image_;
+    vips::VImage& image_;
     GeoCoordinates coordinates_;
     double resolution_;
 
   private:
-    template<typename PixType>
-      void copyLabelFromImageT(const Ga::ImageBase* source, const double& src_labelValue, const double& dest_labelValue, const int& channel=0);
-    void copyLabelFromImage(const Ga::Image& source, const double source_labelValue, const double dest_labelValue, const int channel=0);
+
+    void copyLabelFromImage(vips::VImage& source, 
+			    const int source_labelValue, 
+			    const int dest_labelValue, 
+			    const int offsetX = 0,
+			    const int offsetY = 0);
   }; 
 
 
@@ -172,48 +178,48 @@ namespace GaGeoImage
     double f1 = coordinates_.east - coordinates_.west;
     double f2 = geo - coordinates_.west;
     
-    return (int)(f2 / f1 * image_.sizeX());
+    return (int)(f2 / f1 * image_.Xsize());
   }
 
  
 /** returns the x-image coordinate of a x-geocoordinate, caution: no range check */
  inline int GeoImage::geo2ImageX_f(double geo) const {
-   return (int)((geo - coordinates_.west) / (coordinates_.east - coordinates_.west) * (double)image_.sizeX());
+   return (int)((geo - coordinates_.west) / (coordinates_.east - coordinates_.west) * (double)image_.Xsize());
  }
 
 /** returns the x-image coordinate of a x-geocoordinate, caution: no range check */
  inline double GeoImage::geo2ImageX_double(double geo) const {
    //!MP10.07.01  return ((geo - coordinates_.west) / (coordinates_.east - coordinates_.west) * (double)image.sizeX());
-   return ((geo - coordinates_.west) / (coordinates_.east - coordinates_.west) * (double)image_.sizeX());
+   return ((geo - coordinates_.west) / (coordinates_.east - coordinates_.west) * (double)image_.Xsize());
  }
 
  /** returns the y-image coordinate of a y-geocoordinate */
  inline int GeoImage::geo2ImageY(double geo) const {
-   return (int)(image_.sizeY()/(coordinates_.south-coordinates_.north)*(geo-coordinates_.north));
+   return (int)(image_.Ysize()/(coordinates_.south-coordinates_.north)*(geo-coordinates_.north));
  }
 
 /** returns the y-image coordinate of a y-geocoordinate, caution: no range check */
  inline int GeoImage::geo2ImageY_f(double geo) const {
   
-   return (int)(image_.sizeY()/(coordinates_.south-coordinates_.north)*(geo-coordinates_.north));
+   return (int)(image_.Ysize()/(coordinates_.south-coordinates_.north)*(geo-coordinates_.north));
  }
 
 /** returns the y-image coordinate of a y-geocoordinate, caution: no range check */
  inline double GeoImage::geo2ImageY_double(double geo) const {
    
-   return image_.sizeY()/(coordinates_.south-coordinates_.north)*(geo-coordinates_.north);
+   return image_.Ysize()/(coordinates_.south-coordinates_.north)*(geo-coordinates_.north);
  }
  
 /** returns the geocoordinate of a x-image coordinate */
  inline double GeoImage::image2GeoX(double x) const {
    
-   return (x+0.5)*(coordinates_.east-coordinates_.west)/image_.sizeX()+coordinates_.west;
+   return (x+0.5)*(coordinates_.east-coordinates_.west)/image_.Xsize()+coordinates_.west;
  }
  
  /** returns the geocoordinate of a y-image coordinate */
  inline double GeoImage::image2GeoY(double y) const {
    
-   return (coordinates_.south-coordinates_.north)/image_.sizeY()*(y+0.5)+coordinates_.north;
+   return (coordinates_.south-coordinates_.north)/image_.Ysize()*(y+0.5)+coordinates_.north;
  }
  
  /** returns the geo-distance for a number of pix image pixel (only exact for 0 and 90 degree) */

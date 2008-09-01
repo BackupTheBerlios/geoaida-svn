@@ -1,6 +1,10 @@
+INCLUDE(UsePkgConfig)
+PKGCONFIG(vips-7.14 VIPS_INC VIPS_LIB VIPS_LINK VIPS_CFLAGS)
+
+
 include_directories(.
         ${CMAKE_SOURCE_DIR}/pfm/libpfm
-        ${PROJECT_SOURCE_DIR}/src/image
+	${VIPS_INC}
 	)
 
 set(headers 
