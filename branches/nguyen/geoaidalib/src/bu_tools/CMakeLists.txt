@@ -1,0 +1,8 @@
+add_subdirectory(ga_bu_generic)
+add_subdirectory(ga_bu_industrie)
+add_subdirectory(ga_bu_merge_rating)
+add_subdirectory(ga_dummy_bottomup)
+add_subdirectory(ga_bu_maxdist)
+add_subdirectory(ga_bu_minsize)
+add_subdirectory(ga_bu_maxsize)
+add_subdirectory(ga_bu_settlement)
