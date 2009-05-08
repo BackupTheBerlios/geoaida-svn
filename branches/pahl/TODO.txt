@@ -1,0 +1,43 @@
+GeoAIDA Pitfalls
+
+* If you mess with image formats, e.g. introduce a new one, grep for FORMAT to get a list of relevant places. If you write code that is affected by the introduction of new file formats, please add a FORMAT comment.
+
+* The cache and splitting system haven't really been properly tested with HUGE files (>4GB). The Unix part of gacachefile.cpp should work just fine on a system where off_t (used by lseek) is 64 bits wide, such as Darwin (apparently even in 32bit versions), but the Windows port is known NOT to work with such files (TODO).
+
+* If anything goes wrong with large files, there could be oversights here, i.e. temporary calculations still being done with ints, i.e. someFunction(sizeX*sizeY) where the variables are still ints. Correct: LargeSize(sizeX) * LargeSize(sizeY).
+
+* x, y, sizeX, sizeY are always stored as int values (only pixel indices are stored as long long/LargeSize). This means that while an Image *could* have an area of up to 2^64 pixels, its width and height are limited to 2^31-1 at the moment. I doubt that this will become a problem anytime soon, but it should be noted, and could be changed if someone has too much time on his hands :)
+
+
+
+GeoAIDA Critical To Do
+
+* Documentation: As long as there're still undocumented classes in the Doxygen class tree, this To Do item is an important one :)
+
+* Integrate branches/raschke with the parts outside of ga_image, i.e. gad and gda. Some parts of them have already been superficially updated for the new Image interface, but most haven't.
+
+* Except Canny and Gaussian Blur, no algorithm has been tested a lot. They should be fixed if necessary, and a reference image/unit test should be created by someone who understands what the algorithms are supposed to do. This is the only way to guarantee that they will remain working over time!
+  * Some algorithms that were part of Image but should be moved out are included in gaalgo.h. They should be moved to a separate .cpp file and only their declaration left in gaalgo.h.
+
+* Windows port: Most of the algorithms use variable-length arrays on the stack, a GCC extension not supported by Visual C++, so the Windows port doesn't work at all. They all should be replaced by vectors.
+
+
+
+GeoAIDA Non-Critical Improvements
+
+* All tabs should be transformed into two spaces, some files still contain them.
+
+* Most source files have an extensive header that contains a date and author, and lots of other stuff. Most of them are outdated. Do we really need such headers at all? Wouldn't an author (with email) suffice?
+
+* The ga_image/src/gaimage folder is pretty messy and should be split up into cache, image and algorithms.
+
+* Maybe a less offensive image should be used for unit tests ;)
+
+* pImage() is a weird name, would ImageT() be clearer?
+
+* channels and noChannels are both heavily used, both in variable as well as in function names. Should be unified.
+
+* Iterator range optimizations: ImageT iterators carry an allowed range and a relocation functor with them. Once they leave their range, they call the relocation function that will tell them if they need to point to a different image segment. This range usually spans from the left border to the right border of a segment.
+However, if the image is only one segment wide, the range could be extended so that the iterator silently (and in this case, safely) wraps around the borders, avoiding lots of relocations. If one segment-wide images become unexpectingly common, this should be considered.
+
+* Geo data parser/writer for comments. At the moment, there is no way to read or store geopositions. The old way of reading and writing them via libpfm has been broken by both the new ImageIO design and a libpfm bug with regard to comment reading/writing. If a file format is introduced that allows for geopositions to be stored with the image, the getComment/setComment system should be changed to getGeoData/setGeoData.

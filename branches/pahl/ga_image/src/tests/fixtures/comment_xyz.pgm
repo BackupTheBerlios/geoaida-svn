@@ -1,0 +1,7 @@
+P5 # 8 bit unsigned integer (PGM)
+#comment
+#xyz
+#end
+1	1
+255
+J

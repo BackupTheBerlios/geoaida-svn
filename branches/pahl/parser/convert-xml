@@ -1,0 +1,16 @@
+#!/bin/sh
+Convert()
+{
+  convert-xml.py $1 $2
+}
+
+for f in $*
+do
+  if [ -f $f.bak ]
+  then
+    echo "$f.bak already exists"
+  else
+    mv $f $f.bak
+    Convert $f.bak $f
+  fi
+done

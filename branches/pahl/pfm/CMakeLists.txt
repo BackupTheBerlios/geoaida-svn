@@ -1,0 +1,3 @@
+PROJECT(pfm)
+ADD_SUBDIRECTORY(libpfm)
+#ADD_SUBDIRECTORY(pfm_view)

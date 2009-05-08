@@ -1,0 +1,4 @@
+# ADD_SUBDIRECTORY(image)
+ADD_SUBDIRECTORY(modules)
+
+#ADD_SUBDIRECTORY(tools)

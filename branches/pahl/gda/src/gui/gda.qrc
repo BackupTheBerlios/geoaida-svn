@@ -1,0 +1,12 @@
+<RCC>
+    <qresource prefix="/gda" >
+        <file>cleanup.xpm</file>
+        <file>compound.xpm</file>
+        <file>filenew.xpm</file>
+        <file>fileopen.xpm</file>
+        <file>filesave.xpm</file>
+        <file>generalization.xpm</file>
+        <file>start.png</file>
+        <file>start.xpm</file>
+    </qresource>
+</RCC>
