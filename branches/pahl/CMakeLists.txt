@@ -1,3 +1,4 @@
+cmake_minimum_required(VERSION 2.6)
 if(APPLE)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -I/opt/local/include")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I/opt/local/include")
@@ -5,7 +6,7 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L/opt/local/lib")
 endif(APPLE)
 
 ADD_SUBDIRECTORY(pfm)
-ADD_SUBDIRECTORY(ga_image)
+#ADD_SUBDIRECTORY(ga_image)
 ADD_SUBDIRECTORY(parser)
 #ADD_SUBDIRECTORY(geoaidalib)
 ADD_SUBDIRECTORY(gda)
