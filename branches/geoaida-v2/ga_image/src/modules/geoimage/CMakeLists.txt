@@ -1,10 +1,10 @@
-INCLUDE(UsePkgConfig)
-PKGCONFIG(vips-7.14 VIPS_INC VIPS_LIB VIPS_LINK VIPS_CFLAGS)
+find_package(PkgConfig)
+pkg_search_module(VIPS REQUIRED vips-7.18)
 
-
-include_directories(.
+include_directories(
+        .
         ${CMAKE_SOURCE_DIR}/pfm/libpfm
-	${VIPS_INC}
+	${VIPS_INCLUDE_DIRS}
 	)
 
 set(headers 

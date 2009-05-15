@@ -1,7 +1,7 @@
-INCLUDE(UsePkgConfig)
+find_package(PkgConfig)
 find_package(Qt4 REQUIRED)
 
-PKGCONFIG(vips-7.14 VIPS_INC VIPS_LIB VIPS_LINK VIPS_CFLAGS)
+pkg_search_module(VIPS REQUIRED vips-7.18)
 
 add_definitions(${QT_DEFINITIONS})
 
@@ -11,7 +11,7 @@ include_directories(.
         ${CMAKE_SOURCE_DIR}/ga_image/src/gaimage
         ${CMAKE_SOURCE_DIR}/parser
         ${QT_INCLUDES}
-	${VIPS_INC}
+	${VIPS_INCLUDE_DIRS}
 	)
 
 set(headers bottomup.h
