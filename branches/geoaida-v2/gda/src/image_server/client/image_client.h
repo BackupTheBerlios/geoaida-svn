@@ -46,7 +46,7 @@ class ImageClient : public QObject
 	public:
 
 		//--- Constructor / Destructor----------------------------------------//
-		ImageClient();
+		ImageClient(const quint16& unPort);
 		~ImageClient();
 
 		//--- Constant Methods -----------------------------------------------//
@@ -70,8 +70,9 @@ class ImageClient : public QObject
 		void connectToServer() const;
 	  
 		//--- Private Variables ----------------------------------------------//
-		QTcpSocket* pTcpSocket;
-		quint8		m_nRequest;
+		QTcpSocket* pTcpSocket;		///< Socked for this connection
+		quint8		m_nRequest;		///< Request header description
+		quint16		m_unPort;		///< Port for connection
 };
 
 #endif

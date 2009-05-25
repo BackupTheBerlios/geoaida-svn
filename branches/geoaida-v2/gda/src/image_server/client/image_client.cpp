@@ -23,8 +23,10 @@
 ///
 /// \brief Constructor
 ///
+/// \param unPort Port for this connection
+///
 ///////////////////////////////////////////////////////////////////////////////
-ImageClient::ImageClient()
+ImageClient::ImageClient(const quint16& unPort) : m_unPort(unPort)
 {
 	pTcpSocket = new QTcpSocket(this);
 	
@@ -144,5 +146,5 @@ void ImageClient::connectToServer() const
 {
 	std::cout << "ImageClient: Connecting to server." << std::endl;
 	pTcpSocket->abort();
-	pTcpSocket->connectToHost(QHostAddress::LocalHost,19209);
+	pTcpSocket->connectToHost(QHostAddress::LocalHost, m_unPort);
 }

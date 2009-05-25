@@ -41,7 +41,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 void usage()
 {
-	std::cout << "Usage: image_server [PARAMETERS]" << std::endl;
+	std::cout << "Usage: image_server <port>" << std::endl;
+	std::cout << "  <port>: Port for connection" << std::endl;
+	std::cout << "Example: image_server 19209" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -57,9 +59,14 @@ void usage()
 ////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char *argv[])
 {
-	QCoreApplication app(argc, argv);
+	if (argc != 2)
+	{
+		usage();
+		return EXIT_FAILURE;
+	}
 
-	ImageServer Server;
+	QCoreApplication app(argc, argv);
+	ImageServer Server(atoi(argv[1]));
 	
 	return app.exec();
 }

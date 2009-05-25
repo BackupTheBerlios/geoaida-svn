@@ -24,13 +24,14 @@
 ///
 /// \brief Constructor
 ///
-/// \param pParent Parent object
+/// \param unPort  Port for connection
+/// \param pParent Qt parent object
 ///
 ////////////////////////////////////////////////////////////////////////////////
-ImageServer::ImageServer(QObject* pParent) : QTcpServer(pParent)
+ImageServer::ImageServer(const quint16& unPort, QObject* pParent) : QTcpServer(pParent)
 {
 	// Server setup
-	if (!this->listen(QHostAddress::LocalHost, 19209))
+	if (!this->listen(QHostAddress::LocalHost, unPort))
 	{
 		std::cerr << "ImageServer: Error, server not running." << std::endl;
 		this->close();

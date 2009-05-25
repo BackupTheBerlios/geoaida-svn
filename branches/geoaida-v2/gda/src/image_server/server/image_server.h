@@ -44,7 +44,7 @@ class ImageServer : public QTcpServer
 	public:
 
 		//--- Constructor / Destructor----------------------------------------//
-		ImageServer(QObject* parent=0);
+		ImageServer(const quint16& unPort, QObject* parent=0);
 
 		//--- Methods --------------------------------------------------------//
 
