@@ -22,14 +22,12 @@
 
 //--- Standard header --------------------------------------------------------//
 #include <iostream>
-// #include <string>
+#include <string>
 
 //--- Program header ---------------------------------------------------------//
-// #include "ImageEngineBase"
-// #include "ImageEngineDefault"
+#include "ImageEngineBase"
 
 //--- Misc header ------------------------------------------------------------//
-// #include <QTcpServer>
 #include <QTcpSocket>
 #include <QThread>
 
@@ -50,7 +48,8 @@ class ImageServerThread : public QThread
 	public:
 
 		//--- Constructor / Destructor----------------------------------------//
-		ImageServerThread(int nSocketDescriptor, QObject* pParent);
+		ImageServerThread(int nSocketDescriptor, QObject* pParent,
+							const ImageEngineBase* const pImageEngine);
 		~ImageServerThread();
 
 		//--- Methods --------------------------------------------------------//
@@ -65,14 +64,15 @@ class ImageServerThread : public QThread
 
 	private:
 		//--- Constant Methods -----------------------------------------------//
-		const QString requestString(const quint16& nRequest) const;
+		const std::string requestString(const quint16& nRequest) const;
 
 		//--- Private Variables ----------------------------------------------//
 		QTcpSocket*			m_pClientSocket;	///< Socket for connection
-//		ImageEngineBase*	m_pImageEngine;		///< Pointer to image engine
 		quint16				m_nHeader;			///< Header for data transfer
 		
 		int m_nSocketDescriptor;				///< Associated to socket for this connection
+
+		const ImageEngineBase* const m_pImageEngine;	///< Pointer to image engine
 
 };
 

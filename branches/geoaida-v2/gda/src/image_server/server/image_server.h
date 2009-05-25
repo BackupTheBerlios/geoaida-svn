@@ -21,7 +21,6 @@
 #define __IMAGE_SERVER_H
 
 //--- Standard header --------------------------------------------------------//
-// #include <iostream>
 
 //--- Program header ---------------------------------------------------------//
 #include "ImageEngineBase"
@@ -29,11 +28,8 @@
 
 //--- Misc header ------------------------------------------------------------//
 #include <QTcpServer>
-// #include <QTcpSocket>
 
 //--- Constants --------------------------------------------------------------//
-// const quint16 REQUEST_PART_OF_IMAGE	= 1;
-// const quint16 REQUEST_SETUP_SERVER	= 2;
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -64,10 +60,7 @@ class ImageServer : public QTcpServer
 // 		void setup();
 
 		//--- Private Variables ----------------------------------------------//
-//		QTcpServer* 		m_pTcpServer;		///< QT TCP server instance
-//		QTcpSocket*			m_pClientSocket;	///< Socket of connected client
 		ImageEngineBase*	m_pImageEngine;		///< Pointer to image engine
-//		quint16				m_nHeader;			///< Header for data transfer
 
 };
 

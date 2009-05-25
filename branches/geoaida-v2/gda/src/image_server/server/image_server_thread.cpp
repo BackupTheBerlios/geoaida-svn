@@ -23,10 +23,16 @@
 ///
 /// \brief Constructor
 ///
+/// \param nSocketDescriptor Description of socket for this connection
+/// \param pParent Qt parent object
+/// \param pImageEngine Pointer to instance of the image engine the server uses
+///
 ///////////////////////////////////////////////////////////////////////////////
-ImageServerThread::ImageServerThread(int nSocketDescriptor, QObject* pParent) :
+ImageServerThread::ImageServerThread(int nSocketDescriptor, QObject* pParent,
+									const ImageEngineBase* const pImageEngine) :
 									m_nSocketDescriptor(nSocketDescriptor),
-									QThread(pParent)
+									QThread(pParent),
+									m_pImageEngine(pImageEngine)
 {
 }
 
@@ -51,7 +57,7 @@ ImageServerThread::~ImageServerThread()
 ///////////////////////////////////////////////////////////////////////////////
 void ImageServerThread::socketDisconnected()
 {
-	std::cout << "Socket disconnected, leaving thread." << std::endl;
+	std::cout << "ImageServerThread: Socket disconnected, leaving thread." << std::endl;
 	quit();
 }
 
@@ -62,7 +68,7 @@ void ImageServerThread::socketDisconnected()
 ///////////////////////////////////////////////////////////////////////////////
 void ImageServerThread::threadStarted()
 {
-	std::cout << "Image server thread: Thread running." << std::endl;
+	std::cout << "ImageServerThread: Thread running." << std::endl;
 	
 	m_pClientSocket = new QTcpSocket(this);
 
@@ -94,6 +100,10 @@ void ImageServerThread::getRequest()
 	{
 		if (m_pClientSocket->bytesAvailable() < (int)sizeof(quint16))
 			return;
+
+		std::cout << "ImageServerThread: Bytes available at socket: " << 
+					m_pClientSocket->bytesAvailable() << std::endl;
+
 		in >> m_nHeader;
 	}
 	
@@ -102,25 +112,29 @@ void ImageServerThread::getRequest()
 // 	if (m_pClientSocket->bytesAvailable() < m_nBlockSize)
 // 		return;
 	
-	std::cout << "ImageServerThread: Incoming request = " << m_nHeader << std::endl;
+	std::cout << "ImageServerThread: Incoming request = " << requestString(m_nHeader)
+				<< std::endl;
+
+	if (m_nHeader == REQUEST_PART_OF_IMAGE)
+		m_pImageEngine->getPartOfImage("Test 1", 1, 1, 1, 1, "Test 2");
 }
 
-// ///////////////////////////////////////////////////////////////////////////////
-// ///
-// /// \brief Translates request constant into string.
-// ///
-// /// \param nRequest Request descriptor
-// ///
-// ///////////////////////////////////////////////////////////////////////////////
-// const std::string ImageServerThread::requestString(const quint16& nRequest) const
-// {
-// 	switch(nRequest)
-// 	{
-// 		case REQUEST_PART_OF_IMAGE:
-// 			return "REQUEST_PART_OF_IMAGE";
-// 		case REQUEST_SETUP_SERVER:
-// 			return "REQUEST_SETUP_SERVER";
-// 		default:
-// 			return "REQUEST_UNKNOWN";
-// 	}
-// }
+///////////////////////////////////////////////////////////////////////////////
+///
+/// \brief Translates request constant into string.
+///
+/// \param nRequest Request descriptor
+///
+///////////////////////////////////////////////////////////////////////////////
+const std::string ImageServerThread::requestString(const quint16& nRequest) const
+{
+	switch(nRequest)
+	{
+		case REQUEST_PART_OF_IMAGE:
+			return "REQUEST_PART_OF_IMAGE";
+		case REQUEST_SETUP_SERVER:
+			return "REQUEST_SETUP_SERVER";
+		default:
+			return "REQUEST_UNKNOWN";
+	}
+}

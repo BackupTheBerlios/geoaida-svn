@@ -55,7 +55,7 @@ void ImageServer::incomingConnection(int nSocketDescriptor)
 {
 	std::cout << "ImageServer: New incoming connection." << std::endl;
 	
-	ImageServerThread* pThread = new ImageServerThread(nSocketDescriptor, this);
+	ImageServerThread* pThread = new ImageServerThread(nSocketDescriptor, this, m_pImageEngine);
 	connect(pThread, SIGNAL(finished()), pThread, SLOT(deleteLater()));
 	connect(pThread, SIGNAL(started() ), pThread, SLOT(threadStarted()));
 	

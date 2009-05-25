@@ -101,10 +101,10 @@ void ImageClient::connectionEstablished()
 	switch (m_nRequest)
 	{
 		case REQUEST_PART_OF_IMAGE:
-			std::cout << "ImageClient: Requesting image part from server." << std::endl;
+			std::cout << "ImageClient: Sending REQUEST_PART_OF_IMAGE." << std::endl;
 			break;
 		case REQUEST_SETUP_SERVER:
-			std::cout << "ImageClient: Requesting to setup the server." << std::endl;
+			std::cout << "ImageClient: Sending REQUEST_SETUP_SERVER." << std::endl;
 			break;
 	}
 }
