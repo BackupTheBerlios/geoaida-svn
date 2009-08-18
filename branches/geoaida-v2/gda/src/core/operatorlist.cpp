@@ -86,7 +86,7 @@ OperatorList::read(QIODevice & fp)
         Operator *op = new Operator(parser);
 #ifdef WIN32
         if (op == 0){
-          cout << "Out of Memory..13";
+          //cout << "Out of Memory..13";
           exit(1);
         }
 #endif

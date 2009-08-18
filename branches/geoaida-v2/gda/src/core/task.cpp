@@ -25,7 +25,9 @@
 
 #include "task.h"
 #include <sys/types.h>
+#ifndef WIN32
 #include <sys/wait.h>
+#endif
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
@@ -38,6 +40,9 @@
 #define WIN32_LEAN_AND_MEAN
 #include <process.h>
 #include <windows.h>
+#include <string>
+#include <tchar.h>
+#include <stdio.h>
 #undef WIN32_LEAN_AND_MEAN
 #include <qmessagebox.h>
 #endif
@@ -52,7 +57,7 @@ Task::Task(unsigned int maxJobs)
 #ifdef WIN32
   process_count= -1;
   if (timer_ == 0){
-    cout << "Out of memory..20";
+    //    cout << "Out of memory..20";
     exit(1);
   }
 #endif
@@ -85,6 +90,9 @@ int Task::execNext()
   ProcessEntry *p = jobQueue_.dequeue();
   Q_ASSERT(p);
   QString command = p->cmd_;
+#ifdef DEBUG_MSG
+  qDebug("Comando na fila::  %s\n", p->cmd_.toLatin1().constData());
+#endif
   int pid = start(p->cmd_);
   p->pid_ = pid;
   emit stateChanged(p->guiPtr_, p->pid_, p->node_->name(), p->cmd_,
@@ -93,16 +101,16 @@ int Task::execNext()
   if (pid <= 0)
     failedJobs_.enqueue(p);
   else
-#ifdef WIN32
-    process_[++process_count]=*p;
-#else
+    //#ifdef WIN32
+    //    process_[++process_count]=*p;
+    //#else
   process_.insert(pid,p);
-#endif
+  //#endif
 #ifdef DEBUG_MSG
   qDebug("Task::execNext(%d): %s\n", pid, command.toLatin1().constData());
 #endif
   if (!timerRunning_) {
-    timer_->start(200);
+    timer_->start(2000);
     timerRunning_ = true;
   }
   return pid;
@@ -116,16 +124,114 @@ int Task::start(QString command)
 #ifdef DEBUGMSG
 	qDebug("Task::start: %s\n",command.latin1());
 #endif
-pid = _spawnvp(_P_NOWAIT,  command.latin1(),  _environ );
-if (pid == -1)
-  { QString Fehler= strerror(errno);
-    Fehler.append('\n');
-    Fehler.append(command);
-#ifdef WIN32
-    QMessageBox::information(0,"Task::start:Fehler",Fehler,1);
+
+	//alterado por Dario
+	  //pid = fork();
+
+	QStringList auxiliar;
+//
+//	command.replace('\'','\"');
+//	//modificado por Dario
+//
+	command = command.simplified();
+	QStringList command_list;
+
+	for (int i = 0; i< command.length(); )
+	{
+		QString str_auxiliar = "";
+		if (command[i]=='\"')
+		{
+			i++;
+			while ((command[i]!='\"')&&(i<command.length()))
+			{
+				str_auxiliar = str_auxiliar + command[i];
+				i++;
+			}
+			i++;
+			command_list << str_auxiliar;
+		}
+		else if (command[i]==' ')
+		{
+			i++;
+//			while ((command[i]!=' ')&&(i<command.length()))
+//			{
+//				str_auxiliar = str_auxiliar + command[i];
+//				i++;
+//			}
+//			i++;
+//			command_list << str_auxiliar;
+		}
+		else
+		{
+			while ((command[i]!=' ')&&(i<command.length()))
+			{
+				str_auxiliar = str_auxiliar + command[i];
+				i++;
+			}
+			//i++;
+			command_list << str_auxiliar;
+		}
+	}
+
+	//auxiliar = QStringList::split( " ", command );
+	QString command_aux = (command_list.at(0));
+	command_list.removeAt(0);
+	command_list.removeAt(command_list.count()-1);
+	//cout << "numero de argumentos " << command_list.count() << endl;
+	for (int i= 0; i<command_list.count();i++)
+	{
+//		if(command_list.at(i)=="")
+//		{
+//			command_aux = command_aux + " \"\"";
+//		}
+//		else
+//		{
+//			command_aux = command_aux + " " + command_list.at(i).latin1();
+//		}
+
+		//cout << "argumento " << i << ": " << command_list.at(i).latin1()  <<  endl;
+	}
+
+#ifdef DEBUGMSG
+	//cout << "finalmente o comando!! " << command.latin1()  << " # primeiro: " << command_aux.latin1() << endl;
 #endif
-  }
-  return pid;
+
+
+	        QProcess *myProcess = new QProcess(this);
+	        //myProcess->setStandardOutputFile(QString("ga_bu.txt"));
+	        //myProcess->start(command_aux);
+	        myProcess->start(command_aux,command_list);
+
+			pid = (long)myProcess;
+			
+	  if (pid == -1)
+	  { QString Fehler= strerror(errno);
+	    Fehler.append('\n');
+	    Fehler.append(command);
+		#ifdef WIN32
+	    	QMessageBox::information(0,"Task::start:Fehler",Fehler,1);
+		#endif
+	  }
+	  if (pid == 0) {
+	    //system(command.latin1());
+	    exit(127);
+	  }
+
+	//pid = system(command.latin1());
+#ifdef DEBUG_MSG
+	  //cout << "comando executado: " << command.latin1() << endl;
+#endif
+//if (pid == -1)
+//  { QString Fehler= strerror(errno);
+//    Fehler.append('\n');
+//    Fehler.append(command);
+//#ifdef WIN32
+//    QMessageBox::information(0,"Task::start:Fehler",Fehler,1);
+//#endif
+//  }
+  //return pid;
+  return (long) myProcess;
+
 }
 #else
 int Task::start(QString command)
@@ -172,11 +278,16 @@ int Task::queue(QString command, INode * obj)
   ProcessEntry *p = new ProcessEntry;
 #ifdef WIN32
     if (p == 0){
-      cout << "Out of memory..20";
+      //cout << "Out of memory..20";
       exit(1);
     }
 #endif
-
+#ifdef WIN32
+  command.replace('/','\\');
+#endif
+#ifdef DEBUG_MSG
+  qDebug("Comando antes de criar processo:  %s\n", command.toLatin1().constData());
+#endif
   p->cmd_ = command;
   p->jid_ = ++jid_;
   p->pid_ = 0;
@@ -187,10 +298,12 @@ int Task::queue(QString command, INode * obj)
   emit newProcess(p);
   emit stateChanged(p->guiPtr_, p->pid_, p->node_->name(), p->cmd_,
                     systemLoad_);
-
+#ifdef DEBUG_MSG
+  //cout << "Mandou o sinal " << endl;
+#endif
 /* alte Version
 #ifdef WIN32
-	if (!maxJobs_ || process_count<maxJobs_) 
+	if (!maxJobs_ || process_count<maxJobs_)
 	{	execNext();
 	}
 #else
@@ -224,7 +337,8 @@ void Task::remove(INode * obj)
 void Task::check()
 {
 #ifdef DEBUG_MSG
-  //  qDebug("Task::check(%d)\n",process_.count());
+    qDebug("Task::check(%d)\n",process_.count());
+    qDebug("conferindo...");
 #endif
   int status;
   while (!failedJobs_.isEmpty()) {
@@ -236,33 +350,74 @@ void Task::check()
     delete p;
   }
 #ifdef WIN32
-  int pid;
-  int pidcount = 0;
-  if (process_count < 0)	
-  {
-#ifdef DEBUGMSG
-    qDebug("Task::check process_ is Empty\n");
+  QHash <int,ProcessEntry*>::const_iterator it = job_.constBegin();
+  unsigned long stWord;
+  //LPDWORD stWord;
+  int pid=0;
+  int flag=0;
+  status=-1;
+  //while(1)
+  //{
+#ifdef DEBUG_MSG
+//cout << "contagem de jobs : " << it.count() << endl;
 #endif
+  if (job_.count()>0)
+  {
+	  it = job_.constBegin();
   }
   else
-  {for (;pidcount < maxProcess; pidcount++)	
-    { pid=process_[pidcount].pid_;
-      if (pid>0)
-			{	HANDLE pidx= OpenProcess(PROCESS_ALL_ACCESS, FALSE,pid);
-				LPDWORD lpExitCode =0;
-				if (pidx!=NULL)    //Process nicht mehr zu öffnen
-				{	GetExitCodeProcess(pidx, lpExitCode);
-					CloseHandle(pidx);
-					if (*lpExitCode == STILL_ACTIVE)
-						pid=0;
-				}
-			}
-			if (pid > 0) break; //terminierter Process gefunden
-		}
-	}
+  {
+	  return;
+  }
+  while (it != job_.constEnd()) {
+	  //cout << "pid no check " << it.current()->pid_ << endl;
+	  //cout << "status no check " << ((QProcess*)it.current()->pid_)->state() << endl;
+	  if (((QProcess*)(*it)->pid_)->state()==0) //if the process ended
+	  //if (GetExitCodeProcess(((QProcess*)it.current()->pid_)->pid()->hProcess,&stWord)) //if the process ended
+	  {
+		  #ifdef DEBUG_MSG
+		  //cout << "valor do stWORD :::: " << stWord << endl;
+		  //cout << "valor do Still Active :::: " << STILL_ACTIVE << endl;
+		  #endif
+		  //if ((unsigned long) stWord != (unsigned long) STILL_ACTIVE)
+		  //{
+			  pid=(*it)->pid_;
 
+			  status=0;
+			  flag=1;
+
+			  break;
+		  //}
+	  }
+//	  if (GetExitCodeProcess(&(it.current()->pid_),stWord)) //if the process ended
+//	  {
+//		  if (*stWord != STILL_ACTIVE)
+//		  {
+//			status=0;
+//			pid=it.current()->pid_;
+//			flag=1;
+//			break;
+//		  }
+//	  }
+
+	  ++it;
+  }
+
+
+  //adicionado por Dario (como colocar o status dependente do erro?)
+
+  //int pid = WaitForSingleObject((HANDLE)job_[jid_]->pid_, 5000);
+
+  //int pid=_cwait(&status,_getpid() , _WAIT_CHILD);
+
+  //int pid=_cwait(&status,job_[jid_]->pid_ , _WAIT_CHILD);
+
+  //int pid = waitpid(-1, &status, WNOHANG);
 #else //WIN32
   int pid = waitpid(-1, &status, WNOHANG);
+#endif
+#ifdef DEBUG_MSG
+  qDebug("conferindo2...");
 #endif
   switch (pid) {
   case -1:
@@ -272,16 +427,13 @@ void Task::check()
     break;
   case 0:
 #ifdef DEBUG_MSG
-    //    qDebug("Task::check no child exited\n");
+    qDebug("Task::check no child exited\n");
 #endif
     break;
   default:
-#ifdef WIN32
-	job_.remove(process_[pidcount].jid_);
-	INode* iNode=process_[pidcount].node_;
-	process_[pidcount].pid_=0;	
-#else
+#ifdef DEBUG_MSG
    qDebug("Task::check: ********* pid %d ", pid);
+#endif
    ProcessEntry * p = process_[pid];
     if (!p) {
       qDebug("Task::check: pid %d not found in table", pid);
@@ -295,24 +447,6 @@ void Task::check()
     qDebug("Task::child(%d) child %d exited - %d left\n", p->jid_, p->pid_,
            process_.count());
 #endif
-#endif
-#ifdef WIN32
-	if (!maxJobs_ ) 
-	{	execNext();
-	}
-	int status =0;
-    if (iNode) iNode->taskFinished(process_[pidcount].pid_, status);
-	BOOLEAN weiter = FALSE;
-	for (pidcount = 0;(!weiter && (pidcount < maxProcess)); pidcount++)	
-	{	if 	(process_[pidcount].pid_ >0) //Noch aktive Processe
-			weiter = TRUE;
-	}
-	if (!weiter)
-	{	timer_->stop();
-    	timerRunning_=false;
-    }
-    break;
-#else
     if (!systemLoad())
       execNext();
     else
@@ -322,13 +456,19 @@ void Task::check()
       timerRunning_ = false;
       emit stateChanged(0, 0, "", "", systemLoad_);
     }
-    if (iNode)
+    if (iNode) {
+#ifdef DEBUG_MSG
+    	//cout << "Task::check: STATUS DO PROCESSO %d = %d " << p->pid_ << p->status_ << endl;
+#endif
       iNode->taskFinished(p->pid_, p->status_);
+    }
     emit processFinished(p->guiPtr_);
     delete p;
     break;
-#endif
   }
+#ifdef DEBUG_MSG
+  qDebug("conferindo3...");
+#endif
 }
 
 /** Wait until process pid finished   */
@@ -337,12 +477,21 @@ void Task::wait(int jid)
 #ifdef DEBUG_MSG
   qDebug("Task::wait(%d)\n", jid);
 #endif
+#ifdef WIN32
+  if (jid==0)
+    while (job_.count()!=0)
+      qApp->processEvents(QEventLoop::AllEvents,400);
+    else
+      while (job_[jid]!=0)
+        qApp->processEvents(QEventLoop::AllEvents,400);
+#else
   if (jid == 0)
     while (process_.count() != 0)
       qApp->processEvents(QEventLoop::AllEvents,400);
   else
     while (job_[jid] != 0)
       qApp->processEvents(QEventLoop::AllEvents,400);
+#endif
 
 #ifdef DEBUG_MSG
   qDebug("Task::wait(%d) done\n", jid);
@@ -358,7 +507,11 @@ void Task::setMaxJobs(int maxJobs)
 }
 
 /** No descriptions */
+#ifdef WIN32
+void Task::setGuiPtr(ProcessEntry * pEntry, Q3ListViewItem * ptr)
+#else
 void Task::setGuiPtr(ProcessEntry * pEntry, QTreeWidgetItem * ptr)
+#endif
 {
   pEntry->guiPtr_ = ptr;
 }

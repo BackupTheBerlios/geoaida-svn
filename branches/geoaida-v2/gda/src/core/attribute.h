@@ -52,7 +52,7 @@ public:
     Attribute(QString name, QString defaultValue, double min, double max,
               QString label = "", QString tip = "");
         /** Constructor for ENUM-Attribute */
-    Attribute(QString name, QString defaultValue, QStringList * options,
+    Attribute(QString name, QString defaultValue, QStringList * keys, QStringList * options,
               QString label = "", QString tip = "");
         /** Constructor for OPERATOR-Attribute */
     Attribute(QString name, QString defaultValue, QString typeOfOp,
@@ -68,12 +68,16 @@ public:
   void set(ArgDict & attribs);
   /** Returns the default value of this attribute */
   QString value();
+  /** Returns the default extension of a file attribute */
+  QString ext();
   /** Build the command string using the given attribute-values for this attribute */
   QString command(ArgDict & argdict);
   /** Type of this attribute */
   int type();
   /** Returns the options for an enum attribute, otherwise 0 */
   const QStringList& options();
+  /** Returns the keys for an enum attribute, otherwise 0 */
+  const QStringList& keys();
   /** Returns the type of operator */
   QString typeOfOperator();
   /** Returns the image type */
@@ -128,6 +132,7 @@ protected:                     // Protected attributes
     b_;
     struct
     {
+      QStringList *keys_;
       QStringList *options_;
     }
     e_;
@@ -155,6 +160,7 @@ protected:                     // Protected attributes
   /** command string for this attribute */
   QString cmd_;
   QString defaultValue_;
+  QString defaultExt_;
   QString label_;
   QString tip_;
 public: // Public attributes

@@ -67,8 +67,8 @@ QT4_ADD_RESOURCES(resourcelib ${resources})
 QT4_WRAP_UI(uilib ${uifiles})
 QT4_WRAP_CPP(moclib ${mocheaders})
 
-ADD_LIBRARY(gdagui ${sources} ${moclib} ${uilib} ${resourcelib} )
+ADD_LIBRARY(gdagui STATIC ${sources} ${moclib} ${uilib} ${resourcelib} )
 
-INSTALL(TARGETS gdagui DESTINATION lib)
+#INSTALL(TARGETS gdagui DESTINATION lib)
 #INSTALL(FILES ${headers} DESTINATION include)
 #INSTALL(FILES ${classheaders} DESTINATION include)

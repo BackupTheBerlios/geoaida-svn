@@ -28,10 +28,7 @@ const MLTagTable nodeTagTable(keywords);
 GNode::GNode()
 {
   init();
-#ifdef WIN32
-  qDebug ("GNode.parent_ = %x", parent_);
-//  parent_ = &node;
-#endif
+
 
 }
 
@@ -90,9 +87,7 @@ void GNode::read(MLParser & parser)
 {
   parser.args(&attribList_,false);
   setVars();
-#ifdef DEBUGMSG
-//  qDebug("Node: name=%s\n", (const char *) name_);
-#endif
+
   int tag = parser.tag(nodeTagTable);
   while (tag == TOK_NODE) {
     GNode *node = this->newNode();
@@ -210,6 +205,12 @@ AttribList & GNode::attribList()
 GNode *GNode::copy()
 {
   GNode *gn = new GNode(*this);
+#ifdef WIN32
+  if (gn == 0){
+    //cout << "Out of Memory..7";
+    exit(1);
+  }
+#endif
   return gn;
 }
 
@@ -217,6 +218,12 @@ GNode *GNode::copy()
 GNode *GNode::newNode()
 {
   GNode *gn = new GNode();
+#ifdef WIN32
+  if (gn == 0){
+    //cout << "Out of Memory..8";
+    exit(1);
+  }
+#endif
   return gn;
 }
 

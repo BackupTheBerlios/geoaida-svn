@@ -66,6 +66,9 @@ INode::INode(INode & node):TreeNode < INode, GNode > (node)
   execState(node.execState());
   status(node.status());
   childList_ = node.childList_;
+  temporalChildList_ = node.temporalChildList_;
+  temporalCount_ = node.temporalCount_;
+  temporalProcessing_ = node.temporalProcessing_;
   childcount_ = node.childcount_;
   aktivcount_ = node.aktivcount_;
   ordercount_ = node.ordercount_;
@@ -102,6 +105,9 @@ void INode::init()
   aktivcount_ = childcount_ = ordercount_ = aktivorder_ = 0;
   truncation_ = FALSE;
   childList_ = NULL;
+  temporalChildList_ = NULL;
+  temporalCount_ = 0;
+  temporalProcessing_ = false;
 }
 
 /** Make a copy of this INode */
@@ -110,7 +116,7 @@ GNode *INode::copy()
   GNode *gn = new INode(*this);
 #ifdef WIN32
   if (gn == 0){
-    cout << "Out of Memory..9";
+    //cout << "Out of Memory..9";
     exit(1);
   }
 #endif
@@ -123,7 +129,7 @@ GNode *INode::newNode()
   GNode *gn = new INode(0);
 #ifdef WIN32
   if (gn == 0){
-    cout << "Out of Memory..10";
+    //cout << "Out of Memory..10";
     exit(1);
   }
 #endif
@@ -182,7 +188,11 @@ void INode::taskFinished(int pid, int exit_state)
       qDebug("INode::184:clean up necessary?");
         return;
       }
-      flag = evalTopDown(pid);
+      Q_CHECK_PTR(this->sNode());
+      if (sNode_->temporal()) // GILSON: temporal processing
+    	flag = evalTemporalTopDown(pid);  
+      else
+    	flag = evalTopDown(pid);
       break;
     case BU:
       if (exit_state!=0) {
@@ -192,7 +202,11 @@ void INode::taskFinished(int pid, int exit_state)
      qDebug ( "INode::194:clean up necessary?");
         return;
       }
-      flag = evalBottomUp(pid);
+      Q_CHECK_PTR(this->sNode());
+      if (sNode_->temporal()) // GILSON: temporal processing
+    	  flag = evalTemporalBottomUp(pid);
+      else
+    	  flag = evalBottomUp(pid);
       break;
     }
 #ifdef DEBUGMSG
@@ -204,20 +218,8 @@ void INode::taskFinished(int pid, int exit_state)
       INode::analysis()->ready();
       break;
     case 0:
-#ifdef WIN32
-        analysis()->setError(true);
-        status(BU_ERROR);
-        analysis()->ready();
-#else
       delete this;
-#endif
       break;
-#ifdef WIN32
-    case -1:
-        analysis()->setError(true);
-        status(BU_ERROR);
-        analysis()->ready();
-#endif
     }
   }
   catch(FileIOException err) {
@@ -225,6 +227,143 @@ void INode::taskFinished(int pid, int exit_state)
            err.what().toLatin1().constData());
 //    emit analysis_->message(err.message());
   }
+}
+
+/** handle the results of the temporal BottomUp operator
+  * pid ==  0 -> no operator or node have no holistic operator
+  * pid == -1 -> can't start process
+  * return -1 - error
+  * return  0 - delete 'this'
+  * return  2 - processing
+  * this node (SNode) must have children
+  */
+int INode::evalTemporalBottomUp(int pid)
+{
+	// GILSON: INode cannot be root!
+//QFile fDebug("debug_evalTemporal.txt");
+//fDebug.open(IO_WriteOnly);
+//Q3TextStream strDebug(&fDebug);
+//strDebug << ".1" << endl;
+	
+  //Q3PtrList < INode > temporalNodeList; //list of temporal nodes
+  QList < INode* > temporalNodeList; //list of temporal nodes
+  //Q3PtrList < INode > *oriTemporalNodeList; //original list of temporal nodes
+  QList < INode* > *oriTemporalNodeList; //original list of temporal nodes
+  int temporalNodeCount; //number of temporal nodes
+  //INode *tNode; // auxiliary pointer to temporal nodes
+	QList<INode*>::iterator tNode;
+  
+  oriTemporalNodeList = &(parent()->children()); // list of temporal nodes
+  //for (tNode = oriTemporalNodeList->first(); tNode != 0; tNode = oriTemporalNodeList->next())
+  for (tNode = oriTemporalNodeList->begin(); tNode != oriTemporalNodeList->end(); ++tNode)
+	  temporalNodeList.append(*tNode);
+  temporalNodeCount = temporalNodeList.count(); // count of all temporal nodes
+
+//strDebug << ".2 temporalNodeCount: " << temporalNodeCount << endl;
+
+#ifdef DEBUGMSG
+  qDebug("#*  INode::evalTemporalBottomUp(%s): pid=%d (%p)\n", name().toLatin1().constData(),
+         pid, this);
+#endif
+  if (pid <= 0) {
+#ifdef DEBUGMSG
+    qDebug("#  (ERROR) evalTemporalBottomUp(%p): temporal BottomUp operator have no result \n",
+           this);
+#endif
+    //! hier noch das Icon im Browser auf rot setzen (Problem)
+    
+    for (tNode = temporalNodeList.begin(); tNode != temporalNodeList.end(); ++tNode){
+      (*tNode)->status(TRASH);
+    }
+    parent()->decrementCount();
+    return -1;
+  }
+ 
+  for (tNode = temporalNodeList.begin(); tNode != temporalNodeList.end(); ++tNode){
+//strDebug << ".3 tNode: " << tNode << endl;
+	  (*tNode)->execState(BU);
+	  analysis_->nodeChange(*tNode);
+  }
+
+  QList < INode* > &nodeList = sNode_->evalTemporalBottomUp(this);       //new composition
+  analysis_->nodeChange(this);
+   
+#ifdef DEBUGMSG
+  qDebug("#  (INFO)  nodeList count: %d\n", nodeList.count());
+#endif
+  
+  if (nodeList.isEmpty()) {
+#ifdef DEBUGMSG
+    qDebug
+      ("#  (ERROR) evalTemporalBottomUp: QList<<INode> nodeList is empty - all trash\n");
+#endif
+//strDebug << ".4 nodeList.isEmpty(): " << nodeList.isEmpty() << endl;
+    for (tNode = temporalNodeList.begin(); tNode != temporalNodeList.end(); ++tNode){
+      (*tNode)->status(TRASH);
+    }
+    parent()->decrementCount();
+    delete & nodeList;
+    return 2;
+  }
+   
+  QListIterator < INode* > it(nodeList);
+  while (it.hasNext()) {
+    INode *iNode = it.next();
+    analysis_->nodeChange(iNode);
+    parent()->childLink(iNode);
+    iNode->status(CI);
+//strDebug << ".5 iNode->status(CI): " << iNode->status() << endl;
+    //INode *el;
+	QList<INode*>::iterator el;
+    for (el = iNode->children().begin(); el != iNode->children().end(); ++el) {
+//strDebug << ".6 el->status(): " << el->status() << endl;
+      if ((*el)->status() <= MI)			
+        iNode->status(MI);
+		analysis_->nodeChange(*el);        //info to the rest of the world //GILSON: why do that? el does not change!
+     }
+  }
+   
+  INode *p = parent();          //for later access
+  do {
+	  tNode = temporalNodeList.begin();
+
+//strDebug << ".7 (tNode->children()).isEmpty(): " << (tNode->children()).isEmpty() << endl;
+//strDebug << ".7 parent()->aktivcount_: " << parent()->aktivcount_ << endl;
+//strDebug << ".7 parent()->childcount_: " << parent()->childcount_ << endl;
+//strDebug << ".7 parent()->ordercount_: " << parent()->ordercount_ << endl;
+//strDebug << ".7 parent()->aktivorder_: " << parent()->aktivorder_ << endl;
+//strDebug << ".8 tNode: " << tNode << endl;
+//strDebug << ".8 tNode->attribute(name): " << tNode->attribute("name") << endl;
+//strDebug << ".8 tNode->attribute(id): " << tNode->attribute("id") << endl;
+//strDebug << ".8 this: " << this << endl;
+//strDebug << ".8 this->attribute(name): " << this->attribute("name") << endl;
+//strDebug << ".8 this->attribute(id): " << this->attribute("id") << endl;
+
+	if (((*tNode)->children()).isEmpty()) {
+#ifdef DEBUGMSG
+	  qDebug("#  (INFO) evalTemporalBottomUp: empty list - no trash\n");  //GILSON: should indicate the node class
+#endif
+//strDebug << ".8 " << endl;
+	  parent()->childUnlink(*tNode);
+	  if ((*tNode) != this) delete (*tNode);
+	}
+	else {
+//strDebug << ".9 " << endl;
+	  (*tNode)->status(TRASH);
+	}
+    temporalNodeList.removeFirst();
+  } while (!temporalNodeList.isEmpty());
+	  
+  p->decrementCount();
+  delete & nodeList;
+
+//strDebug << ".10 (this->children()).isEmpty()" << (this->children()).isEmpty() << endl;
+//fDebug.close();
+
+  if ((this->children()).isEmpty()) 
+    return 0;                   // delete this;
+  else
+    return 2;
 }
 
 /** handle the results of the BottomUp operator
@@ -254,9 +393,11 @@ int INode::evalBottomUp(int pid)
       parent()->decrementCount();
     return -1;
   }
-
+ 
   execState(BU);
+   
   if (isRoot()) {               //! Debug
+	
     qDebug("INode::evalBottomUp: is Root");
 #ifdef WIN32
   QMessageBox::information(0,"INode","evalBottomUp: is Root",QMessageBox::Cancel);
@@ -274,10 +415,10 @@ int INode::evalBottomUp(int pid)
     switch (nodeList.count()) {
     case 0:
 #ifdef DEBUGMSG
-      qDebug("#  (ERROR) No szene found(%p)\n", this);
+      qDebug("#  (ERROR) No scene found(%p)\n", this);
 #endif
 #ifdef WIN32
-  QMessageBox::warning(0,"INode","evalBottomUp: No szene found");
+  QMessageBox::warning(0,"INode","evalBottomUp: No scene found");
 #endif
       return 1;
     case 1:{
@@ -285,11 +426,11 @@ int INode::evalBottomUp(int pid)
         qDebug("#  Root node is unique (%p)\n", this);
 #endif
         //alle bis auf die zurückgegebenen aus this entfernen
-        {                       //! eigentlich können die children direkt gelöscht werden!
+        {                       //! the children can actually be deleted immediately!
           INode *trashNode = new INode(*this);
 #ifdef WIN32
           if (trashNode == 0){
-            cout << "Out of Memory..11";
+            //cout << "Out of Memory..11";
             exit(1);
           }
 #endif
@@ -335,7 +476,7 @@ int INode::evalBottomUp(int pid)
       return -1;
     }
   }
-
+   
   if (nodeList.isEmpty()) {
 #ifdef DEBUGMSG
     qDebug
@@ -360,10 +501,10 @@ int INode::evalBottomUp(int pid)
          ++el) {
       if ((*el)->status() <= MI)
         iNode->status(MI);
-      analysis_->nodeChange(*el);        //info to the rest of the world
-    }
+      analysis_->nodeChange(*el);        //info to the rest of the world //GILSON: why do that? el does not change!
+     }
   }
-
+   
   INode *p = parent();          //for later access
   if ((this->children()).isEmpty()) {
 #ifdef DEBUGMSG
@@ -382,6 +523,7 @@ int INode::evalBottomUp(int pid)
     //return 0; // XXX TEST - fuer die Ergebnisdarstellung
     return 2;
   }
+   
 }
 
 /** handle the results of the TopDown operator
@@ -428,15 +570,15 @@ int INode::evalTopDown(int pid)
 #ifdef DEBUGMSG
 qDebug("##*** evalTopDown: %d(min) < %d(ist) < %d(max)",sNode()->minNumNode(),iNodeList.count(), sNode()->maxNumNode());
 #endif
-    if (!(sNode()->minNumNode() == 0 && sNode()->maxNumNode() == 0 )) //beide eintraege null -> alles erlaubt
-      if (iNodeList.count() < sNode()->minNumNode() || iNodeList.count() > sNode()->maxNumNode() ) {
+    if (!(sNode()->minNumNode() == 0 && sNode()->maxNumNode() == 0 )) //there are restrictions on the number of nodes
+      if (iNodeList.count() < sNode()->minNumNode() || 
+    		  (iNodeList.count() > sNode()->maxNumNode() && !(sNode()->maxNumNode() == 0))) { //GILSON
 #ifdef DEBUGMSG
 qDebug("*****  iNodeList.count %d, sNode->minNumNode %d, sNode->maxNumNode %d \n",iNodeList.count(),sNode()->minNumNode(),sNode()->maxNumNode());
 #endif
         status(MI);
         execState(BU);
         truncation(TRUE);
-        //! unlink here
         parent->status(TRASH);
         parent->truncation(TRUE);
         parent->childUnlink(this);      //!remove this temporary INode
@@ -449,7 +591,7 @@ qDebug("*****  iNodeList.count %d, sNode->minNumNode %d, sNode->maxNumNode %d \n
 
     if (iNodeList.isEmpty()) {
 #ifdef DEBUGMSG
-      qDebug("#  (warning) operator return no result - missing Instance");
+      qDebug("#  (warning) operator returned no result - missing Instance");
 #endif
       status(MI);
       execState(BU);
@@ -499,16 +641,168 @@ qDebug("*****  iNodeList.count %d, sNode->minNumNode %d, sNode->maxNumNode %d \n
   }
 }
 
+/** handle the results of the TemporalTopDown operator
+  * pid ==  0 -> no operator or node have no holistic operator
+  * pid == -1 -> can't start process
+  */
+int INode::evalTemporalTopDown(int pid)
+{
+#ifdef DEBUGMSG
+  qDebug("#*  INode::evalTemporalTopDown(%s)(%p): pid=%d Start\n",
+         name().toLatin1().constData(), this, pid);
+#endif
+  Q_CHECK_PTR(sNode_);
+  if (pid <= 0) {
+#ifdef DEBUGMSG
+    qDebug
+      ("#  (ERROR -1/0) evalTemporalTopDown: can't start process\n");
+#endif
+    analysis()->setError(true);
+    status(TD_ERROR);
+    analysis()->ready();
+    qDebug("temporalTopDown error: can't start process. Clean up necessary?");
+    return 1;
+  }
 
-/** call the TopDown operator for all childs (of this)
-  * "this" is not a last node */
-/** return
-  0 - all sub nodes are handled or node is trash
-  1 - some more sub node must be calculate
+  temporalProcessing_ = true;
+  temporalChildList_ = sNode_->evalTemporalTopDown(this); // creates list of children for this INode
+  childcount_ = temporalChildList_->count(); // count of all nodes to be processed 
+
+/*
+QFile fDebug("debug_evalTemporalTopDown.txt");
+fDebug.open(IO_Append);
+Q3TextStream strDebug(&fDebug);
+strDebug << ".1" << endl;
+strDebug << ".1 this->attribute(name): " << this->attribute("name") << endl;
+strDebug << ".1 this->attribute(id): " << this->attribute("id") << endl;
+strDebug << ".1 this->attribute(class): " << this->attribute("class") << endl;
+strDebug << ".7 this->aktivcount_: " << this->aktivcount_ << endl;
+strDebug << ".7 this->childcount_: " << this->childcount_ << endl;
+strDebug << ".7 this->ordercount_: " << this->ordercount_ << endl;
+strDebug << ".7 this->aktivorder_: " << this->aktivorder_ << endl;
+strDebug << ".7 sNode_->temporal(): " << sNode_->temporal() << endl;
+strDebug << ".7 temporalProcessing_: " << temporalProcessing_ << endl;
+fDebug.close();
 */
-/** first
-  0 - FALSE - call to handel nodes with next priority / order
-  1 - TRUE (default) - first call for this object
+  temporalChildTopDown(true);
+
+  return 2;
+}
+
+/** execTemporalTopDown - Calls the TemporalTopDown operator to create the initial hyphoteses for the conceptual children of "this" ("this" is a temporal node). */
+void INode::execTemporalTopDown()
+{
+//QFile fDebug("debug_execTemporalTopDown.txt");
+//fDebug.open(IO_Append);
+//Q3TextStream strDebug(&fDebug);
+//strDebug << ".1" << endl;
+//strDebug << ".1 this->attribute(name): " << this->attribute("name") << endl;
+//strDebug << ".1 this->attribute(id): " << this->attribute("id") << endl;
+//strDebug << ".1 this->attribute(class): " << this->attribute("class") << endl;
+//strDebug << ".7 this->aktivcount_: " << this->aktivcount_ << endl;
+//strDebug << ".7 this->childcount_: " << this->childcount_ << endl;
+//strDebug << ".7 this->ordercount_: " << this->ordercount_ << endl;
+//strDebug << ".7 this->aktivorder_: " << this->aktivorder_ << endl;
+//strDebug << ".7 sNode_->temporal(): " << sNode_->temporal() << endl;
+//strDebug << ".7 temporalProcessing_: " << temporalProcessing_ << endl;
+//fDebug.close();
+
+#ifdef DEBUGMSG
+  qDebug("#*  INode::execTemporalTopDown(%s)(%p): Start\n", 
+	 name().toLatin1().constData(),this);
+#endif
+  if (analysis()->error()) {
+    status(TD_ABORTED);
+    return;
+  }
+  execState(TD);
+  Q_CHECK_PTR(this->sNode());
+  if (sNode_->holistic())
+    sNode_->execTemporalTopDownOp(this); //start Temporal TD
+  else { //no operator, semantic network definition error
+      analysis()->setError(true);
+      status(TD_ERROR);
+      analysis()->ready();
+      qDebug("TemporalChildTopDown error: clean up necessary?");
+      return;
+   }
+}
+
+/** temporalChildTopDown - Calls the TopDown operator for all (conceptual) children of "this" ("this" is not a leaf node). */
+/** return:
+  0 - all subnodes have been handled, or node is trash
+  1 - more subnodes must be handled
+/** first:
+  0 - FALSE - call to handle nodes with next priority order
+  1 - TRUE (default) - first call for this node
+*/
+bool INode::temporalChildTopDown(bool first)
+{
+	
+#ifdef DEBUGMSG
+  qDebug("#  INode::temporalChildTopDown (%s) cont_td (this %p) first: %d", 
+	 name().toLatin1().constData(), 
+	 this, 
+	 first);
+    qDebug("##(xxx) INode::temporalChildTopDown (%s) (this %p) #childcount %d, ordercount %d, aktivorder %d, aktivcount %d, truncation %d",
+	   name().toLatin1().constData(), 
+	   this, 
+	   childcount_,
+	   ordercount_,
+	   aktivorder_,
+	   aktivcount_,
+	   truncation());
+#endif
+  //INode *inode; // auxiliary pointer
+  
+  QList<INode*>::iterator inode;
+  
+  if (first) {// first call of childTopDown for this INode
+    aktivorder_=-1; // priority (order) of nodes to be processed 
+    ordercount_=0;
+  } else { // recursive call of childTopDown for this INode
+    if (aktivcount_ > 0 || ordercount_ > 0 ) return 1; // there are more subnodes to process
+    if (childcount_ <= 0) return 0; //all sub nodes have been processed
+    if (truncation()) return 0; //all sub nodes have been processed, or node is trash
+  }
+
+  // At this point: (ordercount_ == 0) && (childcount_ > 0)
+  while (ordercount_ == 0) {
+    aktivorder_ ++;
+    for (inode = temporalChildList_->begin(); inode != temporalChildList_->end(); ++inode)
+      if((*inode)->sNode_->order() == aktivorder_) ordercount_++; // counts nodes with same priority (order)
+  }
+#ifdef DEBUGMSG
+    qDebug("## INode::temporalChildTopDown (%s) (this %p) #childs %d, ordercount %d, aktivorder %d, aktivcount_ %d",
+	   name().toLatin1().constData(), 
+	   this, 
+	   childcount_, 
+	   ordercount_, 
+	   aktivorder_,
+	   aktivcount_);
+#endif
+
+  for (inode = temporalChildList_->begin(); inode != temporalChildList_->end(); ++inode) {
+    if ((*inode)->sNode_->order() == aktivorder_) { //for each child concept (of the current order), creates a new hypothesis
+      incrementCount(); //einer mehr in der queue -> siehe decrementCount() /GILSON: increments aktivcount_
+      childcount_--; ordercount_--; //aktuelle wird gleich bearbeitet
+      (*inode)->status(HI);
+      (*inode)->execState(TD);
+      childLink(*inode);         // mount new node in the tree
+      (*inode)->execTopDown(first);     //start topdown operator
+      analysis_->nodeChange(0); //info to the rest of the world
+    }
+  }
+  return 1;
+}
+
+/** childTopDown - Calls the TopDown operator for all (conceptual) children of "this" ("this" is not a leaf node). */
+/** return:
+  0 - all subnodes have been handled, or node is trash
+  1 - more subnodes must be handled
+/** first:
+  0 - FALSE - call to handle nodes with next priority order
+  1 - TRUE (default) - first call for this node
 */
 bool INode::childTopDown(bool first)
 {
@@ -525,30 +819,47 @@ bool INode::childTopDown(bool first)
 	 aktivcount_,
 	 truncation());
 #endif
-  if (first) {// first call of 'childTopDown' for this object
-    childList_ = &sNode_->children(); // liste der subknoten erzeugen
-    childcount_ = childList_->count(); // anzahl aller (noch) zu bearbeitenden knoten
-    aktivorder_=-1; // prioritaet der zu bearbeitenden nodes
-    if (childcount_ == 0) { //no sub nodes
-      aktivcount_ = 0;
-      execBottomUp();             //execState(BU);// BottomUp
+
+//QFile fDebug("debug_childTopDown.txt");
+//fDebug.open(IO_Append);
+//Q3TextStream strDebug(&fDebug);
+//strDebug << ".1" << endl;
+//strDebug << ".1 this->attribute(name): " << this->attribute("name") << endl;
+//strDebug << ".1 this->attribute(id): " << this->attribute("id") << endl;
+//strDebug << ".1 this->attribute(class): " << this->attribute("class") << endl;
+//strDebug << ".7 this->aktivcount_: " << this->aktivcount_ << endl;
+//strDebug << ".7 this->childcount_: " << this->childcount_ << endl;
+//strDebug << ".7 this->ordercount_: " << this->ordercount_ << endl;
+//strDebug << ".7 this->aktivorder_: " << this->aktivorder_ << endl;
+//strDebug << ".7 sNode_->temporal(): " << sNode_->temporal() << endl;
+//strDebug << ".7 temporalProcessing_: " << temporalProcessing_ << endl;
+//strDebug << ".7 first: " << first << endl;
+//fDebug.close();
+    
+  //SNode *el; // auxiliary pointer
+  QList<SNode*>::iterator el;
+  if (first) {// first call of childTopDown for this INode
+    childList_ = &(sNode_->children()); // creates list of children for this INode
+    childcount_ = childList_->count(); // count of all nodes to be processed 
+    aktivorder_=-1; // priority (order) of nodes to be processed 
+    if (childcount_ == 0) { // no sub nodes: leaf node
+      aktivcount_ = 0; // indicates no more top-down activity for this INode (ok to start bottom-up processing)
+      execBottomUp(); //executes bottom-up operator
       return 0;
     }
-  } else { // recursiv call of 'childTopDown' for this object
-    if (aktivcount_ > 0 || ordercount_ > 0 ) return 1;
-    if (childcount_ <= 0) return 0;//all sub nodes are handled
-    if (truncation()) return 0; //all sub nodes are handelt or node is trash
+  } else { // recursive call of childTopDown for this INode
+    if (aktivcount_ > 0 || ordercount_ > 0 ) return 1; // there are more subnodes to process
+    if (childcount_ <= 0) return 0; //all sub nodes have been processed
+    if (truncation()) return 0; //all sub nodes have been processed, or node is trash
   }
 
-  //Praemisse (ordercount_ == 0) && (childcount_ > 0)
+  // At this point: (ordercount_ == 0) && (childcount_ > 0)
   while (ordercount_ == 0) {
     aktivorder_ ++;
-    QList<SNode*>::iterator el; // hilfspointer
-    for (el = childList_->begin(); 
-	 el != childList_->end(); 
-	 ++el)
-      if((*el)->order() == aktivorder_) ordercount_++; // anzahl der nodes der aktuellen prioritaet
+    for (el = childList_->begin(); el != childList_->end(); ++el)
+      if((*el)->order() == aktivorder_) ordercount_++; // counts nodes with same priority (order)
   }
+
 #ifdef DEBUGMSG
     qDebug("## INode::childTopDown (%s) (this %p) #childs %d, ordercount %d, aktivorder %d, aktivcount_ %d",
 	   name().toLatin1().constData(), 
@@ -559,42 +870,30 @@ bool INode::childTopDown(bool first)
 	   aktivcount_);
 #endif
 
-    INode *inode;
-    QList<SNode*>::iterator el; // hilfspointer
-    for (el = childList_->begin(); 
-	 el != childList_->end(); 
-	 ++el) {
-      if (truncation()) { //bedingungen nicht mehr erfüllt
-        aktivcount_ = 0;
-        execBottomUp();             //execState(BU);// BottomUp
-        return 0;
-      }
-      if ((*el)->order() == aktivorder_) {
-        incrementCount(); //einer mehr in der queue -> siehe decrementCount()
-        childcount_--; ordercount_--; //aktuelle wird gleich bearbeitet
-        inode = new INode(*el);    //new INode
-#ifdef WIN32
-         if (inode == 0){
-          cout << "Out of Memory..12";
-          exit(1);
-          }
-#endif
-        Q_CHECK_PTR(inode);
-        inode->status(HI);
-        inode->execState(TD);
-        childLink(inode);         // remount node in the tree
-        inode->execTopDown();     //start topdown operator
-        //childcount_--; ordercount_--; //aktuelle wird gleich bearbeitet
-//!MP25.07.2001 inode might be deleted
-//!      analysis_->nodeChange(inode);  //info to the rest of the world
-        analysis_->nodeChange(0);
-      }
+  INode *inode;
+  for (el = childList_->begin(); el != childList_->end(); ++el) {
+    if (truncation()) { //no longer meets (min, max) conditions
+      aktivcount_ = 0;
+      execBottomUp();
+      return 0;
     }
+    if ((*el)->order() == aktivorder_) { //for each child concept (of the current order), creates a new hypothesis
+      incrementCount(); //einer mehr in der queue -> siehe decrementCount() /GILSON: increments aktivcount_
+      childcount_--; ordercount_--; //aktuelle wird gleich bearbeitet
+      inode = new INode(*el);    //new INode
+      Q_CHECK_PTR(inode);
+      inode->status(HI);
+      inode->execState(TD);
+      childLink(inode);         // mount new node in the tree
+      inode->execTopDown(first);     //start topdown operator
+      analysis_->nodeChange(0); //info to the rest of the world
+    }
+  }
   return 1;
 }
 
 /** call the TopDown Operator of the SNode  */
-void INode::execTopDown()
+void INode::execTopDown(bool first)
 {
 #ifdef DEBUGMSG
   qDebug("#*  INode::execTopDown(%s)(%p): Start\n", name().toLatin1().constData(),this);
@@ -608,17 +907,43 @@ void INode::execTopDown()
   }
   execState(TD);
   Q_CHECK_PTR(this->sNode());
-  if (sNode_->holistic())
-    sNode_->execTopDownOp(this);        //start TD
-  else if (!sNode_->attributeBool("td_multiclass"))
-    taskFinished(0,0);
-  else {
-    parent()->decrementCount();
-//      status(TRASH);
-    parent()->childUnlink(this);        //!remove this temporary INode
-    delete this;
-  }
+  if (sNode_->temporal()) { // GILSON: temporal processing
+    if ((isLast()) || (isRoot())) { // temporal node cannot be leaf nor root
+      analysis()->setError(true);
+      status(TD_ERROR);
+      analysis()->ready();
+      qDebug ( "Semantic Net Error: Temporal node cannot be leaf nor root!");
+      return;
+    }
+    else { // change directly to partial instance: no structural TD processing at temporal node
+      // next lines correspond to a dummy topdown to generate hypothesis of temporal node
+      configure(parent()->attribList());
+      attribute("class", sNode_->name());
+      attribute("name", sNode_->name() + QString().sprintf("_%03d", attributeInt("id")));
+      labelImage_ = (parent()->labelImage_)->shallowCopy();
+      status(PI);
 
+      if (first) {// first temporal node, proceed like normal node
+    	  temporalProcessing_ = false;
+    	  childTopDown();
+      }
+      else {
+    	  temporalProcessing_ = true;
+    	  execTemporalTopDown();
+      }
+    }
+  }
+  else { // regular, non temporal processing
+	  if (sNode_->holistic())
+	    sNode_->execTopDownOp(this);        //start TD
+	  else if (!sNode_->attributeBool("td_multiclass"))
+	    taskFinished(0,0);
+	  else { //no operator, remove initial hypothesis
+	    parent()->decrementCount();
+	    parent()->childUnlink(this);
+	    delete this;
+	  }
+  }
 }
 
 /** returns the corresponding SNode */
@@ -657,6 +982,10 @@ QString & INode::output()
   *  "this" in not a last node*/
 int INode::decrementCount()
 {
+  bool doneWithNode;
+  int temporalProcessed;
+  int temporalTotal;
+
 #ifdef DEBUGMSG
   qDebug("#  decrementCount(%s)(%p): Start, aktivcount = %d\n",
          name().toLatin1().constData(), this, aktivcount_);
@@ -670,11 +999,43 @@ int INode::decrementCount()
   }
 
   aktivcount_--;
-  if (!childTopDown(FALSE)) {//return FALSE when all sub nodes are handeled or node is trash
+  
+//QFile fDebug("debug_decrementCount.txt");
+//fDebug.open(IO_Append);
+//Q3TextStream strDebug(&fDebug);
+//strDebug << ".1" << endl;
+//strDebug << ".1 this->attribute(name): " << this->attribute("name") << endl;
+//strDebug << ".1 this->attribute(id): " << this->attribute("id") << endl;
+//strDebug << ".1 this->attribute(class): " << this->attribute("class") << endl;
+//strDebug << ".7 this->aktivcount_: " << this->aktivcount_ << endl;
+//strDebug << ".7 this->childcount_: " << this->childcount_ << endl;
+//strDebug << ".7 this->ordercount_: " << this->ordercount_ << endl;
+//strDebug << ".7 this->aktivorder_: " << this->aktivorder_ << endl;
+//strDebug << ".7 sNode_->temporal(): " << sNode_->temporal() << endl;
+//strDebug << ".7 temporalProcessing_: " << temporalProcessing_ << endl;
+//fDebug.close();
+
+  if ((sNode_->temporal()) && (temporalProcessing_)) // GILSON: temporal processing if 'childList_.isEmpty()' although temporal node: regular TD processing
+	doneWithNode = !temporalChildTopDown(false);
+  else
+	doneWithNode = !childTopDown(false);
+  
+  if (doneWithNode) { //all sub nodes have been handled or node is trash
     if (truncation() && !isRoot()) {
       parent()->decrementCount();
-    } else {
-      execBottomUp();// jetzt geht es wieder nach oben
+    } 
+    else {
+      if (sNode_->temporal()) {
+    	parent()->temporalCount_++;
+    	temporalProcessed = parent()->temporalCount_; // count of temporal nodes to be processed
+    	temporalTotal = parent()->childList_->count(); // total number of temporal nodes 
+    	if (temporalProcessed == temporalTotal)  // check if execTemporalBottomUp() can be executed
+    	  execTemporalBottomUp();  // jetzt geht es wieder nach oben
+    	else if (ordercount_==0) // there are temporal nodes with different order -> temporal sequence
+    		parent()->decrementCount();
+      }
+      else
+	      execBottomUp(); // jetzt geht es wieder nach oben, jawohl!
     }
     return 0;
   }
@@ -708,6 +1069,37 @@ void INode::execBottomUp()
   Q_CHECK_PTR(this->sNode());
   if (sNode_)
     sNode_->execBottomUpOp(this);       //start BU
+}
+
+/** Execute the temporalBottomUp operator */
+void INode::execTemporalBottomUp()
+{
+#ifdef DEBUGMSG
+  qDebug("#*  INode::execTemporalBottomUp(%s)(%p): Start\n", 
+	 name().toLatin1().constData(), 
+	 this);
+#endif
+
+	QList<INode*> auxList = (this->parent())->children();
+
+  if (analysis()->error()) {
+	  QList<INode*>::iterator itSibling;
+	  for (itSibling = auxList.begin(); itSibling != auxList.end(); ++itSibling) {	
+		INode *iNode = *itSibling;
+		iNode->status(BU_ABORTED);
+	  }
+	  return;
+  }
+
+  // execState(BU);
+  QList <INode*>::iterator itSibling;
+  for (itSibling = auxList.begin(); itSibling != auxList.end(); ++itSibling) {	
+	INode *iNode = *itSibling;
+	iNode->execState(BU);
+  }
+  Q_CHECK_PTR(this->sNode());
+  if (sNode_)
+    sNode_->execTemporalBottomUpOp(this);       //start BU
 }
 
 /** return TRUE if the Node is the last Node (leaf node) or the last node to analyze otherwise return FALSE  */
@@ -793,7 +1185,7 @@ void INode::setGeoRegion(float gW, float gN, float gE, float gS, INode* parent)
     labelImage_->geoSouth(gS);
   }
 #endif
-  assert(labelImage_);
+  Q_ASSERT(labelImage_);
   labelImage_->load();
   if (!attribList_.contains("geoNorth") || attribList_.value("geoNorth").isEmpty()) { // geo coordinates are not set
     qDebug("INode::setRegion: geo ausrechnen");
@@ -811,35 +1203,19 @@ void INode::setGeoRegion(float gW, float gN, float gE, float gS, INode* parent)
 
     labelImage_->picBBox(geoWest, geoNorth, geoEast, geoSouth, llx, lly, urx,
                          ury);
-#ifdef WIN32
-//c:\eigenedateien\cpptest\geoaida\gda\gda\core\inode.cpp(739) : error C2664: 'replace' : Konvertierung des Parameters 2 von 'class QString' in 'const class QString *' nicht moeglich
-//        Kein benutzerdefinierter Konvertierungsoperator verfuegbar, der diese Konvertierung durchfuehren kann, oder der Operator kann nicht aufgerufen werden
-    attribList_.replace("llx",&QString().sprintf("%d", llx));
-    attribList_.replace("lly",&QString().sprintf("%d", lly));
-    attribList_.replace("urx",&QString().sprintf("%d", urx));
-    attribList_.replace("ury",&QString().sprintf("%d", ury));
-#else
     attribList_.replace("llx",QString().sprintf("%d", llx));
     attribList_.replace("lly",QString().sprintf("%d", lly));
     attribList_.replace("urx",QString().sprintf("%d", urx));
     attribList_.replace("ury",QString().sprintf("%d", ury));
-#endif
   }
   else {
     //! Todo: calculate the labelimage geo coordinates from the given geo coordinates
     //        and label boundingbox
   }
-#ifdef WIN32
-  attribList_.replace("geoNorth",&QString().sprintf("%f", geoNorth));
-  attribList_.replace("geoSouth",&QString().sprintf("%f", geoSouth));
-  attribList_.replace("geoWest", &QString().sprintf("%f", geoWest));
-  attribList_.replace("geoEast", &QString().sprintf("%f", geoEast));
-#else
   attribList_.replace("geoNorth",QString().sprintf("%f", geoNorth));
   attribList_.replace("geoSouth",QString().sprintf("%f", geoSouth));
   attribList_.replace("geoWest", QString().sprintf("%f", geoWest));
   attribList_.replace("geoEast", QString().sprintf("%f", geoEast));
-#endif
   qDebug("INode::setGeoRegion: %s file=%s(%f,%f,%f,%f) bbox=(%5d, %5d, %5d %5d) geo=(%f, %f, %f, %f) res=(%f, %f)",
 	 name.toLatin1().constData(), file.toLatin1().constData(), 
 	 gW, gN, gE, gS, llx, lly, urx, ury,

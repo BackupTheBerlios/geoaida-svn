@@ -42,11 +42,16 @@ public:
   void append(QString filename);
   /** Delete the stored files */
   void deleteFiles();
+  /** Delete all temp files */
+  void deleteAllFiles();
   static QString getTmpDir();
   static QString getTmpDirPID();
+  /** Returns PID of the main process */
+  static unsigned int getPID();
   /** creates the relDir in absDir and returns the new absDir */
   static QString mkdir(QString absDir, QString relDir);
   static QString& prefix(QString prefix="");
+  void setPrefix(QString prefix);
   static QString prefix_;
 };
 

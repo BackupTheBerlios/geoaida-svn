@@ -69,7 +69,7 @@ public:
   /** Sets the filename for operator output    */
   void output(QString val);
   /** Gets the filename for operator output    */
-    QString & output();
+  QString & output();
   /** set the analysis status of the INode {TRASH, MI, IH, CI, PI, HI}*/
   void status(IType st)
   {
@@ -81,7 +81,11 @@ public:
   {
     return status_;
   };
-
+  /** indicates if children of this temporal INode node are under temporal processing (top-down) */
+  bool temporalProcessing(void)
+  {
+    return temporalProcessing_;
+  };
   /** Sets the pointer to the analyze class */
   static void analysis(Analysis * an)
   {
@@ -109,9 +113,13 @@ public:
     return execState_;
   };
   /** call the TopDown Operator of the SNode  */
-  void execTopDown();
+  void execTopDown(bool first = FALSE);
   /** Execute the bottomUp operator */
   void execBottomUp();
+  /** call the TemporalTopDown operator to create the initial hyphoteses for the conceptual children of "this" ("this" is a temporal node). */
+  void execTemporalTopDown();
+  /** Execute the temporalBottomUp operator */
+  void execTemporalBottomUp();  
   /** decrement the aktiv counter * aktiv TopDown child operators
     * -1 -> ERROR (aktivcount < 0)
     *  0 -> aktivcount == 0
@@ -143,19 +151,34 @@ protected:                     // Protected attributes
     * this node must have children
     */
   int evalBottomUp(int pid);
-        /** handle the results of the TopDown operator
+  /** handle the results of the temporal BottomUp operator
+    * pid ==  0 -> no operator or node have no holistic operator
+    * pid == -1 -> can't start process
+    * return -1 - error
+    * return  0 - delete 'this'
+    * return  2 - processing
+    * this node (SNode) must have children
+    */
+  int evalTemporalBottomUp(int pid);
+  /** handle the results of the TopDown operator
     * pid ==  0 -> no operator or node have no holistic operator
     * pid == -1 -> can't start process
     */
   int evalTopDown(int pid);
+  /** handle the results of the TemporalTopDown operator
+    * pid ==  0 -> no operator or node have no holistic operator
+    * pid == -1 -> can't start process
+    */
+  int evalTemporalTopDown(int pid);
   /** call the TopDown operator for all childs (of this)*/
   bool childTopDown(bool first = TRUE);
-  /** return TRUE if the Node is the last Node (leaf node) or the last node to analyze otherwise return FALSE  */
+  /** call the TopDown operator for all (conceptual) children of a temporal node*/
+  bool temporalChildTopDown(bool  first = TRUE);
+  /** return TRUE if the Node is leaf node of the net otherwise return FALSE  */
   bool isLast();
   /** return TRUE if the Node is the root node of the net otherwise return FALSE  */
   bool isRoot();
-
-
+  
   /** pointer to the SNode this INode is type of */
   SNode *sNode_;
   /** Holds the filename for operator output */
@@ -170,16 +193,25 @@ protected:                     // Protected attributes
   GeoImage *labelImage_;
   /** pointer to the analyze */
   static Analysis *analysis_;
-  /** anzahl der nodes die bei td noch ausgefüht werden müssen. */
+  /** anzahl der nodes die bei td noch ausgeführt werden müssen. */
+  /** number of nodes not yet processed in top-down step. */
   int childcount_;
-  /** anzahl der nodes die bei td für die aktuelle priorität noch ausgefüht werden müssen. */
+  /** number of child temporal nodes already processed. Only used for parents of temporal nodes. */
+  int temporalCount_;
+  /** anzahl der nodes die bei td für die aktuelle priorität noch ausgeführt werden müssen. */
+  /** number of nodes of the current priority not yet processed in top-down step. */
   int ordercount_;
   /** Memo für die Priorität, wird von 0 ab hochgezählt */
+  /** priority counter, starts from 0 */
   int aktivorder_;
   /** flag to handle min and max restriction of snode definition */
   bool truncation_;
   /** childlist of 'this' used in childTopDown */
   QList < SNode* > *childList_;
+  /** flag to indicate that children of a temporal node will actually undergo temporal processing  */
+  bool temporalProcessing_;
+  /** tempChildlist of 'this' used in temporalChildTopDown */
+  QList <INode*> *temporalChildList_;
 
 };
 

@@ -28,23 +28,18 @@
 #include <stdlib.h> // für exit
 #include <QMessageBox>
 #endif
+
+#include <QXmlStreamReader>
+
 //#define DEBUG_MSG
 
-static QString GetTmpFilename(QString prefix = "", QString path = "")
+#warning do we need tdCounter_ and buCounter_ ?
+static QString GetTmpFilename(QString prefix = "", QString path = ".")
 {
   static int no = 0;
   static QString dir = CleanUp::getTmpDirPID();
-#ifdef WIN32
-  if (!path.isEmpty())
-    return dir + "\\" + path + QString().sprintf("%04d-%s", no++,
-                                                prefix.toLatin1().constData());
-  return dir + QString().sprintf("\\%04d-%s", no++, prefix.toLatin1().constData());
-#else
-  if (!path.isEmpty())
-    return dir + "/" + path + QString().sprintf("%04d-%s", no++,
-                                                prefix.toLatin1().constData());
-  return dir + QString().sprintf("/%04d-%s", no++, prefix.toLatin1().constData());
-#endif
+  QDir tmppath(dir+"/"+path+"/"+QString().sprintf("%04d-", no++)+prefix);
+  return tmppath.path();
 }
 
 SNode::SNode()
@@ -61,6 +56,7 @@ SNode::SNode(SNode & node):TreeNode < SNode, GNode > (node)
 {
 //  min_ = node.min_;
 //  max_ = node.max_;
+#warning call init() here?
   tdCounter_ = 0;
   buCounter_ = 0;
   genericAttributes_ = node.genericAttributes_;
@@ -82,6 +78,8 @@ void SNode::init()
 {
 //      GNode::init();
 //  order_=0;
+  tdCounter_=0;
+  buCounter_=0;
   refCounter_=0;
   topDown_ = 0;
   bottomUp_ = 0;
@@ -90,50 +88,55 @@ void SNode::init()
 //  max_ = 1;
   sections_ += "bottomUp";
   sections_ += "topDown";
+//  GILSON --
+//  sections_+="evaluation";
   sections_+="evaluation";
   genericAttributes_.insert("resultNode",
                             new Attribute("resultNode", "FALSE", Attribute::BOOL,
-                                          "ResultNode",
-                                          "If this attribute is activated this node will be handled as a result/leaf node"));
+                                          "Result node",
+                                          "If this attribute is activated this node will be handled as a leaf node"));
   genericAttributes_.insert("name",
                             new Attribute("name", "name_", Attribute::STRING,
                                           "Name", "Name of Node"));
   genericAttributes_.insert("class",
                             new Attribute("class", "", Attribute::STRING,
                                           "Class",
-                                          "Class of Node<br>This is used for selecting nodes resulting from the topdown operator call"));
+                                          "Class of node<br>This is used for selecting nodes resulting from the topdown operator call"));
   genericAttributes_.insert("order",
-                            new Attribute("order", "0", 0, 99999, "order",
-                                          "node priority, lowest entry works first (using min and max entry)"));
+                            new Attribute("order", "0", 0, 99999, "Order",
+                                          "Node processing priority, lowest entry processed first"));
   genericAttributes_.insert("min",
-                            new Attribute("min", "0", 0, 99999, "min",
-                                          "minimal number of needed INodes"));
+                            new Attribute("min", "0", 0, 99999, "Min",
+                                          "Minimal number of needed hypotheses"));
   genericAttributes_.insert("max",
-                            new Attribute("max", "0", 0, 99999, "max",
-                                          "maximal number of needed INodes"));
+                            new Attribute("max", "0", 0, 99999, "Max",
+                                          "Maximal number of needed hypotheses"));
   genericAttributes_.insert("topDown",
-                            new Attribute("topDown", "dummyTopDown",
-                                          "topdown", "TopDownOperator"));
+                            new Attribute("topDown", "Dummy TopDown",
+                                          "topdown", "TopDown Operator"));
   genericAttributes_.insert("bottomUp",
-                            new Attribute("bottomUp", "dummyBottomUp",
-                                          "bottomup", "BottomUpOperator"));
+                            new Attribute("bottomUp", "Dummy BottomUp",
+                                          "bottomup", "BottomUp Operator"));
   genericAttributes_.insert("evaluation",
                             new Attribute("giscomp", "***No Operator***",
                                           "giscomp", "EvaluationOperator"));
   genericAttributes_.insert("color",
                             new Attribute("color", "255:255:255",
                                           Attribute::COLOR, "Color",
-                                          "color to show this kind of node in the result image"));
-  attribute("color", "255:255:255");
+                                          "Color that identifies occurrences of this concept in the result image"));
   genericAttributes_.insert("td_multiclass",
-                            new Attribute("td_multiclass", "",
+                            new Attribute("td_multiclass", "FALSE",
                                           Attribute::BOOL,
-                                          "TopDown Multi Class",
+                                          "TopDown Multi-Class",
                                           "<ul>"
-                                          "<li>Multi Class Off- Operator only detects one class</li>"
-                                          "<li>Multi Class On - Operator detects multiple classes</li>"
+                                          "<li>Multi-Class Off- Operator only detects one class</li>"
+                                          "<li>Multi-Class On - Operator detects multiple classes</li>"
                                           "</ul>"));
-  attribute("td_multiclass", "0");
+  genericAttributes_.insert("temporal_node",
+                            new Attribute("temporal_node", "FALSE",
+                                          Attribute::BOOL,
+                                          "Temporal node",
+                                          "Indicates whether or not it is a temporal node."));
   {
     QStringList *o = new QStringList();
     (*o) += "TopDown";
@@ -141,7 +144,7 @@ void SNode::init()
     (*o) += "DebugInfo";
     (*o) += "NoDebugInfo";
     genericAttributes_.insert("debug",
-                              new Attribute("debug", "DebugInfo", o, "Debug",
+                              new Attribute("debug", "DebugInfo", 0, o, "Debug",
                                             "<ul>"
                                             "<li>TopDown - Start single step when topdown is executed</li>"
                                             "<li>BottomUp - Start single step when bottomup is executed</li>"
@@ -224,7 +227,7 @@ GNode *SNode::copy()
   GNode *gn = new SNode(*this);
 #ifdef WIN32
   if (gn == 0){
-    cout << "Out of Memory..15";
+    //cout << "Out of Memory..15";
     exit(1);
   }
 #endif
@@ -237,7 +240,7 @@ GNode *SNode::newNode()
   GNode *gn = new SNode();
 #ifdef WIN32
   if (gn == 0){
-    cout << "Out of Memory..16";
+    //cout << "Out of Memory..16";
     exit(1);
   }
 #endif
@@ -252,7 +255,7 @@ void SNode::setVars()
 //  MLParser::setInt(max_, &attribList_, "max");
   QString val;
   val = "";
-  MLParser::setString(val, &attribList_, "topDown");
+  MLParser::setString(val, &attribList_, "topdown");
   if (!val.isEmpty())
     topDown_ = operatorList_[val];
 #define OLD_NET_COMPATIBILITY
@@ -260,8 +263,9 @@ void SNode::setVars()
   if (topDown_) {
     AttributeDictionary *attribs = topDown_->attributeDesc();
     if (attribs) {
-      AttributeDictionary::const_iterator it=attribs->constBegin();
-      for (; it!=attribs->constEnd(); ++it) {
+      for (AttributeDictionary::const_iterator it=attribs->constBegin(); 
+	   it!=attribs->constEnd(); 
+	   ++it) {
 	Attribute* attrib= *it;
         QString name = attrib->name();
 	if (attribList().contains(name)) {
@@ -275,15 +279,16 @@ void SNode::setVars()
   }
 #endif
   val = "";
-  MLParser::setString(val, &attribList_, "bottomUp");
+  MLParser::setString(val, &attribList_, "bottomup");
   bottomUp_ = operatorList_[val];
 
 #ifdef OLD_NET_COMPATIBILITY
   if (bottomUp_) {
     AttributeDictionary *attribs = bottomUp_->attributeDesc();
     if (attribs) {
-      AttributeDictionary::const_iterator it=attribs->constBegin();
-      for (; it!=attribs->constEnd(); ++it) {
+      for (AttributeDictionary::const_iterator it=attribs->constBegin();
+	   it!=attribs->constEnd(); 
+	   ++it) {
 	Attribute* attrib= *it;
         QString name = attrib->name();
 	if (attribList().contains(name)) {
@@ -314,13 +319,81 @@ void SNode::execOperator(Operator * op, INode * iNode, AttribList & attribs,
   }
   CleanUp::mkdir(CleanUp::getTmpDirPID(), path);
   iNode->output(GetTmpFilename("output", path));
-  attribs.replace("output", &(iNode->output()));
-#ifdef WIN32
-  attribs.replace("tmpdir", &CleanUp::getTmpDirPID());
-#else
+  attribs.replace("output", iNode->output());
   attribs.replace("tmpdir", CleanUp::getTmpDirPID());
-#endif
+	
+	//Returns the process pid
+	unsigned int pid = cleanUp_.getPID();
+
+	//Rodrigo
+
+		QString projectFile;
+		QString fuzzysetsFile;
+		QString fileName = "./" + QString().setNum(pid) + ".tmp";
+
+		 if (fileName.isEmpty())
+			 return;
+
+		 QFile file1(fileName);
+		 if (!file1.open(QFile::ReadOnly | QFile::Text)) {
+			 return;
+		 }
+
+		QXmlStreamReader reader(&file1);
+
+		while (!reader.atEnd())
+		{
+			 reader.readNext();
+
+			 if (reader.error())
+			 {
+				 return;
+			 } else
+				 if (reader.isStartElement() && reader.name().toString() == "geoproject") {
+					 projectFile = reader.attributes().value("file").toString();
+				 } else {
+				 }
+		}
+		
+		file1.close();
+
+		/* Read project file */
+
+		if (projectFile.isEmpty())
+			return;
+
+		QFile file3(projectFile);
+
+		if (!file3.open(QFile::ReadOnly | QFile::Text)) {
+			 return;
+		 }
+
+		QXmlStreamReader reader3(&file3);
+
+		while (!reader3.atEnd())
+		{
+			 reader3.readNext();
+
+			 if (reader3.error())
+			 {
+				 return;
+			 } else
+				 if (reader3.isStartElement() && reader3.name().toString() == "fuzzysets") {
+					 fuzzysetsFile = reader3.attributes().value("file").toString();
+				 }
+		}
+		
+		file3.close();
+
+  attribs.replace("fuzzysets", new QString(fuzzysetsFile));
+
+//Rodrigo
+  
+  
   QString cmd=op->command(attribs);
+  
+ cmd.replace("\n"," "); //GILSON: must replace new line, or else Windows batch file will not run properly 
+
   QString stdout_file=iNode->output()+".stdout";
   QString stderr_file=iNode->output()+".stderr";
   QFile fp(iNode->output()+".cmd");
@@ -340,8 +413,9 @@ static void putAttribs(SNode & snode, AttribList & attribs, QString section)
   AttributeDictionary *attribDict = snode.attributeDesc(section);
   AttribList & attribList = snode.attribList();
   if (attribDict) {
-    AttributeDictionary::const_iterator it=attribDict->constBegin();
-    for (; it!=attribDict->constEnd(); ++it) {
+    for (AttributeDictionary::const_iterator it=attribDict->constBegin(); 
+	 it!=attribDict->constEnd(); 
+	 ++it) {
       QString name = (*it)->name();
       if (attribList.contains((*it)->fullname()))
 	attribs.replace(name, attribList.value((*it)->fullname()));
@@ -363,28 +437,30 @@ void SNode::execTopDownOp(INode * iNode)
 #endif
   Q_ASSERT(iNode->parent());
 //((*(TreeGNode*)(&(*(TreeNode<GNode,TreeGNode>*)(&(*(GNode*)(&(*(TreeNode<INode,GNode>*)(&*iNode))))))))).parent_
+
 //Hier Absturz weil parent = 0
 //Darf nur aus Analyze::start() gestartet werden, nicht aus MainGui::Start()!
-#ifdef WIN32
+
   INode *parent = 0;
+
   if (iNode)
-    if (iNode->parent())
-      parent = iNode->parent();
+    if (iNode->parent()) {
+    	if (((this->parent())->temporal()) && ((iNode->parent())->temporalProcessing()))
+    		parent = iNode; //if iNode is a result of temporal top-down processing, its own info will be used 
+    	else
+    		parent = iNode->parent();
+    }
     else
       parent = iNode;
   else return;
-  if (parent->isA("SNode")) //rootNode
-    QMessageBox::information(0,"SNode","Problem",QMessageBox::Default);
-#else
-  INode *parent = iNode->parent();
-#endif
-
+  
   AttribList attribs(parent->attribList());
   AttributeDictionary *topDownAttrib = attributeDesc("topDown");
   // now generate image specific attributes
   if (topDownAttrib) {
-    AttributeDictionary::const_iterator it=topDownAttrib->constBegin();
-    for (; it!=topDownAttrib->constEnd(); ++it) {
+    for (AttributeDictionary::const_iterator it=topDownAttrib->constBegin();
+	 it!=topDownAttrib->constEnd(); 
+	 ++it) {
       Attribute *attrib=*it;
       switch (attrib->type()) {
       case Attribute::IMAGE:{
@@ -392,8 +468,9 @@ void SNode::execTopDownOp(INode * iNode)
           QString keyName = attrib->name();
           GeoImage *image = geoImageList->geoImage(imageName);
           if (image) {
-            ArgDictConstIterator it= image->constBegin();
-            for (; it!=image->constEnd(); ++it) {
+            for (ArgDictConstIterator it= image->constBegin(); 
+		 it!=image->constEnd(); 
+		 ++it) {
               attribs.replace(keyName + "_" + it.key(),it.value());
             }
             QString partName;
@@ -417,8 +494,9 @@ void SNode::execTopDownOp(INode * iNode)
           QString keyName = (**it).name();
           ArgDict *args = fileList_.value(fileName);
           if (args) {
-            ArgDictConstIterator it=args->constBegin();
-            for (; it!=args->constEnd(); ++it) {
+            for (ArgDictConstIterator it=args->constBegin(); 
+		 it!=args->constEnd(); 
+		 ++it) {
               attribs.replace(keyName + "_" + it.key(),it.value());
             }
           }
@@ -432,8 +510,9 @@ void SNode::execTopDownOp(INode * iNode)
   // create a mask image and store mask attributes
   GeoImage *labelImage = parent->labelImage();
   if (labelImage) {
-    ArgDictConstIterator it = labelImage->constBegin();
-    for (; it!=labelImage->constEnd(); ++it) {
+    for (ArgDictConstIterator it = labelImage->constBegin();
+	 it!=labelImage->constEnd(); 
+	 ++it) {
       attribs.replace("mask_" + it.key(), it.value());
     }
     QString maskfile;
@@ -474,7 +553,8 @@ void SNode::execTopDownOp(INode * iNode)
     attribs.replace("mask_file", maskfile);
     cleanUp_.append(maskfile);
   }
-  else attribs.replace("mask_file", "\"\"");
+  else 
+    attribs.replace("mask_file", "");
 
   attribs.replace("minRes", geoImageList->minResolution());
   attribs.replace("maxRes", geoImageList->maxResolution());
@@ -493,15 +573,198 @@ void SNode::execTopDownOp(INode * iNode)
 #ifdef DEBUG_MSG
   {
     qDebug("SNode::execTopDown: attributes");
-    QTextStream ts(stderr);
-    ts << attribs;
+    //QTextOStream ts(stderr);
+    //ts << attribs;
   }
 #endif
   execOperator(topDown_, iNode, attribs, parent->path(), tdCounter_);
 }
 
+/** Execute the Temporal Top-Down operator. This function spawns a new process
+  * and returns. When the Temporal Top-Down task is finish iNode->taskFinished() is called. */
+void SNode::execTemporalTopDownOp(INode * iNode)
+{
+#ifdef DEBUG_MSG
+  qDebug("#* SNode::execTemporalTopDown(%s)", name_.toLatin1().constData());
+#endif
+
+  //INode *inodeYoungerSibling;  // pointer to temporal node
+  QList<INode*>::iterator inodeYoungerSibling;
+  QList <INode*> *temporalSiblingList;  // list of temporal siblings
+  
+  CleanUp::mkdir(CleanUp::getTmpDirPID(), iNode->path());
+  QString iname = GetTmpFilename("input", iNode->path());
+  QFile ifp(iname);
+  if (!ifp.open(QIODevice::WriteOnly)) {
+    qDebug("Could not open tempfile %s\n", iname.toLatin1().constData());
+    iNode->taskFinished(0,0);
+    return;
+  }
+
+  QTextStream str(&ifp);
+
+  temporalSiblingList = &((iNode->parent())->children()); // creates list of siblings for this INode
+  inodeYoungerSibling = temporalSiblingList->begin();
+  while ((((*inodeYoungerSibling)->sNode())->order()) != ((iNode->sNode())->order() - 1))  {
+	  ++inodeYoungerSibling;
+	  if (inodeYoungerSibling == temporalSiblingList->end()) {
+		  qDebug("Temporal TD: Could not find earlier temporal node. Semantic Net definition error!\n");
+		  iNode->taskFinished(0,0);
+		  return;
+	  }
+  }
+  
+  QList<INode*> auxList = (*inodeYoungerSibling)->children();
+  
+  QList<INode*>::iterator itNode;
+  
+  for (itNode = auxList.begin(); itNode != auxList.end(); ++itNode) {
+    INode *node = *itNode;
+    if (node->status() == TRASH) // trashnodes must be skipped here
+      continue;
+    GeoImage *img = node->labelImage();
+    if (img) {
+        node->attribute("file_geoWest", img->geoWest());
+        node->attribute("file_geoSouth", img->geoSouth());
+        node->attribute("file_geoEast", img->geoEast());
+        node->attribute("file_geoNorth", img->geoNorth());
+    }
+    node->attribute("temporal", (*inodeYoungerSibling)->attribute("class"));
+    node->write(str, "", false);
+  }
+  ifp.close();
+
+  iNode->attribute("input", iname);
+
+  AttribList attribs;
+  putAttribs(*this, attribs, "generic");
+  putAttribs(*this, attribs, "topDown");
+
+  AttribListConstIterator it= iNode->attribList().constBegin();
+  for (; it!=iNode->attribList().constEnd(); ++it) {
+    attribs.replace(it.key(), it.value());
+  }
+  //int dummyCounter = 0; //no need to increment tdCounter_ here
+  //execOperator(topDown_, iNode, attribs, iNode->path(), dummyCounter);
+  execOperator(topDown_, iNode, attribs, iNode->path(), tdCounter_);
+}
+
+#if 0
+QStringList & SNode::predefinedAttribs()
+{
+  return predefinedAttribs_;
+}
+#endif
+
+/** Returns true if  this class is a cname */
+bool SNode::isA(QString cname)
+{
+  return (cname == "SNode");
+}
+
+/** Get the attribute description for the specified section */
+AttributeDictionary *SNode::attributeDesc(QString section)
+{
+#ifdef DEBUG_MSG
+  qDebug("SNode::attributeDesc(%s)\n", section.toLatin1().constData());
+#endif
+  if (section == "generic")
+    return &genericAttributes_;
+  if ((section == "topDown") && (topDown_))
+    return topDown_->attributeDesc();
+  if ((section == "bottomUp") && (bottomUp_))
+    return bottomUp_->attributeDesc();
+  if ((section == "evaluation") && (evaluation_))
+    return evaluation_->attributeDesc();
+#ifdef DEBUG_MSG
+  qDebug("SNode::attributeDesc(%s) not found\n", section.toLatin1().constData());
+#endif
+  return 0;
+}
+
+/** Execute the temporalBottomUp operator. This function spawns a new process
+    and returns. When the temporalBottomUp task is finish iNode->taskFinished() is called. */
+void SNode::execTemporalBottomUpOp(INode * iNode)
+{
+#ifdef DEBUG_MSG
+  qDebug("#* SNode::execTemporalBottomUp(%s)", name_.toLatin1().constData());
+#endif
+
+  Operator *temporalBottomUp = NULL;
+  AttribList attribs;
+  int counter;
+  
+  CleanUp::mkdir(CleanUp::getTmpDirPID(), iNode->path());
+  QString iname = GetTmpFilename("input", iNode->path());
+  QFile ifp(iname);
+  if (!ifp.open(QIODevice::WriteOnly)) {
+    qDebug("Could not open tempfile %s\n", iname.toLatin1().constData());
+    iNode->taskFinished(0,0);
+    return;
+  }
+
+  QTextStream str(&ifp);
+  
+  QList<INode*> auxList = (iNode->parent())->children();
+  
+  QList<INode*>::iterator itSibling; // creates list of siblings for this INode
+  for (itSibling = auxList.begin(); itSibling != auxList.end(); ++itSibling) {	
+	INode *tNode = (*itSibling);
+	
+	QList<INode*> auxList2 = tNode->children();
+	
+    QList<INode*>::iterator itCousin;
+    for (itCousin = auxList2.begin(); itCousin != auxList2.end(); ++itCousin) {
+      INode *node = (*itCousin);
+      if (node->status() == TRASH) // trashnodes must be skipped here
+        continue;
+      GeoImage *img = node->labelImage();
+      if (img) {
+        node->attribute("file_geoWest", img->geoWest());
+        node->attribute("file_geoSouth", img->geoSouth());
+        node->attribute("file_geoEast", img->geoEast());
+        node->attribute("file_geoNorth", img->geoNorth());
+      }
+      //node->attribute("addr", QString().sprintf("%p", node));
+      node->attribute("addr", QString("%1").arg((long) node, 0, 16));
+      node->attribute("temporal", tNode->attribute("class"));
+      node->write(str, "", false);
+      node->attributeRemove("addr");
+    }
+    if ((tNode->sNode())->bottomUp_) {
+      temporalBottomUp = (tNode->sNode())->bottomUp_;
+      putAttribs(*(tNode->sNode()), attribs, "generic");
+      putAttribs(*(tNode->sNode()), attribs, "bottomUp");
+    }
+  }
+  ifp.close();
+    
+  iNode->attribute("input", iname);
+  
+  AttribListConstIterator it= iNode->attribList().constBegin();
+  for (; it!=iNode->attribList().constEnd(); ++it) {
+      attribs.replace(it.key(), it.value());
+  }
+  
+  counter = buCounter_;
+  
+  execOperator(temporalBottomUp, iNode, attribs, iNode->path(), buCounter_);
+  
+  if (counter != buCounter_){ // buCounter_ of all siblings must change in the same way
+  
+	QList<SNode*> auxList3 = ((iNode->sNode())->parent())->children();
+  
+	  QList<SNode*>::iterator itSSibling;
+	  for (itSSibling = auxList3.begin(); itSSibling != auxList3.end(); ++itSSibling) {	
+		SNode *sNode = (*itSSibling);
+		if (sNode!=this) (sNode->buCounter_)++;
+		stateChanged(sNode->guiPtr_);
+	  }
+  }
+}
+
 /** Execute the bottomUp operator. This function spawns a new process
-  * and returns. When the bottomUp task is finish iNode->taskFinished() is called. */
+    and returns. When the bottomUp task is finish iNode->taskFinished() is called. */
 void SNode::execBottomUpOp(INode * iNode)
 {
 #ifdef DEBUG_MSG
@@ -566,11 +829,9 @@ void SNode::execBottomUpOp(INode * iNode)
 #endif
   iNode->attribute("input", iname);
   {
-    AttribListConstIterator it= iNode->attribList().constBegin();
-    for (; it!=iNode->attribList().constEnd(); ++it) {
-#ifdef WIN32
-      QMessageBox::information(0,"SNode",it.key(),1);
-#endif
+    for (AttribListConstIterator it= iNode->attribList().constBegin(); 
+	 it!=iNode->attribList().constEnd(); 
+	 ++it) {
       attribs.replace(it.key(), it.value());
     }
   }
@@ -583,32 +844,6 @@ QStringList & SNode::predefinedAttribs()
   return predefinedAttribs_;
 }
 #endif
-
-/** Returns true if  this class is a cname */
-bool SNode::isA(QString cname)
-{
-  return (cname == "SNode");
-}
-
-/** Get the attribute description for the specified section */
-AttributeDictionary *SNode::attributeDesc(QString section)
-{
-#ifdef DEBUG_MSG
-  qDebug("SNode::attributeDesc(%s)\n", section.toLatin1().constData());
-#endif
-  if (section == "generic")
-    return &genericAttributes_;
-  if ((section == "topDown") && (topDown_))
-    return topDown_->attributeDesc();
-  if ((section == "bottomUp") && (bottomUp_))
-    return bottomUp_->attributeDesc();
-  if ((section == "evaluation") && (evaluation_))
-    return evaluation_->attributeDesc();
-#ifdef DEBUG_MSG
-  qDebug("SNode::attributeDesc(%s) not found\n", section.toLatin1().constData());
-#endif
-  return 0;
-}
 
 /** Evaluates the result of TopDownOperator    */
 QList < INode* > SNode::evalTopDown(INode * inode)
@@ -680,7 +915,7 @@ QList < INode* > SNode::evalTopDown(INode * inode)
           double gW = inode->parent()->attributeFloat("geoWest");
           double gE = inode->parent()->attributeFloat("geoEast");
           node->setGeoRegion(gW, gN, gE, gS);
-          cleanUp_.append(node->attribute("file"));
+          cleanUp_.append(node->attribute("file")); //GILSON: maybe this is not necessary
           list.append(node);
         }
         break;
@@ -688,10 +923,261 @@ QList < INode* > SNode::evalTopDown(INode * inode)
     }
     delete attribList;
   } while (tag != MLParser::END_OF_FILE);
-//!     fp.remove();
-
   return list;
 }
+
+/** Evaluates the result of temporalTopDownOperator    */
+QList <INode*> *SNode::evalTemporalTopDown(INode * inode)
+{
+#ifdef DEBUG_MSG
+  qDebug("#* SNode::evalTemporalTopDown(%s)", name_.toLatin1().constData());
+#endif
+  tdCounter_--;
+  stateChanged(guiPtr_);
+  Q_ASSERT(inode);
+  QList <INode*> *list = new QList <INode*>;
+
+  cleanUp_.append(inode->attribute("input"));
+  inode->attributeRemove("input");
+  cleanUp_.append(inode->output());
+  QString fileName = inode->output();
+
+  QFile fp(fileName);
+  if (!fp.open(QIODevice::ReadOnly)) {
+    qDebug("SNode::evalTemporalTopDown(%s): file not found\n",
+           (inode->output().toLatin1().constData()));
+    delete list;
+    return 0;
+  }
+  QString classname = this->attribute("class");
+  MLParser parser(&fp); 
+#ifdef DEBUG_MSG
+  qDebug("SNode::evalTemporalTopDown: Searching for %s\n", classname.toLatin1().constData());
+#endif
+  int tag;
+  do {
+    tag = parser.tag(nodeTagTable);
+#ifdef DEBUG_MSG
+    qDebug("tag=%d\n", tag);
+#endif
+    AttribList *attribList = parser.args();
+#ifdef DEBUG_MSG     
+    qDebug("tag=%d\n", tag);
+#endif
+    switch (tag) {
+    case TOK_REGION: {
+        SNode *sNode;
+        INode *node;
+        QString classNameRegion = attribList->value("class");
+#ifdef DEBUG_MSG
+        qDebug("class is %s\n", classNameRegion.toLatin1().constData());
+#endif
+        if (!classNameRegion.isEmpty()) {
+          sNode = this->findClass(classNameRegion);
+        }
+        else
+          sNode = 0;
+
+        if (sNode) {
+#ifdef DEBUG_MSG
+          qDebug("SNode::evalTemporalTopDown(): found %s\n",
+                 classNameRegion.toLatin1().constData());
+#endif
+          node = new INode(sNode);
+          node->configure(*attribList);
+          double gN = node->attributeFloat("geoNorth");
+          double gS = node->attributeFloat("geoSouth");
+          double gW = node->attributeFloat("geoWest");
+          double gE = node->attributeFloat("geoEast");
+          node->setGeoRegion(gW, gN, gE, gS);
+          list->append(node);
+        }
+        break;
+      }
+    }
+    delete attribList;
+#ifdef DEBUG_MSG     
+    qDebug("tag=%d\n", tag);
+#endif
+  } while (tag != MLParser::END_OF_FILE); 
+  return list;
+}
+
+/** Evaluates the result of the temporal bottom-up-operator   */
+QList <INode*> &SNode::evalTemporalBottomUp(INode * iNode)
+{
+//QFile fDebug("debug_evalTemporalBottomUp.txt");
+//fDebug.open(IO_WriteOnly);
+//Q3TextStream strDebug(&fDebug);
+//strDebug << ".1" << endl;
+
+#ifdef DEBUG_MSG
+  qDebug("#* SNode::evalTemporalBottomUp(%s)", name_.toLatin1().constData());
+  //cout << "#* SNode::evalTemporalBottomUp(%s)" << name_.toLatin1().constData() << endl;
+#endif
+
+  //decrement buCounter_ of all tempral siblings
+  
+  QList<SNode*> auxList = ((iNode->sNode())->parent())->children();
+  
+  QList<SNode*>::iterator itSSibling;
+  for (itSSibling = auxList.begin(); itSSibling != auxList.end(); ++itSSibling) {	
+	  SNode *sNode = *itSSibling;
+	  (sNode->buCounter_)--;
+	  stateChanged(sNode->guiPtr_);
+  }
+
+  cleanUp_.append(iNode->attribute("input"));
+  iNode->attributeRemove("input");
+  
+  QList <INode*> *groupList = new QList <INode*>;
+  //groupList->setAutoDelete(false);
+
+  INode *list = 0;
+//strDebug << ".2" << endl;
+  cleanUp_.append(iNode->output());
+  QFile fp(iNode->output());
+  if (!fp.open(QIODevice::ReadOnly)) {
+    qDebug("SNode::evalTemporalBottomUp(%s): file not found\n",
+           iNode->output().toLatin1().constData());
+    return *groupList;
+  }
+  MLParser parser(&fp);
+ 
+//strDebug << ".3" << endl;
+  
+#ifdef DEBUG_MSG
+  qDebug("SNode::evalTemporalBottomUp: Parsing %s\n", iNode->output().toLatin1().constData());
+#endif
+  bool foundSNode = false;
+  int tag;
+  do {
+    tag = parser.tag(nodeTagTable);
+//strDebug << ".3 tag: " << tag << endl;
+#ifdef DEBUG_MSG
+    qDebug("tag=%d\n", tag);
+    //cout << "tag = " << tag << endl;
+#endif
+    AttribList *attribList = parser.args();
+    INode *node;
+    switch (tag) {
+    case TOK_GROUP:
+	{
+      // list = new INode(this);
+      // must find SNode to which this group belongs to
+      SNode *sNode;
+      QString classNameRegion = attribList->value("class");
+
+//strDebug << ".4 TOK_GROUP: *classNameRegion: " << *classNameRegion << endl;
+
+      if (!classNameRegion.isEmpty()) {
+        sNode = ((iNode->sNode())->parent())->findClass(classNameRegion);
+      }
+      else
+        sNode = 0;
+//strDebug << ".5 TOK_GROUP: sNode: " << sNode << endl;
+
+      if (sNode) {
+#ifdef DEBUG_MSG
+        qDebug("SNode::evalTemporalBottomUp(): found %s\n",
+               classNameRegion.toLatin1().constData());
+#endif
+    	foundSNode = true;
+        list = new INode(sNode);
+#ifdef WIN32
+        if (list == 0){
+          //cout << "Out of Memory..16";
+          exit(1);
+        }
+#endif
+        list->update(iNode->attribList());
+        list->attributeRemove("llx");
+        list->attributeRemove("urx");
+        list->attributeRemove("lly");
+        list->attributeRemove("ury");
+        list->attributeRemove("file_geoWest");
+        list->attributeRemove("file_geoNorth");
+        list->attributeRemove("file_geoEast");
+        list->attributeRemove("file_geoSouth");
+        list->update(*attribList);
+        if (!attribList->contains("name") && attribList->contains("id"))
+          list->attribute("name", sNode->name() + QString().sprintf("_t%03d",(attribList->value("id").toInt())));
+		  
+//strDebug << ".6 TOK_GROUP: foundSNode: " << foundSNode << endl;
+      }
+      else {
+    	foundSNode = false;
+      } 
+	}
+    break;
+
+    case -TOK_GROUP:
+      if (foundSNode) {
+//strDebug << ".7 -TOK_GROUP: list->children().count(): " << list->children().count() << endl;
+        if (list->children().count() != 0) {
+          list->setGeoRegion(list->attributeFloat("file_geoWest"),
+                             list->attributeFloat("file_geoNorth"),
+                             list->attributeFloat("file_geoEast"),
+                             list->attributeFloat("file_geoSouth"));
+          cleanUp_.append(list->attribute("file"));
+          groupList->append(list);
+        }
+        else
+          delete list;
+      }
+#ifdef DEBUG_MSG
+      qDebug("End of group\n");
+      //cout << "end of group " << endl;
+#endif
+      list = 0;
+      break;
+    case TOK_NODE:
+      if (foundSNode) {
+//strDebug << ".8 TOK_NODE: (*attribList)[addr]: " << *((*attribList)["addr"]) << endl;
+        QString s = attribList->value("addr");
+        if (s.isEmpty())
+			break;
+        node = 0;
+		if (sscanf(s.toLatin1().constData(), "%p", &node) != 1)
+			break;  
+//strDebug << ".9 TOK_NODE: node.attribute(class): " << node->attribute("class") << endl;
+//Q3DictIterator < QString > it(*attribList);
+//for (; it.current(); ++it)
+//strDebug << ".10 TOK_NODE:" << it.currentKey() << ": " << it.current()->latin1() << endl;
+		node->update(*attribList);
+//strDebug << ".11 TOK_NODE" << endl;
+        node->attributeRemove("addr");
+//strDebug << ".12 TOK_NODE" << endl;
+        node->setGeoRegion(node->attributeFloat("file_geoWest"),
+                           node->attributeFloat("file_geoNorth"),
+                           node->attributeFloat("file_geoEast"),
+                           node->attributeFloat("file_geoSouth"));
+//strDebug << ".13 TOK_NODE" << endl;
+        cleanUp_.append(node->attribute("file"));  
+//strDebug << ".14 TOK_NODE: list: " << list << endl;
+        list->childLink(node);
+//strDebug << ".15 TOK_NODE: node.attribute(file): " << node->attribute("file") << endl;
+      }
+      break;
+    case -TOK_NODE:
+      break;
+    }
+    delete attribList;
+  } while (tag != MLParser::END_OF_FILE);
+
+  if (list)
+    delete list;
+//fDebug.close();
+  QList<INode*>::iterator it = groupList->begin();
+  for (; it != groupList->end(); ++it) {
+#ifdef DEBUG_MSG
+    qDebug("count=%d\n", (*it)->children().count());
+    //cout << "count= " << it.current()->children().count() << endl;
+#endif
+  }
+  return *groupList;
+}
+
 
 /** Evaluates the result of the bottom-up-operator   */
 QList < INode* > &SNode::evalBottomUp(INode * iNode)
@@ -699,8 +1185,10 @@ QList < INode* > &SNode::evalBottomUp(INode * iNode)
 #ifdef DEBUG_MSG
   qDebug("#* SNode::evalBottomUp(%s)", name_.toLatin1().constData());
 #endif
+ 
   buCounter_--;
   stateChanged(guiPtr_);
+   
   cleanUp_.append(iNode->attribute("input"));
   iNode->attributeRemove("input");
 
@@ -716,27 +1204,25 @@ QList < INode* > &SNode::evalBottomUp(INode * iNode)
     return *groupList;
   }
   MLParser parser(&fp);
+ 
+  
 #ifdef DEBUG_MSG
   qDebug("SNode::evalBottomUp: Parsing %s\n", iNode->output().toLatin1().constData());
 #endif
   int tag;
+ 
   do {
     tag = parser.tag(nodeTagTable);
 #ifdef DEBUG_MSG
     qDebug("tag=%d\n", tag);
+    //cout << "tag = " << tag << endl;
 #endif
     AttribList *attribList = parser.args();
     INode *node;
     switch (tag) {
     case TOK_GROUP:
       list = new INode(this);
-#ifdef WIN32
-      if (list == 0){
-        cout << "Out of Memory..16";
-        exit(1);
-      }
-#endif
-//                      list->setAutoDelete(false);
+      Q_ASSERT(list);
       list->update(iNode->attribList());
       list->attributeRemove("llx");
       list->attributeRemove("urx");
@@ -765,6 +1251,7 @@ QList < INode* > &SNode::evalBottomUp(INode * iNode)
         delete list;
 #ifdef DEBUG_MSG
       qDebug("End of group\n");
+      //cout << "end of group " << endl;
 #endif
       list = 0;
       break;
@@ -785,9 +1272,13 @@ QList < INode* > &SNode::evalBottomUp(INode * iNode)
                            node->attributeFloat("file_geoNorth"),
                            node->attributeFloat("file_geoEast"),
                            node->attributeFloat("file_geoSouth"));
+        
         cleanUp_.append(node->attribute("file"));
+        
         list->childLink(node);
         //! Set attributes added by BottomUp-Operator
+        //GILSON: doesn't that happens with node->update(*attribList); ?????
+         
       }
       break;
     case -TOK_NODE:
@@ -796,6 +1287,7 @@ QList < INode* > &SNode::evalBottomUp(INode * iNode)
     delete attribList;
   } while (tag != MLParser::END_OF_FILE);
 //!     fp.remove();
+ 
 
   if (list)
     delete list;
@@ -813,14 +1305,21 @@ QList < INode* > &SNode::evalBottomUp(INode * iNode)
   }
 
   {                             // Debug
-    QList < INode* >::const_iterator it = groupList->constBegin();
-    for (; it!=groupList->constEnd(); ++it) {
+    for (QList < INode* >::const_iterator it = groupList->constBegin(); 
+	 it!=groupList->constEnd(); 
+	 ++it) {
 #ifdef DEBUG_MSG
       qDebug("count=%d\n", (*it)->children().count());
 #endif
     }
   }
   return *groupList;
+}
+
+/** indicates whether or not the node is a temporal one */
+bool SNode::temporal(void)
+{
+	return attributeBool("temporal_node");
 }
 
 /** says whether the node is hollistisch */
@@ -843,8 +1342,9 @@ bool SNode::synchron_ = FALSE;
 /** find a snode with the given classname. Only direct children of this snode are checked. */
 SNode *SNode::findClass(QString classname)
 {
-  QList < SNode* >::const_iterator it= children().constBegin();
-  for (; it!=children().constEnd(); ++it) {
+  for (QList < SNode* >::const_iterator it= children().constBegin();
+       it!=children().constEnd(); 
+       ++it) {
     SNode *node = (*it);
     if (QString::compare(classname, node->attribute("class"),Qt::CaseInsensitive) == 0)
       return node;
@@ -868,11 +1368,7 @@ void SNode::changeOperator(Operator * &op, QString opName)
   if (op) {
     AttribListConstIterator it = attribList().constBegin();
     while (it!=attribList().constEnd()) {
-#ifdef WIN32
-      if (it.key().contains(op->type().toLower() + "\\")) {
-#else
-      if (it.key().contains(op->type().toLower() + "/")) {
-#endif
+      if (it.key().contains(op->type().toLower() + ".")) {
         attribList().remove(it.key());
       }
       else
@@ -885,15 +1381,11 @@ void SNode::changeOperator(Operator * &op, QString opName)
     return;
   AttributeDictionary *attribs = op->attributeDesc();
   if (attribs) {
-    AttributeDictionary::const_iterator it = attribs->constBegin();
-    for (; it!=attribs->constEnd(); ++it) {
-#ifdef WIN32
-      QString name = (*it)->.fullname();
-      QString val = (*it)->value();
-#else
+    for (AttributeDictionary::const_iterator it = attribs->constBegin(); 
+	 it!=attribs->constEnd(); 
+	 ++it) {
       QString name = (*it)->fullname();
       QString val = (*it)->value();
-#endif
       if (!val.isEmpty())
         attribList().replace(name, val);
     }

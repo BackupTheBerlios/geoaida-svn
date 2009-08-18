@@ -56,7 +56,7 @@ public:
   QString tip();
   /** Returns true if operator works best on whole image, otherwise returns false */
   bool runGlobal();
- protected:                     // Protected attributes
+protected:                     // Protected attributes
   /** classname of the operator */
   QString class_;
   /** command to execute */
@@ -69,7 +69,7 @@ public:
   QString type_;
   /** tip for this operator */
   QString tip_;
- public:                        // Public attributes
+public:                        // Public attributes
   /** true if operator works best on whole image, default is false */
   bool runGlobal_;
 };

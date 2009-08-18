@@ -37,14 +37,6 @@
 #include "ArgDict"
 #include "GeoImageCache"
 
-#ifdef WIN32
-#include <pbm.h>
-#include <pgm.h>
-#include <ppm.h>
-#include <pnm.h>
-#include "pfm.h"
-//#include <linuxmath.h>
-#else
 extern "C"
 {
 #include <pbm.h>
@@ -54,7 +46,6 @@ extern "C"
 #include "pfm.h"
 }
 #include <math.h>
-#endif
 
 #ifdef linux
 extern "C"

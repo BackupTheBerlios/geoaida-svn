@@ -33,6 +33,7 @@
 #include <QHash>
 #include <QQueue>
 #include <QString>
+#include <QProcess>
 
 class QTreeWidgetItem;
 
@@ -53,7 +54,11 @@ Q_OBJECT public:
   /** set the maximum number of jobs running parallel */
   void setMaxJobs(int maxJobs);
   /** No descriptions */
+#ifdef WIN32
+  void setGuiPtr(ProcessEntry * pEntry, Q3ListViewItem * ptr);
+#else
   void setGuiPtr(ProcessEntry * pEntry, QTreeWidgetItem * ptr);
+#endif
   /** return the system load on Linux-Systems */
   bool systemLoad();
 protected slots:
@@ -66,12 +71,17 @@ public:
     int status_;                // exit status
     QString cmd_;               // command line
     INode *node_;
+#ifdef WIN32
+    Q3ListViewItem *guiPtr_;
+#else
     QTreeWidgetItem *guiPtr_;
+#endif
   };
  protected:
   int execNext();
   int jid_;
   unsigned int maxJobs_;
+  int process_count;
   QHash < int, ProcessEntry* > process_;
   QHash < int, ProcessEntry* > job_;
   QQueue < ProcessEntry* > jobQueue_;
@@ -87,9 +97,18 @@ signals:                    // Signals
   void newProcess(ProcessEntry *);
   /** signal is emitted whenever the state of process changes.
     guiPtr, pid, nodename and commandline are transmitted */
+#ifdef WIN32
+  void stateChanged(Q3ListViewItem *, int, QString, QString, float load);
+#else
   void stateChanged(QTreeWidgetItem *, int, QString, QString, float load);
+#endif
+
   /** signal is emitted when a process is finished */
+#ifdef WIN32
+  void processFinished(Q3ListViewItem *);
+#else
   void processFinished(QTreeWidgetItem *);
+#endif
 };
 
 extern Task taskTable;

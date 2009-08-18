@@ -22,6 +22,7 @@ public:
   void readSemanticNet(MLParser& parser);
   void readInstanceNet(MLParser& parser);
   void analyze();
+  SemanticNet& semanticNet();
 private:
   QString filename_;
   SemanticNet semanticNet_;
@@ -29,5 +30,7 @@ private:
   //  GeoImageList geoImageList_; // is a global variable so far
   FileList fileList_;
   GeoImage *mapImage_;
+  GeoImageList labelImageList_;
+  Analysis *analysis_;
 };
 

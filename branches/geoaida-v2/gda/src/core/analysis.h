@@ -39,18 +39,21 @@ class INode;
 class Analysis:public QObject
 {
 Q_OBJECT public:
+
+#ifdef INTERIMAGE
   /** default constructor */
   Analysis();
 
-        /** read sem net from file */
+  /** read sem net from file */
   Analysis(const QString & fname);
-
-        /** initialization with "Semanic Net"  */
-  Analysis(SemanticNet *sn, GeoImageList *gil, GeoImageList *lil);
-
-        /** initialization with "Semanic Net"  */
+  
+  /** initialization with "Semanic Net"  */
   Analysis(SemanticNet * sn);
+#endif
 
+  /** initialization with "Semanic Net"  */
+  Analysis(SemanticNet *sn, GeoImageList *gil, GeoImageList *lil);
+  
   /** destructor */
   ~Analysis();
 

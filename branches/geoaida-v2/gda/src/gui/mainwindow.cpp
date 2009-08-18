@@ -29,6 +29,20 @@ void MainWindow::on_actionQuit_triggered()
   qApp->quit();
 }
 
+void MainWindow::connectSemanticNetEditor()
+{
+   semNetEditor_->setModel(&project_.semanticNet());
+   connect(semNetEditor_,SIGNAL(clicked(const QModelIndex &)),
+	   &attributeModel_,SLOT(setNode(const QModelIndex &)));
+   qDebug("MainWindow::on_actionNetLoad_triggered: connect");
+   connect(&attributeModel_,SIGNAL(modelReset()),
+	   attributeEditor_,SLOT(expandAll()));
+   
+   attributeEditor_->setModel(&attributeModel_);
+   attributeEditor_->setItemDelegate(&attributeValueDelegate_);
+   //  treeEditor->rootNode(semNet.rootNode());
+}
+
 /*!
  * \brief load semantic net
  */
@@ -44,17 +58,8 @@ void MainWindow::on_actionNetLoad_triggered()
    fileSemanticNet_=fname;
    //  readyToAna(TRUE);  //enable the analysis buttons XXX only for testing
    //  treeEditor->rootNode(0);
-   semNet_.read(fileSemanticNet_);
-   semNetEditor_->setModel(&semNet_);
-   connect(semNetEditor_,SIGNAL(clicked(const QModelIndex &)),
-	   &attributeModel_,SLOT(setNode(const QModelIndex &)));
-   qDebug("MainWindow::on_actionNetLoad_triggered: connect");
-   connect(&attributeModel_,SIGNAL(modelReset()),
-	   attributeEditor_,SLOT(expandAll()));
-   
-   attributeEditor_->setModel(&attributeModel_);
-   attributeEditor_->setItemDelegate(&attributeValueDelegate_);
-   //  treeEditor->rootNode(semNet.rootNode());
+   project_.semanticNet().read(fileSemanticNet_);
+   connectSemanticNetEditor();
  }
  catch ( const Exception& err ) {
    QMessageBox::information(this,tr("Info"),err.what());
@@ -77,6 +82,7 @@ void MainWindow::on_actionProjectLoad_triggered()
    if (fname.isEmpty()) return;
    project_.setFilename(fname);
    project_.read();
+   connectSemanticNetEditor();
  }
  catch ( const Exception& err ) {
    QMessageBox::information(this,tr("Info"),err.what());
@@ -88,6 +94,6 @@ void MainWindow::on_actionProjectLoad_triggered()
 
 void MainWindow::on_actionStart_triggered()
 {
-  taskViewerDock_->show();
+  project_.analyze();
 } 
  

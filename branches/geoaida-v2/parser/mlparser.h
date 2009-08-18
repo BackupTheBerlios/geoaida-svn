@@ -34,6 +34,7 @@ class ArgDict : public QHash<QString,QString> {
  public:
   ArgDict() 
     : QHash<QString,QString>(){}
+#if 0
   ArgDict(const ArgDict& dict) 
     : QHash<QString,QString>(dict) {
     //    copy(dict);
@@ -50,16 +51,19 @@ class ArgDict : public QHash<QString,QString> {
     //    }
     return *this;
   }
+#endif
   /** write the contents of dictionary to the given QTextStream */
   virtual QTextStream& write(QTextStream&) const;
   void insert(QString name, int val);
   void insert(QString name, double val);
   void insert(QString name, QString val);
   void insert(QString name, bool val);
+  void insert(QString name, const char* val);
   void replace(QString name, int val);
   void replace(QString name, double val);
   void replace(QString name, QString val);
   void replace(QString name, bool val);
+  void replace(QString name, const char* val);
 };
 
 typedef ArgDict::Iterator ArgDictIterator;

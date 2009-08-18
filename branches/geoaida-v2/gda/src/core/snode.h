@@ -99,6 +99,14 @@ public:                        // Public attributes
       and returns. When the bottomUp task is finish iNode->taskFinished() is called.
     */
   void execBottomUpOp(INode * iNode);
+  /** Execute the Temporal Top-Down operator. This function spawns a new process
+      and returns. When the Temporal Top-Down task is finish iNode->taskFinished() is called. 
+    */
+  void execTemporalTopDownOp(INode * iNode);
+  /** Execute the temporalBottomUp operator. This function spawns a new process
+      and returns. When the temporalBottomUp task is finish iNode->taskFinished() is called. 
+    */
+  void execTemporalBottomUpOp(INode * iNode);
 #if 0
   virtual QStringList & predefinedAttribs();
 #endif
@@ -110,6 +118,12 @@ public:                        // Public attributes
   QList<INode*> evalTopDown(INode * inode);
   /** Evaluate the result of the bottom-up-operator   */
   QList<INode*> &evalBottomUp(INode * iNode);
+  /** Evaluates the result of temporalTopDownOperator    */
+  QList<INode*> *evalTemporalTopDown(INode * inode);
+  /** Evaluates the result of the temporal bottom-up-operator   */
+  QList<INode*> &evalTemporalBottomUp(INode * iNode);
+  /** indicates whether or not the node is a temporal one */
+  bool temporal(void);
   /** says whether the node is hollistisch */
   bool holistic(void);
   /** No descriptions */
@@ -132,7 +146,6 @@ public:                        // Public attributes
   /** decrease the reference counter */
   void unlink();
   virtual void setGuiPtr(TreeItem * ptr);
-
 protected:                     // Protected methods
   /** Init member variables */
   virtual void init();

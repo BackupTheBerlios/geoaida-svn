@@ -92,8 +92,8 @@ SET(sources
 
 QT4_WRAP_CPP(moclib ${mocheaders})
 
-ADD_LIBRARY(gdacore ${sources} ${moclib})
+ADD_LIBRARY(gdacore STATIC ${sources} ${moclib})
 
-INSTALL(TARGETS gdacore DESTINATION lib)
+#INSTALL(TARGETS gdacore DESTINATION lib)
 #INSTALL(FILES ${headers} DESTINATION include)
 #INSTALL(FILES ${classheaders} DESTINATION include)

@@ -58,6 +58,10 @@ void ArgDict::insert(QString name, QString val) {
   QHash<QString,QString>::insert(name.toLower(),val);
 }
 
+void ArgDict::insert(QString name, const char* val) {
+  insert(name,QString(val));
+}
+
 void ArgDict::insert(QString name, bool val) {
   QString s(val ? "TRUE" : "FALSE" );
   insert(name.toLower(),s);
@@ -73,6 +77,10 @@ void ArgDict::replace(QString name, double val) {
 
 void ArgDict::replace(QString name, QString val) {
   insert(name.toLower(),val);
+}
+
+void ArgDict::replace(QString name, const char* val) {
+  insert(name.toLower(),QString(val));
 }
 
 void ArgDict::replace(QString name, bool val) {

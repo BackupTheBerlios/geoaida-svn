@@ -49,10 +49,12 @@ class MainWindow : public QMainWindow, private Ui::MainWindow
   void on_actionNetLoad_triggered();
   void on_actionProjectLoad_triggered();
   void on_actionStart_triggered();
+ protected:
+  void connectSemanticNetEditor();
  private:
   bool dirty_;	
   Project project_;
-  SemanticNet semNet_;
+  //  SemanticNet semNet_;
   AttributeModel attributeModel_;
   AttributeValueDelegate attributeValueDelegate_;
   /** filename for the semantic net */

@@ -25,6 +25,7 @@
 #include <QTextStream>
 #include <QAbstractItemModel>
 #include <QHash>
+#include <QXmlStreamWriter>
 #include "MLParser"
 
 class GNode;
@@ -62,6 +63,9 @@ public:
   void write();
   void write(QTextStream & fp);
   void write(const QString & fname);
+  
+  void writeChild(GNode* node, QXmlStreamWriter & writer);
+  
  protected:     
   /** root node of the net */
   GNode * rootNode_;

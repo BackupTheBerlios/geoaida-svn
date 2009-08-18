@@ -117,24 +117,27 @@ void Project::read(MLParser& parser)
         MLParser::setString(dir,args,"dir");  //read tempor.
         MLParser::setString(map,args,"map");  //read tempor.
         QDir d(dir);
-	instanceNet_.read(d.filePath(netfile));
-	INode *rootNode=instanceNet_.rootNode();
-        if (rootNode) {
-          float gN=rootNode->attributeFloat("geoNorth");
-          float gE=rootNode->attributeFloat("geoEast");
-          float gS=rootNode->attributeFloat("geoSouth");
-          float gW=rootNode->attributeFloat("geoWest");
-          GeoImage* mapImage_=new GeoImage(map,"Map",gW,gN,gE,gS);
-          if (mapImage_) {
-            try {
-              mapImage_->load();
-            }
-            catch (FileIOException err) {
-              delete mapImage_;
-              mapImage_=0;
-            }
-          }
+	try {
+	  instanceNet_.read(d.filePath(netfile));
+	  INode *rootNode=instanceNet_.rootNode();
+	  if (rootNode) {
+	    float gN=rootNode->attributeFloat("geoNorth");
+	    float gE=rootNode->attributeFloat("geoEast");
+	    float gS=rootNode->attributeFloat("geoSouth");
+	    float gW=rootNode->attributeFloat("geoWest");
+	    GeoImage* mapImage_=new GeoImage(map,"Map",gW,gN,gE,gS);
+	    if (mapImage_) {
+	      try {
+		mapImage_->load();
+	      }
+	      catch (FileIOException err) {
+		delete mapImage_;
+		mapImage_=0;
+	      }
+	    }
+	  }
         }
+	catch (FileIOException err) {; }
         delete args;
       }
       break;
@@ -146,6 +149,18 @@ void Project::read(MLParser& parser)
     }
     }
   } while ((tag!=MLParser::END_OF_FILE ) && (tag != -TOK_GEOPROJECT));
+}
+
+SemanticNet& Project::semanticNet()
+{
+  return semanticNet_;
+}
+
+void Project::analyze()
+{
+  if (!analysis_) delete analysis_;
+  analysis_=new Analysis(&semanticNet_,&geoImageList_,&labelImageList_);
+  analysis_->start();
 }
 
 #if 0

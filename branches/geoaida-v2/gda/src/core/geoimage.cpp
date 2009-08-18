@@ -55,19 +55,11 @@ GeoImage::GeoImage(QString fname, QString key, float west, float north,
   geoSouth_ = south;
   geoWest_ = west;
   geoEast_ = east;
-#ifdef WIN32
-  insert("geoNorth", new QString(north));
-  insert("geoSouth", new QString(south));
-  insert("geoWest", new QString(west));
-  insert("geoEast", new QString(east));
-  insert("file", new QString(fname));
-#else
   insert("geoNorth", north);
   insert("geoSouth", south);
   insert("geoWest", west);
   insert("geoEast", east);
   insert("file", fname);
-#endif
 }
 
 /** label-picture constructor */
@@ -84,23 +76,15 @@ GeoImage::GeoImage(QString fname, QString key, int xsize, int ysize,
   geoSouth_ = south;
   geoWest_ = west;
   geoEast_ = east;
-#ifdef WIN32
-  insert("geoNorth", new QString(north));
-  insert("geoSouth", new QString(south));
-  insert("geoWest", new QString(west));
-  insert("geoEast", new QString(east));
-  insert("file", new QString(fname));
-#else
   insert("geoNorth", north);
   insert("geoSouth", south);
   insert("geoWest", west);
   insert("geoEast", east);
   insert("file", fname);
-#endif
   data_ = new int[xsize * ysize];
 #ifdef WIN32
   if (data_ == 0){
-    cout << "Out of Memory..5";
+    //cout << "Out of Memory..5";
     exit(1);
   }
 #endif
@@ -136,15 +120,6 @@ void GeoImage::read(MLParser & parser)
   MLParser::setFloat(geoSouth_, this, "geoSouth");
   MLParser::setFloat(geoWest_, this, "geoWest");
   MLParser::setFloat(geoEast_, this, "geoEast");
-#ifdef WIN32
-  if (!find("type"))   insert("type",   new QString("not set"));
-  if (!find("file"))	  insert("file",   new QString("not set"));
-  if (!find("dir"))    insert("dir",    new QString(""));
-  if (!find("res_x"))  insert("res_x",  new QString("not set"));
-  if (!find("res_y"))  insert("res_y",  new QString("not set"));
-  if (!find("size_x")) insert("size_x", new QString("not set"));
-  if (!find("size_y")) insert("size_y", new QString("not set"));
-#else
   if (!contains("type"))
     insert("type", QString("not set"));
   if (!contains("file"))
@@ -159,7 +134,6 @@ void GeoImage::read(MLParser & parser)
     insert("size_x", QString("not set"));
   if (!contains("size_y"))
     insert("size_y", QString("not set"));
-#endif
 }
 
 /** configure attributes for this GeoImage through dictionary */
@@ -171,7 +145,7 @@ void GeoImage::configure(ArgDict & dict)
   copyarg("geoWest");
   copyarg("geoEast");
   copyarg("type");
-  copyarg("fle");
+  copyarg("file");
   copyarg("x_res");
   copyarg("y_res");
   copyarg("size_x");
@@ -234,21 +208,12 @@ void GeoImage::load()
          cols_, rows_, minval_, maxval_, type_);
   if (type_ == UNKNOWN)
     qDebug("##  (ERROR) unknown image type!");
-#ifdef WIN32
-  replace("size_x", &QString::number(cols_));
-  replace("size_y", &QString::number(rows_));
-  resolutionX_ = (geoEast_ - geoWest_) / cols_;
-  replace("res_x", &QString::number(resolutionX_));
-  resolutionY_ = (geoNorth_ - geoSouth_) / rows_;
-  replace("res_y", &QString::number(resolutionY_));
-#else
   replace("size_x", cols_);
   replace("size_y", rows_);
-  resolutionX_ = (geoEast_ - geoWest_) / cols_;
+  resolutionX_ = (float)(geoEast_ - geoWest_) / cols_;
   replace("res_x", resolutionX_);
-  resolutionY_ = (geoNorth_ - geoSouth_) / rows_;
+  resolutionY_ = (float)(geoNorth_ - geoSouth_) / rows_;
   replace("res_y", resolutionY_);
-#endif
 }
 
 int sizeOfData(int type)

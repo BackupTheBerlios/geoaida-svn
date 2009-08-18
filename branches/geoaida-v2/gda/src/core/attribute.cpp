@@ -35,6 +35,7 @@ Attribute::Attribute(const Attribute & a)
 {
   init(a.name_, a.label_, a.tip_);
   cmd_ = a.cmd_;
+  defaultExt_ = a.defaultExt_;
   defaultValue_ = a.defaultValue_;
   type_ = a.type_;
   switch (type_) {
@@ -51,6 +52,7 @@ Attribute::Attribute(const Attribute & a)
     b_.offValue_ = new QString(*(a.b_.offValue_));
     break;
   case ENUM:
+    e_.keys_ = new QStringList(*(a.e_.keys_));
     e_.options_ = new QStringList(*(a.e_.options_));
     break;
   }
@@ -97,11 +99,13 @@ Attribute::Attribute(QString name, QString defaultValue, double min,
 
 /** Constructor for ENUM-Attribute */
 Attribute::Attribute(QString name, QString defaultValue,
-                     QStringList * options, QString label, QString tip)
+                     QStringList* keys, QStringList * options, QString label, QString tip)
 {
   init(name, label, tip);
   type_ = ENUM;
   e_.options_ = options;
+  if (!keys) e_.keys_ = options;
+  else e_.keys_ = keys;
   defaultValue_ = defaultValue;
 }
 
@@ -116,9 +120,13 @@ Attribute::Attribute(QString name, QString defaultValue, QString typeOfOp,
 
 Attribute::~Attribute()
 {
-  if (type_ == ENUM)
-    if (e_.options_)
+  if (type_ == ENUM) {
+    if (e_.options_==e_.keys_) e_.keys_=0;
+    if (e_.options_) 
       delete e_.options_;
+    if (e_.keys_)
+      delete e_.keys_;
+  }
 }
 
 /** Initialize attribute */
@@ -127,6 +135,7 @@ Attribute::init(QString name, QString label, QString tip)
 {
   name_ = name;
   cmd_ = "";
+  defaultExt_ = "";
   prefix_="";
   defaultValue_ = "";
   type_ = STRING;
@@ -194,6 +203,13 @@ Attribute::set(ArgDict & attribs)
       e_.options_ = new QStringList();
       if (!val.isEmpty())
         *(e_.options_) = val.split(",");
+      val="";
+      MLParser::setString(val, &attribs, "keys");
+      if (val.isEmpty())
+	MLParser::setString(val, &attribs, "options");
+      e_.keys_ = new QStringList();
+      if (!val.isEmpty())
+        *(e_.keys_) = val.split(",");
       break;
     }
   case OPERATOR:
@@ -210,6 +226,7 @@ Attribute::set(ArgDict & attribs)
     break;
   }
   MLParser::setString(defaultValue_, &attribs, "value");
+  MLParser::setString(defaultExt_, &attribs, "ext");
   cmd_ = "@" + name_ + "@";
   MLParser::setString(cmd_, &attribs, "cmd");
 }
@@ -236,6 +253,13 @@ Attribute::value()
   return defaultValue_;
 }
 
+/** Returns the default extension of a file attribute */
+QString
+Attribute::ext()
+{
+  return defaultExt_;
+}
+
 /** Type of this attribute */
 int
 Attribute::type()
@@ -248,6 +272,15 @@ const QStringList& Attribute::options()
 {
   if (type_ == ENUM)
     return *e_.options_;
+  else
+    return emptyList_;
+}
+
+/** Returns the keys for an enum attribute, otherwise 0 */
+const QStringList& Attribute::keys()
+{
+  if (type_ == ENUM)
+    return *e_.keys_;
   else
     return emptyList_;
 }

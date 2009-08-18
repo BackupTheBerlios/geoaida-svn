@@ -115,7 +115,7 @@ GeoImageList::read(MLParser & parser)
         GeoImage *gi = new GeoImage(parser);    //parse geoimage
 #ifdef WIN32
   if (gi == 0){
-    cout << "Out of Memory..6";
+    //cout << "Out of Memory..6";
     exit(1);
   }
 #endif
@@ -261,7 +261,7 @@ GeoImage *GeoImageList::loadLabelImage(QString fname,
   GeoImage *gi = new GeoImage(fname, key, west, north, east, south);
 #ifdef WIN32
   if (gi == 0){
-    cout << "Out of Memory..7";
+   // cout << "Out of Memory..7";
     exit(1);
   }
 #endif

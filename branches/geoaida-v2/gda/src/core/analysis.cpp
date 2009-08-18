@@ -34,6 +34,7 @@
 #include "SemanticNet"
 #include "GeoImageList"
 
+#ifdef INTERIMAGE
 Analysis::Analysis():iNodeRoot_(0), semNet_(0)
 {                               //default constructor
   init();
@@ -50,10 +51,10 @@ Analysis::Analysis(SemanticNet * sn):iNodeRoot_(0), semNet_(0)
   init();
   semNet_ = sn;
 }
+#endif
 
-Analysis::Analysis(SemanticNet * sn, GeoImageList * gil, GeoImageList * lil):iNodeRoot_(0),
-semNet_
-(0)
+Analysis::Analysis(SemanticNet * sn, GeoImageList * gil, GeoImageList * lil)
+  :iNodeRoot_(0), semNet_(0)
 {
   init();
   semNet_ = sn;
@@ -210,7 +211,7 @@ void Analysis::synchron(bool b)
   if (b)
     taskTable.setMaxJobs(1);
   else
-    taskTable.setMaxJobs(4);
+    taskTable.setMaxJobs(8);
 }
 
 /** generate the first instance, the goal instance.
@@ -242,7 +243,7 @@ int Analysis::genGoal(INode* iNode)
   return 0;                     // OK
 }
 
-/** slot to told the analyze from the root node that all was finished */
+/** slot to tell the analyze from the root node that all was finished */
 void slotready()
 {
 }
@@ -257,9 +258,13 @@ void Analysis::slotstart()
 void Analysis::start()
 {
   if (genGoal() == 0) {
-    emit message("Starting analysis");
-    (iNodeRoot_->sNode())->synchron(synchron());
-    iNodeRoot_->startAnalyze();
+	if ((iNodeRoot_->sNode())->temporal())
+	  emit message("Analysis aborted: temporal node cannot be root!");
+	else {
+      emit message("Starting analysis");
+      (iNodeRoot_->sNode())->synchron(synchron());
+      iNodeRoot_->startAnalyze();
+	}
   }
 }
 

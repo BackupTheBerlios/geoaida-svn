@@ -32,11 +32,11 @@ NetModel::NetModel()
   rootNode_ = new GNode();
 #ifdef WIN32
         if (rootNode_ == 0){
-          cout << "Out of Memory..14";
+          //cout << "Out of Memory..14";
           exit(1);
         }
 #endif
-  rootNode_->name("Szene");
+  rootNode_->name("Scene");
 //  rootNode_->xxxmin(1);
 //  rootNode_->xxxmax(1);
 }
@@ -78,6 +78,7 @@ int NetModel::columnCount ( const QModelIndex & parent ) const
  */
 int NetModel::rowCount ( const QModelIndex & parent ) const
 {
+  if (!parent.isValid()) return 1;
   GNode *parentNode = nodeFromIndex(parent);
   if (!parentNode)
     return 0;
@@ -137,8 +138,13 @@ QModelIndex NetModel::index (int row, int column,
 {
     if (!rootNode_)
         return QModelIndex();
-    GNode *parentNode = nodeFromIndex(parent);
-    return createIndex(row, column, parentNode->children()[row]);
+    if (parent.isValid()) {
+      GNode *parentNode = nodeFromIndex(parent);
+      return createIndex(row, column, parentNode->children()[row]);
+    }
+    else
+      return createIndex(row, column, rootNode_);
+      
 }
 
 /*!
@@ -157,7 +163,7 @@ QModelIndex NetModel::parent(const QModelIndex &child) const
         return QModelIndex();
     GNode *grandparentNode = parentNode->parent();
     if (!grandparentNode)
-        return QModelIndex();
+      return createIndex(0,0,parentNode);
     int row = grandparentNode->children().indexOf(parentNode);
     return createIndex(row, child.column(), parentNode);
 }
@@ -258,24 +264,98 @@ void NetModel::write()
 }
 
 /** Write the  net to the file fname */
-void NetModel::write(const QString & fname)
-{
-  QFile fp(fname);
-  if (!fp.open(QIODevice::WriteOnly)) {
-    qDebug("NetModel::write(%s): file not accessable", fname.toLatin1().constData());
-    throw FileIOException(FileIOException::OPEN_FAILED, fname);
-  }
-  QTextStream str(&fp);
-  write(str);
-  fp.close();
-  setFilename(fname);
-}
+//void NetModel::write(const QString & fname)
+//{
+//  QFile fp(fname);
+//  if (!fp.open(QIODevice::WriteOnly)) {
+//    qDebug("NetModel::write(%s): file not accessable", fname.toLatin1().constData());
+//    throw FileIOException(FileIOException::OPEN_FAILED, fname);
+//  }
+//  QTextStream str(&fp);
+//  write(str);
+//  fp.close();
+//  setFilename(fname);
+//}
+
+//Method changed by Rodrigo - 04/06/09
 
 /** write the  net to the file fp */
-void NetModel::write(QTextStream & fp)
+//void NetModel::write(QTextStream & fp)
+//{
+//  if (rootNode_)
+//    rootNode_->write(fp, QString(""));
+//}
+
+/** write the  net to the file fp */
+void NetModel::write(const QString & fname)
 {
-  if (rootNode_)
-    rootNode_->write(fp, QString(""));
+
+	QFile fp(fname);
+	
+	if (!fp.open(QIODevice::WriteOnly)) {
+		qDebug("NetModel::write(%s): file not accessable", fname.toLatin1().constData());
+		throw FileIOException(FileIOException::OPEN_FAILED, fname);
+	}
+
+	if (!rootNode_) return;
+	
+	QXmlStreamWriter writer(&fp);
+
+	writer.setAutoFormatting(true);
+	
+	writer.setCodec("UTF-8");
+	
+	writer.writeStartDocument();
+
+	writer.writeStartElement("node");
+	
+    ArgDictConstIterator it=rootNode_->attribList().constBegin();
+	  for (;it!=rootNode_->attribList().constEnd(); ++it) {
+
+        writer.writeAttribute(it.key(), it.value());
+
+  	}
+  
+	//Writes child elements recursively
+
+    QList<GNode*>::const_iterator ait = rootNode_->children().constBegin();
+    for (; ait!=rootNode_->children().constEnd(); ++ait) {
+		writeChild(*ait,writer);
+    }
+
+	writer.writeEndElement();
+	  
+	writer.writeEndDocument();
+  
+	fp.close();
+	
+	setFilename(fname);
+  
+}
+
+/** write child element to the net file */
+
+void NetModel::writeChild(GNode* node, QXmlStreamWriter & writer)
+{
+
+	writer.writeStartElement("node");
+	
+    ArgDictConstIterator it=node->attribList().constBegin();
+	  for (;it!=node->attribList().constEnd(); ++it) {
+
+        writer.writeAttribute(it.key(), it.value());
+
+  	}
+  
+	//Writes child elements recursively
+
+    QList<GNode*>::const_iterator ait = node->children().constBegin();
+    for (; ait!=node->children().constEnd(); ++ait) {
+		writeChild(*ait,writer);
+    }
+
+	writer.writeEndElement();
+	  
 }
 
 /** Get the rootNode_ of the  net */

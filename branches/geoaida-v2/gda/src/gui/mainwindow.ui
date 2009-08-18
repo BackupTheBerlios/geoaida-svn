@@ -74,6 +74,12 @@
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
+           <property name="uniformRowHeights" >
+            <bool>true</bool>
+           </property>
+           <property name="allColumnsShowFocus" >
+            <bool>true</bool>
+           </property>
           </widget>
           <widget class="AttributeEditor" name="attributeEditor_" >
            <property name="sizePolicy" >

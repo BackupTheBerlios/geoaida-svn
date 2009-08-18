@@ -41,6 +41,40 @@ CleanUp::~CleanUp()
 {
 }
 
+bool RemoveDirectory(QDir aDir)
+{
+	bool has_err = false;
+	if (aDir.exists())//QDir::NoDotAndDotDot
+	{
+	
+		QFileInfoList entries = aDir.entryInfoList(QDir::NoDotAndDotDot |
+		QDir::Dirs | QDir::Files);
+		int count = entries.size();
+	
+		//RBCFS_OK == has_err
+		for (int idx = 0; ((idx < count) && (!has_err)); idx++)
+		{
+			QFileInfo entryInfo = entries[idx];
+			QString path = entryInfo.absoluteFilePath();
+			if (entryInfo.isDir())
+			{
+			has_err = RemoveDirectory(QDir(path));
+			}
+			else
+			{
+				QFile file(path);
+				if (!file.remove())
+					has_err = true;
+			}
+		}
+	
+		if (!aDir.rmdir(aDir.absolutePath()))
+			has_err = true;
+	}
+	
+	return(has_err);
+}
+
 /** Append filename to the list of temporary files */
 void CleanUp::append(QString filename)
 {
@@ -52,17 +86,74 @@ void CleanUp::append(QString filename)
 /** Delete the stored files */
 void CleanUp::deleteFiles()
 {
+
+/*
+#ifdef DEBUG_MSG 	
   qDebug("Cleanup::deleteFiles");
-  const_iterator it;
-  for (it = constBegin(); it != constEnd(); ++it) {
-    qDebug("     rm %s", (*it).toLatin1().constData());
-    QFile::remove(*it);
+#endif
+  Iterator it;
+  for (it = this->begin(); it != this->end(); ++it) {
+#ifdef DEBUG_MSG
+#ifdef WIN32
+	  qDebug("     del /f %s", (const char *) it.key());
+#else
+	  qDebug("     rm %s", (const char *) it.key());
+#endif
+#endif
+    QFile::remove(it.key());
   }
   clear();
   QString cmd;
-  cmd.sprintf("rm -rf %s",getTmpDirPID().toLatin1().constData());
-  qDebug(cmd.toLatin1().constData());
-  system(cmd.toLatin1().constData());
+#ifdef WIN32
+  	  cmd.sprintf("rd /s/q %s",getTmpDirPID().latin1());
+#else
+	  cmd.sprintf("rm -rf %s",getTmpDirPID().latin1());
+#endif  
+  
+#ifdef DEBUG_MSG   
+  qDebug(cmd);
+#endif
+  system(cmd.latin1());
+*/
+
+  QDir tempDir = QDir(getTmpDirPID());
+
+  RemoveDirectory(tempDir);
+  
+}
+
+/** Delete all temp files */
+void CleanUp::deleteAllFiles()
+{
+
+  QDir aDir = QDir(getTmpDir());
+
+  bool has_err = false;
+	if (aDir.exists())//QDir::NoDotAndDotDot
+	{
+	
+		QFileInfoList entries = aDir.entryInfoList(QDir::NoDotAndDotDot |
+		QDir::Dirs | QDir::Files);
+		int count = entries.size();
+	
+		//RBCFS_OK == has_err
+		for (int idx = 0; ((idx < count) && (!has_err)); idx++)
+		{
+			QFileInfo entryInfo = entries[idx];
+			QString path = entryInfo.absoluteFilePath();
+			if (entryInfo.isDir())
+			{
+			has_err = RemoveDirectory(QDir(path));
+			}
+			else
+			{
+				QFile file(path);
+				if (!file.remove())
+					has_err = true;
+			}
+		}
+			
+	}
 
 }
 
@@ -70,35 +161,16 @@ QString CleanUp::getTmpDir()
 {
   static QString dir;
   if (dir.isEmpty()) {
+    QDir tmpdir;
     dir = getenv("GA_DATADIR");
-      if (dir.isEmpty()) {
-      dir=getenv("HOME");
-      if (!dir
-      .isEmpty()) {
-        dir+="/.gda";
-        QDir tmpdir(dir);
-        if (!tmpdir.exists()) {
-	  qDebug("Creating tmpdir %s", dir.toLatin1().constData());
-	  tmpdir.mkdir(dir);
-        }
-        dir+="/tmp";
-      }
-      else {
-        if (prefix_=="")
-#ifdef WIN32
-          dir = getenv("TEMP");
-#else
-          dir = TMPDIR;
-#endif
-        else
-          dir=prefix_+"/tmp";
-      }
+    if (dir.isEmpty()) 
+      tmpdir.setPath(QDir::homePath()+"/.gda/tmp");
+    else tmpdir.setPath(dir);
+    if (!tmpdir.exists()) {
+      qDebug("Creating tmpdir %s", tmpdir.path().toLatin1().constData());
+      tmpdir.mkpath(tmpdir.path());
     }
-	  QDir tmpdir(dir);
-	  if (!tmpdir.exists()) {
-	    qDebug("Creating tmpdir %s", dir.toLatin1().constData());
-	    tmpdir.mkdir(dir);
-	  }
+    dir=tmpdir.path();
   }
 
   return dir;
@@ -109,19 +181,21 @@ QString CleanUp::getTmpDirPID()
   static QString dir;
   if (dir.isEmpty()) {
     dir = getTmpDir();
-#ifdef WIN32
-    dir = QString().sprintf("%s\\%d", dir.toLatin1().constData(), getpid());
-#else
+    
     dir = QString().sprintf("%s/%d", dir.toLatin1().constData(), getpid());
-#endif
   }
 
   QDir tmpdir(dir);
   if (!tmpdir.exists()) {
-    qDebug("Creating tmpdir %s", dir.toLatin1().constData());
-    tmpdir.mkdir(dir);
+    qDebug("Creating tmpdir %s", tmpdir.path().toLatin1().constData());
+    tmpdir.mkdir(tmpdir.path());
   }
   return dir;
+}
+
+unsigned int CleanUp::getPID()
+{
+	return getpid();
 }
 
 /** creates the relDir in absDir and returns the new absDir */
@@ -129,19 +203,15 @@ QString CleanUp::mkdir(QString absDir, QString relDir)
 {
   QDir dir(absDir);
   if (!dir.exists()) return "";
-#ifdef WIN32
-  QStringList dirElements=relDir.split("\\");
-#else
-  QStringList dirElements=relDir.split("/");
-#endif
-  for ( QStringList::Iterator it = dirElements.begin(); it != dirElements.end(); ++it ) {
-    if (!dir.exists(*it)) {
-      if (!dir.mkdir(*it)) return "";
-    }
-    if (!dir.cd(*it)) return "";
-  }
+  dir.mkpath(relDir); //! throw exception
+  dir.setPath(relDir);  //! throw exception
   return dir.path();
 
+}
+
+void CleanUp::setPrefix(QString prefix)
+{
+   prefix_=prefix;
 }
 
 QString& CleanUp::prefix(QString prefix)
