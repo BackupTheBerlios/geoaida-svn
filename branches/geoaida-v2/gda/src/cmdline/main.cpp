@@ -1,7 +1,7 @@
 /***************************************************************************
-                          tree.h  -  description
+                          main.cpp  -  description
                              -------------------
-    begin                : Wed Sep 27 2000
+    begin                : Wed Jul 12 2000
     copyright            : (C) 2000 by Martin Pahl
     email                : pahl@tnt.uni-hannover.de
  ***************************************************************************/
@@ -14,35 +14,41 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
+#include <QCoreApplication>
+#include <QDir>
+#include "OperatorList"
+#include "CleanUp"
+#include <iostream>
+#include <getopt.h>
+#include "Project"
 
-/*
- * $Source: /data/cvs/ga_image/ga_image/gaimage/treenode.h,v $
- * $Revision: 1.1 $
- * $Date: 2001/12/03 13:00:07 $
- * $Author: stahlhut $
- * $Locker:  $
- */
+using namespace std;
 
-#ifndef TREENODE_H
-#define TREENODE_H
-
-#include <qstring.h>
-#include <qlist.h>
-/**Template class for a tree
-  *@author Martin Pahl
-  */
-
-template <class T, class Base>
-class TreeNode : public Base
+void Usage(const char* prgname)
 {
-public: 
-	TreeNode();
-	virtual ~TreeNode();
-  /** Get the parent of this node */
-  T* parent();
-  /** Get the List of children */
-  QList<T>& children();
-};
+  std::cout << "Usage:" << endl;
+  std::cout << "  " << prgname << " <project-file>" << endl;
+  
+}
 
-#include "treenode.hpp"
-#endif
+int main(int argc, char **argv)
+{
+  if (argc<=1) {
+    Usage(argv[0]);
+    return(1);
+  }
+  QCoreApplication app(argc, argv);
+  //  Q_INIT_RESOURCE(gda);
+  cleanUp_.prefix(PRGDIR);
+  QDir d(PRGDIR);
+  d.cd("share/data/operators");
+  operatorList_.readDir(d.path());	
+  Project project;
+  project.read(argv[1]);
+//   MainWindow *mainWindow = new MainWindow(argc,argv);
+//   mainWindow->show();
+  
+  int ret_val=app.exec();
+  return 0;
+
+}

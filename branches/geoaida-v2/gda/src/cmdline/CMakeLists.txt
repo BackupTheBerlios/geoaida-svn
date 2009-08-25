@@ -26,10 +26,10 @@ SET(sources main.cpp )
 
 #QT4_WRAP_CPP(moclib ${mocheaders})
 
-ADD_EXECUTABLE(gda-gui ${sources})
+ADD_EXECUTABLE(gda ${sources})
 
 
-TARGET_LINK_LIBRARIES(gda-gui gdagui gdacore mlparser pfm pnm ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} ${QT_QTXML_LIBRARY})
+TARGET_LINK_LIBRARIES(gda gdacore mlparser pfm pnm ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} ${QT_QTXML_LIBRARY})
 
-INSTALL(TARGETS gda-gui DESTINATION bin)
+INSTALL(TARGETS gda DESTINATION bin)
 

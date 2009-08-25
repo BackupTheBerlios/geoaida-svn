@@ -11,7 +11,7 @@ set(headers gaall.h
            gadowindowt.h
            gadraw.h
            gadrawt.h
-           gafft.h
+#           gafft.h
            gagaussian.h
            gagradient.h
            gagradientt.h
@@ -44,7 +44,7 @@ set(templateheaders
 set(sources gacanny.cpp
            gaconvolution.cpp
            gadraw.cpp
-           gafft.cpp
+#           gafft.cpp
            gagaussian.cpp
            gagradient.cpp
            gahough.cpp
@@ -61,5 +61,5 @@ install(TARGETS gaimage DESTINATION lib)
 install(FILES ${headers} DESTINATION include)
 
 add_executable(painttest paint.cpp)
-target_link_libraries(painttest gaimage pfm pnm fftw3
-)
+#target_link_libraries(painttest gaimage pfm pnm fftw3)
+target_link_libraries(painttest gaimage pfm pnm)

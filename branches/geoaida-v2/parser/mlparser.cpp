@@ -32,16 +32,13 @@
 
 QTextStream& ArgDict::write(QTextStream& fp) const
 {
-	{
-	  ArgDictConstIterator it=constBegin();
-	  for (;it!=constEnd(); ++it) {
-  		QString s=it.value();
-   	 	fp << it.key() << "=\""
-   	   	 << (s.replace(QRegExp("\\\\"),QString("\\\\"))).replace(QRegExp("\""),QString("\\\""))
-   	     << "\" ";
-  	}
-  }	
- 	return fp;
+  for (ArgDictConstIterator it=constBegin();it!=constEnd(); ++it) {
+    QString s=it.value();
+    fp << it.key() << "=\""
+       << (s.replace(QRegExp("\\\\"),QString("\\\\"))).replace(QRegExp("\""),QString("\\\""))
+       << "\" ";
+  }
+  return fp;
 }
 
 void ArgDict::insert(QString name, int val) {
