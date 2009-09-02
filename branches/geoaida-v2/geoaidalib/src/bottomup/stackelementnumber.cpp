@@ -17,7 +17,7 @@
 
 #include "stackelementnumber.h"
 
-using BottomUp;
+using namespace BottomUpLib;
 StackElementNumber::StackElementNumber(double v) {
   data_=v;
 }

@@ -22,13 +22,16 @@ output: [stack of lists] */
 //	#define DEBUGMESSAGES
 
 #include "neighbour.h"
-#include "stackelem.h"
-#include "stackelemnodelist.h"
-#include "stackelemnumber.h"
-#include "stackelemstring.h"
-#include "stackelemstack.h"
-#include "regionsensor.h"
-#include "stackelemstring.h"
+#include "StackElement"
+#include "StackElementNodeList"
+#include "StackElementNumber"
+#include "StackElementString"
+#include "StackElementStack"
+#include "StackElementString"
+#include "RegionSensor"
+#include "Node"
+
+using namespace BottomUpLib;
 
 class GeoPosition {//help class to calc overlap area
   public:
@@ -104,11 +107,11 @@ class GeoPosition {//help class to calc overlap area
 	Point2D bbc_;
 };
 
-bool neighbour(Stack& stack){
-  StackElem *el1=0;
-  StackElem *el2=0;
-  StackElem *el3=0;
-  StackElem *el4=0;
+bool BottomUpLib::neighbour(Stack& stack){
+  StackElement *el1=0;
+  StackElement *el2=0;
+  StackElement *el3=0;
+  StackElement *el4=0;
 
   try {
     if (stack.count()<4) throw Stack::CleanUp(false); //	sind noch genug Werte auf dem stack?
@@ -117,13 +120,13 @@ bool neighbour(Stack& stack){
     el3=stack.pop(); 	//nodelist Schatten vom stack holen
     el4=stack.pop(); 	//nodelist Dach vom stack holen
 	  // Typen testen
-    if (el1->type()!=StackElem::NUMBER || el2->type()!=StackElem::STRING || el3->type()!=StackElem::NODELIST || el4->type()!=StackElem::NODELIST)
+    if (el1->type()!=StackElement::NUMBER || el2->type()!=StackElement::STRING || el3->type()!=StackElement::NODELIST || el4->type()!=StackElement::NODELIST)
 		throw Stack::CleanUp(false);
   	//	Werte holen
-    float maxdist=((StackElemNumber*)el1)->data();		//	max eudist
-    QString dir=((StackElemString*)el2)->data();			//	Sonnenrichtung
-    NodeList& nl2=((StackElemNodeList*)el3)->data();	//	Schatten
-    NodeList& nl1=((StackElemNodeList*)el4)->data();	//	Daecher
+    float maxdist=((StackElementNumber*)el1)->data();		//	max eudist
+    QString dir=((StackElementString*)el2)->data();			//	Sonnenrichtung
+    NodeList& nl2=((StackElementNodeList*)el3)->data();	//	Schatten
+    NodeList& nl1=((StackElementNodeList*)el4)->data();	//	Daecher
 
 	#ifdef DEBUGMESSAGES
 	cout<<"in function neighbour"<<endl;		
@@ -147,58 +150,69 @@ bool neighbour(Stack& stack){
      }
     Stack* st= new Stack;  // Ergebnis stack anlegen
 
-   QDictIterator<Node> it1( nl1 );
+    QHash<QString,Node*>::iterator it1=nl1.begin();
 	// nodelist1 durchlaufen Daecher
-    while ( it1.current() ) {
-      Node *node1 = it1.current();
-		NodeList *nlist = new NodeList;
-	   GeoPosition gp(node1, node1->getValue("llx")->toInt(),  node1->getValue("lly")->toInt(),
-			node1->getValue("urx")->toInt(), node1->getValue("ury")->toInt(), node1->getValue("area")->toFloat() );
-		gp.key(it1.currentKey());
-		int shade=0;
-		QDictIterator<Node> it2( nl2 );
-		// nodelist2 durchlaufen Schattenbereiche
-   	while ( it2.current() ) {
-      	Node *node2 = it2.current();
-			if (gp.bbOverlap(GeoPosition (node2, node2->getValue("llx")->toInt(),  node2->getValue("lly")->toInt(),
-			node2->getValue("urx")->toInt(), node2->getValue("ury")->toInt(), node2->getValue("area")->toFloat() ), dir, maxdist)){
-				if (!shade){
-					#ifdef DEBUGMESSAGES
-					cout<<"Haus in nodelist eingehaengt"<<endl;		
-					#endif //DEBUGMESSAGES
-					nlist->insert ( *((*node1)["addr"]), node1 );	//	insert node1 Haus					
-					shade=1;
-					}
-				nlist->insert ( *((*node2)["addr"]), node2 );	//	insert node2 Schatten																													
-				#ifdef DEBUGMESSAGES
-				cout<<"Schatten in nodelist eingehaengt"<<endl;		
-				#endif //DEBUGMESSAGES
-				}
-			++it2;
-	  	}
-		if (shade){
-		   st->push(new StackElemNodeList(*nlist));
-			#ifdef DEBUGMESSAGES
- 			cout<<"nodelist auf lokalen stack gepusht"<<endl;			
-			#endif //DEBUGMESSAGES
-			}
+    while ( it1!=nl1.end() ) {
+      Node *node1 = it1.value();
+      NodeList *nlist = new NodeList;
+      GeoPosition gp(node1, 
+		     node1->getValue("llx").toInt(),  
+		     node1->getValue("lly").toInt(),
+		     node1->getValue("urx").toInt(), 
+		     node1->getValue("ury").toInt(), 
+		     node1->getValue("area").toFloat() );
+      gp.key(it1.key());
+      int shade=0;
+      QHash<QString,Node*>::iterator it2=nl2.begin();
+      // nodelist2 durchlaufen Schattenbereiche
+      while ( it2!=nl2.end() ) {
+      	Node *node2 = it2.value();
+	if (gp.bbOverlap(GeoPosition (node2, 
+				      node2->getValue("llx").toInt(),  
+				      node2->getValue("lly").toInt(),
+				      node2->getValue("urx").toInt(), 
+				      node2->getValue("ury").toInt(),
+				      node2->getValue("area").toFloat() ),
+			 dir, maxdist)){
+	  if (!shade){
+#ifdef DEBUGMESSAGES
+	    cout<<"Haus in nodelist eingehaengt"<<endl;		
+#endif //DEBUGMESSAGES
+//	insert node1 Haus
+	    nlist->insert(node1->value("addr"), node1 );	
+	    shade=1;
+	  }
+	  //	insert node2 Schatten
+	  nlist->insert(node2->value("addr"), node2 );	
+#ifdef DEBUGMESSAGES
+	  cout<<"Schatten in nodelist eingehaengt"<<endl;		
+#endif //DEBUGMESSAGES
+	}
+	++it2;
+      }
+      if (shade){
+	st->push(new StackElementNodeList(*nlist));
+#ifdef DEBUGMESSAGES
+	cout<<"nodelist auf lokalen stack gepusht"<<endl;			
+#endif //DEBUGMESSAGES
+      }
       delete nlist;
-	    ++it1;
-   	}
-
-   stack.push(new StackElemStack(*st));
-	#ifdef DEBUGMESSAGES
-	cout<<"gefundene Haeuser mit Schatten:"<<st->count()<<" auf globalen Stack gepusht"<<endl;
-	#endif //DEBUGMESSAGES
-   delete st;
-   throw Stack::CleanUp(true);
+      ++it1;
+    }
+    
+    stack.push(new StackElementStack(*st));
+#ifdef DEBUGMESSAGES
+    cout<<"gefundene Haeuser mit Schatten:"<<st->count()<<" auf globalen Stack gepusht"<<endl;
+#endif //DEBUGMESSAGES
+    delete st;
+    throw Stack::CleanUp(true);
   }
-    catch(Stack::CleanUp e) {
+  catch(Stack::CleanUp e) {
     if (el1) delete el1;
     if (el2) delete el2;
     if (el3) delete el3;
     if (el4) delete el4;
     return e.status_;
-  	}
+  }
 }
 

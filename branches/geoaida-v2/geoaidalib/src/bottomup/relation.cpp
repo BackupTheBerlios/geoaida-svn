@@ -16,7 +16,7 @@
  ***************************************************************************/
 
 #include "relation.h"
-using BottomUp;
+using namespace BottomUpLib;
 
 Relation::Relation(){
 }

@@ -16,37 +16,40 @@
  ***************************************************************************/
 
 
-#ifndef REGION_H
-#define REGION_H
+#ifndef NODE_H
+#define NODE_H
 
 #include <QString>
 #include <QPoint>
 #include <QFile>
 
 #include <MLParser>
-#include <vips/vips>
+//#include <vips/vips>
 #include "Stack"
+#include "StackElement"
 
-class Ga::Image;
+namespace Ga {
+class Image;
+}
 
-namespace BottomUp {
+namespace BottomUpLib {
 
-class RegionList;
+class NodeList;
 
 /**class to handel the infos for one image
   *@author Jürgen Bückner
   */
 
-class Region : public ArgDict {
+class Node : public ArgDict {
 public: 
   /** default constructor */
-  Region();
+  Node();
   
-  /** constructor read attributes for this Region through parser*/
-  Region(MLParser& parser);
+  /** constructor read attributes for this Node through parser*/
+  Node(MLParser& parser);
   
   /** denstructor */
-  ~Region();
+  ~Node();
   
  protected: // Protected attributes
   enum IMGTYPE {
@@ -65,14 +68,14 @@ public:
   /** init routine */
   void init();
   
-  /** read attributes for this Region through parser */
+  /** read attributes for this Node through parser */
   void read(MLParser& parser);
   
   /** load image info - not the data */
-  void load(RegionList& regionList);
+  void load(NodeList& nodeList);
   
   /** write data to file */
-  void write(QTextStream& fp, QString keyword="region");
+  void write(QTextStream& fp, QString keyword="node");
   
   /** return the image filename */
   QString filename();
@@ -83,11 +86,11 @@ public:
   /** return data */
   Ga::Image* data();
 
-  //** set value in region */
+  //** set value in node */
   void setValue(QString key, QString val);
 
-  //** get value from region */
-  QString* getValue(const QString key);
+  //** get value from node */
+  QString getValue(const QString key);
 
   /** return data label id */
   int id() {return id_;}
@@ -145,11 +148,11 @@ public:
   QString classname() {return class_;}
   /** return identifier name*/
   QString name() {return name_;}
-  /** return region address*/
+  /** return node address*/
   QString addr() {return addr_;}
-  /** return region address*/
+  /** return node address*/
   QString key() {return key_;}
-  /** return info about this region*/
+  /** return info about this node*/
   void info() {
     ArgDictIterator it = iterator();
     for (it = begin(); it != end(); ++it){
@@ -163,7 +166,7 @@ public:
   /** Removes the top item from the local stack and returns it. */
   StackElement* stackPop();
   /** Adds an element d to the top of the local stack. */
-  void stackPush(const StackElement* d);
+  void stackPush(StackElement* d);
   /** Returns the number of items in the local stack.  */
   uint stackCount(void);
   /** Returns TRUE is the local stack contains no elements to be popped; otherwise returns FALSE.  */
@@ -178,7 +181,7 @@ public:
   
   //Operatoren:
   /** return class name*/
-  //friend ostream& operator<< (ostream& os, Region& region);
+  //friend ostream& operator<< (ostream& os, Node& node);
   
  protected: // Protected attributes
   QString filename_, class_, name_, addr_, key_;

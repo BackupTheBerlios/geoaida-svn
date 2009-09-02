@@ -20,20 +20,19 @@
 #ifndef REGIONSENSOR_H
 #define REGIONSENSOR_H
 
-#include <gasensor.h>
+#include "Node"
+#include "Sensor"
+#include "StackElementNumber"
 #include "pfm.h"
 #include "point2d.h"
 #include "gaimage.h"
-#include <qlist.h>
-#include <qvaluelist.h> 
-#include <stdio.h>
-#include "stackelemnumber.h"
-//#include "stackelemstring.h"
+#include <QLinkedList>
+#include <cstdio>
 
 using namespace Ga;
+namespace BottomUpLib {
 
-
-class RegionSensor : public GASensor  {
+class RegionSensor : public Sensor  {
 public:
 	/** default constructor */
 	RegionSensor();
@@ -155,22 +154,22 @@ public:
 template <class PixType>
 void basic(PixType label) {
 
-	unsigned int n(0), area(0); //area size of the region
-	int stx(sizeX_), sty(0); //lower-left pixel of region (sp - start point)
+	unsigned int n(0), area(0); //area size of the node
+	int stx(sizeX_), sty(0); //lower-left pixel of node (sp - start point)
 	int llx(sizeX_-1), lly(0), urx(0), ury(sizeY_-1); //values of encase rectangle
 	int bbLlx(0), bbLly(sizeY_-1), bbUrx(sizeX_-1), bbUry(0);
 	unsigned int sx(0),  sy(0);//help variablen
-	double dx(0.0), dy(0.0); //center of region
+	double dx(0.0), dy(0.0); //center of node
 	const int* p = data();
-	ASSERT(p);
+	assert(p);
 	if (node()) {
   	llx=bbUrx=node()->urx();
   	lly=bbUry=node()->ury();
   	urx=bbLlx=node()->llx();
   	ury=bbLly=node()->lly();
   }
-  ASSERT(bbLly<sizeY_);//qDebug(" %d > %d",bbLly,sizeY_);
-  ASSERT(bbUrx<sizeX_);//qDebug(" %d > %d",bbUrx,sizeX_);
+  assert(bbLly<sizeY_);//qDebug(" %d > %d",bbLly,sizeY_);
+  assert(bbUrx<sizeX_);//qDebug(" %d > %d",bbUrx,sizeX_);
   qDebug("RegionSensor::basic Test: bbox llx:%3d < urx:%3d lly:%3d > ury:%3d  (label: %d)",
          bbLlx, bbUrx, bbLly, bbUry, label);
 
@@ -201,7 +200,7 @@ void basic(PixType label) {
   qDebug("RegionSensor::basic: nbox llx:%3d < urx:%3d lly:%3d > ury:%3d size:%d",
          llx, urx, lly, ury, area);
   //if (!area) {
-  qDebug("RegionSensor::basic: id=%d (%s) area=%d",label,node()->filename().latin1(),area);
+  qDebug("RegionSensor::basic: id=%d (%s) area=%d",label,node()->filename().toLatin1().constData(),area);
   //}
 	//qDebug("#....# area:%d  dx:%f  dy:%f  l:%d",area,dx,dy,label);
 	//convert results to string and replace in NODE
@@ -242,15 +241,15 @@ float nextPoint(const int* pic, int& x, int& y, int& dir, int label);
 template <class PixType>
 void calc_circumference(PixType label) {
   float circumference = 0.0;
-  float xc=x_center(label, "x_center"); //x-center of region
-  float yc=y_center(label, "y_center"); //y-center of region
+  float xc=x_center(label, "x_center"); //x-center of node
+  float yc=y_center(label, "y_center"); //y-center of node
 	int stx_=stx(label, "stx");
   int sty_=sty(label, "sty");
 	int xp=stx_;
   int yp=sty_;
   const int* pic = data();
   int i=0, dir=0;
-	ASSERT(pic);
+	assert(pic);
   double radius=0.0;
 
   circumference = nextPoint(pic,xp,yp,dir,label);
@@ -267,7 +266,10 @@ void calc_circumference(PixType label) {
   //for (p=pointList.first(); p!=0;p=pointList.next()) printf("(%d, %d)\n",p->x(),p->y());
 
  	radius /= i; //radius bestimmen
- 	qDebug("(%s): label: %d, radius: %f",((*node_)["name"])->latin1(),label,radius);
+ 	qDebug("(%s): label: %d, radius: %f",
+	       node_->value("name").toLatin1().constData(),
+	       label,
+	       radius);
 	QString *circumference_s = new QString;
 	circumference_s->setNum(circumference);
 	node_->replace("circumference", circumference_s);	
@@ -278,15 +280,15 @@ void calc_circumference(PixType label) {
 }
 
 //.......
-/** circumference of the label region  - put the value of the local stack*/
+/** circumference of the label node  - put the value of the local stack*/
 template <class PixType>
 float circumference(PixType label, QString sn="") {
   int i=0;
   if (sn.isEmpty()) {sn=sensor_name;i=1;}
-	if (!node_->find(sn))
+	if (!node_->contains(sn))
 	  this->calc_circumference(label);	
-	  float s=((*node_)[sn])->toFloat();
-    if (i) node_->stackPush(  new StackElemNumber( double(s) ));
+	float s=node_->value(sn).toFloat();
+    if (i) node_->stackPush(  new StackElementNumber( double(s) ));
 	  return s;
 }
 
@@ -381,16 +383,16 @@ void calc_orthogonality(PixType label) {
 }
 
 
-/** orthogonality for the label region - put the value of the local stack */
+/** orthogonality for the label node - put the value of the local stack */
 template <class PixType>
 float orthogonality(PixType label, QString sn="")
 {
   int i=0;
   if (sn.isEmpty()) {sn=sensor_name;i=1;}
-  if (!node_->find(sn))
+  if (!node_->contains(sn))
     this->calc_orthogonality(label);	
-  float s=((*node_)[sn])->toFloat();
-  if (i) node_->stackPush(  new StackElemNumber( double(s) ));
+  float s=node_->value(sn).toFloat();
+  if (i) node_->stackPush(  new StackElementNumber( double(s) ));
   return s;
 }
 
@@ -408,7 +410,12 @@ void calc_roundness(PixType label) {
   if(val<17.0) roundness=1-(val-12.5664)/(17.0-12.5664);
 
   qDebug("(%s): label: %d, circum: %f, size: %d, U^2/F: %f, roundness: %f",
-          ((*node_)["name"])->latin1(),label, circum, a, 1/(float(a)/(circum*circum)), roundness);
+	 node_->value("name").toLatin1().constData(),
+	 label, 
+	 circum, 
+	 a,
+	 1/(float(a)/(circum*circum)), 
+	 roundness);
 	
 	QString *roundness_s = new QString;
 	roundness_s->setNum(roundness);
@@ -421,15 +428,15 @@ void calc_roundness(PixType label) {
 	}*/
 }
 
-/** roundness of the label region [0..1] - put the value of the local stack*/
+/** roundness of the label node [0..1] - put the value of the local stack*/
 template <class PixType>
 float roundness(PixType label, QString sn="") {
   int i=0;
   if (sn.isEmpty()) {sn=sensor_name;i=1;}
-	if (!node_->find(sn))
+	if (!node_->contains(sn))
 	  this->calc_roundness(label);	
-	  float s=((*node_)[sn])->toFloat();
-    if (i) node_->stackPush(  new StackElemNumber( double(s) ));
+	  float s=node_->value(sn).toFloat();
+    if (i) node_->stackPush(  new StackElementNumber( double(s) ));
 	  return s;
 }
 //##################### SQUARNESS #####################
@@ -445,7 +452,7 @@ void calc_squareness(PixType label) {
     squareness=1-sqrt((val-16.0)*(val-16.0)) / 4.5;
 
   qDebug("(%s): label: %d, circum: %f, size: %d, U^2/F: %f, squareness: %f",
-          ((*node_)["name"])->latin1(),label, circum, a, 1/(float(a)/(circum*circum)), squareness);
+          node_->value("name").toLatin1().constData(),label, circum, a, 1/(float(a)/(circum*circum)), squareness);
 	
 	QString *squareness_s = new QString;
 	squareness_s->setNum(squareness);
@@ -458,15 +465,15 @@ void calc_squareness(PixType label) {
 	}*/
 }
 
-/** roundness of the label region [0..1] - put the value of the local stack*/
+/** roundness of the label node [0..1] - put the value of the local stack*/
 template <class PixType>
 float squareness(PixType label, QString sn="") {
   int i=0;
   if (sn.isEmpty()) {sn=sensor_name;i=1;}
-	if (!node_->find(sn))
+	if (!node_->contains(sn))
 	  this->calc_squareness(label);	
-	  float s=((*node_)[sn])->toFloat();
-    if (i) node_->stackPush(  new StackElemNumber( double(s) ));
+	  float s=node_->value(sn).toFloat();
+    if (i) node_->stackPush(  new StackElementNumber( double(s) ));
 	  return s;
 }
 
@@ -479,26 +486,26 @@ void calc_compactness(PixType label) {
   double compactness = 0.0;
 
   compactness=3.14159265*4*a/(circum*circum);
-  //	check for splitted regions of one label
+  //	check for splitted nodes of one label
   if (compactness > 1.0)
 		compactness= 0.0;
   qDebug("(%s): label: %d, circum: %f, size: %d, compactness: %f",
-          ((*node_)["name"])->latin1(), label, circum, a, compactness);
+          node_->value("name").toLatin1().constData(), label, circum, a, compactness);
 	
 	QString *compactness_s = new QString;
 	compactness_s->setNum(compactness);
 	node_->replace("compactness", compactness_s);	
 }
 
-/** compactness of the label region [0..1] - put the value of the local stack*/
+/** compactness of the label node [0..1] - put the value of the local stack*/
 template <class PixType>
 float compactness(PixType label, QString sn="") {
   int i=0;
   if (sn.isEmpty()) {sn=sensor_name;i=1;}
-	if (!node_->find(sn))
+	if (!node_->contains(sn))
 	  this->calc_compactness(label);	
-	  float s=((*node_)[sn])->toFloat();
-    if (i) node_->stackPush(  new StackElemNumber( double(s) ));
+	  float s=node_->value(sn).toFloat();
+    if (i) node_->stackPush(  new StackElementNumber( double(s) ));
 	  return s;
 }
 
@@ -572,25 +579,25 @@ void calc_thickness(PixType label) {
   }
   
   qDebug("(%s): label: %d, thickness: %d",
-          ((*node_)["name"])->latin1(),label, thickness);
+          node_->value("name").toLatin1().constData(),label, thickness);
 	
 	QString *thickness_s = new QString;
 	thickness_s->setNum(thickness);
 	node_->replace("thickness", thickness_s);
 }
 
-/** thickness of the label region [0..1] - put the value of the local stack*/
+/** thickness of the label node [0..1] - put the value of the local stack*/
 template <class PixType>
 int thickness(PixType label, QString sn="") {
   int i=0;
   if (sn.isEmpty()) {sn=sensor_name;i=1;}
-	if (!node_->find(sn)){
+	if (!node_->contains(sn)){
     int labelnummer= label;
 
     this->calc_thickness(label);
 		}
-	  int s=((*node_)[sn])->toInt();
-    if (i) node_->stackPush(  new StackElemNumber( double(s) ));
+	  int s=node_->value(sn).toInt();
+    if (i) node_->stackPush(  new StackElementNumber( double(s) ));
 	  return s;
 }
 
@@ -1042,7 +1049,7 @@ void calc_average_thickness(PixType label){
               }
             }        
                                                 
-//    qDebug("(%s): label: %d", ((*node_)["name"])->latin1(),label);
+//    qDebug("(%s): label: %d", node_->value("name").toLatin1().constData(),label);
 	  QString *av_thickness_s = new QString;
     
     float av_thickness, av_thickness_pixel;
@@ -1073,15 +1080,20 @@ void calc_average_thickness(PixType label){
     float ge = node()->geoEast();
     float gw = node()->geoWest();
     
-    std::cout<<"Globale Lage der BB: north="<<gn<<" south="<<gs<<" west="<<gw<<" east="<<ge<<" file="<<node()->filename()<<endl;
+    std::cout << "Globale Lage der BB: north=" << gn
+	      << " south=" << gs
+	      << " west=" << gw
+	      << " east=" <<ge
+	      << " file=" <<node()->filename().toLatin1().constData()
+	      << endl;
     std::cout<<"Lage der BB: llx="<<x1<<" urx="<<x2<<" ury="<<y1<<" lly="<<y2<<endl;
     std::cout<<"BB: x-dim="<<dx<<" ydim="<<dy<<endl;
 
     //  gen-file oeffnen
     FILE *gen_fp;
-    QValueList<QPoint> skeleton_list;    
+    QLinkedList<QPoint> skeleton_list;    
     char genfilename[1024];
-    sprintf(genfilename, "%s.gen",node()->filename().ascii());
+    sprintf(genfilename, "%s.gen",node()->filename().toLatin1().constData());
     //  gen-file anfuegen
     gen_fp = fopen(genfilename, "a");
    
@@ -1098,7 +1110,7 @@ void calc_average_thickness(PixType label){
           }
 
     //  write skeleton list to gen file with correct topology
-    QValueList<QPoint>::iterator it;
+    QLinkedList<QPoint>::iterator it;
     //  look for start point of vectrisation
     float diag= sqrt (dx*dx+dy*dy);
     float min_dist[4]={diag, diag, diag, diag};                                             //    0 1
@@ -1131,7 +1143,7 @@ void calc_average_thickness(PixType label){
       center= new_center;
       for (it= skeleton_list.begin(); it!= skeleton_list.end(); ++it){
         if (dist(center, *it)==0.0)
-          it= skeleton_list.remove(it);
+          it= skeleton_list.erase(it);
         else if (dist(center, *it)<min_dist){
           min_dist= dist(center, *it);
           new_center= *it;
@@ -1154,7 +1166,7 @@ void calc_average_thickness(PixType label){
           std::cout<<"delete "<<new_center.x()<<","<<new_center.y()<<")"<<endl;
       for (it= skeleton_list.begin(); it!= skeleton_list.end(); ++it)
         if (dist(new_center, *it)==0.0)
-          it= skeleton_list.remove(it);
+          it= skeleton_list.erase(it);
       new_center= center;
       }
     }    
@@ -1170,20 +1182,20 @@ float dist(QPoint p1, QPoint p2){
   return sqrt( (p1.x()-p2.x())*(p1.x()-p2.x()) + (p1.y()-p2.y())*(p1.y()-p2.y()) );
 }  
 
-/** DELTA_PA of the label region - put the value of the local stack*/
+/** DELTA_PA of the label node - put the value of the local stack*/
 template <class PixType>
 int average_thickness(PixType label, QString sn="") {
   int i=0;
   if (sn.isEmpty()) {sn=sensor_name;i=1;}
-	if (!node_->find(sn)){
+	if (!node_->contains(sn)){
     int labelnummer= label;
  		std::cout<<"in average_thickness"<<endl;
     std::cout<<"labelnummer= "<<labelnummer<<endl;
     
 	  calc_average_thickness(label);
 		}
-	  float s=((*node_)[sn])->toFloat();
-    if (i) node_->stackPush(  new StackElemNumber( double(s) ));
+	  float s=node_->value(sn).toFloat();
+    if (i) node_->stackPush(  new StackElementNumber( double(s) ));
 	  return static_cast<int>(s);
 }
 
@@ -1197,7 +1209,7 @@ void calc_momente(PixType label) {
 	double  m11(0.0),//Trägheitsprodukt der Achsen durch den Schwerpunkt parallel zu den Koordinatenachsen.
 	        m02(0.0),//Moment 2. Ordnung (zeilenabhängig).
 	        m20(0.0);//Moment 2. Ordnung (spaltenabhängig).
-	ASSERT(p);
+	assert(p);
 	for (int y=0; y<sizeY_; y++) {
 		for (int x=0; x<sizeX_; x++) {
 			if(*p == label) {
@@ -1213,7 +1225,7 @@ void calc_momente(PixType label) {
   double ha2 = h - sqrt ( h*h - m20 * m02 + m11*m11);
 
   qDebug("(%s): label: %d, M11: %f, M02: %f, M20: %f, h: %f, HA1: %f, HA2: %f",
-          ((*node_)["name"])->latin1(),label,m11,m02,m20,h,ha1,ha2);
+          node_->value("name").toLatin1().constData(),label,m11,m02,m20,h,ha1,ha2);
 	
 	QString *m11_s = new QString;
 	m11_s->setNum(m11);
@@ -1232,10 +1244,10 @@ template <class PixType>
 double M11(PixType label, QString sn="") {
   int i=0;
   if (sn.isEmpty()) {sn=sensor_name;i=1;}
-	if (!node_->find(sn))
+	if (!node_->contains(sn))
 	  this->calc_momente(label);	
-	  double s=((*node_)[sn])->toFloat();
-    if (i) node_->stackPush(  new StackElemNumber( s ));
+	  double s=node_->value(sn).toFloat();
+    if (i) node_->stackPush(  new StackElementNumber( s ));
 	  return s;
 }
 	
@@ -1244,10 +1256,10 @@ template <class PixType>
 double M20(PixType label, QString sn="") {
   int i=0;
   if (sn.isEmpty()) {sn=sensor_name;i=1;}
-	if (!node_->find(sn))
+	if (!node_->contains(sn))
 	  this->calc_momente(label);	
-	  double s=((*node_)[sn])->toFloat();
-    if (i) node_->stackPush(  new StackElemNumber( s ));
+	  double s=node_->value(sn).toFloat();
+    if (i) node_->stackPush(  new StackElementNumber( s ));
 	  return s;
 }
 
@@ -1256,10 +1268,10 @@ template <class PixType>
 double M02(PixType label, QString sn="") {
   int i=0;
   if (sn.isEmpty()) {sn=sensor_name;i=1;}
-	if (!node_->find(sn))
+	if (!node_->contains(sn))
 	  this->calc_momente(label);	
-	  double s=((*node_)[sn])->toFloat();
-    if (i) node_->stackPush(  new StackElemNumber( s ));
+	  double s=node_->value(sn).toFloat();
+    if (i) node_->stackPush(  new StackElementNumber( s ));
 	  return s;
 }	
 //#####################  #####################
@@ -1267,28 +1279,28 @@ double M02(PixType label, QString sn="") {
 
 //#####################  #####################
 
-/** Sum of all pixels in the region and put the 'pixelsize' of the local stack*/
+/** Sum of all pixels in the node and put the 'pixelsize' of the local stack*/
 template <class PixType>
 unsigned int size(PixType label, QString sn="") {
   int i=0;
   if (sn.isEmpty()) {sn=sensor_name;i=1;}
-	if (!node_->find(sn))
+	if (!node_->contains(sn))
 	  this->basic(label);	
-  unsigned int s=((*node_)[sn])->toUInt();
-  if (i) node_->stackPush(  new StackElemNumber( double(s) ));
+  unsigned int s=node_->value(sn).toUInt();
+  if (i) node_->stackPush(  new StackElementNumber( double(s) ));
 	return s;
 }
 
-/** Sum of all pixels in the region multiply with x and y resolution
+/** Sum of all pixels in the node multiply with x and y resolution
     and put the 'size' of the local stack*/
 template <class PixType>
 float area(PixType label, QString sn="") {
   int i=0;
   if (sn.isEmpty()) {sn=sensor_name;i=1;}
-	if (!node_->find(sn))
+	if (!node_->contains(sn))
 	  this->basic(label);
-  float s=((*node_)[sn])->toFloat();
-  if (i) node_->stackPush(  new StackElemNumber( double(s) ));
+  float s=node_->value(sn).toFloat();
+  if (i) node_->stackPush(  new StackElementNumber( double(s) ));
 	return s;
 }
 
@@ -1297,10 +1309,10 @@ template <class PixType>
 float x_center(PixType label, QString sn="") {
   int i=0;
   if (sn.isEmpty()) {sn=sensor_name;i=1;}
-	if (!node_->find(sn))
+	if (!node_->contains(sn))
 	  this->basic(label);	
-	  float s=((*node_)[sn])->toFloat();
-    if (i) node_->stackPush(  new StackElemNumber( double(s) ));
+	  float s=node_->value(sn).toFloat();
+    if (i) node_->stackPush(  new StackElementNumber( double(s) ));
 	  return s;
 }
 
@@ -1309,10 +1321,10 @@ template <class PixType>
 float y_center(PixType label, QString sn="") {
   int i=0;
   if (sn.isEmpty()) {sn=sensor_name;i=1;}
-	if (!node_->find(sn))
+	if (!node_->contains(sn))
 	  this->basic(label);	
-	  float s=((*node_)[sn])->toFloat();
-    if (i) node_->stackPush(  new StackElemNumber( double(s) ));
+	  float s=node_->value(sn).toFloat();
+    if (i) node_->stackPush(  new StackElementNumber( double(s) ));
 	  return s;
 }
 
@@ -1321,10 +1333,10 @@ template <class PixType>
 float xGeoCenter(PixType label, QString sn="") {
   int i=0;
   if (sn.isEmpty()) {sn=sensor_name;i=1;}
-	if (!node_->find(sn))
+	if (!node_->contains(sn))
 	  this->basic(label);	
-	  float s=((*node_)[sn])->toFloat();
-    if (i) node_->stackPush(  new StackElemNumber( double(s) ));
+	  float s=node_->value(sn).toFloat();
+    if (i) node_->stackPush(  new StackElementNumber( double(s) ));
 	  return s;
 }
 
@@ -1333,10 +1345,10 @@ template <class PixType>
 float yGeoCenter(PixType label, QString sn="") {
   int i=0;
   if (sn.isEmpty()) {sn=sensor_name;i=1;}
-	if (!node_->find(sn))
+	if (!node_->contains(sn))
 	  this->basic(label);	
-	  float s=((*node_)[sn])->toFloat();
-    if (i) node_->stackPush(  new StackElemNumber( double(s) ));
+	  float s=node_->value(sn).toFloat();
+    if (i) node_->stackPush(  new StackElementNumber( double(s) ));
 	  return s;
 }
 
@@ -1345,10 +1357,10 @@ template <class PixType>
 unsigned int llx(PixType label, QString sn="") {
   int i=0;
   if (sn.isEmpty()) {sn=sensor_name;i=1;}
-	if (!node_->find(sn))
+	if (!node_->contains(sn))
 	  this->basic(label);	
-	  unsigned int s=((*node_)[sn])->toUInt();
-    if (i) node_->stackPush(  new StackElemNumber( double(s) ));
+	  unsigned int s=node_->value(sn).toUInt();
+    if (i) node_->stackPush(  new StackElementNumber( double(s) ));
 	  return s;
 }
 
@@ -1357,10 +1369,10 @@ template <class PixType>
 unsigned int lly(PixType label, QString sn="") {
   int i=0;
   if (sn.isEmpty()) {sn=sensor_name;i=1;}
-	if (!node_->find(sn))
+	if (!node_->contains(sn))
 	  this->basic(label);	
-	  unsigned int s=((*node_)[sn])->toUInt();
-    if (i) node_->stackPush(  new StackElemNumber( double(s) ));
+	  unsigned int s=node_->value(sn).toUInt();
+    if (i) node_->stackPush(  new StackElementNumber( double(s) ));
 	  return s;
 }
 
@@ -1369,10 +1381,10 @@ template <class PixType>
 unsigned int urx(PixType label, QString sn="") {
   int i=0;
   if (sn.isEmpty()) {sn=sensor_name;i=1;}
-	if (!node_->find(sn))
+	if (!node_->contains(sn))
 	  this->basic(label);	
-	  unsigned int s=((*node_)[sn])->toUInt();
-    if (i) node_->stackPush(  new StackElemNumber( double(s) ));
+	  unsigned int s=node_->value(sn).toUInt();
+    if (i) node_->stackPush(  new StackElementNumber( double(s) ));
 	  return s;
 }
 
@@ -1381,34 +1393,34 @@ template <class PixType>
 unsigned int ury(PixType label, QString sn="") {
   int i=0;
   if (sn.isEmpty()) {sn=sensor_name;i=1;}
-	if (!node_->find(sn))
+	if (!node_->contains(sn))
 	  this->basic(label);	
-	  unsigned int s=((*node_)[sn])->toUInt();
-    if (i) node_->stackPush(  new StackElemNumber( double(s) ));
+	  unsigned int s=node_->value(sn).toUInt();
+    if (i) node_->stackPush(  new StackElementNumber( double(s) ));
 	  return s;
 }
 
-/** upper left x-point of region and put the value of the local stack*/   //sensor_name
+/** upper left x-point of node and put the value of the local stack*/   //sensor_name
 template <class PixType>
 unsigned int stx(PixType label, QString sn="") {
   int i=0;
   if (sn.isEmpty()) {sn=sensor_name;i=1;}
-	if (!node_->find(sn))
+	if (!node_->contains(sn))
 	  this->basic(label);	
-	  unsigned int s=((*node_)[sn])->toUInt();
-    if (i) node_->stackPush(  new StackElemNumber( double(s) ));
+	  unsigned int s=node_->value(sn).toUInt();
+    if (i) node_->stackPush(  new StackElementNumber( double(s) ));
 	  return s;
 }
 
-/** upper left y-point of region and put the value of the local stack*/
+/** upper left y-point of node and put the value of the local stack*/
 template <class PixType>
 unsigned int sty(PixType label, QString sn="") {
   int i=0;
   if (sn.isEmpty()) {sn=sensor_name;i=1;}
-	if (!node_->find(sn))
+	if (!node_->contains(sn))
 	  this->basic(label);	
-	  unsigned int s=((*node_)[sn])->toUInt();
-    if (i) node_->stackPush(  new StackElemNumber( double(s) ));
+	  unsigned int s=node_->value(sn).toUInt();
+    if (i) node_->stackPush(  new StackElementNumber( double(s) ));
 	  return s;
 }
 
@@ -1431,4 +1443,5 @@ private: // Private attributes
 	
 };
 
+} // namespace BottomUpLib
 #endif

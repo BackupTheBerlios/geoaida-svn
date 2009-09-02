@@ -1,5 +1,5 @@
 /***************************************************************************
-                          regionlist.h  -  description
+                          nodelist.h  -  description
                              -------------------
     begin                : Thu Oct 19 2000
     copyright            : (C) 2000 by Jürgen Bückner
@@ -16,8 +16,8 @@
  ***************************************************************************/
 
 
-#ifndef REGION_LIST_H
-#define REGION_LIST_H
+#ifndef NODE_LIST_H
+#define NODE_LIST_H
 
 #include <QString>
 #include <QStringList>
@@ -28,39 +28,44 @@
 #include <MLParser>
 #include "Sensor"
 #include "Relation"
-#include "Region"
-#include "Image"
+#include "Node"
 #include "Stack"
 
-namespace BottomUp {
+#ifdef GAIMAGE_COMPAT
+#include "gaimage.h"
+#else
+#include "Image"
+#endif
+
+namespace BottomUpLib {
 /**class to handel a list of image informations
   *@author Jürgen Bückner
   */
 
-class RegionList  : public QHash<QString, Region*> {
+class NodeList  : public QHash<QString, Node*> {
 public: 
   /** default constructor */
-	RegionList();
+	NodeList();
 
   /** Copy constructor */
-  RegionList(const RegionList& nl);
-  RegionList(const RegionList& nl, bool deep);
-  void copy(const RegionList& nl, bool deep);
-  RegionList& operator=(const RegionList& nl);
+  NodeList(const NodeList& nl);
+  NodeList(const NodeList& nl, bool deep);
+  void copy(const NodeList& nl, bool deep);
+  NodeList& operator=(const NodeList& nl);
 
   /** constructor resd from the provided filename*/
-	RegionList(QString filename);
+	NodeList(QString filename);
 
   /** denstructor */
-	~RegionList();
+	~NodeList();
 
-  /** read a list of Region and the attributes through parser */
+  /** read a list of Node and the attributes through parser */
   void read(MLParser& parser);
 
-  /** read a list of Region and the attributes from the provided filename */
+  /** read a list of Node and the attributes from the provided filename */
   void read(QString filename);
 
-  /** read a list of Region and the attributes from the provided filepointer */
+  /** read a list of Node and the attributes from the provided filepointer */
   void read(QIODevice& fp);
 
   /** print info  */
@@ -71,16 +76,16 @@ public:
     return list_;
   };
 
-  /** set regionlist attribute (group attribute) */
+  /** set nodelist attribute (group attribute) */
   void set(QString name, QString val);
-  /** get regionlist attribute (group attribute) */
+  /** get nodelist attribute (group attribute) */
   QString get(QString name);
 
-	/** operator +=  for RegionList*/
-  RegionList &operator += (RegionList& nl);
+	/** operator +=  for NodeList*/
+  NodeList &operator += (NodeList& nl);
 
-  /** return void pointer to the Region class */
-  BottomUp::Region* region(QString imgKey);
+  /** return pointer to the Node class */
+  BottomUpLib::Node* node(QString imgKey);
   /** return void pointer to the image data */
   void* data(QString imgKey);
   /** return the cols numbers of the image */
@@ -100,15 +105,15 @@ public:
   /** Returns the number of items in the list.*/
 	int size() {return list_.count();};
 	/** Overloading insert function*/
-	void insert(QString key, Region* region);
-	/** calculate new geo coordinates and resolution using all images belong to included regions*/
+	void insert(QString key, BottomUpLib::Node* node);
+	/** calculate new geo coordinates and resolution using all images belong to included nodes*/
 	void calcNewGEOValues(float &gn,float &gs,float &gw,float &ge,int &sizeX,int &sizeY,float &xRes,float &yRes);
 #if 0	
   /** write a scrap of the data to a file*/
 	QString part(QString imgKey, float north, float south, float west, float east, QString fname="");
 #endif	
   /** return a list of pointer to the objects of specified class type */
-  RegionList* selectClass (QString classname);
+  NodeList* selectClass (QString classname);
   /** calculate for all classes 'classname' the term 'term' with the function 'fkt'*/
   void calcForSelect (QString classname, QString term, int (*fkt)(void));
   /** calculate for all classes 'classname' the term 'term' with the function 'fkt'*/
@@ -118,24 +123,24 @@ public:
   /** calculate for all classes 'classname' the term 'term' using the class 'Sensor'*/
 	void calcForSelect (QString term, Sensor* sensor);
   /** calculate for all classes 'classname' the relation with the function 'fkt'*/
-	void calcRelation (Region* rregion, Region* lregion, Relation* relation);
+	void calcRelation (BottomUpLib::Node* rnode, BottomUpLib::Node* lnode, Relation* relation);
   /** merge for all images in list (scale to a common resulution)
   * write result to file 'fname'
     flag 'newReg'
-      true - generate new regions when regions are split into subregions
-      false - one region can associate to more than on region
+      true - generate new nodes when nodes are split into subnodes
+      false - one node can associate to more than on node
   */
-  //RegionList* merge (QString fname, bool newReg = 0);
-  RegionList* merge (bool newReg = false, QString outImgName="");
-  /** write a regionlist to the given textstream */
+  //NodeList* merge (QString fname, bool newReg = 0);
+  NodeList* merge (bool newReg = false, QString outImgName="");
+  /** write a nodelist to the given textstream */
   void write(QTextStream &fp, QString groupFileName="");
-  /** write a regionlist as a regionsfile */
-  void writeRegionFile(QTextStream &fp);
+  /** write a nodelist as a nodesfile */
+  void writeNodeFile(QTextStream &fp);
   /** write the resulting label image */
   void writeOutImage(QString filename);
   /** write the resulting group label image */
   void writeGroupImage(QString filename);
-  /** copy the regions in this regionlist into the group image */
+  /** copy the nodes in this nodelist into the group image */
   void genGroupImage();
   Ga::Image& readLabelFile(QString filename, double gW, double gN, double gE, double gS);
 
@@ -144,7 +149,7 @@ public:
   /** Removes the top item from the local stack and returns it. */
   StackElement* stackPop();
   /** Adds an element d to the top of the local stack. */
-  void stackPush(const StackElement* d);
+  void stackPush(StackElement* d);
   /** Returns the number of items in the local stack.  */
   uint stackCount(void);
   /** Returns TRUE is the local stack contains no elements to be popped; otherwise returns FALSE.  */
@@ -154,7 +159,7 @@ public:
   bool stackRemove (void) ;
   /** Removes all items from the local stack, deleting them if autoDelete() is TRUE.  */
   void stackClear(void);
-  /** set the out-image-file-name in all regions of REGIONLIST */
+  /** set the out-image-file-name in all nodes of NODELIST */
   void setImgName(QString);
   /** update the internal variables using the dictionary */
 
@@ -175,40 +180,37 @@ protected: // Protected attributes
   Stack stack_;
   ArgDict attribList_;
 
-  class SortElement {//help class to sort regionlist; needed by help
+  class SortElement {//help class to sort nodelist; needed by help
   public:
-    SortElement(Region* n, float p, QString key = "") {
-      region_=n;
+    SortElement(BottomUpLib::Node* n, float p, QString key = "") {
+      node_=n;
       p_ = p;
       key_ = key;
     }
     bool operator == (SortElement& lval){return (p_==lval.p());}
     bool operator < (SortElement& lval){return (p_<lval.p());}
-    float p(){return p_;}
-    void p(float p){p_ = p;}
+    float p()const { return p_; }
+    void p(float p) {p_ = p;}
     void setGeoPos(int lx, int ly, int ux, int uy) {
       llx=lx; lly=ly; urx=ux; ury=uy;}
     QString key(){return key_;}
     void key(QString k){key_ = k;}
-    Region* region(){return region_;}
+    BottomUpLib::Node* node(){return node_;}
     QString key_;
     float p_;
-    Region* region_;
+    BottomUpLib::Node* node_;
     int llx, lly, urx, ury;
+    virtual bool operator<(const SortElement* rval) const {
+      return (p()<rval->p());
+    }
   };
   
-  class SortPtrList : public QList<SortElement*> { //sort list of 'SortElement' objects
+  //sort list of 'SortElement' objects
+  class SortPtrList : public QList<SortElement*> { 
   public:
-  SortPtrList() : QPtrList<SortElement> () {};
+  SortPtrList() : QList<SortElement*> () {};
     ~SortPtrList() {};
     
-    virtual int compareItems(Item il, Item ir) {
-      SortElement *lval = (SortElement*)il;
-      SortElement *rval = (SortElement*)ir;
-      if (lval->p() == rval->p()) return 0;
-      if (lval->p()<rval->p()) return -1;
-      return 1;
-    }
   };
   
   };

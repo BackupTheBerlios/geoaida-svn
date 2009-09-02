@@ -21,11 +21,13 @@
 
 #include <QString>
 #include <QStack>
+#include <QTextStream>
 #include "StackElement"
 #include <QMap>
 #include <MLParser>
+#include <ArgDict>
 
-namespace BottomUp {
+namespace BottomUpLib {
 
 class NodeList;
 class Node;
@@ -71,7 +73,7 @@ public:
   *@author Martin Pahl
   */
 
-class Stack : public QStack<StackElement>  {
+class Stack : public QStack<StackElement*>  {
 public:
 	Stack(NodeList* nl=0, QString filename="");
   Stack(const Stack& stack);

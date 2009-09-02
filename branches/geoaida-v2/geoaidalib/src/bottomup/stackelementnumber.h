@@ -20,7 +20,7 @@
 
 #include "StackElement"
 
-namespace BottomUp {
+namespace BottomUpLib {
 /**Stack element holding a number
   *@author Martin Pahl
   */

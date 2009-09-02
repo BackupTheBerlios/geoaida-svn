@@ -21,7 +21,7 @@
 #include "StackElement"
 #include "NodeList"
 
-namespace BottomUp {
+namespace BottomUpLib {
 
 
 /**Stack element holding a node list

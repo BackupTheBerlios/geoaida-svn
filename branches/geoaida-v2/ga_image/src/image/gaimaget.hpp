@@ -20,7 +20,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <stdarg.h>
-
+#include <limits>
 namespace Ga {
 template <class PixTyp>
 double ImageT<PixTyp>::getPixelAsDouble(int x, int y, int channel, double neutral) const {

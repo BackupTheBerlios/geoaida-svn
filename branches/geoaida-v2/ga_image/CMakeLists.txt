@@ -1,2 +1,2 @@
-project(gaimage)
+project(image)
 add_subdirectory(src)

@@ -18,7 +18,7 @@
 #ifndef STACKELEM_H
 #define STACKELEM_H
 
-namespace BottomUp {
+namespace BottomUpLib {
 
 /**Stack Element
   *@author Martin Pahl

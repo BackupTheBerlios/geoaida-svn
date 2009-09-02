@@ -17,7 +17,7 @@
 
 #include "bottomup.h"
 
-using BottomUp;
+using namespace BottomUpLib;
 
 BottomUp::BottomUp(){
   nodelist_=0;

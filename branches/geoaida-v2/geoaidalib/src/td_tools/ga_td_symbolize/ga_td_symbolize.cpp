@@ -15,12 +15,15 @@
  *                                                                         *
  ***************************************************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include "stack.h"
-#include "bottomup.h"
+#include <cstdio>
+#include <cstdlib>
+#include <QString>
+#include "Stack"
+#include "BottomUp"
 #include "neighbour.h"
 
+
+using namespace BottomUpLib;
 // #define DEBUG_PRG
 
 void usage(char* prg)
@@ -46,7 +49,7 @@ int main(int argc, char *argv[])
   if (nl->isEmpty()) return 0;
   Stack stack(nl,argv[2]);
   QString command(argv[3]);
-  qDebug("Command=%s",command.latin1());
+  qDebug("Command=%s",command.toLatin1().constData());
   stack.registerFunction("neighbour", neighbour);
   stack.run(command);
   qDebug("writing result");

@@ -16,21 +16,25 @@
  ***************************************************************************/
 
 #include "StackElement"
+#include "stackelementstack.h"
 
-using BottomUp;
+using namespace BottomUpLib;
 
 StackElementStack::StackElementStack(const Stack& stack){
   //stack_=stack;
-  QPtrStackIterator<StackElement> it(stack);
-  for (;it.current();++it) {
+  
+  for (Stack::ConstIterator it=stack.constBegin();
+       it!=stack.constEnd();
+       ++it) {
     stack_.push((*it)->copy());
   }
 }
 
 StackElementStack::StackElementStack(const StackElementStack& elem){
   //stack_=elem.stack_;
-  QPtrStackIterator<StackElement> it(elem.stack_);
-  for (;it.current();++it) {
+  for (Stack::ConstIterator it=elem.stack_.constBegin();
+       it!=elem.stack_.constEnd();
+       ++it) {
     stack_.push((*it)->copy());
   }
 }

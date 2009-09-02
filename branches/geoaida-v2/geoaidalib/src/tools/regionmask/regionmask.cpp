@@ -18,11 +18,13 @@
 //#define DEBUG_PRG
 
 #include "gaimage.h"
-#include "gaimaget.h"
+//#include "gaimaget.h"
 #include "pfm.h"
-#include "MLParser.h"
-#include <qfile.h>
-#include <qlist.h>
+#include "MLParser"
+
+#include <QHash>
+#include <QList>
+#include <QFile>
 #include <getopt.h>
 
 using namespace Ga;
@@ -44,9 +46,9 @@ struct LabelImage
   float scale_y;
 };
 
-QDict <Image> imageDict;
-QDict <LabelImage> labelImageDict;
-QDict <QList < ArgDict > > regionFileDict;
+QHash <QString, Image*> imageDict;
+QHash <QString, LabelImage*> labelImageDict;
+QHash <QString, QList < ArgDict* >* > regionFileDict;
 
 void Usage(const char *prg)
 {
@@ -116,9 +118,9 @@ LabelImage *readLabelFile(QString filename, GaMaskImage & mask, int &mask_x,
   if (image)
     im->image=*image;
   else {
-    printf("readLabelFile %s\n",filename.latin1());
+    printf("readLabelFile %s\n",filename.toLatin1().constData());
     image=new Image();
-    image->read(filename.latin1());
+    image->read(filename.toLatin1().constData());
     imageDict.insert(filename,image);
     im->image=*image;
   }
@@ -230,22 +232,22 @@ bool processRegion(ArgDict & args, GaMaskImage & mask, int mask_x, int mask_y,
 #undef DefFloat
 }
 
-QList<ArgDict>* readRegionFile(const char* filename)
+QList<ArgDict*>* readRegionFile(const char* filename)
 {
-  QList <ArgDict>* region=regionFileDict[filename];
+  QList<ArgDict*> * region=regionFileDict[filename];
   if (region) 
     return region;
 
   // read regionfile
 //  QFile rfp("/project/geoaida/tmp/reglist.dest");
   QFile rfp(filename);
-  if (!rfp.open(IO_ReadOnly)) {
+  if (!rfp.open(QIODevice::ReadOnly)) {
     fprintf(stderr, "regionfile %s not found\n", filename);
     return 0;
   }
   // Read and process regions
-  QList < ArgDict > *regionList=new QList < ArgDict >();
-  regionList->setAutoDelete(true);
+  QList < ArgDict* > *regionList=new QList < ArgDict* >();
+  //!  regionList->setAutoDelete(true);
   MLParser parser(&rfp);
   QString keywords[] = { "region", "" };
   const MLTagTable nodeTagTable(keywords);
@@ -267,7 +269,7 @@ QList<ArgDict>* readRegionFile(const char* filename)
     default:{
         args = parser.args();
         delete args;
-        qDebug("Unknown keyword %s in line %d", parser.lasttagstr().latin1(),
+        qDebug("Unknown keyword %s in line %d", parser.lasttagstr().toLatin1().constData(),
                parser.lineNumber());
         break;
       }
@@ -293,15 +295,15 @@ int DoIt(const char* outFile, const char* regFile, const char* maskFile, const c
   mask.read(mfp);
   fclose(mfp);
 
-  QList<ArgDict> *regionSourceList=readRegionFile(regFile);
+  QList<ArgDict*> *regionSourceList=readRegionFile(regFile);
   if (!regionSourceList) return 1;
-  QList<ArgDict> regionList;
+  QList<ArgDict*> regionList;
 
   // Process regions
-  for (ArgDict* arg = regionSourceList->first();
-       arg;
-       arg=regionSourceList->next()) {
-    ArgDict* args=new ArgDict(*arg);
+  for (QList<ArgDict*>::Iterator arg = regionSourceList->begin();
+       arg!=regionSourceList->end();
+       ++arg) {
+    ArgDict* args=new ArgDict(**arg);
     if (processRegion
 	(*args, mask, mask_x, mask_y, mask_size_x, mask_size_y))
       regionList.append(args);
@@ -317,19 +319,20 @@ int DoIt(const char* outFile, const char* regFile, const char* maskFile, const c
       return 1;
     }
     else {
-      if (regionList.count()>0) {
+      if (!regionList.isEmpty()) {
         ArgDict *dict = regionList.first();
-        QString *oldfile = (*dict)["file"];
-        QString *labelfile = new QString();
+        QString oldfile = dict->value("file");
+        QString labelfile;
         if (resultFile)
-          labelfile->sprintf("%s", resultFile);
+          labelfile.sprintf("%s", resultFile);
         else
-          labelfile->sprintf("%s.plm", outFile);
-        LabelImage *im = labelImageDict.take(*oldfile);
-        labelImageDict.replace(*labelfile, im);
-        QListIterator < ArgDict > it(regionList);
-        for (; it.current(); ++it) {
-          ArgDict *argDict = it.current();
+          labelfile.sprintf("%s.plm", outFile);
+        LabelImage *im = labelImageDict.take(oldfile);
+        labelImageDict.insert(labelfile, im);
+        for (QList<ArgDict*>::Iterator it=regionList.begin(); 
+	     it!=regionList.end();
+	     ++it) {
+          ArgDict *argDict = *it;
           assert(argDict);
           argDict->replace("file", labelfile);
         }
@@ -340,24 +343,27 @@ int DoIt(const char* outFile, const char* regFile, const char* maskFile, const c
     printf("regionmask: overwriting %s\n",regFile);
     outFile = regFile;
   }
-  QDictIterator < LabelImage > git(labelImageDict);
-  if (regionList.count()>0) {
-    for (; git.current(); ++git) {
-      LabelImage *im = git.current();
-      qDebug("Writing %s", git.currentKey().latin1());
-      im->image.write(git.currentKey().latin1());
+  if (!regionList.isEmpty()) {
+    for (QHash<QString,LabelImage*>::Iterator git=labelImageDict.begin(); 
+	 git!=labelImageDict.end();
+	 ++git) {
+      LabelImage *im = *git;
+      qDebug("Writing %s", git.key().toLatin1().constData());
+      im->image.write(git.key().toLatin1().constData());
     }
   }
   // Write regions
-  if (!rfp.open(IO_WriteOnly)) {
+  if (!rfp.open(QIODevice::WriteOnly)) {
     fprintf(stderr, "cannot open regionfile %s for writing\n", outFile);
     return 1;
   }
   if (regionList.count()>0) {
-    QListIterator < ArgDict > it(regionList);
+    
     QTextStream ts(&rfp);
-    for (; it.current(); ++it) {
-      ArgDict *argDict = it.current();
+    for (QList<ArgDict*>::Iterator it=regionList.begin(); 
+	 it!=regionList.end();
+	 ++it) {
+      ArgDict *argDict = *it;
       assert(argDict);
       ts << "<region ";
       ts << (*argDict);
@@ -365,9 +371,17 @@ int DoIt(const char* outFile, const char* regFile, const char* maskFile, const c
     }
   }
   rfp.close();
-  labelImageDict.setAutoDelete(true);
+  //!  labelImageDict.setAutoDelete(true);
+  for (QHash<QString,LabelImage*>::Iterator it=labelImageDict.begin();
+       it!=labelImageDict.end();
+       ++it)
+    delete *it;
   labelImageDict.clear();
-  regionList.setAutoDelete(true);
+  //!  regionList.setAutoDelete(true);
+  for (QList<ArgDict*>::Iterator it=regionList.begin();
+       it!=regionList.end();
+       ++it)
+    delete *it;
   return 0;
 }
 
@@ -420,17 +434,16 @@ int main(int argc, char *argv[])
     int numCalls =-1;
     while (numCalls) {
       printf("Waiting for command\n");
-      if (!pipe.open(IO_ReadOnly)) {
+      if (!pipe.open(QIODevice::ReadOnly)) {
         fprintf(stderr,"Can't open pipe %s for reading\n",pipeName);
         return 1;
       }
-      QString buffer;
-      pipe.readLine(buffer,1024);
+      QString buffer(pipe.readLine(1024));
       pipe.close();
-      QTextIStream cmdStr(&buffer);
+      QTextStream cmdStr(&buffer);
       QString cmd;
       cmdStr >> cmd;
-      printf("Found buffer %s\n",buffer.latin1());
+      printf("Found buffer %s\n",buffer.toLatin1().constData());
       // numCalls <numCalls>
       if (cmd=="numCalls") {
         cmdStr >> numCalls;
@@ -441,7 +454,7 @@ int main(int argc, char *argv[])
         break;
       }
       if (cmd!="run") {
-        fprintf(stderr,"Unknown command: %s\n",buffer.latin1());
+        fprintf(stderr,"Unknown command: %s\n",buffer.toLatin1().constData());
         continue;
       }
       // run outfile regfile maskfile mask_x mask_y mask_size_x mask_size_y
@@ -452,13 +465,16 @@ int main(int argc, char *argv[])
       QString outFile,regFile,maskFile;
       cmdStr >> outFile >> regFile >> maskFile >> mask_x >> mask_y >> mask_size_x >> mask_size_y;
       printf("Running regionmask %s %s %s %d %d %d %d\n",
-             outFile.latin1(),
-             regFile.latin1(),
-             maskFile.latin1(),
+             outFile.toLatin1().constData(),
+             regFile.toLatin1().constData(),
+             maskFile.toLatin1().constData(),
              mask_x,mask_y,mask_size_x,mask_size_y);
       fflush(stdout);
       sleep(0);
-      DoIt(outFile,regFile,maskFile,resultImage,mask_x,mask_y,mask_size_x,mask_size_y);
+      DoIt(outFile.toLatin1().constData(),
+	   regFile.toLatin1().constData(),
+	   maskFile.toLatin1().constData(),
+	   resultImage,mask_x,mask_y,mask_size_x,mask_size_y);
       printf("Done -- Removing lockfile %s\n",lockName);
       if (lockName) {
         QFile::remove(lockName);

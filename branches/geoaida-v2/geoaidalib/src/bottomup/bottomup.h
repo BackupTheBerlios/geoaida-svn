@@ -20,13 +20,13 @@
 
 #include <QHash>
 #include <QFile>
-#include "RegionList"
+#include "NodeList"
 
-namespace BottomUp {
+namespace BottomUpLib {
 /**
   *@author jürgen bückner
   */
-/** region list class */
+/** node list class */
 class BottomUp {
 public: 
 	/** default constructor */
@@ -45,15 +45,15 @@ public:
   /** return the number of classes read into 'arglist'  */
   int number_of_classes();
 	/** show info */
-	void region_info() {regionlist_->info();};
+	void node_info() {nodelist_->info();};
   /** return a list of pointer to the objects of specified class type */
-  RegionList* selectClass (QString classname);
+  NodeList* selectClass (QString classname);
   /** return a list of pointer to the objects of specified class type */
   int calcForSelect (QString classname);
 
 protected: // Protected attributes
   /** list of class description */
-  RegionList* regionlist_;
+  NodeList* nodelist_;
 };
 
 } // namespace BottomUp

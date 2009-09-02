@@ -14,16 +14,19 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+
 #include <cstdio>
 #include <cstdlib>
-#include "stack.h"
-#include "bottomup.h"
-#include "neighbour.h"
 #include <iostream>
 
+#include <QtGlobal>
+#include <QString>
+#include <QTextStream>
+#include "Stack"
+#include "BottomUp"
+#include "neighbour.h"
 
-#include <cstdlib>
+using namespace BottomUpLib;
 
 //  #define DEBUG_PRG
 
@@ -46,7 +49,7 @@ int main(int argc, char *argv[])
 #ifndef DEBUG_PRG
   if (argc!=4)
     usage(argv[0]);
-  BottomUp bu(argv[1]); // read infile                                                              nt.uni-hannover.de/
+  BottomUp bu(argv[1]); // read infile 
 #else
   //BottomUp bu("/project/geoaida/share/data/test_files/stack/settlement_4_Haus_13_greenland_2_agriculture_6");
   BottomUp bu("/project/geoaida/share/data/test_files/ga_bu_generic/schattern.regs");
@@ -71,7 +74,7 @@ int main(int argc, char *argv[])
   //QString command("nodelist \"Haus\" selectClass \"size\" calc \"compactness\" calc merge \"compactness\" calc");
   //QString command("nodelist \"Haus\" selectClass  \"size\" calc 200 > select \"squareness\" calc \"orthogonallity\" calc \"compactness\" calc dup max dup max \"p\" set nl_max set_judgement ");//nl_max set_judgement ");
 #endif
-  qDebug("Command=%s",command.latin1());
+  qDebug("Command=%s",command.toLatin1().constData());
   stack.registerFunction("neighbour", neighbour);
   if (!stack.run(command)){
     std::cerr << "ga_bu_generic: Error while running stack" << std::endl;

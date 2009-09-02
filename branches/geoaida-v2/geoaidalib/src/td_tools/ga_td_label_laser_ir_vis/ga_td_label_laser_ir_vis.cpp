@@ -22,6 +22,7 @@
 #include "gaimage.h"
 #include <gavariance.h>
 #include <gasplit2regionst.h>
+#include <cstring>
 
 using namespace Ga;
 

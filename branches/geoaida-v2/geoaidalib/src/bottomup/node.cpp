@@ -1,5 +1,5 @@
 /***************************************************************************
-                          region.cpp  -  description
+                          node.cpp  -  description
                              -------------------
     begin                : Thu Oct 19 2000
     copyright            : (C) 2000 by Jürgen Bückner
@@ -19,26 +19,24 @@
 #define DEBUGMSG
 #endif
 
-#include "region.h"
-#include "regionlist.h"
+#include "node.h"
+#include "nodelist.h"
 
-using BottomUp;
+using namespace BottomUpLib;
 
-Region::Region() {
+Node::Node() {
   init();
-  setAutoDelete(TRUE);
 }
 
-Region::Region(MLParser& parser) {
+Node::Node(MLParser& parser) {
   init();
   read(parser);
 }
 
-Region::~Region() {
+Node::~Node() {
 }
 
-void Region::init() {
-  setAutoDelete(true);
+void Node::init() {
   data_ = 0;
 #if 0	
   type_ = UNKNOWN;
@@ -49,18 +47,18 @@ void Region::init() {
   filename_ = ""; class_ = "";
 }
 
-//** set value in region */07
+//** set value in node */07
 
-void Region::setValue(QString key, QString val) {
+void Node::setValue(QString key, QString val) {
 	replace(key, val);
 }
-//** get value from region */
-QString* Region::getValue(const QString key) {
-  return (this)->find(key);
+//** get value from node */
+QString Node::getValue(const QString key) {
+  return (this)->value(key);
 }
 
 /** set label id */
-void Region::id(int l) {
+void Node::id(int l) {
   id_ = l;
   QString *s = new QString;
   s->setNum(l);
@@ -68,7 +66,7 @@ void Region::id(int l) {
 }
 
 /** set label weighing */
-void Region::p(float f) {
+void Node::p(float f) {
   QString *s = new QString;
   s->setNum(f);
   replace("p",s);
@@ -76,7 +74,7 @@ void Region::p(float f) {
 
 #if 0
 /** set data typ */
-void Region::dataTyp(int t) {
+void Node::dataTyp(int t) {
   type_ = (IMGTYPE)t;
   QString *s = new QString;
   s->setNum(type_);
@@ -85,73 +83,73 @@ void Region::dataTyp(int t) {
 #endif
 
 /** set the image filename */
-void Region::filename(QString fn) {
+void Node::filename(QString fn) {
   filename_ = fn;	
   replace("file",&filename_);
 }
 
 /** set class name*/
-void Region::classname(QString str) {
+void Node::classname(QString str) {
   class_ = str;
   replace("class",&class_);
 }
 
 /** set  geoNorth*/
-void Region::geoNorth(float value) 
+void Node::geoNorth(float value) 
 {
   geoNorth_=value;
-  if (getValue("file_geoNorth"))
+  if (contains("file_geoNorth"))
     replace("file_geoNorth",value);
 }
 
 /** set  geoSouth*/
-void Region::geoSouth(float value)
+void Node::geoSouth(float value)
 {
   geoSouth_=value;
-  if (getValue("file_geoSouth"))
+  if (contains("file_geoSouth"))
     replace("file_geoSouth",value);
 }
 
 /** set  geoEast*/
-void Region::geoEast(float value)
+void Node::geoEast(float value)
 {
   geoEast_=value;
-  if (getValue("file_geoEast"))
+  if (contains("file_geoEast"))
     replace("file_geoEast",value);
 }
 
 /** set  geoWest*/
-void Region::geoWest(float value)
+void Node::geoWest(float value)
 {
   geoWest_=value;
-  if (getValue("file_geoWest"))
+  if (contains("file_geoWest"))
     replace("file_geoWest",value);
 }
 
 /** return x-resolution of the image*/
-float Region::xResolution() {
+float Node::xResolution() {
   if(cols_)
     return float(geoNorth_-geoSouth_) / float(rows_);
   else return 0.0;
 }
 
 /** return y-resolution of the image*/
-float Region::yResolution() {
+float Node::yResolution() {
   if(rows_)
     return float(geoEast_-geoWest_) / float(cols_);
   else return 0.0;
 }
 
 /** read attributes for this operator through parser */
-void Region::read(MLParser& parser) { //bekommt einen Parser übergeben und liest die Attribute ein
-  qDebug("Region::read(MLParser& parser)");
+void Node::read(MLParser& parser) { //bekommt einen Parser übergeben und liest die Attribute ein
+  qDebug("Node::read(MLParser& parser)");
   parser.args(this);
   update();
   //if (!find("type")) insert("type",new QString("not set"));
 }
 
 /** update the internal variables using the dictionary */
-void Region::update()
+void Node::update()
 {
   MLParser::setString(addr_,this,"addr");
   MLParser::setInt(llx_,this,"llx");
@@ -172,9 +170,9 @@ void Region::update()
 }
 
 /** load image info - not the data */
-void Region::load(RegionList& regionList) {
-  //qDebug("Region::load(%s)",(const char*)filename_);
-  data_=&(regionList.readLabelFile(filename_,geoWest_,geoNorth_,geoEast_,geoSouth_));
+void Node::load(NodeList& nodeList) {
+  //qDebug("Node::load(%s)",(const char*)filename_);
+  data_=&(nodeList.readLabelFile(filename_,geoWest_,geoNorth_,geoEast_,geoSouth_));
   cols_=data_->sizeX();
   rows_=data_->sizeY();
   if ((geoNorth_==geoSouth_) || (geoWest_==geoEast_)) {
@@ -184,15 +182,15 @@ void Region::load(RegionList& regionList) {
     geoEast_=cols_;
     data_->setGeoCoordinates(geoWest_,geoNorth_,geoEast_,geoSouth_);
   }
-  if (!(*this)["llx"]) llx_=0;
-  if (!(*this)["urx"]) urx_=cols_-1;
-  if (!(*this)["lly"]) lly_=rows_-1;
-  if (!(*this)["ury"]) ury_=0;
+  if (!contains("llx")) llx_=0;
+  if (!contains("urx")) urx_=cols_-1;
+  if (!contains("lly")) lly_=rows_-1;
+  if (!contains("ury")) ury_=0;
 #if 0
   FILE *fp;
   fp=fopen(filename_,"r");
   if (!fp) {
-    qWarning("#  (ERROR)Region::load(%s) Can't open file for reading!",(const char*)filename_);
+    qWarning("#  (ERROR)Node::load(%s) Can't open file for reading!",(const char*)filename_);
     return;
   }
   int pxmtype;
@@ -220,17 +218,17 @@ void Region::load(RegionList& regionList) {
 }
 
 /** return data */
-Ga::Image* Region::data() {
-  qDebug("Region::data() - load data");
+Ga::Image* Node::data() {
+  qDebug("Node::data() - load data");
   return data_;
 #if 0
   if(data_) return data_;
-  qDebug("Region::data() %s",(const char*)filename_);
+  qDebug("Node::data() %s",(const char*)filename_);
 
   FILE *fp;
   fp=fopen(filename_,"r");
   if (!fp) {
-    qWarning("#  (ERROR)Region::load(%s) Can't open file for reading!",(const char*)filename_);
+    qWarning("#  (ERROR)Node::load(%s) Can't open file for reading!",(const char*)filename_);
     return 0;
   }
   int cols, rows;
@@ -262,7 +260,7 @@ Ga::Image* Region::data() {
 #endif
 }
 
-bool Region::testSize(int cols, int rows, IMGTYPE type) {
+bool Node::testSize(int cols, int rows, IMGTYPE type) {
   if (cols!=cols_ || rows!=rows_) {
 #if 0
     qWarning("##  (ERROR) inconsistent image data!");
@@ -280,7 +278,7 @@ bool Region::testSize(int cols, int rows, IMGTYPE type) {
 }
 
 /** get the filename */
-QString Region::filename() {
+QString Node::filename() {
   return filename_;
 }
 
@@ -290,10 +288,10 @@ QString Region::filename() {
   * if the file exist do nothing
   * argument fname is optional
   * the coordinates of the image part are geodata e.g. Gauss Krueger **/
-QString Region::part(float north, float south, float west, float east, QString fname) {
+QString Node::part(float north, float south, float west, float east, QString fname) {
   if(fname.isEmpty()) //create output filname
   fname.sprintf("/tmp/%s_%f_%f_%f_%f",(const char*)(*(find("key"))),north,south,west,east);
-  qDebug("#  Region::part %s (%f, %f, %f, %f)",(const char*)fname, north, south,  west, east);
+  qDebug("#  Node::part %s (%f, %f, %f, %f)",(const char*)fname, north, south,  west, east);
   QFile f(fname);
   if (f.exists()) return fname;
 
@@ -304,7 +302,7 @@ QString Region::part(float north, float south, float west, float east, QString f
   geo2pic(west, south, &rx1, &ry2);
   dx = rx2 - rx1;
   dy = ry2 - ry1;
-  if (dx<=0 || dy<=0) qWarning("#  (ERROR) Region::part: (dx=%d=%d-%d || dy=%d=%d-%d)",dx, rx2, rx1,dy, ry2, ry1);
+  if (dx<=0 || dy<=0) qWarning("#  (ERROR) Node::part: (dx=%d=%d-%d || dy=%d=%d-%d)",dx, rx2, rx1,dy, ry2, ry1);
 
   FILE *of=fopen(fname,"w");
   if (!of) {
@@ -313,7 +311,7 @@ QString Region::part(float north, float south, float west, float east, QString f
   }
 
   if (type_ <= PFM_UINT16) {
-    pfm_writepfm_region_type(of, data_, cols_, rows_, minval_, maxval_,
+    pfm_writepfm_node_type(of, data_, cols_, rows_, minval_, maxval_,
         rx1, ry1, rx2, ry2, type_);
     return fname;
   } else if (type_ == PBM) {
@@ -361,7 +359,7 @@ QString Region::part(float north, float south, float west, float east, QString f
 }
 #endif
 
-int Region::geo2pic(float x, float y, int *rx, int *ry) {
+int Node::geo2pic(float x, float y, int *rx, int *ry) {
   float f1, f2;
   /* f1 stores the geocoordinate spacing of the x-axis, geocoord[0] (left) < geocoord[2] (right)
      f2 stores the distance of the test point x to the (left) geocoord[0] */
@@ -403,51 +401,58 @@ int Region::geo2pic(float x, float y, int *rx, int *ry) {
 }
 
 /** write data to file */
-void Region::write(QTextStream& fp, QString keyword) {
-  if (keyword=="region") {
-    QDictIterator<QString> it(*this);
+void Node::write(QTextStream& fp, QString keyword) {
+  if (keyword=="node") {
     fp <<"  <" << keyword << " ";
-    for (;it.current(); ++it) {
-      if (! it.currentKey().contains("file_geo",false)) 
-	fp<<it.currentKey().latin1()<<"=\""<<(it.current())->latin1()<<"\" ";
+    for (Node::iterator it=begin();it!=end(); ++it) {
+      if (! it.key().contains("file_geo", Qt::CaseInsensitive)) 
+	fp << it.key()
+	   <<"=\"" 
+	   << it.value()
+	   <<"\" ";
     }
-    fp <<" />"<<endl;
+    fp << " />" <<endl;
   }
   else {
-    QDictIterator<QString> it(*this);
     fp <<"  <" << keyword << " ";
-    for (;it.current(); ++it) {
-      fp<<it.currentKey().latin1()<<"=\""<<(it.current())->latin1()<<"\" ";
+    for (Node::iterator it=begin();it!=end(); ++it) {
+      fp << it.key()
+	 << "=\""
+	 << it.value()
+	 << "\" ";
     }
-    fp <<" />"<<endl;
+    fp << " />" <<endl;
   }
 }
 /** return stack - for bottom-up */
-Stack& Region::stack(void){
+Stack& Node::stack(void){
   return stack_;
 }
 /** Removes the top item from the local stack and returns it. */
-StackElem* Region::stackPop(){
+StackElement* Node::stackPop() {
  return stack_.pop();
 }
 /** Adds an element d to the top of the local stack. */
-void Region::stackPush(const StackElem* d){
+void Node::stackPush(StackElement* d) {
   stack_.push(d);
 }
 /** Returns the number of items in the local stack.  */
-uint Region::stackCount(void){
+uint Node::stackCount(void) {
   return stack_.count();
 }
 /** Removes all items from the local stack, deleting them if autoDelete() is TRUE.  */
-void Region::stackClear(void){
+void Node::stackClear(void) {
   stack_.clear();
 }
 /** Removes the top item from the local stack and deletes it if autoDelete() is TRUE. Returns TRUE if there was an item to pop;
 otherwise returns FALSE.  */
-bool Region::stackRemove (void) {
-  return stack_.remove();
+bool Node::stackRemove (void) {
+  if (stack_.isEmpty() )
+    return false;
+  stack_.pop();
+  return true;
 }
 /** Returns TRUE is the local stack contains no elements to be popped; otherwise returns FALSE.  */
-bool Region::stackIsEmpty (){
+bool Node::stackIsEmpty (){
   return stack_.isEmpty();
 }

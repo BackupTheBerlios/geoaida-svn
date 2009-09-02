@@ -19,10 +19,14 @@
 #define SENSOR_H
 
 #include <QString>
-#include "Region"
+#include "Node"
+#ifdef GAIMAGE_COMPAT
+#include "gaimage.h"
+#else
 #include "Image"
+#endif
 
-namespace BottomUp {
+namespace BottomUpLib {
 class GaBase;
 
 /**

@@ -17,7 +17,7 @@
 
 #include "stackelement.h"
 
-using BottomUp;
+using namespace BottomUpLib;
 
 StackElement::StackElement(){
 }

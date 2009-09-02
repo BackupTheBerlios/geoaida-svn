@@ -18,22 +18,22 @@
 
 #include "sensor.h"
 
-using BottomUp;
+using namespace BottomUpLib;
 
 /** return label   */
-unsigned long int GASensor::id(void) {
-	return id_;
+unsigned long int Sensor::id(void) {
+  return id_;
 }
 
 /** return node pointer   */
-Node* GASensor::node(void) {
-	return node_;
+Node* Sensor::node(void) {
+  return node_;
 }
 
 /** set node pointer   */
-void GASensor::node(Node* n){
-	node_=n;
-	id_ =((*node_)["id"])->toInt(); //get region ID
+void Sensor::node(Node* n){
+  node_=n;
+  id_ =node_->value("id").toInt(); //get region ID
 }
 
 

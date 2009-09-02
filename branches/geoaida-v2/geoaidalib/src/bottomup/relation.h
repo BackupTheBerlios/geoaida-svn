@@ -18,7 +18,7 @@
 #ifndef RELATION_H
 #define RELATION_H
 
-namespace BottomUp {
+namespace BottomUpLib {
 /**
   *@author jürgen bückner
   *basic class for all relation classes

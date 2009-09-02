@@ -31,14 +31,14 @@ SET(classheaders
           Image
 	  )
 
-ADD_LIBRARY(gaimage STATIC ${sources})
-INSTALL(TARGETS gaimage DESTINATION lib)
+ADD_LIBRARY(image STATIC ${sources})
+INSTALL(TARGETS image DESTINATION lib)
 INSTALL(FILES ${headers} DESTINATION include)
 INSTALL(FILES ${classheaders} DESTINATION include/Ga)
 
 ADD_EXECUTABLE(test_cache test_cache.cpp)
-TARGET_LINK_LIBRARIES(test_cache gaimage pfm netpbm tiff jpeg png)
+TARGET_LINK_LIBRARIES(test_cache image pfm netpbm tiff jpeg png)
 
 ADD_EXECUTABLE(test_image test_image.cpp)
-TARGET_LINK_LIBRARIES(test_image gaimage pfm netpbm tiff jpeg png)
+TARGET_LINK_LIBRARIES(test_image image pfm netpbm tiff jpeg png)
 

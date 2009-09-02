@@ -16,11 +16,12 @@
  ***************************************************************************/
 
 
-#include "stack.h"
+#include "Stack"
 
 #ifndef NEIGHBOUR_H
 #define NEIGHBOUR_H
 
-bool neighbour(Stack& stack) ;
-
+namespace BottomUpLib {
+  bool neighbour(Stack& stack) ;
+}
 #endif

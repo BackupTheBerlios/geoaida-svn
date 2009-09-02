@@ -15,9 +15,9 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "stackelemnodelist.h"
+#include "stackelementnodelist.h"
 
-using BottomUp;
+using namespace BottomUpLib;
 
 /** constructs a stack element containing the given nodelist */
 StackElementNodeList::StackElementNodeList(const NodeList& list)

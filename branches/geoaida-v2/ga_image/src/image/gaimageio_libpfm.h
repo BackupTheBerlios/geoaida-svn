@@ -25,6 +25,7 @@ extern "C" {
 #include <algorithm>
 #include <vector>
 #include <stdexcept>
+#include <limits>
 
 namespace Ga
 {

@@ -21,7 +21,7 @@
 #include <QString>
 #include "StackElement"
 
-namespace BottomUp {
+namespace BottomUpLib {
 /**Stack element holding a string
   *@author Martin Pahl
   */

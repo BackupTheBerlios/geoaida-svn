@@ -21,7 +21,7 @@
 #include "Stack"
 #include "StackElement"
 
-namespace BottomUp {
+namespace BottomUpLib {
 /**This stack element holds a stack
   *@author Martin Pahl
   */

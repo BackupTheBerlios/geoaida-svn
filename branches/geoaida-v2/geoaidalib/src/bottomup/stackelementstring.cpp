@@ -15,9 +15,9 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "stackelemstring.h"
+#include "stackelementstring.h"
 
-using BottomUp;
+using namespace BottomUpLib;
 
 StackElementString::StackElementString(QString s)
 {

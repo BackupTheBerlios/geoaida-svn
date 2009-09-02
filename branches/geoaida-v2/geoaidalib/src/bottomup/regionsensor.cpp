@@ -19,6 +19,7 @@
 
 #include "regionsensor.h"
 using namespace std;
+using namespace BottomUpLib;
 
 RegionSensor::RegionSensor(){
 	init();
@@ -91,7 +92,7 @@ void RegionSensor::image (int* ga_b, int x, int y){
 /** calculate the sensor value - first step to get the type*/
 void RegionSensor::calc(QString str) {
 	sensor_name=str;
-	int label = (int) ((*node_)["id"])->toInt();
+	int label = node_->value("id").toInt();
 	calc_type(label);	
 }
 
