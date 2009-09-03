@@ -19,6 +19,7 @@
 //#include "gaimaget.h"
 #include "pfm.h"
 #include "MLParser"
+#include <QXmlStreamWriter>
 #include <QString>
 #include <QFile>
 #include <QList>
@@ -194,16 +195,20 @@ int main(int argc, char *argv[])
     return 1;
   }
   
-  QTextStream ts(&rfp);
+  QXmlStreamWriter ts(&rfp);
+  ts.setAutoFormatting(true);
+  ts.writeStartDocument();
+  ts.writeStartElement("regionlist");
   for (QList<ArgDict*>::Iterator it=regionList.begin();
        it!=regionList.end();
        ++it) {
     ArgDict* argDict=*it;
     assert(argDict);
-    ts << "<region ";
+    ts.writeEmptyElement("<region ");
     ts << (*argDict);
-    ts << " />" << endl;
   }
+  ts.writeEndElement();
+  ts.writeEndDocument();
   rfp.close();
 }
 

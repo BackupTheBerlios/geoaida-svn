@@ -592,26 +592,30 @@ NodeList* NodeList::merge (bool newReg, QString outImgName) {
 }
 
 /** write a nodelist to the given textstream */
-void NodeList::write(QTextStream &fp, QString groupFileName)
+void NodeList::write(QXmlStreamWriter &fp, QString groupFileName)
 {
   if (!isEmpty()) {
-    fp << "<group ";
-    if (!groupFileName.isEmpty())
-      fp << "id=\"" << groupId_  << "\" file=\"" << groupFileName << "\" ";
+    fp.writeStartElement("group");
+    if (!groupFileName.isEmpty()) {
+      fp.writeAttribute("id",QString::number(groupId_));
+      fp.writeAttribute("file",groupFileName);
+    }
     fp << attribList_;
-    fp.setRealNumberPrecision(8);
-    fp << "file_geoNorth=\"" <<gN_<< "\"file_geoWest=\"" <<gW_<< "\"file_geoEast=\"" <<gE_<< "\"file_geoSouth=\"" <<gS_<< "\"";
-    fp << " >" << endl;
+    fp.writeAttribute("file_geoNorth",QString::number(gN_,'g',8));
+    fp.writeAttribute("file_geoWest",QString::number(gW_,'g',8));
+    fp.writeAttribute("file_geoEast",QString::number(gE_,'g',8));
+    fp.writeAttribute("file_geoSouth",QString::number(gS_,'g',8));
+    
     for (ConstIterator it=begin();it!=end();++it) {
       (*it)->write(fp);
     }
     
-    fp << "</group>" << endl;
+    fp.writeEndElement();
   }
 }
 
 /** write a nodelist as a nodesfile */
-void NodeList::writeNodeFile(QTextStream &fp)
+void NodeList::writeNodeFile(QXmlStreamWriter &fp)
 {
   if (!isEmpty()) {
     for (ConstIterator it=begin();it!=end();++it) {

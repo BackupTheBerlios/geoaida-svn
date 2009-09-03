@@ -1016,7 +1016,7 @@ bool Stack::pushNodeList()
 }
 
 /** write the topmost stackelement, which should be a nodelist or a stack of nodlist, to the given textstream */
-bool Stack::write(QTextStream & fp, QString keyword)
+bool Stack::write(QXmlStreamWriter & fp, QString keyword)
 {
   StackElement *el1 = 0;
   try {
@@ -1033,7 +1033,6 @@ bool Stack::write(QTextStream & fp, QString keyword)
       else {
         nl.writeNodeFile(fp);
       }
-
       throw CleanUp(true);
     }
     if (el1->type() == StackElement::STACK) {
@@ -1063,8 +1062,13 @@ void Stack::write(QString filename, QString keyword)
             filename.toLatin1().constData());
     return;
   }
-  QTextStream str(&fp);
+  QXmlStreamWriter str(&fp);
+  str.setAutoFormatting(true);
+  str.writeStartDocument();
+  str.writeStartElement(keyword+"list");
   write(str, keyword);
+  str.writeEndElement();
+  str.writeEndDocument();
 }
 
 /** concatenate the both topmost lists in stack */

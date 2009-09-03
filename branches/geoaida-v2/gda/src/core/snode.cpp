@@ -23,6 +23,7 @@
 #include <QDir>
 #include <QRegExp>
 #include <QTextStream>
+#include <QXmlStreamWriter>
 #include "cleanup.h"
 #ifdef WIN32
 #include <stdlib.h> // für exit
@@ -592,17 +593,6 @@ void SNode::execTemporalTopDownOp(INode * iNode)
   QList<INode*>::iterator inodeYoungerSibling;
   QList <INode*> *temporalSiblingList;  // list of temporal siblings
   
-  CleanUp::mkdir(CleanUp::getTmpDirPID(), iNode->path());
-  QString iname = GetTmpFilename("input", iNode->path());
-  QFile ifp(iname);
-  if (!ifp.open(QIODevice::WriteOnly)) {
-    qDebug("Could not open tempfile %s\n", iname.toLatin1().constData());
-    iNode->taskFinished(0,0);
-    return;
-  }
-
-  QTextStream str(&ifp);
-
   temporalSiblingList = &((iNode->parent())->children()); // creates list of siblings for this INode
   inodeYoungerSibling = temporalSiblingList->begin();
   while ((((*inodeYoungerSibling)->sNode())->order()) != ((iNode->sNode())->order() - 1))  {
@@ -614,11 +604,23 @@ void SNode::execTemporalTopDownOp(INode * iNode)
 	  }
   }
   
+  CleanUp::mkdir(CleanUp::getTmpDirPID(), iNode->path());
+  QString iname = GetTmpFilename("input", iNode->path());
+  QFile ifp(iname);
+  if (!ifp.open(QIODevice::WriteOnly)) {
+    qDebug("Could not open tempfile %s\n", iname.toLatin1().constData());
+    iNode->taskFinished(0,0);
+    return;
+  }
+
+  QXmlStreamWriter str(&ifp);
+  str.setAutoFormatting(true);
+  str.writeStartDocument();
+  str.writeStartElement("nodelist");
+
   QList<INode*> auxList = (*inodeYoungerSibling)->children();
   
-  QList<INode*>::iterator itNode;
-  
-  for (itNode = auxList.begin(); itNode != auxList.end(); ++itNode) {
+  for (QList<INode*>::iterator itNode = auxList.begin(); itNode != auxList.end(); ++itNode) {
     INode *node = *itNode;
     if (node->status() == TRASH) // trashnodes must be skipped here
       continue;
@@ -630,8 +632,12 @@ void SNode::execTemporalTopDownOp(INode * iNode)
         node->attribute("file_geoNorth", img->geoNorth());
     }
     node->attribute("temporal", (*inodeYoungerSibling)->attribute("class"));
-    node->write(str, "", false);
+    node->write(str, false);
   }
+
+  str.writeEndElement();
+  str.writeEndDocument();
+
   ifp.close();
 
   iNode->attribute("input", iname);
@@ -703,7 +709,10 @@ void SNode::execTemporalBottomUpOp(INode * iNode)
     return;
   }
 
-  QTextStream str(&ifp);
+  QXmlStreamWriter str(&ifp);
+  str.setAutoFormatting(true);
+  str.writeStartDocument();
+  str.writeStartElement("nodelist");
   
   QList<INode*> auxList = (iNode->parent())->children();
   
@@ -728,7 +737,7 @@ void SNode::execTemporalBottomUpOp(INode * iNode)
       //node->attribute("addr", QString().sprintf("%p", node));
       node->attribute("addr", QString("%1").arg((long) node, 0, 16));
       node->attribute("temporal", tNode->attribute("class"));
-      node->write(str, "", false);
+      node->write(str, false);
       node->attributeRemove("addr");
     }
     if ((tNode->sNode())->bottomUp_) {
@@ -737,6 +746,8 @@ void SNode::execTemporalBottomUpOp(INode * iNode)
       putAttribs(*(tNode->sNode()), attribs, "bottomUp");
     }
   }
+  str.writeEndElement();
+  str.writeEndDocument();
   ifp.close();
     
   iNode->attribute("input", iname);
@@ -779,45 +790,51 @@ void SNode::execBottomUpOp(INode * iNode)
     return;
   }
 
-  {
-    if (!iNode->parent()) {     //! Debug
-      qDebug("SNode::execBottomUp: root node evaluated");
-    }
+  QXmlStreamWriter str(&ifp);
+  str.setAutoFormatting(true);
+  str.writeStartDocument();
+  str.writeStartElement("nodelist");
+
+  if (!iNode->parent()) {     //! Debug
+    qDebug("SNode::execBottomUp: root node evaluated");
+  }
 #if 0                           // This code deletes the trashnodes
-    {                           // Delete trash nodes
-      QListIterator < INode > it =
-        QListIterator < INode > (iNode->children());
-      while (it.current()) {
-        INode *node = it.current();
-        if (node->status() == TRASH) {
-          iNode->childUnlink(node);
-          delete node;
-        }
-        else
-          ++it;
+  {                           // Delete trash nodes
+    QListIterator < INode > it =
+      QListIterator < INode > (iNode->children());
+    while (it.current()) {
+      INode *node = it.current();
+      if (node->status() == TRASH) {
+	iNode->childUnlink(node);
+	delete node;
       }
-    }
-#endif
-    QTextStream str(&ifp);
-    QList < INode* >::const_iterator it = iNode->children().constBegin();
-    for (; it!=iNode->children().constEnd(); ++it) {
-      INode *node = *it;
-#if 1                           // If trashnode is not deleted (s.a.) trashnodes must be skipped here
-      if (node->status() == TRASH)
-        continue;
-#endif
-      GeoImage *img = node->labelImage();
-      if (img) {
-        node->attribute("file_geoWest", img->geoWest());
-        node->attribute("file_geoSouth", img->geoSouth());
-        node->attribute("file_geoEast", img->geoEast());
-        node->attribute("file_geoNorth", img->geoNorth());
-      }
-      node->attribute("addr", QString().sprintf("%p", node));
-      node->write(str, "", false);
-      node->attributeRemove("addr");
+      else
+	++it;
     }
   }
+#endif
+  for (QList < INode* >::ConstIterator it = iNode->children().constBegin(); 
+       it!=iNode->children().constEnd();
+       ++it) {
+    INode *node = *it;
+#if 1                           // If trashnode is not deleted (s.a.) trashnodes must be skipped here
+    if (node->status() == TRASH)
+      continue;
+#endif
+    GeoImage *img = node->labelImage();
+    if (img) {
+      node->attribute("file_geoWest", img->geoWest());
+      node->attribute("file_geoSouth", img->geoSouth());
+      node->attribute("file_geoEast", img->geoEast());
+      node->attribute("file_geoNorth", img->geoNorth());
+    }
+    node->attribute("addr", QString().sprintf("%p", node));
+    node->write(str, false);
+    node->attributeRemove("addr");
+  }
+  
+  str.writeEndElement();
+  str.writeEndDocument();
   ifp.close();
 
 #if 1
@@ -1299,8 +1316,13 @@ QList < INode* > &SNode::evalBottomUp(INode * iNode)
 #endif
     QFile fp("new_result1.net");
     fp.open(QIODevice::WriteOnly);
-    QTextStream str(&fp);
+    QXmlStreamWriter str(&fp);
+    str.setAutoFormatting(true);
+    str.writeStartDocument();
+    str.writeStartElement("nodelist");
     iNode->write(str);
+    str.writeEndElement();
+    str.writeEndDocument();
     fp.close();
   }
 

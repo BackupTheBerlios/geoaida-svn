@@ -192,9 +192,13 @@ void Analysis::writeInstanceNet(QString fname)
     return;
   QFile fp(fname);
   fp.open(QIODevice::WriteOnly);
-  QTextStream str(&fp);
+  QXmlStreamWriter str(&fp);
+  str.setAutoFormatting(true);
+  str.writeStartDocument();
+  str.writeStartElement("nodelist");
   iNodeRoot_->write(str);
-
+  str.writeEndElement();
+  str.writeEndDocument();
 }
 
 /** calculate the judgement for this search tree node */

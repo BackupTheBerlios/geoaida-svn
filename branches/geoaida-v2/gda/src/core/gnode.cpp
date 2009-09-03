@@ -101,20 +101,19 @@ void GNode::read(MLParser & parser)
 }
 
 /** Write the node-Date to a file */
-void GNode::write(QTextStream & fp, QString indent, bool recursive)
+void GNode::write(QXmlStreamWriter & fp, bool recursive)
 {
-  fp << indent << "<node ";
+  if (children().count() && recursive ) 
+    fp.writeStartElement("node");
+  else
+    fp.writeEmptyElement("node");
   fp << attribList_;
-  if (children().count() == 0 || !recursive) {
-    fp << "/>" << endl;
-  }
-  else {
-    fp << ">" << endl;
+  if (children().count() && recursive ) {
     QList<GNode*>::const_iterator it = children().constBegin();
     for (; it!=children().constEnd(); ++it) {
-      (*it)->write(fp, indent + "  ");
+      (*it)->write(fp);
     }
-    fp << indent << "</node>" << endl;
+    fp.writeEndElement();
   }
 }
 

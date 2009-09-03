@@ -24,6 +24,7 @@
 #include <QFile>
 
 #include <MLParser>
+#include <QXmlStreamWriter>
 //#include <vips/vips>
 #include "Stack"
 #include "StackElement"
@@ -75,7 +76,7 @@ public:
   void load(NodeList& nodeList);
   
   /** write data to file */
-  void write(QTextStream& fp, QString keyword="node");
+  void write(QXmlStreamWriter& fp, QString keyword="node");
   
   /** return the image filename */
   QString filename();

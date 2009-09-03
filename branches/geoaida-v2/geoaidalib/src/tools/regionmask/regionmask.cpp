@@ -22,6 +22,8 @@
 #include "pfm.h"
 #include "MLParser"
 
+#include <QXmlStreamWriter>
+#include <QTextStream>
 #include <QHash>
 #include <QList>
 #include <QFile>
@@ -359,16 +361,21 @@ int DoIt(const char* outFile, const char* regFile, const char* maskFile, const c
   }
   if (regionList.count()>0) {
     
-    QTextStream ts(&rfp);
+    QXmlStreamWriter ts(&rfp);
+    ts.setAutoFormatting(true);
+    ts.writeStartDocument();
+    ts.writeStartElement("regionlist");
     for (QList<ArgDict*>::Iterator it=regionList.begin(); 
 	 it!=regionList.end();
 	 ++it) {
       ArgDict *argDict = *it;
       assert(argDict);
-      ts << "<region ";
+      
+      ts.writeEmptyElement("<region ");
       ts << (*argDict);
-      ts << " />" << endl;
     }
+    ts.writeEndElement();
+    ts.writeEndDocument();
   }
   rfp.close();
   //!  labelImageDict.setAutoDelete(true);

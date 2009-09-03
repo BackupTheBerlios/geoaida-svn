@@ -24,19 +24,24 @@
  */
 
 #include "mlparser.h"
+#include <QTextStream>
+
 //#include <ctype.h>
 //#include <qstringlist.h>
 #include <QRegExp>
 
 #define DEBUGMSG
 
-QTextStream& ArgDict::write(QTextStream& fp) const
+QXmlStreamWriter& ArgDict::write(QXmlStreamWriter& fp) const
 {
   for (ArgDictConstIterator it=constBegin();it!=constEnd(); ++it) {
+    fp.writeAttribute(it.key(),it.value());
+#if 0
     QString s=it.value();
     fp << it.key() << "=\""
        << (s.replace(QRegExp("\\\\"),QString("\\\\"))).replace(QRegExp("\""),QString("\\\""))
        << "\" ";
+#endif
   }
   return fp;
 }
@@ -84,7 +89,7 @@ void ArgDict::replace(QString name, bool val) {
   insert(name.toLower(),val);
 }
 
-QTextStream& operator<<(QTextStream& fp, ArgDict& argDict)
+QXmlStreamWriter& operator<<(QXmlStreamWriter& fp, ArgDict& argDict)
 {
   return argDict.write(fp);
 }

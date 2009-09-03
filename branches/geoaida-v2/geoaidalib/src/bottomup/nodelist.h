@@ -25,6 +25,7 @@
 #include <QHash>
 #include <QFile>
 #include <QList>
+#include <QXmlStreamWriter>
 #include <MLParser>
 #include "Sensor"
 #include "Relation"
@@ -133,9 +134,9 @@ public:
   //NodeList* merge (QString fname, bool newReg = 0);
   NodeList* merge (bool newReg = false, QString outImgName="");
   /** write a nodelist to the given textstream */
-  void write(QTextStream &fp, QString groupFileName="");
+  void write(QXmlStreamWriter &fp, QString groupFileName="");
   /** write a nodelist as a nodesfile */
-  void writeNodeFile(QTextStream &fp);
+  void writeNodeFile(QXmlStreamWriter &fp);
   /** write the resulting label image */
   void writeOutImage(QString filename);
   /** write the resulting group label image */

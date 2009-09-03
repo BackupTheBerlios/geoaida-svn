@@ -47,8 +47,9 @@ int main(int argc, char **argv)
   project.read(argv[1]);
 //   MainWindow *mainWindow = new MainWindow(argc,argv);
 //   mainWindow->show();
-  
-  int ret_val=app.exec();
+  project.analyze();
+
+  //  int ret_val=app.exec();
   return 0;
 
 }

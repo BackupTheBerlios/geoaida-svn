@@ -401,27 +401,17 @@ int Node::geo2pic(float x, float y, int *rx, int *ry) {
 }
 
 /** write data to file */
-void Node::write(QTextStream& fp, QString keyword) {
+void Node::write(QXmlStreamWriter& fp, QString keyword) {
+  fp.writeEmptyElement(keyword);
   if (keyword=="node") {
-    fp <<"  <" << keyword << " ";
     for (Node::iterator it=begin();it!=end(); ++it) {
       if (! it.key().contains("file_geo", Qt::CaseInsensitive)) 
-	fp << it.key()
-	   <<"=\"" 
-	   << it.value()
-	   <<"\" ";
+	fp.writeAttribute(it.key(),it.value());
     }
-    fp << " />" <<endl;
   }
   else {
-    fp <<"  <" << keyword << " ";
-    for (Node::iterator it=begin();it!=end(); ++it) {
-      fp << it.key()
-	 << "=\""
-	 << it.value()
-	 << "\" ";
-    }
-    fp << " />" <<endl;
+    for (Node::iterator it=begin();it!=end(); ++it) 
+      fp.writeAttribute(it.key(),it.value());
   }
 }
 /** return stack - for bottom-up */

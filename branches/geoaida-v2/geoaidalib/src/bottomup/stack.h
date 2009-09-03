@@ -25,6 +25,7 @@
 #include "StackElement"
 #include <QMap>
 #include <MLParser>
+#include <QXmlStreamWriter>
 #include <ArgDict>
 
 namespace BottomUpLib {
@@ -171,7 +172,7 @@ public:
   /** concatenate the both topmost lists in stack */
   bool concat();
   /** write the topmost stackelement, which should be a nodelist or a stack of nodlist, to the given textstream */
-  bool write(QTextStream& fp, QString keyword="node");
+  bool write(QXmlStreamWriter& fp, QString keyword="node");
   /** write the topmost stackelement to the given filename */
   void write(QString filename, QString keyword="node");
   /** push n lists from stack to a 'seperate stack' on stack */

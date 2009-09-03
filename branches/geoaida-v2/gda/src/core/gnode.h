@@ -25,6 +25,7 @@
 #include <QStringList>
 #include <QList>
 #include <QMultiHash>
+#include <QXmlStreamWriter>
 #include "Attribute"
 /**Base Node
   *@author Martin Pahl
@@ -48,7 +49,7 @@ public:                        // Public attributes
   /** Read a GNode by parsing a file */
   void read(MLParser & parser);
   /** Write the node-Date to a file */
-  void write(QTextStream & fp, QString indent = "", bool recursive = true);
+  void write(QXmlStreamWriter & fp, bool recursive = true);
   /** returns the name of this node */
   virtual const QString & name() const;
   /** Set the name_ */

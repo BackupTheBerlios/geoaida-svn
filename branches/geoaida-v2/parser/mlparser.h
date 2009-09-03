@@ -28,7 +28,7 @@
 
 #include <QHash>
 #include <QXmlStreamReader>
-#include <QTextStream>
+#include <QXmlStreamWriter>
 
 class ArgDict : public QHash<QString,QString> {
  public:
@@ -52,8 +52,8 @@ class ArgDict : public QHash<QString,QString> {
     return *this;
   }
 #endif
-  /** write the contents of dictionary to the given QTextStream */
-  virtual QTextStream& write(QTextStream&) const;
+  /** write the contents of dictionary to the given QXmlStreamWriter */
+  virtual QXmlStreamWriter& write(QXmlStreamWriter&) const;
   void insert(QString name, int val);
   void insert(QString name, double val);
   void insert(QString name, QString val);
@@ -115,7 +115,7 @@ class MLParser : public QXmlStreamReader {
   QString lasttag_;
 };
 
-QTextStream& operator<<(QTextStream& fp, ArgDict&);
+QXmlStreamWriter& operator<<(QXmlStreamWriter& fp, ArgDict&);
 
 
 #endif
