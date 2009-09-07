@@ -51,7 +51,7 @@ CLog&				Log=CLog::getInstance();	///< Logging instance
 void usage()
 {
 	METHOD_ENTRY(Log, "usage()");
-	INFO(Log,
+	INFO(
 
 	std::cout << "Usage: svmop [PROJECT_DIRECTORY]" << std::endl;
 	std::cout << "Starts svm operation using given parameter string as working directory."
@@ -137,36 +137,63 @@ int main(int argc, char *argv[])
 	FeatureExtractor	Extractor;
 	SVMClassifier		Classifier;
 
-	if (argc < 4)
-	{
-		ERROR_MSG(Log, "Main", "Wrong number of parameters.", LOG_DOMAIN_NONE);
-		usage();
-		METHOD_EXIT(Log, "Main");
-		return EXIT_FAILURE;
-	}
-	else
+// 	if (argc < 4)
+// 	{
+// 		ERROR_MSG(Log, "Main", "Wrong number of parameters.", LOG_DOMAIN_NONE);
+// 		usage();
+// 		METHOD_EXIT(Log, "Main");
+// 		return EXIT_FAILURE;
+// 	}
+// 	else
 	{
 		std::vector<std::string> ArgvList;
 
-		for (int i=1; i<argc-1; ++i)
+		for (int i=1; i<argc; ++i)
 		{
 			ArgvList.push_back(argv[i]);
-			Extractor.addInputChannel(argv[i]);
+// 			Extractor.addInputChannel(argv[i]);
+		}
+		
+		//--- Load training images and label image ---------------------------//
+		for (int i=0; i<3; ++i)
+		{
+			Extractor.addInputChannel(ArgvList[i]);
 		}
 
-		Extractor.loadLabelImage(argv[3]);
+		//--- Start the training process -------------------------------------//
+		Extractor.loadLabelImage(ArgvList[3]);
+		Extractor.setFilterRadius(3);
+		Extractor.setLabelSpacingAndBorder(3,3,3,3);
 		Extractor.extract(FEATURE_EXTRACTOR_USE_LABELS);
+		Classifier.setLabelImageSize(Extractor.getImageSize());
 		Classifier.setFeatures(Extractor.getFeatures());
 		Classifier.setLabels(Extractor.getLabels());
-		Classifier.setNumberOfClasses(2);
-		Classifier.loadModel("svm_model");
+		Classifier.scaleFeatures();
+		Classifier.setNumberOfClasses(3);
 		Classifier.train();
 		Classifier.saveModel("svm_model");
 
+		//--- Reclassification -----------------------------------------------//
 		Extractor.extract();
 		Classifier.loadModel("svm_model");
 		Classifier.setFeatures(Extractor.getFeatures());
+		Classifier.scaleFeatures();
 		Classifier.classify();
+		Classifier.saveClassificationResult("result_label_rc.tif");
+		
+		//--- Start the classification process -----------------------------------//
+		Extractor.clearChannels();
+		for (int i=4; i<7; ++i)
+		{
+			Extractor.addInputChannel(ArgvList[i]);
+		}
+		Extractor.extract();
+		Classifier.loadModel("svm_model");
+		Classifier.setLabelImageSize(Extractor.getImageSize());
+		Classifier.setFeatures(Extractor.getFeatures());
+		Classifier.scaleFeatures();
+		Classifier.classify();
+		Classifier.saveClassificationResult("result_label.tif");
 
 // 		if (!setup(argv[1]))
 // 		{
@@ -174,12 +201,6 @@ int main(int argc, char *argv[])
 // 			return EXIT_FAILURE;
 // 		};
 	}
-
-	//--- Start the training process -----------------------------------------//
-
-	//--- Reclassification ---------------------------------------------------//
-
-	//--- Start the classification process -----------------------------------//
 
 	//--- Clean up -----------------------------------------------------------//
 	cleanUp();

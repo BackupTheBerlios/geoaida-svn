@@ -36,8 +36,7 @@ target_link_libraries(svmop
 	OTBLearning
 )
 
-install(TARGETS svmop
-            RUNTIME DESTINATION bin)
+install(TARGETS svmop RUNTIME DESTINATION bin)
 
 # install(TARGETS ga_gisop_multi DESTINATION bin)
 

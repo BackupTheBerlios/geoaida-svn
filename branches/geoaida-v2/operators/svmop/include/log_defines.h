@@ -73,33 +73,23 @@
 	#define DEBUG_MSG(a,b,c,d)		CLog::s_strStr.str(""); \
 									CLog::s_strStr << c; \
 									a.log(b, CLog::s_strStr.str(), LOG_LEVEL_DEBUG, d)
-	#define DEBUG(a,b)				a.logSeparator(LOG_LEVEL_DEBUG); \
-									b \
-									a.logSeparator(LOG_LEVEL_DEBUG)
+	#define DEBUG(a)				a
 	#define INFO_MSG(a,b,c,d)		CLog::s_strStr.str(""); \
 									CLog::s_strStr << c; \
 									a.log(b, CLog::s_strStr.str(), LOG_LEVEL_INFO, d)
-	#define INFO(a,b)				a.logSeparator(LOG_LEVEL_INFO); \
-									b \
-									a.logSeparator(LOG_LEVEL_INFO)
+	#define INFO(a)					a
 	#define NOTICE_MSG(a,b,c,d)		CLog::s_strStr.str(""); \
 									CLog::s_strStr << c; \
 									a.log(b, CLog::s_strStr.str(), LOG_LEVEL_NOTICE, d)
-	#define NOTICE(a,b)				a.logSeparator(LOG_LEVEL_NOTICE); \
-									b \
-									a.logSeparator(LOG_LEVEL_NOTICE)
+	#define NOTICE(a)				a
 	#define WARNING_MSG(a,b,c,d)	CLog::s_strStr.str(""); \
 									CLog::s_strStr << c; \
 									a.log(b, CLog::s_strStr.str(), LOG_LEVEL_WARNING, d)
-	#define WARNING(a,b)			a.logSeparator(LOG_LEVEL_WARNING); \
-									b \
-									a.logSeparator(LOG_LEVEL_WARNING)
+	#define WARNING(a)				a
 	#define ERROR_MSG(a,b,c,d)		CLog::s_strStr.str(""); \
 									CLog::s_strStr << c; \
 									a.log(b, CLog::s_strStr.str(), LOG_LEVEL_ERROR, d)
-	#define ERROR(a,b)				a.logSeparator(LOG_LEVEL_ERROR); \
-									b \
-									a.logSeparator(LOG_LEVEL_ERROR)
+	#define ERROR(a)				a
 	#define CTOR_CALL(a,b)			a.log("Constructor called", b, LOG_LEVEL_DEBUG, LOG_DOMAIN_CONSTRUCTOR)
 	#define DTOR_CALL(a,b)			a.log("Destructor called", b, LOG_LEVEL_DEBUG, LOG_DOMAIN_DESTRUCTOR)
 	#define METHOD_ENTRY(a,b)		a.log("Method entry", b, LOG_LEVEL_DEBUG, LOG_DOMAIN_METHOD_ENTRY)
@@ -110,31 +100,23 @@
 
 #ifdef LOGLEVEL_INFO
 	#define DEBUG_MSG(a,b,c,d)
-	#define DEBUG(a,b)
+	#define DEBUG(a)
 	#define INFO_MSG(a,b,c,d)		CLog::s_strStr.str(""); \
 									CLog::s_strStr << c; \
 									a.log(b, CLog::s_strStr.str(), LOG_LEVEL_INFO, d)
-	#define INFO(a,b)				a.logSeparator(); \
-									b \
-									a.logSeparator()
+	#define INFO(a)					a
 	#define NOTICE_MSG(a,b,c,d)		CLog::s_strStr.str(""); \
 									CLog::s_strStr << c; \
 									a.log(b, CLog::s_strStr.str(), LOG_LEVEL_NOTICE, d)
-	#define NOTICE(a,b)				a.logSeparator(); \
-									b \
-									a.logSeparator()
+	#define NOTICE(a)				a
 	#define WARNING_MSG(a,b,c,d)	CLog::s_strStr.str(""); \
 									CLog::s_strStr << c; \
 									a.log(b, CLog::s_strStr.str(), LOG_LEVEL_WARNING, d)
-	#define WARNING(a,b)			a.logSeparator(); \
-									b \
-									a.logSeparator()
+	#define WARNING(a)				a
 	#define ERROR_MSG(a,b,c,d)		CLog::s_strStr.str(""); \
 									CLog::s_strStr << c; \
 									a.log(b, CLog::s_strStr.str(), LOG_LEVEL_ERROR, d)
-	#define ERROR(a,b)				a.logSeparator(); \
-									b \
-									a.logSeparator()
+	#define ERROR(a)				a
 
 	#define CTOR_CALL(a,b)
 	#define DTOR_CALL(a,b)
@@ -146,27 +128,21 @@
 
 #ifdef LOGLEVEL_NOTICE
 	#define DEBUG_MSG(a,b,c,d)
-	#define DEBUG(a,b)
+	#define DEBUG(a)
 	#define INFO_MSG(a,b,c,d)
-	#define INFO(a,b)
+	#define INFO(a)
 	#define NOTICE_MSG(a,b,c,d)		CLog::s_strStr.str(""); \
 									CLog::s_strStr << c; \
 									a.log(b, CLog::s_strStr.str(), LOG_LEVEL_NOTICE, d)
-	#define NOTICE(a,b)				a.logSeparator(); \
-									b \
-									a.logSeparator()
+	#define NOTICE(a)				a
 	#define WARNING_MSG(a,b,c,d)	CLog::s_strStr.str(""); \
 									CLog::s_strStr << c; \
 									a.log(b, CLog::s_strStr.str(), LOG_LEVEL_WARNING, d)
-	#define WARNING(a,b)			a.logSeparator(); \
-									b \
-									a.logSeparator()
+	#define WARNING(a)				a
 	#define ERROR_MSG(a,b,c,d)		CLog::s_strStr.str(""); \
 									CLog::s_strStr << c; \
 									a.log(b, CLog::s_strStr.str(), LOG_LEVEL_ERROR, d)
-	#define ERROR(a,b)				a.logSeparator(); \
-									b \
-									a.logSeparator()
+	#define ERROR(a)				a
 
 	#define CTOR_CALL(a,b)
 	#define DTOR_CALL(a,b)
@@ -178,23 +154,19 @@
 
 #ifdef LOGLEVEL_WARNING
 	#define DEBUG_MSG(a,b,c,d)
-	#define DEBUG(a,b)
+	#define DEBUG(a)
 	#define INFO_MSG(a,b,c,d)
-	#define INFO(a,b)
+	#define INFO(a)
 	#define NOTICE_MSG(a,b,c,d)
-	#define NOTICE(a,b)
+	#define NOTICE(a)
 	#define WARNING_MSG(a,b,c,d)	CLog::s_strStr.str(""); \
 									CLog::s_strStr << c; \
 									a.log(b, CLog::s_strStr.str(), LOG_LEVEL_WARNING, d)
-	#define WARNING(a,b)			a.logSeparator(); \
-									b \
-									a.logSeparator()
+	#define WARNING(a)				a
 	#define ERROR_MSG(a,b,c,d)		CLog::s_strStr.str(""); \
 									CLog::s_strStr << c; \
 									a.log(b, CLog::s_strStr.str(), LOG_LEVEL_ERROR, d)
-	#define ERROR(a,b)				a.logSeparator(); \
-									b \
-									a.logSeparator()
+	#define ERROR(a)				a
 
 	#define CTOR_CALL(a,b)
 	#define DTOR_CALL(a,b)
@@ -206,19 +178,17 @@
 
 #ifdef LOGLEVEL_ERROR
 	#define DEBUG_MSG(a,b,c,d)
-	#define DEBUG(a,b)
+	#define DEBUG(a)
 	#define INFO_MSG(a,b,c,d)
-	#define INFO(a,b)
+	#define INFO(a)
 	#define NOTICE_MSG(a,b,c,d)
-	#define NOTICE(a,b)
+	#define NOTICE(a)
 	#define WARNING_MSG(a,b,c,d)
-	#define WARNING(a,b)
+	#define WARNING(a)
 	#define ERROR_MSG(a,b,c,d)		CLog::s_strStr.str(""); \
 									CLog::s_strStr << c; \
 									a.log(b, CLog::s_strStr.str(), LOG_LEVEL_ERROR, d)
-	#define ERROR(a,b)				a.logSeparator(); \
-									b \
-									a.logSeparator()
+	#define ERROR(a)				a
 
 	#define CTOR_CALL(a,b)
 	#define DTOR_CALL(a,b)
@@ -230,15 +200,15 @@
 
 #ifdef LOGLEVEL_NONE
 	#define DEBUG_MSG(a,b,c,d)
-	#define DEBUG(a,b)
+	#define DEBUG(a)
 	#define INFO_MSG(a,b,c,d)
-	#define INFO(a,b)
+	#define INFO(a)
 	#define NOTICE_MSG(a,b,c,d)
-	#define NOTICE(a,b)
+	#define NOTICE(a)
 	#define WARNING_MSG(a,b,c,d)
-	#define WARNING(a,b)
+	#define WARNING(a)
 	#define ERROR_MSG(a,b,c,d)
-	#define ERROR(a,b)
+	#define ERROR(a)
 
 	#define CTOR_CALL(a,b)
 	#define DTOR_CALL(a,b)

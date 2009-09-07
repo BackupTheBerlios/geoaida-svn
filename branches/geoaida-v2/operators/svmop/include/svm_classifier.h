@@ -45,15 +45,18 @@ class SVMClassifier : virtual public CLogBase
 		~SVMClassifier();
 
 		//--- Const Methods --------------------------------------------------//
+		bool saveClassificationResult(const std::string&) const;
 		bool saveData(const std::string&) const;
 		bool saveModel(const std::string&) const;
 
 		//--- Methods --------------------------------------------------------//
 		bool loadModel(const std::string&);
-		bool loadLabelImage(const std::string&);
 
+		bool scaleFeatures(const double& = -1.0, const double& = 1.0);
+		
 		void setFeatures(const FeaturePointSetType::Pointer);
 		void setLabels(const LabelPointSetType::Pointer);
+		void setLabelImageSize(const LabelImageType::SizeType&);
 		void setNumberOfClasses(const uint&);
 
 		bool classify();
@@ -63,20 +66,31 @@ class SVMClassifier : virtual public CLogBase
 		
 	private:
 	
+		//--- Methods --------------------------------------------------------//
+		TestFeaturePointSetType::Pointer convertPointSet(
+										const FeaturePointSetType::Pointer);
+		
 		//--- Variables ------------------------------------------------------//
-// 		struct svm_model*	m_pModel;
-// 		struct svm_problem	m_Problem;
 		ClassifierType::Pointer			m_pClassifier;	///< Instance of LibSVM wrapper class (classification)
 		EstimatorType::Pointer			m_pEstimator;	///< Instance of LibSVM wrapper class (training)
 		FeaturePointSetType::Pointer	m_pFeatures;	///< Contains the extracted features
 		LabelPointSetType::Pointer		m_pLabels;		///< Contains the labels
 		ModelType::Pointer				m_pModel;		///< SVM model
+		
+		LabelImageType::Pointer		m_pLabelImage;		///< Label image resulting from classification
+		LabelImageType::SizeType	m_LabelImageSize;	///< Contains size of label image
 
 		uint			m_unNumberOfClasses;			///< Number of classes
 
+		bool			m_bGotClassificationResult;		///< Flags if classification was done
 		bool			m_bGotFeatures;					///< Flags if features were passed
 		bool			m_bGotLabels;					///< Flags if labels were passed
 		bool			m_bGotModel;					///< Flags if a model exists
+		bool			m_bGotSize;						///< Flags if size of label image is known
+		
+		DEBUG(
+			static uint m_unNoFVFiles;					///< Indicates the number of written feature vector files
+		);
 };
 
 //--- Implementation is done here for inlining -------------------------------//
@@ -113,6 +127,23 @@ inline void SVMClassifier::setLabels(const LabelPointSetType::Pointer _pLabels)
 	m_bGotLabels = true;
 
 	METHOD_EXIT(m_Log, "SVMClassifier::setFeatures(const LabelPointSetType::Pointer)");
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///
+/// \brief Sets size for label image
+///
+/// \param _pLabels PointSet of labels
+///
+///////////////////////////////////////////////////////////////////////////////
+inline void SVMClassifier::setLabelImageSize(const LabelImageType::SizeType& _Size)
+{
+	METHOD_ENTRY(m_Log, "SVMClassifier::setLabelImageSize(const LabelImageType::SizeType)");
+
+	m_LabelImageSize = _Size;
+	m_bGotSize = true;
+
+	METHOD_EXIT(m_Log, "SVMClassifier::setLabelImageSize(const LabelImageType::SizeType)");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
