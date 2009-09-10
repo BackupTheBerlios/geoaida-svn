@@ -21,6 +21,10 @@
 
 #include <sstream>
 
+DEBUG(
+	uint FeatureExtractor::m_unNoImageFiles = 0;
+);
+
 ///////////////////////////////////////////////////////////////////////////////
 ///
 /// \brief Constructor
@@ -120,6 +124,8 @@ void FeatureExtractor::addInputChannel(const std::string& ImageName)
 	pReader->Update();
 	
 	m_pInputChannelList->PushBack(pReader->GetOutput());
+	m_pInputChannelList->Update();	
+	
 	m_ImageSize = m_pInputChannelList->Front()->GetLargestPossibleRegion().GetSize();
 	DEBUG_MSG(m_Log, "Image Feature Extractor", "Size: " << m_ImageSize, LOG_DOMAIN_VAR);
 
@@ -197,70 +203,6 @@ bool FeatureExtractor::extract(const uchar& _nMode)
 			break;
 		}
 	}
-
-// 	// Initialise image pyramid
-// 	PyramidFilterType::Pointer Pyramid = PyramidFilterType::New();
-// 	Pyramid->SetNumberOfLevels(4);
-// 	Pyramid->SetDecimationRatio(1.5);
-// 	Pyramid->SetInput(m_pImage);
-// 	Pyramid->Update();
-
-// 	INFO_MSG(m_Log, "Image Feature Extractor", "Image pyramid initialised.", LOG_DOMAIN_NONE);
-
-// 	ImageListIterator itAnalyse = Pyramid->GetOutput()->Begin();
-	
-// 	TextureFilter->Update();
-
-// 	int i=1;
-// 
-// 	// Writing the results images
-// 	while (itAnalyse != Pyramid->GetOutput()->End())
-// 	{
-// 		INFO_MSG(m_Log, "Image Feature Extractor", "Pyramid Level " << i << ".", LOG_DOMAIN_NONE);
-// // 		TextureFilter->SetInput(itAnalyse.Get());
-// 		INFO_MSG(m_Log, "Image Feature Extractor", "Initialise filtering.", LOG_DOMAIN_NONE);
-// // 		Writer->SetInput(itAnalyse.Get());//TextureFilter->GetOutput());
-// // 		Writer->SetFileName(m_ImageNamesList[i]);
-// 		INFO_MSG(m_Log, "Image Feature Extractor", "Processing.", LOG_DOMAIN_NONE);
-// // 		Writer->Update();
-// // 		INFO_MSG(m_Log, "Image Feature Extractor", "Image " << m_ImageNamesList[i] << " written.", LOG_DOMAIN_FILEIO);
-// 		++itAnalyse;
-// 		++i;
-// 	}
-
-// 	m_pInputChannelList->Update();
-
-// 	ImageListToVectorImageFilterType::Pointer pC2VI = ImageListToVectorImageFilterType::New();
-// 	
-// 	pC2VI->SetInput(m_pInputChannelList);
-// 	pC2VI->Update();
-// 
-// 	TextureFilter->SetInput(pC2VI->GetOutput());
-// 	TextureFilter->Update();
-// 	m_pWriter->SetInput(TextureFilter->GetOutput());
-// 	m_pWriter->SetFileName("Vectorimage.tif");
-// 	m_pWriter->Update();
-	
-// 	ImageListIterator itVariance = m_pInputChannelList->Begin();
-// 
-// 	uint i=0;
-// 	while (itVariance != m_pInputChannelList->End())
-// 	{
-// 		TextureFilter->SetInput(itVariance.Get());
-// 		m_pWriter->SetInput(TextureFilter->GetOutput());
-// 
-// 
-// 		ostringstream Filename("");
-// 		Filename << "entropy_" <<
-// 							TextureFilter->GetRadius()[0] << "-" <<
-// 							TextureFilter->GetOffset()[0] << "-" <<
-// 							TextureFilter->GetOffset()[1] << "_" <<
-// 							i << ".tif";
-// 		m_pWriter->SetFileName(Filename.str());
-// 		m_pWriter->Update();
-// 		++itVariance;
-// 		++i;
-// 	}
 
 	m_bFeaturesExtracted = true;
 	METHOD_EXIT(m_Log, "FeatureExtractor::extract()");
@@ -351,10 +293,6 @@ void FeatureExtractor::setLabelSpacingAndBorder(const int& _nSX, const int& _nSY
 /// pixel of a grid with border, other ORFEO methods for efficient extraction
 /// are used.
 ///
-/// \todo Normalize features!
-/// \todo Check every label in neighbourhood when training. For better performance,
-///       create a index list for those pixels to be evaluated
-///
 /// \return Returns if extraction was successfull
 ///
 ///////////////////////////////////////////////////////////////////////////////
@@ -365,73 +303,68 @@ bool FeatureExtractor::extractWithLabels()
 	//--------------------------------------------------------------------------
 	// Setup common stuff
 	//--------------------------------------------------------------------------
-	m_pFeatures = FeaturePointSetType::New();
-	m_pLabels = LabelPointSetType::New();
+// 	m_pFeatures = FeaturePointSetType::New();
+// 	m_pLabels = LabelPointSetType::New();
 
-	FeaturePointContainer::Pointer	pFeatCont = FeaturePointContainer::New();
-	LabelPointContainer::Pointer	pLabCont = LabelPointContainer::New();
+// 	FeaturePointContainer::Pointer	pFeatCont = FeaturePointContainer::New();
+// 	LabelPointContainer::Pointer	pLabCont = LabelPointContainer::New();
 	
 	//--- Define image filters ---//
 	typedef itk::MeanImageFilter<InputImageType, InputImageType> MeanFilterType;
 	MeanFilterType::Pointer pMeanFilter = MeanFilterType::New();
 	
-	typedef otb::Functor::VarianceTextureFunctor<	InputPixelType,
-													InputPixelType>
-		FunctorType;
+// 	typedef otb::Functor::VarianceTextureFunctor<	InputPixelType,
+// 													InputPixelType>
+// 		FunctorType;
 
-	typedef otb::TextureImageFunction<InputImageType, FunctorType>
-		VarianceFilterType;
+// 	typedef otb::TextureImageFunction<InputImageType, FunctorType>
+// 		VarianceFilterType;
 		
 	typedef LabelImageType::RegionType ValidateRegionType;
 	typedef itk::ImageRegionConstIterator<LabelImageType> ConstLabelImageIteratorType;
 
-	VarianceFilterType::Pointer		TextureFilter = VarianceFilterType::New();
-	VarianceFilterType::SizeType	nRadius;
+// 	VarianceFilterType::Pointer		TextureFilter = VarianceFilterType::New();
+	InputImageType::SizeType	nRadius;
 	InputImageType::IndexType		nFeatureIndex;
-	InputImageType::OffsetType		nOffset;
+// 	InputImageType::OffsetType		nOffset;
 	InputImageType::SizeType		nSize;
 	LabelImageType::IndexType		nLabelIndex;
 
 	nRadius[0] = m_nFilterRadius;
 	nRadius[1] = m_nFilterRadius;
-	nOffset[0] = 5;
-	nOffset[1] = 0;
-	TextureFilter->SetRadius(nRadius);
-	TextureFilter->SetOffset(nOffset);
+// 	nOffset[0] = 5;
+// 	nOffset[1] = 0;
+// 	TextureFilter->SetRadius(nRadius);
+// 	TextureFilter->SetOffset(nOffset);
 
 	pMeanFilter->SetRadius(nRadius);
 	
-	m_pInputChannelList->Update();
-	ImageListType::Iterator it = m_pInputChannelList->Begin();
-	nSize = it.Get()->GetLargestPossibleRegion().GetSize();
+// 	m_pInputChannelList->Update();
+// 	ImageListType::ConstIterator it = m_pInputChannelList->Begin();
+// 	nSize = it.Get()->GetLargestPossibleRegion().GetSize();
+	nSize = m_ImageSize;
 	uint nChannel = 0u;
 	uint nX;
 	uint nY;
-	std::vector<FeatureVectorType> FeaturePoints;
-	std::vector<LabelPixelType> LabelPoints;
-	
-	INFO_MSG(m_Log, "Image Feature Extractor", "Reading labels",
-					LOG_DOMAIN_NONE);
-	INFO_MSG(m_Log, "Image Feature Extractor", "Calculating features of channel 0",
-					LOG_DOMAIN_NONE);
+// 	std::vector<FeatureVectorType> FeaturePoints;
+// 	std::vector<LabelPixelType> LabelPoints;
+// 
+// 	INFO_MSG(m_Log, "Image Feature Extractor", "Reading labels",
+// 					LOG_DOMAIN_NONE);
+// 	INFO_MSG(m_Log, "Image Feature Extractor", "Calculating features of channel 0",
+// 					LOG_DOMAIN_NONE);
+// 
+// 	// First run to fill LabelPoints vector and first dimension and
+// 	// therefore size of FeaturePoints vector
+// 	TextureFilter->SetInputImage(it.Get());
+// 	pMeanFilter->SetInput(it.Get());
+// 	pMeanFilter->Update();
 
-	// First run to fill LabelPoints vector and first dimension and
-	// therefore size of FeaturePoints vector
-	TextureFilter->SetInputImage(it.Get());
-	pMeanFilter->SetInput(it.Get());
-	pMeanFilter->Update();
-	
-	LabelWriterType::Pointer pWriter = LabelWriterType::New();
-	pWriter->SetFileName("mean.tif");
-	pWriter->SetInput(pMeanFilter->GetOutput());
-	pWriter->Update();
-	
 	// For debugging draw an image of feature extraction points
 	DEBUG(
-		LabelImageType::Pointer pValidationMap = LabelImageType::New();
-		LabelImageType::IndexType StartIndex;
-		LabelImageType::SizeType Size;
-		LabelImageType::RegionType Region;
+		Image8BitType::Pointer pValidationMap = Image8BitType::New();
+		Image8BitType::IndexType StartIndex;
+		Image8BitType::RegionType Region;
 
 		StartIndex[0]=0;
 		StartIndex[1]=0;
@@ -442,15 +375,14 @@ bool FeatureExtractor::extractWithLabels()
 		pValidationMap->FillBuffer(0);
 	);
 	
-	std::list<InputImageType::IndexType> InputIndexList;
-
+// 	std::list<InputImageType::IndexType> InputIndexList;
 	nY = m_nLabelBorderY;
-	while (nY < nSize[1]-m_nLabelBorderY+1)
+	while (nY < nSize[1]-m_nLabelBorderY)
 	{
 		nX = m_nLabelBorderX;
 		nFeatureIndex[1] = nY;
 		nLabelIndex[1] = nY;
-		while (nX < nSize[0]-m_nLabelBorderX+1)
+		while (nX < nSize[0]-m_nLabelBorderX)
 		{
 			nFeatureIndex[0] = nX;
 			nLabelIndex[0] = nX;
@@ -494,106 +426,101 @@ bool FeatureExtractor::extractWithLabels()
 			////////////////////////////////////////////////////////////////////
 			if (bValid)
 			{
-				FeatureVectorType vecFeature;
-				vecFeature.push_back(TextureFilter->EvaluateAtIndex(nFeatureIndex));
-				vecFeature.push_back(pMeanFilter->GetOutput()->GetPixel(nFeatureIndex));
-				FeaturePoints.push_back(vecFeature);
+// 				FeatureVectorType vecFeature;
+// 				vecFeature.push_back(TextureFilter->EvaluateAtIndex(nFeatureIndex));
+// 				vecFeature.push_back(pMeanFilter->GetOutput()->GetPixel(nFeatureIndex));
+// 				FeaturePoints.push_back(vecFeature);
 			
-				LabelPoints.push_back(m_pLabelImage->GetPixel(nLabelIndex));
+// 				LabelPoints.push_back(m_pLabelImage->GetPixel(nLabelIndex));
 
 				// Fill validation map for debugging purposes
 				DEBUG(
 					pValidationMap->SetPixel(nLabelIndex,255);
 				);
 
-				InputIndexList.push_back(nFeatureIndex);
+// 				InputIndexList.push_back(nFeatureIndex);
 			}
 			
 			nX += m_nLabelSpacingX;
 		}
 		nY += m_nLabelSpacingY;
 	}
-	++it;
-	++nChannel;
+// 	++it;
+// 	++nChannel;
 	
 	// Save the validation map
 	DEBUG(
-		LabelWriterType::Pointer pVMWriter = LabelWriterType::New();
-		pVMWriter->SetFileName("DEBUG_validation_map.tif");
-		pVMWriter->SetInput(pValidationMap);
-		pVMWriter->Update();
+		saveImage(pValidationMap, "DEBUG_validation_map.tif");
 	);
-	
-	while (it != m_pInputChannelList->End())
-	{
-		INFO_MSG(m_Log, "Image Feature Extractor", "Calculating features of channel " <<
-					nChannel, LOG_DOMAIN_NONE);
-		
-		int i=0;
-		
-		TextureFilter->SetInputImage(it.Get());
-		pMeanFilter->SetInput(it.Get());
-		pMeanFilter->Update();
 
-		std::list<InputImageType::IndexType>::const_iterator ciIndex = InputIndexList.begin();
-		while (ciIndex != InputIndexList.end())
-		{
-			FeaturePoints[i].push_back(TextureFilter->EvaluateAtIndex((*ciIndex)));
-			FeaturePoints[i].push_back(pMeanFilter->GetOutput()->GetPixel((*ciIndex)));
-			++i;
-			++ciIndex;
-		}
-		++it;
-		++nChannel;
-	}
-	
-	std::vector<FeatureVectorType>::const_iterator ci;
-	std::vector<LabelPixelType>::const_iterator cj = LabelPoints.begin();
-	int i=0;
-	for (ci = FeaturePoints.begin(); ci != FeaturePoints.end(); ++ci)
-	{
-		
-		FeaturePointType FP;
-		LabelPointType LP;
-
-		FP[0] = -i;
-		LP[0] = -i;
-
-		pFeatCont->InsertElement(i, FP);
-		m_pFeatures->SetPointData(i, (*ci));
-
-		pLabCont->InsertElement(i, LP);
-		m_pLabels->SetPointData(i, (*cj));
-		++i;
-		++cj;
-	}
-
-	m_pFeatures->SetPoints(pFeatCont);
-	m_pLabels->SetPoints(pLabCont);
+// 	while (it != m_pInputChannelList->End())
+// 	{
+// 		INFO_MSG(m_Log, "Image Feature Extractor", "Calculating features of channel " <<
+// 					nChannel, LOG_DOMAIN_NONE);
+// 		
+// 		int i=0;
+// 		
+// 		TextureFilter->SetInputImage(it.Get());
+// 		pMeanFilter->SetInput(it.Get());
+// 		pMeanFilter->Update();
+// 
+// 		std::list<InputImageType::IndexType>::const_iterator ciIndex = InputIndexList.begin();
+// 		while (ciIndex != InputIndexList.end())
+// 		{
+// 			FeaturePoints[i].push_back(TextureFilter->EvaluateAtIndex((*ciIndex)));
+// 			FeaturePoints[i].push_back(pMeanFilter->GetOutput()->GetPixel((*ciIndex)));
+// 			++i;
+// 			++ciIndex;
+// 		}
+// 		++it;
+// 		++nChannel;
+// 	}
+// 
+// 	std::vector<FeatureVectorType>::const_iterator ci;
+// 	std::vector<LabelPixelType>::const_iterator cj = LabelPoints.begin();
+// 	int i=0;
+// 	for (ci = FeaturePoints.begin(); ci != FeaturePoints.end(); ++ci)
+// 	{
+// 
+// 		FeaturePointType FP;
+// 		LabelPointType LP;
+// 
+// 		FP[0] = -i;
+// 		LP[0] = -i;
+// 
+// 		pFeatCont->InsertElement(i, FP);
+// 		m_pFeatures->SetPointData(i, (*ci));
+// 
+// 		pLabCont->InsertElement(i, LP);
+// 		m_pLabels->SetPointData(i, (*cj));
+// 		++i;
+// 		++cj;
+// 	}
+// 
+// 	m_pFeatures->SetPoints(pFeatCont);
+// 	m_pLabels->SetPoints(pLabCont);
 
 	METHOD_EXIT(m_Log, "FeatureExtractor::extractWithLabels()");
 	return true;
 }
 
-///////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 ///
 /// \brief Method to extract features from image.
 ///
 /// Since it is common for to extract features for every pixel when in
 /// classification, ORFEO methods to filter the whole image are used.
 ///
-/// \todo Normalize features!
-///
 /// \return Returns if extraction was successfull
 ///
-///////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 bool FeatureExtractor::extractWithoutLabels()
 {
 	METHOD_ENTRY(m_Log, "FeatureExtractor::extractWithoutLabels()");
 	
-	//--------------------------------------------------------------------------
+	////////////////////////////////////////////////////////////////////////////
 	// Setup common stuff
-	//--------------------------------------------------------------------------
+	////////////////////////////////////////////////////////////////////////////
 	m_pFeatures = FeaturePointSetType::New();
 
 	FeaturePointContainer::Pointer	pFeatCont = FeaturePointContainer::New();
@@ -633,25 +560,50 @@ bool FeatureExtractor::extractWithoutLabels()
 	uint nChannel = 0u;
 	uint nX;
 	uint nY;
+	double fPyramidLevelFactor;
 	std::vector<FeatureVectorType> FeaturePoints;
 	
-	INFO_MSG(m_Log, "Image Feature Extractor", "Reading labels",
-					LOG_DOMAIN_NONE);
 	INFO_MSG(m_Log, "Image Feature Extractor", "Calculating features of channel 0",
 					LOG_DOMAIN_NONE);
 
-	// First run to fill LabelPoints vector and first dimension and
-	// therefore size of FeaturePoints vector
+	////////////////////////////////////////////////////////////////////////////
+	// First run to fill LabelPoints vector and first dimension and therfore
+	// size of FeaturePoints vector
+	////////////////////////////////////////////////////////////////////////////
+	
+	//--------------------------
+	// Initialise image pyramid
+	//--------------------------
+	PyramidFilterType::Pointer pPyramid = PyramidFilterType::New();
+	pPyramid->SetNumberOfLevels(2);
+	pPyramid->SetDecimationRatio(2.0);
+	pPyramid->SetInput(it.Get());
+	pPyramid->Update();
+	fPyramidLevelFactor = 1.0;
+	ImageListIterator itP = pPyramid->GetOutput()->Begin();
+
 	TextureFilter->SetInput(it.Get());
 	TextureFilter->Update();
 	pMeanFilter->SetInput(it.Get());
 	pMeanFilter->Update();
 	
-// 	LabelWriterType::Pointer pWriter = LabelWriterType::New();
-// 	pWriter->SetFileName("mean.tif");
-// 	pWriter->SetInput(pMeanFilter->GetOutput());
-// 	pWriter->Update();
+	DEBUG(
+	{
+		#include <fstream>
+		#include <sstream>
+		std::ostringstream oss("");
+		oss << "DEBUG_feature_image_" << m_unNoImageFiles << ".tif";
+		saveImage(pMeanFilter->GetOutput(), oss.str());
+		++m_unNoImageFiles;
+	});
+	
+	INFO_MSG(m_Log, "Image Feature Extractor", "New pyramid level, size: " <<
+					pMeanFilter->GetOutput()->GetLargestPossibleRegion().GetSize(),
+					LOG_DOMAIN_VAR);
 
+	//--------------------------------------
+	// Store first feature vector component
+	//--------------------------------------
 	nY = 0;
 	while (nY < nSize[1])
 	{
@@ -670,36 +622,94 @@ bool FeatureExtractor::extractWithoutLabels()
 		}
 		++nY;
 	}
-// 	ConstInputImageIteratorType itImg(pMeanFilter->GetOutput(), pMeanFilter->GetOutput()->GetLargestPossibleRegion());
-// 	itImg.GoToBegin();
-// 	while (!itImg.IsAtEnd())
-// 	{
-// 		FeatureVectorType vecFeature;
-// 		vecFeature.push_back(itImg.Value());
-// 		++itImg;
-// 	}
 	++it;
 	++nChannel;
 	
-	while (it != m_pInputChannelList->End())
+	////////////////////////////////////////////////////////////////////////////
+	// Now do the same for all other channels.
+	////////////////////////////////////////////////////////////////////////////
+	while (!((it == m_pInputChannelList->End()) && (itP == pPyramid->GetOutput()->End())))
 	{
-		INFO_MSG(m_Log, "Image Feature Extractor", "Calculating features of channel " <<
-					nChannel, LOG_DOMAIN_NONE);
-		
 		int i=0;
 		
-		TextureFilter->SetInput(it.Get());
-		TextureFilter->Update();
-		pMeanFilter->SetInput(it.Get());
-		pMeanFilter->Update();
+		//-----------------------------------------------
+		// Create new filters due to changing image size
+		//-----------------------------------------------
+		TextureFilter = VarianceFilterType::New();
+		TextureFilter->SetRadius(nRadius);
+		TextureFilter->SetOffset(nOffset);
+		
+		pMeanFilter = MeanFilterType::New();
+		pMeanFilter->SetRadius(nRadius);
+		
+		//---------------------------------------------------
+		// Calculate on sublevels or start new pyramid level
+		//---------------------------------------------------
+		if (itP != pPyramid->GetOutput()->End())
+		{			
+			TextureFilter->SetInput(itP.Get());
+			TextureFilter->Update();
+			pMeanFilter->SetInput(itP.Get());
+			pMeanFilter->Update();
+			fPyramidLevelFactor *= 0.5;
+			++itP;
+			
+			INFO_MSG(m_Log, "Image Feature Extractor", "New pyramid level, size: " <<
+					pMeanFilter->GetOutput()->GetLargestPossibleRegion().GetSize(),
+					LOG_DOMAIN_VAR);
+			DEBUG_MSG(m_Log, "Image Feature Extractor", "Pyramid level factor: " <<
+					fPyramidLevelFactor, LOG_DOMAIN_VAR);
+					
+			DEBUG(
+				std::ostringstream oss("");
+				oss << "DEBUG_feature_image_" << m_unNoImageFiles << ".tif";
+				saveImage(pMeanFilter->GetOutput(), oss.str());
+				++m_unNoImageFiles;
+			);
+		}
+		else
+		{
+			INFO_MSG(m_Log, "Image Feature Extractor", "Calculating features of channel " <<
+					nChannel, LOG_DOMAIN_NONE);
+			TextureFilter->SetInput(it.Get());
+			TextureFilter->Update();
+			pMeanFilter->SetInput(it.Get());
+			pMeanFilter->Update();
+			
+			pPyramid = PyramidFilterType::New();
+			pPyramid->SetNumberOfLevels(2);
+			pPyramid->SetDecimationRatio(2.0);
+			pPyramid->SetInput(it.Get());
+			pPyramid->Update();
+			fPyramidLevelFactor = 1.0;
+			
+			itP = pPyramid->GetOutput()->Begin();
+			
+			++it;
+			++nChannel;
+			
+			INFO_MSG(m_Log, "Image Feature Extractor", "New pyramid level, size: " <<
+					pMeanFilter->GetOutput()->GetLargestPossibleRegion().GetSize(),
+					LOG_DOMAIN_VAR);
+					
+			DEBUG(
+				std::ostringstream oss("");
+				oss << "DEBUG_feature_image_" << m_unNoImageFiles << ".tif";
+				saveImage(pMeanFilter->GetOutput(), oss.str());
+				++m_unNoImageFiles;
+			);
+		}
+		//--------------------------------
+		// Store feature vector component
+		//--------------------------------
 		nY = 0;
 		while (nY < nSize[1])
 		{
 			nX = 0;
-			nFeatureIndex[1] = nY;
+			nFeatureIndex[1] = double(nY)*fPyramidLevelFactor;
 			while (nX < nSize[0])
 			{
-				nFeatureIndex[0] = nX;
+				nFeatureIndex[0] = double(nX)*fPyramidLevelFactor;
 				
 				FeaturePoints[i].push_back(TextureFilter->GetOutput()->GetPixel(nFeatureIndex));
 				FeaturePoints[i].push_back(pMeanFilter->GetOutput()->GetPixel(nFeatureIndex));
@@ -709,9 +719,11 @@ bool FeatureExtractor::extractWithoutLabels()
 			}
 			++nY;
 		}
-		++it;
-		++nChannel;
 	}
+	
+	////////////////////////////////////////////////////////////////////////////
+	// Move feature points to point set for classification.
+	////////////////////////////////////////////////////////////////////////////
 	std::vector<FeatureVectorType>::const_iterator ci;
 	int i=0;
 	for (ci = FeaturePoints.begin(); ci != FeaturePoints.end(); ++ci)
@@ -732,21 +744,47 @@ bool FeatureExtractor::extractWithoutLabels()
 	METHOD_EXIT(m_Log, "FeatureExtractor::extractWithoutLabels()");
 	return true;
 }
-// ///////////////////////////////////////////////////////////////////////////////
-// ///
-// /// \brief Transforms the image list to a vector image for further processing
-// ///
-// ///////////////////////////////////////////////////////////////////////////////
-// void FeatureExtractor::channels2VectorImage()
-// {
-// 	METHOD_ENTRY(m_Log, "FeatureExtractor::channels2VectorImage()");
-// 
-// 	INFO_MSG(m_Log, "Image Feature Extractor", "Composing image channels.", LOG_DOMAIN_NONE);
-// 	ImageListToVectorImageFilterType::Pointer pC2VI = ImageListToVectorImageFilterType::New();
-// 	
-// 	pC2VI->SetInput(m_pInputChannelList);
-// 	pC2VI->Update();
-// 	m_pImage = pC2VI->GetOutput();
-// 
-// 	METHOD_EXIT(m_Log, "FeatureExtractor::channels2VectorImage()");
-// }
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// \brief Stores a given 8 bit image to disk
+///
+/// \param _pImg Pointer to image
+/// \param _Filename File to write to
+///
+////////////////////////////////////////////////////////////////////////////////
+void FeatureExtractor::saveImage(const Image8BitType::Pointer _pImg,
+								 const std::string& _Filename) const
+{
+	METHOD_ENTRY(m_Log, "FeatureExtractor::saveImage(const Image8BitType::Pointer, const std::string&");
+	
+	INFO_MSG(m_Log, "Image Feature Extractor", "Writing image " << _Filename, LOG_DOMAIN_NONE);
+	Writer8BitType::Pointer pWriter = Writer8BitType::New();
+	pWriter->SetFileName(_Filename);
+	pWriter->SetInput(_pImg);
+	pWriter->Update();
+	
+	METHOD_EXIT(m_Log, "FeatureExtractor::saveImage(const Image8BitType::Pointer, const std::string&");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// \brief Stores a given 16 bit image to disk
+///
+/// \param _pImg Pointer to image
+/// \param _Filename File to write to
+///
+////////////////////////////////////////////////////////////////////////////////
+void FeatureExtractor::saveImage(const Image16BitType::Pointer _pImg,
+								 const std::string& _Filename) const
+{
+	METHOD_ENTRY(m_Log, "FeatureExtractor::saveImage(const Image16BitType::Pointer, const std::string&");
+	
+	INFO_MSG(m_Log, "Image Feature Extractor", "Writing image " << _Filename, LOG_DOMAIN_NONE);
+	Writer16BitType::Pointer pWriter = Writer16BitType::New();
+	pWriter->SetFileName(_Filename);
+	pWriter->SetInput(_pImg);
+	pWriter->Update();
+	
+	METHOD_EXIT(m_Log, "FeatureExtractor::saveImage(const Image16BitType::Pointer, const std::string&");
+}

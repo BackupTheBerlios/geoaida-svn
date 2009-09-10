@@ -29,7 +29,6 @@
 #include "otbImage.h"
 #include "otbImageList.h"
 #include "otbImageFileReader.h"
-#include "otbImageListToVectorImageFilter.h"
 #include "otbMorphologicalPyramidAnalysisFilter.h"
 #include "otbOpeningClosingMorphologicalFilter.h"
 #include "otbStreamingImageFileWriter.h"
@@ -42,34 +41,37 @@
 
 //--- Define input and output images ---//
 const unsigned int Dimension = 2;
+typedef uchar			Pixel8BitType;
+typedef unsigned short	Pixel16BitType;
 typedef float			FeaturePixelType;
 typedef unsigned short	InputPixelType;
-typedef unsigned short	LabelPixelType;
+typedef unsigned char	LabelPixelType;
+typedef otb::Image<Pixel8BitType, Dimension> Image8BitType;
+typedef otb::Image<Pixel16BitType, Dimension> Image16BitType;
 typedef otb::Image<InputPixelType, Dimension> InputImageType;
 typedef otb::Image<LabelPixelType, Dimension> LabelImageType;
-// typedef otb::VectorImage<OutputPixelType, Dimension> VectorImageType;
 
 typedef otb::ImageList<InputImageType> ImageListType;
 
-// typedef otb::ImageListToVectorImageFilter<ImageListType, VectorImageType>
-// 		ImageListToVectorImageFilterType;
-
-// // Define pyramid filtering types
-// typedef itk::BinaryBallStructuringElement<InputPixelType,Dimension> StructuringElementType;
-// typedef otb::OpeningClosingMorphologicalFilter<	InputImageType,
-// 												InputImageType,
-// 												StructuringElementType>
-// 		OpeningClosingFilterType;
-// typedef otb::MorphologicalPyramidAnalysisFilter<InputImageType,
-// 												InputImageType,
-// 												OpeningClosingFilterType>
-// 		PyramidFilterType;
-// typedef PyramidFilterType::OutputImageListType::Iterator ImageListIterator;
+// Define pyramid filtering types
+typedef itk::BinaryBallStructuringElement<InputPixelType,Dimension> StructuringElementType;
+typedef otb::OpeningClosingMorphologicalFilter<	InputImageType,
+												InputImageType,
+												StructuringElementType>
+		OpeningClosingFilterType;
+typedef otb::MorphologicalPyramidAnalysisFilter<InputImageType,
+												InputImageType,
+												OpeningClosingFilterType>
+		PyramidFilterType;
+typedef PyramidFilterType::OutputImageListType::Iterator ImageListIterator;
 
 //--- Define Pipes ---//
 typedef otb::ImageFileReader<InputImageType> ReaderType;
 typedef otb::ImageFileReader<LabelImageType> LabelReaderType;
+typedef otb::StreamingImageFileWriter<Image8BitType> Writer8BitType;
+typedef otb::StreamingImageFileWriter<Image16BitType> Writer16BitType;
 typedef otb::StreamingImageFileWriter<LabelImageType> LabelWriterType;
+
 
 //--- Define types for svm learning and classification ---//
 const unsigned int FeatureSpaceDimension = 1;
@@ -83,12 +85,12 @@ typedef FeaturePointSetType::PointType							FeaturePointType;
 typedef FeaturePointSetType::PointsContainer					FeaturePointContainer;
 typedef FeaturePointSetType::PointDataContainer					FeaturePointDataContainer;
 
-typedef itk::PointSet<FeatureVectorType,6>						TestFeaturePointSetType;
+typedef itk::PointSet<FeatureVectorType,18>						TestFeaturePointSetType;
 typedef TestFeaturePointSetType::PointType						TestFeaturePointType;
 typedef TestFeaturePointSetType::PointsContainer				TestFeaturePointContainer;
 // typedef FeaturePointSetType::PointDataContainer					TestFeaturePointDataContainer;
 
-typedef itk::Statistics::PointSetToListAdaptor<TestFeaturePointSetType>					SampleType;
+typedef itk::Statistics::PointSetToListAdaptor<TestFeaturePointSetType>				SampleType;
 typedef otb::SVMModel<SampleType::MeasurementVectorType::ValueType,LabelPixelType>	ModelType;
 
 typedef otb::SVMPointSetModelEstimator<FeaturePointSetType,LabelPointSetType>		EstimatorType;

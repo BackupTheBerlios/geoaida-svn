@@ -162,38 +162,38 @@ int main(int argc, char *argv[])
 
 		//--- Start the training process -------------------------------------//
 		Extractor.loadLabelImage(ArgvList[3]);
-		Extractor.setFilterRadius(3);
-		Extractor.setLabelSpacingAndBorder(3,3,3,3);
+		Extractor.setFilterRadius(5);
+		Extractor.setLabelSpacingAndBorder(5,5,5,5);
 		Extractor.extract(FEATURE_EXTRACTOR_USE_LABELS);
-		Classifier.setLabelImageSize(Extractor.getImageSize());
-		Classifier.setFeatures(Extractor.getFeatures());
-		Classifier.setLabels(Extractor.getLabels());
-		Classifier.scaleFeatures();
-		Classifier.setNumberOfClasses(3);
-		Classifier.train();
-		Classifier.saveModel("svm_model");
-
-		//--- Reclassification -----------------------------------------------//
-		Extractor.extract();
-		Classifier.loadModel("svm_model");
-		Classifier.setFeatures(Extractor.getFeatures());
-		Classifier.scaleFeatures();
-		Classifier.classify();
-		Classifier.saveClassificationResult("result_label_rc.tif");
-		
-		//--- Start the classification process -----------------------------------//
-		Extractor.clearChannels();
-		for (int i=4; i<7; ++i)
-		{
-			Extractor.addInputChannel(ArgvList[i]);
-		}
-		Extractor.extract();
-		Classifier.loadModel("svm_model");
-		Classifier.setLabelImageSize(Extractor.getImageSize());
-		Classifier.setFeatures(Extractor.getFeatures());
-		Classifier.scaleFeatures();
-		Classifier.classify();
-		Classifier.saveClassificationResult("result_label.tif");
+// 		Classifier.setLabelImageSize(Extractor.getImageSize());
+// 		Classifier.setFeatures(Extractor.getFeatures());
+// 		Classifier.setLabels(Extractor.getLabels());
+// 		Classifier.scaleFeatures();
+// 		Classifier.setNumberOfClasses(3);
+// 		Classifier.train();
+// 		Classifier.saveModel("svm_model");
+// 
+// 		//--- Reclassification -----------------------------------------------//
+// 		Extractor.extract();
+// 		Classifier.loadModel("svm_model");
+// 		Classifier.setFeatures(Extractor.getFeatures());
+// 		Classifier.scaleFeatures();
+// 		Classifier.classify();
+// 		Classifier.saveClassificationResult("result_label_rc.tif");
+// 		
+// 		//--- Start the classification process -----------------------------------//
+// 		Extractor.clearChannels();
+// 		for (int i=4; i<7; ++i)
+// 		{
+// 			Extractor.addInputChannel(ArgvList[i]);
+// 		}
+// 		Extractor.extract();
+// 		Classifier.loadModel("svm_model");
+// 		Classifier.setLabelImageSize(Extractor.getImageSize());
+// 		Classifier.setFeatures(Extractor.getFeatures());
+// 		Classifier.scaleFeatures();
+// 		Classifier.classify();
+// 		Classifier.saveClassificationResult("result_label.tif");
 
 // 		if (!setup(argv[1]))
 // 		{

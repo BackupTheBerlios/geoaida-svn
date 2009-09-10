@@ -88,9 +88,16 @@ class FeatureExtractor : virtual public CLogBase
 		int								m_nLabelSpacingY;				///< Distance between samples for training
 		int								m_nLabelBorderX;				///< Distance of border when training
 		int								m_nLabelBorderY;				///< Distance of border when training
-
-		//--- Methods [private] ----------------------------------------------//
-		void channels2VectorImage();
+		
+		DEBUG(
+			static uint m_unNoImageFiles;								///< Indicates the number of written image files
+		);
+		
+		//--- Constant methods [private] -------------------------------------//
+		void	saveImage(const Image8BitType::Pointer,
+						  const std::string&) const;
+		void	saveImage(const Image16BitType::Pointer,
+						  const std::string&) const;
 
 };
 
