@@ -41,7 +41,7 @@
 
 //--- Define input and output images ---//
 const unsigned int Dimension = 2;
-typedef uchar			Pixel8BitType;
+typedef unsigned char	Pixel8BitType;
 typedef unsigned short	Pixel16BitType;
 typedef float			FeaturePixelType;
 typedef unsigned short	InputPixelType;

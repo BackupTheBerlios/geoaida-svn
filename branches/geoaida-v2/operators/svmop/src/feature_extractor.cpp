@@ -31,6 +31,7 @@ DEBUG(
 ///
 ///////////////////////////////////////////////////////////////////////////////
 FeatureExtractor::FeatureExtractor():	m_pInputChannelList(ImageListType::New()),
+										m_bChannelLoaded(false),
 										m_bFeaturesExtracted(false),
 										m_bLabelsExtracted(false),
 										m_bLabelImageLoaded(false),
@@ -96,7 +97,7 @@ const LabelImageType::SizeType FeatureExtractor::getImageSize() const
 {
 	METHOD_ENTRY(m_Log, "FeatureExtractor::getImageSize()");
 
-	if (m_pInputChannelList->Size() == 0)
+	if (!m_bChannelLoaded)
 	{
 		WARNING_MSG(m_Log, "Image Feature Extractor", "No images were loaded. Can't determine size.", LOG_DOMAIN_NONE);
 	}
@@ -130,6 +131,7 @@ void FeatureExtractor::addInputChannel(const std::string& ImageName)
 	DEBUG_MSG(m_Log, "Image Feature Extractor", "Size: " << m_ImageSize, LOG_DOMAIN_VAR);
 
 	INFO_MSG(m_Log, "Image Feature Extractor", "Number of channels: " << m_pInputChannelList->Size(), LOG_DOMAIN_VAR);
+	m_bChannelLoaded = true;
 
 	METHOD_EXIT(m_Log, "FeatureExtractor::addInputChannel(const std::string&)");
 }
@@ -146,6 +148,7 @@ void FeatureExtractor::clearChannels()
 	INFO_MSG(m_Log, "Image Feature Extractor", "Deleting input channels.", LOG_DOMAIN_NONE);
 	
 	m_pInputChannelList->Clear();
+	m_bChannelLoaded = false;
 
 	METHOD_EXIT(m_Log, "FeatureExtractor::clearChannels()");
 }
@@ -167,7 +170,7 @@ void FeatureExtractor::clearChannels()
 /// \return Returns if extraction was successfull
 ///
 ///////////////////////////////////////////////////////////////////////////////
-bool FeatureExtractor::extract(const uchar& _nMode)
+bool FeatureExtractor::extract(const unsigned char& _nMode)
 {
 	METHOD_ENTRY(m_Log, "FeatureExtractor::extract()");
 	
@@ -300,65 +303,79 @@ bool FeatureExtractor::extractWithLabels()
 {
 	METHOD_ENTRY(m_Log, "FeatureExtractor::extractWithLabels()");
 	
-	//--------------------------------------------------------------------------
+	////////////////////////////////////////////////////////////////////////////
 	// Setup common stuff
-	//--------------------------------------------------------------------------
-// 	m_pFeatures = FeaturePointSetType::New();
-// 	m_pLabels = LabelPointSetType::New();
+	////////////////////////////////////////////////////////////////////////////
+	m_pFeatures = FeaturePointSetType::New();
+	m_pLabels = LabelPointSetType::New();
 
-// 	FeaturePointContainer::Pointer	pFeatCont = FeaturePointContainer::New();
-// 	LabelPointContainer::Pointer	pLabCont = LabelPointContainer::New();
+	FeaturePointContainer::Pointer	pFeatCont = FeaturePointContainer::New();
+	LabelPointContainer::Pointer	pLabCont = LabelPointContainer::New();
 	
 	//--- Define image filters ---//
 	typedef itk::MeanImageFilter<InputImageType, InputImageType> MeanFilterType;
 	MeanFilterType::Pointer pMeanFilter = MeanFilterType::New();
 	
-// 	typedef otb::Functor::VarianceTextureFunctor<	InputPixelType,
-// 													InputPixelType>
-// 		FunctorType;
+	typedef otb::Functor::VarianceTextureFunctor<	InputPixelType,
+													InputPixelType>
+		FunctorType;
 
-// 	typedef otb::TextureImageFunction<InputImageType, FunctorType>
-// 		VarianceFilterType;
+	typedef otb::TextureImageFunction<InputImageType, FunctorType>
+		VarianceFilterType;
 		
 	typedef LabelImageType::RegionType ValidateRegionType;
 	typedef itk::ImageRegionConstIterator<LabelImageType> ConstLabelImageIteratorType;
 
-// 	VarianceFilterType::Pointer		TextureFilter = VarianceFilterType::New();
-	InputImageType::SizeType	nRadius;
+	VarianceFilterType::Pointer		TextureFilter = VarianceFilterType::New();
+	InputImageType::SizeType		nRadius;
 	InputImageType::IndexType		nFeatureIndex;
-// 	InputImageType::OffsetType		nOffset;
+	InputImageType::OffsetType		nOffset;
 	InputImageType::SizeType		nSize;
 	LabelImageType::IndexType		nLabelIndex;
 
 	nRadius[0] = m_nFilterRadius;
 	nRadius[1] = m_nFilterRadius;
-// 	nOffset[0] = 5;
-// 	nOffset[1] = 0;
-// 	TextureFilter->SetRadius(nRadius);
-// 	TextureFilter->SetOffset(nOffset);
+	nOffset[0] = 5;
+	nOffset[1] = 0;
+	TextureFilter->SetRadius(nRadius);
+	TextureFilter->SetOffset(nOffset);
 
 	pMeanFilter->SetRadius(nRadius);
 	
-// 	m_pInputChannelList->Update();
-// 	ImageListType::ConstIterator it = m_pInputChannelList->Begin();
-// 	nSize = it.Get()->GetLargestPossibleRegion().GetSize();
+	m_pInputChannelList->Update();
+	ImageListType::ConstIterator it = m_pInputChannelList->Begin();
+	nSize = it.Get()->GetLargestPossibleRegion().GetSize();
 	nSize = m_ImageSize;
 	uint nChannel = 0u;
 	uint nX;
 	uint nY;
-// 	std::vector<FeatureVectorType> FeaturePoints;
-// 	std::vector<LabelPixelType> LabelPoints;
-// 
-// 	INFO_MSG(m_Log, "Image Feature Extractor", "Reading labels",
-// 					LOG_DOMAIN_NONE);
-// 	INFO_MSG(m_Log, "Image Feature Extractor", "Calculating features of channel 0",
-// 					LOG_DOMAIN_NONE);
-// 
-// 	// First run to fill LabelPoints vector and first dimension and
-// 	// therefore size of FeaturePoints vector
-// 	TextureFilter->SetInputImage(it.Get());
-// 	pMeanFilter->SetInput(it.Get());
-// 	pMeanFilter->Update();
+	double fPyramidLevelFactor;
+	std::vector<FeatureVectorType> FeaturePoints;
+	std::vector<LabelPixelType> LabelPoints;
+
+	INFO_MSG(m_Log, "Image Feature Extractor", "Reading labels",
+					LOG_DOMAIN_NONE);
+	INFO_MSG(m_Log, "Image Feature Extractor", "Calculating features of channel 0",
+					LOG_DOMAIN_NONE);
+
+	////////////////////////////////////////////////////////////////////////////
+	// First run to fill LabelPoints vector and first dimension and therfore
+	// size of FeaturePoints vector
+	////////////////////////////////////////////////////////////////////////////
+	
+	//--------------------------
+	// Initialise image pyramid
+	//--------------------------
+	PyramidFilterType::Pointer pPyramid = PyramidFilterType::New();
+	pPyramid->SetNumberOfLevels(2);
+	pPyramid->SetDecimationRatio(1.25);
+	pPyramid->SetInput(it.Get());
+	pPyramid->Update();
+	fPyramidLevelFactor = 1.0;
+	ImageListIterator itP = pPyramid->GetOutput()->Begin();
+	TextureFilter->SetInputImage(it.Get());
+	pMeanFilter->SetInput(it.Get());
+	pMeanFilter->Update();
 
 	// For debugging draw an image of feature extraction points
 	DEBUG(
@@ -375,7 +392,11 @@ bool FeatureExtractor::extractWithLabels()
 		pValidationMap->FillBuffer(0);
 	);
 	
-// 	std::list<InputImageType::IndexType> InputIndexList;
+	
+	//--------------------------------------------------------------------------
+	// Store first feature vector component, build up list for further channels
+	//--------------------------------------------------------------------------
+	std::list<InputImageType::IndexType> InputIndexList;
 	nY = m_nLabelBorderY;
 	while (nY < nSize[1]-m_nLabelBorderY)
 	{
@@ -397,10 +418,10 @@ bool FeatureExtractor::extractWithLabels()
 			ValidateRegionType::IndexType RgStart;
 			ValidateRegionType::SizeType RgSize;
 			
-			RgStart[0] = nX-m_nLabelBorderX;
-			RgStart[1] = nY-m_nLabelBorderY;
-			RgSize[0] = m_nLabelBorderX*2+1;
-			RgSize[1] = m_nLabelBorderY*2+1;
+			RgStart[0] = nX-int(m_nLabelBorderX*1.25*1.25);
+			RgStart[1] = nY-int(m_nLabelBorderY*1.25*1.25);
+			RgSize[0] = int(m_nLabelBorderX*1.25*1.25*2)+1;
+			RgSize[1] = int(m_nLabelBorderY*1.25*1.25*2)+1;
 			Region.SetIndex(RgStart);
 			Region.SetSize(RgSize);
 			ConstLabelImageIteratorType ciR(m_pLabelImage, Region);
@@ -426,79 +447,146 @@ bool FeatureExtractor::extractWithLabels()
 			////////////////////////////////////////////////////////////////////
 			if (bValid)
 			{
-// 				FeatureVectorType vecFeature;
-// 				vecFeature.push_back(TextureFilter->EvaluateAtIndex(nFeatureIndex));
-// 				vecFeature.push_back(pMeanFilter->GetOutput()->GetPixel(nFeatureIndex));
-// 				FeaturePoints.push_back(vecFeature);
+				FeatureVectorType vecFeature;
+				vecFeature.push_back(TextureFilter->EvaluateAtIndex(nFeatureIndex));
+				vecFeature.push_back(pMeanFilter->GetOutput()->GetPixel(nFeatureIndex));
+				FeaturePoints.push_back(vecFeature);
 			
-// 				LabelPoints.push_back(m_pLabelImage->GetPixel(nLabelIndex));
+				LabelPoints.push_back(m_pLabelImage->GetPixel(nLabelIndex));
 
 				// Fill validation map for debugging purposes
 				DEBUG(
 					pValidationMap->SetPixel(nLabelIndex,255);
 				);
 
-// 				InputIndexList.push_back(nFeatureIndex);
+				InputIndexList.push_back(nFeatureIndex);
 			}
 			
 			nX += m_nLabelSpacingX;
 		}
 		nY += m_nLabelSpacingY;
 	}
-// 	++it;
-// 	++nChannel;
+	++it;
+	++nChannel;
 	
 	// Save the validation map
 	DEBUG(
 		saveImage(pValidationMap, "DEBUG_validation_map.tif");
 	);
 
-// 	while (it != m_pInputChannelList->End())
-// 	{
-// 		INFO_MSG(m_Log, "Image Feature Extractor", "Calculating features of channel " <<
-// 					nChannel, LOG_DOMAIN_NONE);
-// 		
-// 		int i=0;
-// 		
-// 		TextureFilter->SetInputImage(it.Get());
-// 		pMeanFilter->SetInput(it.Get());
-// 		pMeanFilter->Update();
-// 
-// 		std::list<InputImageType::IndexType>::const_iterator ciIndex = InputIndexList.begin();
-// 		while (ciIndex != InputIndexList.end())
-// 		{
-// 			FeaturePoints[i].push_back(TextureFilter->EvaluateAtIndex((*ciIndex)));
-// 			FeaturePoints[i].push_back(pMeanFilter->GetOutput()->GetPixel((*ciIndex)));
-// 			++i;
-// 			++ciIndex;
-// 		}
-// 		++it;
-// 		++nChannel;
-// 	}
-// 
-// 	std::vector<FeatureVectorType>::const_iterator ci;
-// 	std::vector<LabelPixelType>::const_iterator cj = LabelPoints.begin();
-// 	int i=0;
-// 	for (ci = FeaturePoints.begin(); ci != FeaturePoints.end(); ++ci)
-// 	{
-// 
-// 		FeaturePointType FP;
-// 		LabelPointType LP;
-// 
-// 		FP[0] = -i;
-// 		LP[0] = -i;
-// 
-// 		pFeatCont->InsertElement(i, FP);
-// 		m_pFeatures->SetPointData(i, (*ci));
-// 
-// 		pLabCont->InsertElement(i, LP);
-// 		m_pLabels->SetPointData(i, (*cj));
-// 		++i;
-// 		++cj;
-// 	}
-// 
-// 	m_pFeatures->SetPoints(pFeatCont);
-// 	m_pLabels->SetPoints(pLabCont);
+	////////////////////////////////////////////////////////////////////////////
+	// Now do the same for all other channels.
+	////////////////////////////////////////////////////////////////////////////
+	while (!((it == m_pInputChannelList->End()) && (itP == pPyramid->GetOutput()->End())))
+	{
+		int i=0;
+	
+		//-----------------------------------------------
+		// Create new filters due to changing image size
+		//-----------------------------------------------
+		TextureFilter = VarianceFilterType::New();
+		TextureFilter->SetRadius(nRadius);
+		TextureFilter->SetOffset(nOffset);
+		
+		pMeanFilter = MeanFilterType::New();
+		pMeanFilter->SetRadius(nRadius);
+		
+		//---------------------------------------------------
+		// Calculate on sublevels or start new pyramid level
+		//---------------------------------------------------
+		if (itP != pPyramid->GetOutput()->End())
+		{			
+			TextureFilter->SetInputImage(itP.Get());
+			pMeanFilter->SetInput(itP.Get());
+			pMeanFilter->Update();
+			fPyramidLevelFactor *= 0.8;
+			++itP;
+			
+			INFO_MSG(m_Log, "Image Feature Extractor", "New pyramid level, size: " <<
+					pMeanFilter->GetOutput()->GetLargestPossibleRegion().GetSize(),
+					LOG_DOMAIN_VAR);
+			DEBUG_MSG(m_Log, "Image Feature Extractor", "Pyramid level factor: " <<
+					fPyramidLevelFactor, LOG_DOMAIN_VAR);
+					
+			DEBUG(
+				std::ostringstream oss("");
+				oss << "DEBUG_feature_image_" << m_unNoImageFiles << ".tif";
+				saveImage(pMeanFilter->GetOutput(), oss.str());
+				++m_unNoImageFiles;
+			);
+		}
+		else
+		{
+			INFO_MSG(m_Log, "Image Feature Extractor", "Calculating features of channel " <<
+					nChannel, LOG_DOMAIN_NONE);
+			TextureFilter->SetInputImage(it.Get());
+			pMeanFilter->SetInput(it.Get());
+			pMeanFilter->Update();
+			
+			pPyramid = PyramidFilterType::New();
+			pPyramid->SetNumberOfLevels(2);
+			pPyramid->SetDecimationRatio(1.25);
+			pPyramid->SetInput(it.Get());
+			pPyramid->Update();
+			fPyramidLevelFactor = 1.0;
+			
+			itP = pPyramid->GetOutput()->Begin();
+			
+			++it;
+			++nChannel;
+			
+			INFO_MSG(m_Log, "Image Feature Extractor", "New pyramid level, size: " <<
+					pMeanFilter->GetOutput()->GetLargestPossibleRegion().GetSize(),
+					LOG_DOMAIN_VAR);
+					
+			DEBUG(
+				std::ostringstream oss("");
+				oss << "DEBUG_feature_image_" << m_unNoImageFiles << ".tif";
+				saveImage(pMeanFilter->GetOutput(), oss.str());
+				++m_unNoImageFiles;
+			);
+		}
+		//--------------------------------
+		// Store feature vector component
+		//--------------------------------
+		std::list<InputImageType::IndexType>::const_iterator ciIndex = InputIndexList.begin();
+		while (ciIndex != InputIndexList.end())
+		{
+			FeaturePoints[i].push_back(TextureFilter->EvaluateAtIndex((*ciIndex)*fPyramidLevelFactor));
+			FeaturePoints[i].push_back(pMeanFilter->GetOutput()->GetPixel((*ciIndex)*fPyramidLevelFactor));
+			++i;
+			++ciIndex;
+		}
+		++it;
+		++nChannel;
+	}
+
+	////////////////////////////////////////////////////////////////////////////
+	// Move feature points to point set for classification.
+	////////////////////////////////////////////////////////////////////////////
+	std::vector<FeatureVectorType>::const_iterator ci;
+	std::vector<LabelPixelType>::const_iterator cj = LabelPoints.begin();
+	int i=0;
+	for (ci = FeaturePoints.begin(); ci != FeaturePoints.end(); ++ci)
+	{
+
+		FeaturePointType FP;
+		LabelPointType LP;
+
+		FP[0] = -i;
+		LP[0] = -i;
+
+		pFeatCont->InsertElement(i, FP);
+		m_pFeatures->SetPointData(i, (*ci));
+
+		pLabCont->InsertElement(i, LP);
+		m_pLabels->SetPointData(i, (*cj));
+		++i;
+		++cj;
+	}
+
+	m_pFeatures->SetPoints(pFeatCont);
+	m_pLabels->SetPoints(pLabCont);
 
 	METHOD_EXIT(m_Log, "FeatureExtractor::extractWithLabels()");
 	return true;
@@ -576,7 +664,7 @@ bool FeatureExtractor::extractWithoutLabels()
 	//--------------------------
 	PyramidFilterType::Pointer pPyramid = PyramidFilterType::New();
 	pPyramid->SetNumberOfLevels(2);
-	pPyramid->SetDecimationRatio(2.0);
+	pPyramid->SetDecimationRatio(1.25);
 	pPyramid->SetInput(it.Get());
 	pPyramid->Update();
 	fPyramidLevelFactor = 1.0;
@@ -651,7 +739,7 @@ bool FeatureExtractor::extractWithoutLabels()
 			TextureFilter->Update();
 			pMeanFilter->SetInput(itP.Get());
 			pMeanFilter->Update();
-			fPyramidLevelFactor *= 0.5;
+			fPyramidLevelFactor *= 0.8;
 			++itP;
 			
 			INFO_MSG(m_Log, "Image Feature Extractor", "New pyramid level, size: " <<
@@ -678,7 +766,7 @@ bool FeatureExtractor::extractWithoutLabels()
 			
 			pPyramid = PyramidFilterType::New();
 			pPyramid->SetNumberOfLevels(2);
-			pPyramid->SetDecimationRatio(2.0);
+			pPyramid->SetDecimationRatio(1.25);
 			pPyramid->SetInput(it.Get());
 			pPyramid->Update();
 			fPyramidLevelFactor = 1.0;

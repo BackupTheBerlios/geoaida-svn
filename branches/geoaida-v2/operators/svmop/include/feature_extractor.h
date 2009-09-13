@@ -33,8 +33,8 @@
 #include "itkImageRegionConstIterator.h"
 
 
-const uchar FEATURE_EXTRACTOR_DEFAULT = 0;
-const uchar FEATURE_EXTRACTOR_USE_LABELS = 10;
+const unsigned char FEATURE_EXTRACTOR_DEFAULT = 0;
+const unsigned char FEATURE_EXTRACTOR_USE_LABELS = 10;
 
 const int FEATURE_EXTRACTOR_DEFAULT_FILTER_RADIUS = 5;		///< Default value for filters
 const int FEATURE_EXTRACTOR_DEFAULT_SPACING_AND_BORDER = 5; ///< Default value that fits filter radius
@@ -60,7 +60,7 @@ class FeatureExtractor : virtual public CLogBase
 		//--- Methods --------------------------------------------------------//
 		void addInputChannel(const std::string&);
 		void clearChannels();
-		bool extract(const uchar& = FEATURE_EXTRACTOR_DEFAULT);
+		bool extract(const unsigned char& = FEATURE_EXTRACTOR_DEFAULT);
 		void loadLabelImage(const std::string&);
 		void setFilterRadius(const int&);
 		void setLabelSpacingAndBorder(const int&, const int&, const int&, const int&);
@@ -77,8 +77,8 @@ class FeatureExtractor : virtual public CLogBase
 		LabelPointSetType::Pointer		m_pLabels;						///< Contains the extracted features
 		
 		InputImageType::SizeType		m_ImageSize;					///< Contains size of label image
-
 		bool							m_bFeaturesExtracted;			///< Flags if features were extracted
+		bool							m_bChannelLoaded;				///< Flags if at least one channel was loaded
 		bool							m_bLabelsExtracted;				///< Flags if labels were extracted
 		bool							m_bLabelImageLoaded;			///< Flags if label image was loaded
 		bool							m_bLabelSpacingAndBorderSet;	///< Flags if label image settings are configured
