@@ -85,7 +85,7 @@ typedef FeaturePointSetType::PointType							FeaturePointType;
 typedef FeaturePointSetType::PointsContainer					FeaturePointContainer;
 typedef FeaturePointSetType::PointDataContainer					FeaturePointDataContainer;
 
-typedef itk::PointSet<FeatureVectorType,18>						TestFeaturePointSetType;
+typedef itk::PointSet<FeatureVectorType,24>						TestFeaturePointSetType;
 typedef TestFeaturePointSetType::PointType						TestFeaturePointType;
 typedef TestFeaturePointSetType::PointsContainer				TestFeaturePointContainer;
 // typedef FeaturePointSetType::PointDataContainer					TestFeaturePointDataContainer;

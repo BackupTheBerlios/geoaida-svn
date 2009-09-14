@@ -445,6 +445,8 @@ bool SVMClassifier::train()
 ///
 /// \brief Converts a point set to make it compatible to classification
 ///
+/// \param _pPS Point set to be converted
+///
 /// \return Returns converted point set
 ///
 ///////////////////////////////////////////////////////////////////////////////

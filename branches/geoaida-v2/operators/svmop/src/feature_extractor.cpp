@@ -35,12 +35,14 @@ FeatureExtractor::FeatureExtractor():	m_pInputChannelList(ImageListType::New()),
 										m_bFeaturesExtracted(false),
 										m_bLabelsExtracted(false),
 										m_bLabelImageLoaded(false),
-										m_bLabelSpacingAndBorderSet(false),
+										m_bLabelSpacingSet(false),
+										m_fPyramidDecimationRate(FEATURE_EXTRACTOR_DEFAULT_PYRAMID_DECIMATION_RATE),
 										m_nFilterRadius(FEATURE_EXTRACTOR_DEFAULT_FILTER_RADIUS),
-										m_nLabelSpacingX(FEATURE_EXTRACTOR_DEFAULT_SPACING_AND_BORDER),
-										m_nLabelSpacingY(FEATURE_EXTRACTOR_DEFAULT_SPACING_AND_BORDER),
-										m_nLabelBorderX(FEATURE_EXTRACTOR_DEFAULT_SPACING_AND_BORDER),
-										m_nLabelBorderY(FEATURE_EXTRACTOR_DEFAULT_SPACING_AND_BORDER)
+										m_nNumberOfPyramidLevels(FEATURE_EXTRACTOR_DEFAULT_NUMBER_OF_PYRAMID_LEVELS),
+										m_nLabelSpacingX(FEATURE_EXTRACTOR_DEFAULT_SPACING),
+										m_nLabelSpacingY(FEATURE_EXTRACTOR_DEFAULT_SPACING),
+										m_nLabelBorderX(FEATURE_EXTRACTOR_DEFAULT_FILTER_RADIUS),
+										m_nLabelBorderY(FEATURE_EXTRACTOR_DEFAULT_FILTER_RADIUS)
 {
 	METHOD_ENTRY(m_Log, "FeatureExtractor::FeatureExtractor()");
 
@@ -161,10 +163,6 @@ void FeatureExtractor::clearChannels()
 /// added channels will be used to build a vector image. Filters and feature
 /// extractors are applied on this vector image.
 ///
-/// \todo Normalize features!
-/// \todo Check every label in neighbourhood when training. For better performance,
-///       create a index list for those pixels to be evaluated
-///
 /// \param _nMode Mode of operation. 
 ///
 /// \return Returns if extraction was successfull
@@ -173,6 +171,15 @@ void FeatureExtractor::clearChannels()
 bool FeatureExtractor::extract(const unsigned char& _nMode)
 {
 	METHOD_ENTRY(m_Log, "FeatureExtractor::extract()");
+	
+	m_nLabelBorderX = static_cast<int>(
+						static_cast<double>(m_nFilterRadius) * 
+						pow(m_fPyramidDecimationRate, m_nNumberOfPyramidLevels)
+						+ 1);
+	m_nLabelBorderY = m_nLabelBorderX;
+
+	DEBUG_MSG(m_Log, "Image Feature Extractor", "Label border calculated: " <<
+				m_nLabelBorderX, LOG_DOMAIN_VAR);
 	
 	switch (_nMode)
 	{
@@ -187,10 +194,10 @@ bool FeatureExtractor::extract(const unsigned char& _nMode)
 				METHOD_EXIT(m_Log, "FeatureExtractor::extract()");
 				return false;
 			}
-			if (!m_bLabelSpacingAndBorderSet)
+			if (!m_bLabelSpacingSet)
 			{
-				NOTICE_MSG(m_Log, "Image Feature Extractor", "Label spacing and border not set. Using default value " <<
-							FEATURE_EXTRACTOR_DEFAULT_SPACING_AND_BORDER << " for all.", LOG_DOMAIN_NONE);
+				NOTICE_MSG(m_Log, "Image Feature Extractor", "Label spacing not set. Using default value " <<
+							FEATURE_EXTRACTOR_DEFAULT_SPACING << " for all.", LOG_DOMAIN_NONE);
 			}
 			
 			this->extractWithLabels();
@@ -263,28 +270,59 @@ void FeatureExtractor::setFilterRadius(const int& _nR)
 ///
 /// \param _nSX Spacing of samples in label image, x direction
 /// \param _nSX Spacing of samples in label image, y direction
-/// \param _nSX Distance of samples to label image border, x direction
-/// \param _nSX Distance of samples to label image border, y direction
 ///
 ///////////////////////////////////////////////////////////////////////////////
-void FeatureExtractor::setLabelSpacingAndBorder(const int& _nSX, const int& _nSY,
-											const int& _nBX, const int& _nBY)
+void FeatureExtractor::setLabelSpacing(const int& _nSX, const int& _nSY)
 {
-	METHOD_ENTRY(m_Log, "FeatureExtractor::setLabelSpacingAndBorder(const int&, const int&, const int&, const int&)");
+	METHOD_ENTRY(m_Log, "FeatureExtractor::setLabelSpacing(const int&, const int&)");
 
-	if (m_bLabelSpacingAndBorderSet == true)
+	if (m_bLabelSpacingSet == true)
 	{
-		NOTICE_MSG(m_Log, "Image Feature Extractor", "Already set label image spacing and border. Overwriting.", LOG_DOMAIN_NONE);
+		NOTICE_MSG(m_Log, "Image Feature Extractor", "Already set label image spacing. Overwriting.", LOG_DOMAIN_NONE);
 	}
 
 	m_nLabelSpacingX = _nSX;
 	m_nLabelSpacingY = _nSY;
-	m_nLabelBorderX = _nBX;
-	m_nLabelBorderY = _nBY;
 
-	m_bLabelSpacingAndBorderSet = true;
+	m_bLabelSpacingSet = true;
 
-	METHOD_EXIT(m_Log, "FeatureExtractor::setLabelSpacingAndBorder(const int&, const int&, const int&, const int&)");
+	METHOD_EXIT(m_Log, "FeatureExtractor::setLabelSpacing(const int&, const int&)");
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///
+/// \brief Configures image pyramid
+///
+/// \param _nNoPL Number of levels for image pyramid
+///
+///////////////////////////////////////////////////////////////////////////////
+void FeatureExtractor::setNumberOfPyramidLevels(const int& _nNoPL)
+{
+	METHOD_ENTRY(m_Log, "FeatureExtractor::setNumberOfPyramidLevels(const int&)");
+
+	m_nNumberOfPyramidLevels = _nNoPL;
+	INFO_MSG(m_Log, "Image Feature Extractor", "Number of levels for image "
+			"pyramid set to " << _nNoPL, LOG_DOMAIN_VAR);
+			
+	METHOD_EXIT(m_Log, "FeatureExtractor::setNumberOfPyramidLevels(const int&)");
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///
+/// \brief Configures image pyramid
+///
+/// \param _fPDR Rate for subsampling of images within pyramid
+///
+///////////////////////////////////////////////////////////////////////////////
+void FeatureExtractor::setPyramidDecimationRate(const double& _fPDR)
+{
+	METHOD_ENTRY(m_Log, "FeatureExtractor::setPyramidDecimationRate(const double&)");
+
+	m_fPyramidDecimationRate = _fPDR;
+	INFO_MSG(m_Log, "Image Feature Extractor", "Decimation Rate for image pyramid "
+			"set to " << _fPDR, LOG_DOMAIN_VAR);
+
+	METHOD_EXIT(m_Log, "FeatureExtractor::setPyramidDecimationRate(const double&)");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -367,12 +405,13 @@ bool FeatureExtractor::extractWithLabels()
 	// Initialise image pyramid
 	//--------------------------
 	PyramidFilterType::Pointer pPyramid = PyramidFilterType::New();
-	pPyramid->SetNumberOfLevels(2);
-	pPyramid->SetDecimationRatio(1.25);
+	pPyramid->SetNumberOfLevels(m_nNumberOfPyramidLevels);
+	pPyramid->SetDecimationRatio(m_fPyramidDecimationRate);
 	pPyramid->SetInput(it.Get());
 	pPyramid->Update();
 	fPyramidLevelFactor = 1.0;
 	ImageListIterator itP = pPyramid->GetOutput()->Begin();
+	
 	TextureFilter->SetInputImage(it.Get());
 	pMeanFilter->SetInput(it.Get());
 	pMeanFilter->Update();
@@ -418,10 +457,10 @@ bool FeatureExtractor::extractWithLabels()
 			ValidateRegionType::IndexType RgStart;
 			ValidateRegionType::SizeType RgSize;
 			
-			RgStart[0] = nX-int(m_nLabelBorderX*1.25*1.25);
-			RgStart[1] = nY-int(m_nLabelBorderY*1.25*1.25);
-			RgSize[0] = int(m_nLabelBorderX*1.25*1.25*2)+1;
-			RgSize[1] = int(m_nLabelBorderY*1.25*1.25*2)+1;
+			RgStart[0] = nX-int(m_nLabelBorderX);
+			RgStart[1] = nY-int(m_nLabelBorderY);
+			RgSize[0] = int(m_nLabelBorderX)*2+1;
+			RgSize[1] = int(m_nLabelBorderY)*2+1;
 			Region.SetIndex(RgStart);
 			Region.SetSize(RgSize);
 			ConstLabelImageIteratorType ciR(m_pLabelImage, Region);
@@ -499,7 +538,7 @@ bool FeatureExtractor::extractWithLabels()
 			TextureFilter->SetInputImage(itP.Get());
 			pMeanFilter->SetInput(itP.Get());
 			pMeanFilter->Update();
-			fPyramidLevelFactor *= 0.8;
+			fPyramidLevelFactor *= 1/m_fPyramidDecimationRate;
 			++itP;
 			
 			INFO_MSG(m_Log, "Image Feature Extractor", "New pyramid level, size: " <<
@@ -524,8 +563,8 @@ bool FeatureExtractor::extractWithLabels()
 			pMeanFilter->Update();
 			
 			pPyramid = PyramidFilterType::New();
-			pPyramid->SetNumberOfLevels(2);
-			pPyramid->SetDecimationRatio(1.25);
+			pPyramid->SetNumberOfLevels(m_nNumberOfPyramidLevels);
+			pPyramid->SetDecimationRatio(m_fPyramidDecimationRate);
 			pPyramid->SetInput(it.Get());
 			pPyramid->Update();
 			fPyramidLevelFactor = 1.0;
@@ -552,13 +591,14 @@ bool FeatureExtractor::extractWithLabels()
 		std::list<InputImageType::IndexType>::const_iterator ciIndex = InputIndexList.begin();
 		while (ciIndex != InputIndexList.end())
 		{
-			FeaturePoints[i].push_back(TextureFilter->EvaluateAtIndex((*ciIndex)*fPyramidLevelFactor));
-			FeaturePoints[i].push_back(pMeanFilter->GetOutput()->GetPixel((*ciIndex)*fPyramidLevelFactor));
+			InputImageType::IndexType Index;
+			Index[0] = (*ciIndex)[0]*fPyramidLevelFactor;
+			Index[1] = (*ciIndex)[1]*fPyramidLevelFactor;
+			FeaturePoints[i].push_back(TextureFilter->EvaluateAtIndex(Index));
+			FeaturePoints[i].push_back(pMeanFilter->GetOutput()->GetPixel(Index));
 			++i;
 			++ciIndex;
 		}
-		++it;
-		++nChannel;
 	}
 
 	////////////////////////////////////////////////////////////////////////////
@@ -663,8 +703,8 @@ bool FeatureExtractor::extractWithoutLabels()
 	// Initialise image pyramid
 	//--------------------------
 	PyramidFilterType::Pointer pPyramid = PyramidFilterType::New();
-	pPyramid->SetNumberOfLevels(2);
-	pPyramid->SetDecimationRatio(1.25);
+	pPyramid->SetNumberOfLevels(m_nNumberOfPyramidLevels);
+	pPyramid->SetDecimationRatio(m_fPyramidDecimationRate);
 	pPyramid->SetInput(it.Get());
 	pPyramid->Update();
 	fPyramidLevelFactor = 1.0;
@@ -739,7 +779,7 @@ bool FeatureExtractor::extractWithoutLabels()
 			TextureFilter->Update();
 			pMeanFilter->SetInput(itP.Get());
 			pMeanFilter->Update();
-			fPyramidLevelFactor *= 0.8;
+			fPyramidLevelFactor *= 1/m_fPyramidDecimationRate;
 			++itP;
 			
 			INFO_MSG(m_Log, "Image Feature Extractor", "New pyramid level, size: " <<
@@ -765,8 +805,8 @@ bool FeatureExtractor::extractWithoutLabels()
 			pMeanFilter->Update();
 			
 			pPyramid = PyramidFilterType::New();
-			pPyramid->SetNumberOfLevels(2);
-			pPyramid->SetDecimationRatio(1.25);
+			pPyramid->SetNumberOfLevels(m_nNumberOfPyramidLevels);
+			pPyramid->SetDecimationRatio(m_fPyramidDecimationRate);
 			pPyramid->SetInput(it.Get());
 			pPyramid->Update();
 			fPyramidLevelFactor = 1.0;

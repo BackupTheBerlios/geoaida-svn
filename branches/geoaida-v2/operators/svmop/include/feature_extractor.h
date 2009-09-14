@@ -21,9 +21,10 @@
 #define FEATURE_EXTRACTOR_H
 
 //--- Standard header --------------------------------------------------------//
-#include "list"
-#include "string"
-#include "vector"
+#include <list>
+#include <string>
+#include <vector>
+#include <cmath>
 
 //--- Program header ---------------------------------------------------------//
 #include "log.h"
@@ -36,8 +37,13 @@
 const unsigned char FEATURE_EXTRACTOR_DEFAULT = 0;
 const unsigned char FEATURE_EXTRACTOR_USE_LABELS = 10;
 
-const int FEATURE_EXTRACTOR_DEFAULT_FILTER_RADIUS = 5;		///< Default value for filters
-const int FEATURE_EXTRACTOR_DEFAULT_SPACING_AND_BORDER = 5; ///< Default value that fits filter radius
+const int		FEATURE_EXTRACTOR_DEFAULT_FILTER_RADIUS = 5;		///< Default value for filters
+// The default number of pyramid levels should stay 0, because
+// the default border will be set to default filter radius which
+// is only valid for 0 pyramid levels
+const int		FEATURE_EXTRACTOR_DEFAULT_NUMBER_OF_PYRAMID_LEVELS = 0; ///< Default value for image pyramid
+const double	FEATURE_EXTRACTOR_DEFAULT_PYRAMID_DECIMATION_RATE = 1.5; ///< Default value for image pyramid
+const int		FEATURE_EXTRACTOR_DEFAULT_SPACING = 5; ///< Default value that fits filter radius
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -63,7 +69,9 @@ class FeatureExtractor : virtual public CLogBase
 		bool extract(const unsigned char& = FEATURE_EXTRACTOR_DEFAULT);
 		void loadLabelImage(const std::string&);
 		void setFilterRadius(const int&);
-		void setLabelSpacingAndBorder(const int&, const int&, const int&, const int&);
+		void setLabelSpacing(const int&, const int&);
+		void setNumberOfPyramidLevels(const int&);
+		void setPyramidDecimationRate(const double&);
 
 	private:
 		
@@ -81,13 +89,15 @@ class FeatureExtractor : virtual public CLogBase
 		bool							m_bChannelLoaded;				///< Flags if at least one channel was loaded
 		bool							m_bLabelsExtracted;				///< Flags if labels were extracted
 		bool							m_bLabelImageLoaded;			///< Flags if label image was loaded
-		bool							m_bLabelSpacingAndBorderSet;	///< Flags if label image settings are configured
+		bool							m_bLabelSpacingSet;				///< Flags if label image settings are configured
 
+		double							m_fPyramidDecimationRate;		///< Factor for subsamling of images
 		int								m_nFilterRadius;				///< Radius of feature filters
 		int								m_nLabelSpacingX;				///< Distance between samples for training
 		int								m_nLabelSpacingY;				///< Distance between samples for training
 		int								m_nLabelBorderX;				///< Distance of border when training
 		int								m_nLabelBorderY;				///< Distance of border when training
+		int								m_nNumberOfPyramidLevels;		///< Number of subsampled images in image pyramid
 		
 		DEBUG(
 			static uint m_unNoImageFiles;								///< Indicates the number of written image files
