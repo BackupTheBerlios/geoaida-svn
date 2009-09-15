@@ -108,6 +108,8 @@ class FeatureExtractor : virtual public CLogBase
 						  const std::string&) const;
 		void	saveImage(const Image16BitType::Pointer,
 						  const std::string&) const;
+		void	saveImage(const ImageFloatType::Pointer,
+						  const std::string&) const;
 
 };
 

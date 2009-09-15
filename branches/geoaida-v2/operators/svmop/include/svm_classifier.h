@@ -29,6 +29,7 @@
 //--- Misc. header -----------------------------------------------------------//
 
 const uint SVM_CLASSIFIER_DEFAULT_NUMBER_OF_CLASSES = 2;
+const bool SVM_CLASSIFIER_CALCULATE_EXTREMA = true;
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -45,6 +46,8 @@ class SVMClassifier : virtual public CLogBase
 		~SVMClassifier();
 
 		//--- Const Methods --------------------------------------------------//
+		double getFeatureMin() const;
+		double getFeatureMax() const;
 		bool saveClassificationResult(const std::string&) const;
 		bool saveData(const std::string&) const;
 		bool saveModel(const std::string&) const;
@@ -52,7 +55,8 @@ class SVMClassifier : virtual public CLogBase
 		//--- Methods --------------------------------------------------------//
 		bool loadModel(const std::string&);
 
-		bool scaleFeatures(const double& = -1.0, const double& = 1.0);
+		bool scaleFeatures(const bool& = false,
+						   const double& = -1.0, const double& = 1.0);
 		
 		void setFeatures(const FeaturePointSetType::Pointer);
 		void setLabels(const LabelPointSetType::Pointer);
@@ -81,6 +85,9 @@ class SVMClassifier : virtual public CLogBase
 		LabelImageType::SizeType	m_LabelImageSize;	///< Contains size of label image
 
 		uint			m_unNumberOfClasses;			///< Number of classes
+		
+		double			m_fMin;							///< Minimum feature value
+		double			m_fMax;							///< Maximum feature value
 
 		bool			m_bGotClassificationResult;		///< Flags if classification was done
 		bool			m_bGotFeatures;					///< Flags if features were passed

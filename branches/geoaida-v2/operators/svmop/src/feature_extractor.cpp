@@ -351,20 +351,18 @@ bool FeatureExtractor::extractWithLabels()
 	LabelPointContainer::Pointer	pLabCont = LabelPointContainer::New();
 	
 	//--- Define image filters ---//
-	typedef itk::MeanImageFilter<InputImageType, InputImageType> MeanFilterType;
-	MeanFilterType::Pointer pMeanFilter = MeanFilterType::New();
-	
-	typedef otb::Functor::VarianceTextureFunctor<	InputPixelType,
-													InputPixelType>
-		FunctorType;
-
-	typedef otb::TextureImageFunction<InputImageType, FunctorType>
-		VarianceFilterType;
-		
 	typedef LabelImageType::RegionType ValidateRegionType;
 	typedef itk::ImageRegionConstIterator<LabelImageType> ConstLabelImageIteratorType;
-
-	VarianceFilterType::Pointer		TextureFilter = VarianceFilterType::New();
+	
+	typedef itk::MeanImageFilter<InputImageType,InputImageType> MeanFilterType;
+	typedef itk::GradientMagnitudeImageFilter<InputImageType,InputImageType> GradientFilterType;
+	typedef otb::Functor::VarianceTextureFunctor<InputPixelType,InputPixelType> FunctorType;
+	typedef otb::TextureImageFunction<InputImageType, FunctorType> VarianceFilterType;
+	
+	MeanFilterType::Pointer		pMeanFilter = MeanFilterType::New();
+	GradientFilterType::Pointer pGradientFilter = GradientFilterType::New();
+	VarianceFilterType::Pointer	TextureFilter = VarianceFilterType::New();
+		
 	InputImageType::SizeType		nRadius;
 	InputImageType::IndexType		nFeatureIndex;
 	InputImageType::OffsetType		nOffset;
@@ -412,7 +410,9 @@ bool FeatureExtractor::extractWithLabels()
 	fPyramidLevelFactor = 1.0;
 	ImageListIterator itP = pPyramid->GetOutput()->Begin();
 	
-	TextureFilter->SetInputImage(it.Get());
+	pGradientFilter->SetInput(it.Get());
+	pGradientFilter->Update();
+	TextureFilter->SetInputImage(pGradientFilter->GetOutput());
 	pMeanFilter->SetInput(it.Get());
 	pMeanFilter->Update();
 
@@ -530,12 +530,16 @@ bool FeatureExtractor::extractWithLabels()
 		pMeanFilter = MeanFilterType::New();
 		pMeanFilter->SetRadius(nRadius);
 		
+		pGradientFilter = GradientFilterType::New();
+		
 		//---------------------------------------------------
 		// Calculate on sublevels or start new pyramid level
 		//---------------------------------------------------
 		if (itP != pPyramid->GetOutput()->End())
 		{			
-			TextureFilter->SetInputImage(itP.Get());
+			pGradientFilter->SetInput(itP.Get());
+			pGradientFilter->Update();
+			TextureFilter->SetInputImage(pGradientFilter->GetOutput());
 			pMeanFilter->SetInput(itP.Get());
 			pMeanFilter->Update();
 			fPyramidLevelFactor *= 1/m_fPyramidDecimationRate;
@@ -546,19 +550,14 @@ bool FeatureExtractor::extractWithLabels()
 					LOG_DOMAIN_VAR);
 			DEBUG_MSG(m_Log, "Image Feature Extractor", "Pyramid level factor: " <<
 					fPyramidLevelFactor, LOG_DOMAIN_VAR);
-					
-			DEBUG(
-				std::ostringstream oss("");
-				oss << "DEBUG_feature_image_" << m_unNoImageFiles << ".tif";
-				saveImage(pMeanFilter->GetOutput(), oss.str());
-				++m_unNoImageFiles;
-			);
 		}
 		else
 		{
 			INFO_MSG(m_Log, "Image Feature Extractor", "Calculating features of channel " <<
 					nChannel, LOG_DOMAIN_NONE);
-			TextureFilter->SetInputImage(it.Get());
+			pGradientFilter->SetInput(it.Get());
+			pGradientFilter->Update();
+			TextureFilter->SetInputImage(pGradientFilter->GetOutput());
 			pMeanFilter->SetInput(it.Get());
 			pMeanFilter->Update();
 			
@@ -577,14 +576,21 @@ bool FeatureExtractor::extractWithLabels()
 			INFO_MSG(m_Log, "Image Feature Extractor", "New pyramid level, size: " <<
 					pMeanFilter->GetOutput()->GetLargestPossibleRegion().GetSize(),
 					LOG_DOMAIN_VAR);
-					
-			DEBUG(
-				std::ostringstream oss("");
-				oss << "DEBUG_feature_image_" << m_unNoImageFiles << ".tif";
-				saveImage(pMeanFilter->GetOutput(), oss.str());
-				++m_unNoImageFiles;
-			);
 		}
+		DEBUG(
+		{
+			std::ostringstream oss("");
+			oss << "DEBUG_mean_image_" << m_unNoImageFiles << ".tif";
+			saveImage(pMeanFilter->GetOutput(), oss.str());
+		}
+		);
+		DEBUG(
+		{
+			std::ostringstream oss("");
+			oss << "DEBUG_gradient_image_" << m_unNoImageFiles << ".tif";
+			saveImage(pGradientFilter->GetOutput(), oss.str());
+		}
+		);
 		//--------------------------------
 		// Store feature vector component
 		//--------------------------------
@@ -654,20 +660,20 @@ bool FeatureExtractor::extractWithoutLabels()
 	FeaturePointContainer::Pointer	pFeatCont = FeaturePointContainer::New();
 	
 	//--- Define image filters ---//
-	typedef itk::MeanImageFilter<InputImageType, InputImageType> MeanFilterType;
-	MeanFilterType::Pointer pMeanFilter = MeanFilterType::New();
+	typedef itk::ImageRegionConstIterator<InputImageType> ConstInputImageIteratorType;
 	
-	typedef otb::Functor::VarianceTextureFunctor<	InputPixelType,
-													InputPixelType>
-		FunctorType;
-		
+	typedef itk::MeanImageFilter<InputImageType,InputImageType> MeanFilterType;
+	typedef itk::GradientMagnitudeImageFilter<InputImageType,InputImageType> GradientFilterType;
+	typedef otb::Functor::VarianceTextureFunctor<InputPixelType,InputPixelType> FunctorType;
 	typedef otb::UnaryFunctorNeighborhoodWithOffsetImageFilter<	InputImageType,
 															InputImageType,
 															FunctorType>
 	VarianceFilterType;
-	typedef itk::ImageRegionConstIterator<InputImageType> ConstInputImageIteratorType;
-
-	VarianceFilterType::Pointer		TextureFilter = VarianceFilterType::New();
+	
+	GradientFilterType::Pointer	pGradientFilter = GradientFilterType::New();
+	MeanFilterType::Pointer		pMeanFilter = MeanFilterType::New();
+	VarianceFilterType::Pointer	TextureFilter = VarianceFilterType::New();
+	
 	InputImageType::SizeType		nRadius;
 	InputImageType::IndexType		nFeatureIndex;
 	InputImageType::OffsetType		nOffset;
@@ -710,7 +716,8 @@ bool FeatureExtractor::extractWithoutLabels()
 	fPyramidLevelFactor = 1.0;
 	ImageListIterator itP = pPyramid->GetOutput()->Begin();
 
-	TextureFilter->SetInput(it.Get());
+	pGradientFilter->SetInput(it.Get());
+	TextureFilter->SetInput(pGradientFilter->GetOutput());
 	TextureFilter->Update();
 	pMeanFilter->SetInput(it.Get());
 	pMeanFilter->Update();
@@ -770,12 +777,15 @@ bool FeatureExtractor::extractWithoutLabels()
 		pMeanFilter = MeanFilterType::New();
 		pMeanFilter->SetRadius(nRadius);
 		
+		pGradientFilter = GradientFilterType::New();
+		
 		//---------------------------------------------------
 		// Calculate on sublevels or start new pyramid level
 		//---------------------------------------------------
 		if (itP != pPyramid->GetOutput()->End())
-		{			
-			TextureFilter->SetInput(itP.Get());
+		{
+			pGradientFilter->SetInput(itP.Get());
+			TextureFilter->SetInput(pGradientFilter->GetOutput());
 			TextureFilter->Update();
 			pMeanFilter->SetInput(itP.Get());
 			pMeanFilter->Update();
@@ -787,19 +797,13 @@ bool FeatureExtractor::extractWithoutLabels()
 					LOG_DOMAIN_VAR);
 			DEBUG_MSG(m_Log, "Image Feature Extractor", "Pyramid level factor: " <<
 					fPyramidLevelFactor, LOG_DOMAIN_VAR);
-					
-			DEBUG(
-				std::ostringstream oss("");
-				oss << "DEBUG_feature_image_" << m_unNoImageFiles << ".tif";
-				saveImage(pMeanFilter->GetOutput(), oss.str());
-				++m_unNoImageFiles;
-			);
 		}
 		else
 		{
 			INFO_MSG(m_Log, "Image Feature Extractor", "Calculating features of channel " <<
 					nChannel, LOG_DOMAIN_NONE);
-			TextureFilter->SetInput(it.Get());
+			pGradientFilter->SetInput(it.Get());
+			TextureFilter->SetInput(pGradientFilter->GetOutput());
 			TextureFilter->Update();
 			pMeanFilter->SetInput(it.Get());
 			pMeanFilter->Update();
@@ -819,14 +823,29 @@ bool FeatureExtractor::extractWithoutLabels()
 			INFO_MSG(m_Log, "Image Feature Extractor", "New pyramid level, size: " <<
 					pMeanFilter->GetOutput()->GetLargestPossibleRegion().GetSize(),
 					LOG_DOMAIN_VAR);
-					
-			DEBUG(
-				std::ostringstream oss("");
-				oss << "DEBUG_feature_image_" << m_unNoImageFiles << ".tif";
-				saveImage(pMeanFilter->GetOutput(), oss.str());
-				++m_unNoImageFiles;
-			);
 		}
+		DEBUG(
+		{
+			std::ostringstream oss("");
+			oss << "DEBUG_mean_image_" << m_unNoImageFiles << ".tif";
+			saveImage(pMeanFilter->GetOutput(), oss.str());
+		}
+		);
+		DEBUG(
+		{
+			std::ostringstream oss("");
+			oss << "DEBUG_gradient_image_" << m_unNoImageFiles << ".tif";
+			saveImage(pGradientFilter->GetOutput(), oss.str());
+		}
+		);
+		DEBUG(
+		{
+			std::ostringstream oss("");
+			oss << "DEBUG_varianceofgradient_image_" << m_unNoImageFiles << ".tif";
+			saveImage(TextureFilter->GetOutput(), oss.str());
+			++m_unNoImageFiles;
+		}
+		);
 		//--------------------------------
 		// Store feature vector component
 		//--------------------------------
@@ -884,7 +903,7 @@ bool FeatureExtractor::extractWithoutLabels()
 void FeatureExtractor::saveImage(const Image8BitType::Pointer _pImg,
 								 const std::string& _Filename) const
 {
-	METHOD_ENTRY(m_Log, "FeatureExtractor::saveImage(const Image8BitType::Pointer, const std::string&");
+	METHOD_ENTRY(m_Log, "FeatureExtractor::saveImage(const Image8BitType::Pointer, const std::string&)");
 	
 	INFO_MSG(m_Log, "Image Feature Extractor", "Writing image " << _Filename, LOG_DOMAIN_NONE);
 	Writer8BitType::Pointer pWriter = Writer8BitType::New();
@@ -892,7 +911,7 @@ void FeatureExtractor::saveImage(const Image8BitType::Pointer _pImg,
 	pWriter->SetInput(_pImg);
 	pWriter->Update();
 	
-	METHOD_EXIT(m_Log, "FeatureExtractor::saveImage(const Image8BitType::Pointer, const std::string&");
+	METHOD_EXIT(m_Log, "FeatureExtractor::saveImage(const Image8BitType::Pointer, const std::string&)");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -906,7 +925,7 @@ void FeatureExtractor::saveImage(const Image8BitType::Pointer _pImg,
 void FeatureExtractor::saveImage(const Image16BitType::Pointer _pImg,
 								 const std::string& _Filename) const
 {
-	METHOD_ENTRY(m_Log, "FeatureExtractor::saveImage(const Image16BitType::Pointer, const std::string&");
+	METHOD_ENTRY(m_Log, "FeatureExtractor::saveImage(const Image16BitType::Pointer, const std::string&)");
 	
 	INFO_MSG(m_Log, "Image Feature Extractor", "Writing image " << _Filename, LOG_DOMAIN_NONE);
 	Writer16BitType::Pointer pWriter = Writer16BitType::New();
@@ -914,5 +933,35 @@ void FeatureExtractor::saveImage(const Image16BitType::Pointer _pImg,
 	pWriter->SetInput(_pImg);
 	pWriter->Update();
 	
-	METHOD_EXIT(m_Log, "FeatureExtractor::saveImage(const Image16BitType::Pointer, const std::string&");
+	METHOD_EXIT(m_Log, "FeatureExtractor::saveImage(const Image16BitType::Pointer, const std::string&)");
 }
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// \brief Stores a given float image as 16bit image to disk
+///
+/// \param _pImg Pointer to image
+/// \param _Filename File to write to
+///
+////////////////////////////////////////////////////////////////////////////////
+void FeatureExtractor::saveImage(const ImageFloatType::Pointer _pImg,
+								 const std::string& _Filename) const
+{
+	METHOD_ENTRY(m_Log, "FeatureExtractor::saveImage(const ImageFloatType::Pointer, const std::string&)");
+	
+	typedef itk::RescaleIntensityImageFilter<ImageFloatType,Image16BitType> FilterType;
+	
+	FilterType::Pointer pFilter = FilterType::New();
+	pFilter->SetOutputMinimum(0);
+	pFilter->SetOutputMaximum(65535);
+	pFilter->SetInput(_pImg);
+	DEBUG_MSG(m_Log, "Image Feature Extractor", "Rescaling image " << _Filename, LOG_DOMAIN_NONE);
+	INFO_MSG(m_Log, "Image Feature Extractor", "Writing image " << _Filename, LOG_DOMAIN_NONE);
+	Writer16BitType::Pointer pWriter = Writer16BitType::New();
+	pWriter->SetFileName(_Filename);
+	pWriter->SetInput(pFilter->GetOutput());
+	pWriter->Update();
+	
+	METHOD_EXIT(m_Log, "FeatureExtractor::saveImage(const ImageFloatType::Pointer, const std::string&)");
+}
+

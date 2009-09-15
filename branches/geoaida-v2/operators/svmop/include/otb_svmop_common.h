@@ -21,10 +21,12 @@
 #define OTB_SVMOP_COMMON_H
 
 #include "itkBinaryBallStructuringElement.h"
+#include "itkGradientMagnitudeImageFilter.h"
 #include "itkListSample.h"
 #include "itkMeanImageFilter.h"
 #include "itkPointSet.h"
 #include "itkPointSetToListAdaptor.h"
+#include "itkRescaleIntensityImageFilter.h"
 
 #include "otbImage.h"
 #include "otbImageList.h"
@@ -43,11 +45,13 @@
 const unsigned int Dimension = 2;
 typedef unsigned char	Pixel8BitType;
 typedef unsigned short	Pixel16BitType;
+typedef float			PixelFloatType;
 typedef float			FeaturePixelType;
-typedef unsigned short	InputPixelType;
+typedef PixelFloatType	InputPixelType;
 typedef unsigned char	LabelPixelType;
 typedef otb::Image<Pixel8BitType, Dimension> Image8BitType;
 typedef otb::Image<Pixel16BitType, Dimension> Image16BitType;
+typedef otb::Image<PixelFloatType, Dimension> ImageFloatType;
 typedef otb::Image<InputPixelType, Dimension> InputImageType;
 typedef otb::Image<LabelPixelType, Dimension> LabelImageType;
 

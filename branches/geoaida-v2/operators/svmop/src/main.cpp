@@ -136,6 +136,7 @@ int main(int argc, char *argv[])
 
 	FeatureExtractor	Extractor;
 	SVMClassifier		Classifier;
+	int					nNumberOfChannels;
 
 // 	if (argc < 4)
 // 	{
@@ -147,56 +148,58 @@ int main(int argc, char *argv[])
 // 	else
 	{
 		std::vector<std::string> ArgvList;
-
+		
 		for (int i=1; i<argc; ++i)
 		{
 			ArgvList.push_back(argv[i]);
 // 			Extractor.addInputChannel(argv[i]);
 		}
 		
+		nNumberOfChannels = atoi(ArgvList[0].c_str());
+		
 		//--- Load training images and label image ---------------------------//
-		for (int i=0; i<3; ++i)
+		for (int i=1; i<nNumberOfChannels+1; ++i)
 		{
 			Extractor.addInputChannel(ArgvList[i]);
 		}
 
 		//--- Start the training process -------------------------------------//
-		Extractor.loadLabelImage(ArgvList[3]);
+		Extractor.loadLabelImage(ArgvList[nNumberOfChannels+1]);
 		Extractor.setFilterRadius(5);
 		Extractor.setLabelSpacing(5,5);
 		Extractor.setNumberOfPyramidLevels(3);
-		Extractor.setPyramidDecimationRate(1.5);
+		Extractor.setPyramidDecimationRate(2.0);
 		Extractor.extract(FEATURE_EXTRACTOR_USE_LABELS);
 		Classifier.setLabelImageSize(Extractor.getImageSize());
 		Classifier.setFeatures(Extractor.getFeatures());
 		Classifier.setLabels(Extractor.getLabels());
-		Classifier.scaleFeatures();
+		Classifier.scaleFeatures(SVM_CLASSIFIER_CALCULATE_EXTREMA);
 		Classifier.setNumberOfClasses(3);
 		Classifier.train();
-		Classifier.saveModel("svm_model");
+		Classifier.saveModel("svm_model_4-2");
 
 		//--- Reclassification -----------------------------------------------//
 		Extractor.extract();
-		Classifier.loadModel("svm_model");
+		Extractor.clearChannels(); // Free some memory!
+		Classifier.loadModel("svm_model_4-2");
 		Classifier.setFeatures(Extractor.getFeatures());
 		Classifier.scaleFeatures();
 		Classifier.classify();
-		Classifier.saveClassificationResult("result_label_rc.tif");
+		Classifier.saveClassificationResult("result_label_rc_4-2.tif");
 		
 		//--- Start the classification process -------------------------------//
-		Extractor.clearChannels();
-		for (int i=4; i<7; ++i)
+		for (int i=nNumberOfChannels+2; i<2*nNumberOfChannels+2; ++i)
 		{
 			Extractor.addInputChannel(ArgvList[i]);
 		}
 		Extractor.extract();
-		Classifier.loadModel("svm_model");
+		Classifier.loadModel("svm_model_4-2");
 		Classifier.setLabelImageSize(Extractor.getImageSize());
 		Extractor.clearChannels(); // Free some memory!
 		Classifier.setFeatures(Extractor.getFeatures());
 		Classifier.scaleFeatures();
 		Classifier.classify();
-		Classifier.saveClassificationResult("result_label.tif");
+		Classifier.saveClassificationResult("result_label_4-2.tif");
 
 // 		if (!setup(argv[1]))
 // 		{

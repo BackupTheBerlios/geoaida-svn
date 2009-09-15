@@ -31,6 +31,8 @@ DEBUG(
 ///
 ///////////////////////////////////////////////////////////////////////////////
 SVMClassifier::SVMClassifier() : 	m_unNumberOfClasses(SVM_CLASSIFIER_DEFAULT_NUMBER_OF_CLASSES),
+									m_fMin( 1e300),
+									m_fMax(-1e300),
 									m_bGotClassificationResult(false),
 									m_bGotFeatures(false),
 									m_bGotLabels(false),
@@ -183,13 +185,15 @@ bool SVMClassifier::loadModel(const std::string& _strFilename)
 ///
 /// \brief Scales features to given interval
 ///
+/// \param _bCalc Calculate the minimum and maximum value
 /// \param _fLower Lower interval border
 /// \param _fUpper Upper interval border
 ///
 /// \return Returns if scaling was successful
 ///
 ///////////////////////////////////////////////////////////////////////////////
-bool SVMClassifier::scaleFeatures(const double& _fLower, const double& _fUpper)
+bool SVMClassifier::scaleFeatures(const bool& _bCalc,
+								  const double& _fLower, const double& _fUpper)
 {
 	METHOD_ENTRY(m_Log, "SVMClassifier::scaleFeatures(const double&, const double&)");
 
@@ -204,10 +208,33 @@ bool SVMClassifier::scaleFeatures(const double& _fLower, const double& _fUpper)
 		return false;
 	}
 	
-	DEBUG_MSG(m_Log, "SVM Classifier", "Determining extrema in feature vector.", LOG_DOMAIN_NONE);
+	if (_bCalc)
+	{
+		DEBUG_MSG(m_Log, "SVM Classifier", "Determining extrema in feature vector.", LOG_DOMAIN_NONE);
+		
+		m_fMin = 1e300;
+		m_fMax = -1e300;
+		
+		FeaturePointDataContainer::ConstIterator it = m_pFeatures->GetPointData()->Begin();
+		FeatureVectorType::const_iterator ci;
+		while (it != m_pFeatures->GetPointData()->End())
+		{
+			ci = (it.Value()).begin();
+			while (ci != (it.Value()).end())
+			{
+				if ((*ci) < m_fMin) m_fMin = (*ci);
+				if ((*ci) > m_fMax) m_fMax = (*ci);
+				
+				++ci;
+			}
+			++it;
+		}
+	}
+
+	DEBUG_MSG(m_Log, "SVM Classifier", "Min value: " << m_fMin, LOG_DOMAIN_VAR);
+	DEBUG_MSG(m_Log, "SVM Classifier", "Max value: " << m_fMax, LOG_DOMAIN_VAR);
 	
-	double fMin = 1e300;
-	double fMax = 1e-300;
+	INFO_MSG(m_Log, "SVM Classifier", "Scaling features to interval [" << _fLower << "," << _fUpper << "]", LOG_DOMAIN_NONE);
 	
 	DEBUG(
 		#include <fstream>
@@ -217,43 +244,24 @@ bool SVMClassifier::scaleFeatures(const double& _fLower, const double& _fUpper)
 		std::ofstream of(oss.str().c_str());
 		++m_unNoFVFiles;
 	);
-	
+	FeatureVectorType::iterator jt;
 	FeaturePointDataContainer::Iterator it = m_pFeatures->GetPointData()->Begin();
-	FeatureVectorType::const_iterator ci;
 	while (it != m_pFeatures->GetPointData()->End())
 	{
- 		ci = (it.Value()).begin();
-		while (ci != (it.Value()).end())
+ 		jt = (it.Value()).begin();
+		while (jt != (it.Value()).end())
 		{
-			if ((*ci) < fMin) fMin = (*ci);
-			if ((*ci) > fMax) fMax = (*ci);
+			(*jt) = _fLower + ((*jt) - m_fMin) * (_fUpper - _fLower)/(m_fMax-m_fMin);
 			
-			DEBUG(of << (*ci) << " ";);
+			DEBUG(of << (*jt) << " ";);
 			
-			++ci;
+			++jt;
 		}
 		DEBUG(of << std::endl;);
 		++it;
 	}
 	DEBUG(of.close(););
 	DEBUG_MSG(m_Log, "SVM Classifier", "Feature vectors written to: " << oss.str(), LOG_DOMAIN_NONE);
-	DEBUG_MSG(m_Log, "SVM Classifier", "Min value: " << fMin, LOG_DOMAIN_VAR);
-	DEBUG_MSG(m_Log, "SVM Classifier", "Max value: " << fMax, LOG_DOMAIN_VAR);
-	
-	INFO_MSG(m_Log, "SVM Classifier", "Scaling features to interval [" << _fLower << "," << _fUpper << "]", LOG_DOMAIN_NONE);
-	
-	FeatureVectorType::iterator jt;
-	it = m_pFeatures->GetPointData()->Begin();
-	while (it != m_pFeatures->GetPointData()->End())
-	{
- 		jt = (it.Value()).begin();
-		while (jt != (it.Value()).end())
-		{
-			(*jt) = _fLower + ((*jt) - fMin) * (_fUpper - _fLower)/(fMax-fMin);
-			++jt;
-		}
-		++it;
-	}
 
 	METHOD_EXIT(m_Log, "SVMClassifier::scaleFeatures(const double&, const double&)");
 	return true;
