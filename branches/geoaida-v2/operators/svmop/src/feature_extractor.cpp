@@ -357,11 +357,29 @@ bool FeatureExtractor::extractWithLabels()
 	typedef itk::MeanImageFilter<InputImageType,InputImageType> MeanFilterType;
 	typedef itk::GradientMagnitudeImageFilter<InputImageType,InputImageType> GradientFilterType;
 	typedef otb::Functor::VarianceTextureFunctor<InputPixelType,InputPixelType> FunctorType;
-	typedef otb::TextureImageFunction<InputImageType, FunctorType> VarianceFilterType;
+	typedef otb::TextureImageFunction<InputImageType,FunctorType> VarianceFilterType;
+// 	typedef otb::LineSegmentDetector<InputImageType,InputPixelType> LineSegmentsFilterType;
+// 	typedef otb::DrawLineSpatialObjectListFilter<InputImageType,InputImageType> DrawLineListType;
+// 	typedef otb::BinaryImageDensityFunction<InputImageType> CountFunctionType;
+// 	typedef itk::CannyEdgeDetectionImageFilter<InputImageType,InputImageType> CannyDetectorType;
+// 	typedef otb::EdgeDensityImageFilter<InputImageType,InputImageType,CannyDetectorType,
+// 									CountFunctionType> EdgeDensityFilterType;
+
 	
-	MeanFilterType::Pointer		pMeanFilter = MeanFilterType::New();
-	GradientFilterType::Pointer pGradientFilter = GradientFilterType::New();
-	VarianceFilterType::Pointer	TextureFilter = VarianceFilterType::New();
+	MeanFilterType::Pointer			pMeanFilter = MeanFilterType::New();
+// 	MeanFilterType::Pointer			pMeanFilter2 = MeanFilterType::New();
+	GradientFilterType::Pointer 	pGradientFilter = GradientFilterType::New();
+	VarianceFilterType::Pointer		TextureFilter = VarianceFilterType::New();
+// 	LineSegmentsFilterType::Pointer	pLineSegmentsFilter = LineSegmentsFilterType::New();
+// 	DrawLineListType::Pointer		pDrawLineFilter = DrawLineListType::New();
+
+// 	EdgeDensityFilterType::Pointer	pEdgeDensityFilter = EdgeDensityFilterType::New();
+// 	CannyDetectorType::Pointer		pCannyFilter = CannyDetectorType::New();
+	
+// 	pCannyFilter->SetUpperThreshold(5);
+// 	pCannyFilter->SetLowerThreshold(4);
+// 	pCannyFilter->SetVariance(2.0);
+// 	pCannyFilter->SetMaximumError(0.01);
 		
 	InputImageType::SizeType		nRadius;
 	InputImageType::IndexType		nFeatureIndex;
@@ -377,6 +395,10 @@ bool FeatureExtractor::extractWithLabels()
 	TextureFilter->SetOffset(nOffset);
 
 	pMeanFilter->SetRadius(nRadius);
+// 	pMeanFilter2->SetRadius(nRadius);
+
+// 	pEdgeDensityFilter->SetDetector(pCannyFilter);
+// 	pEdgeDensityFilter->SetNeighborhoodRadius(nRadius);
 	
 	m_pInputChannelList->Update();
 	ImageListType::ConstIterator it = m_pInputChannelList->Begin();
@@ -415,6 +437,18 @@ bool FeatureExtractor::extractWithLabels()
 	TextureFilter->SetInputImage(pGradientFilter->GetOutput());
 	pMeanFilter->SetInput(it.Get());
 	pMeanFilter->Update();
+	
+// 	pLineSegmentsFilter->SetInput(it.Get());
+// 	pDrawLineFilter->SetInput(it.Get());
+// 	pDrawLineFilter->SetInputLineSpatialObjectList(pLineSegmentsFilter->GetOutput());
+// 	pMeanFilter2->SetInput(pDrawLineFilter->GetOutput());
+
+// 	pEdgeDensityFilter->SetInput(it.Get());
+// 	pEdgeDensityFilter->Update();
+// 	DEBUG(
+// 		saveImage(pEdgeDensityFilter->GetOutput(), "DEBUG_edge_density.tif");
+// 		saveImage(pCannyFilter->GetOutput(), "DEBUG_canny.tif");
+// 	);
 
 	// For debugging draw an image of feature extraction points
 	DEBUG(

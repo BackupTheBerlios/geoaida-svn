@@ -166,9 +166,9 @@ int main(int argc, char *argv[])
 		//--- Start the training process -------------------------------------//
 		Extractor.loadLabelImage(ArgvList[nNumberOfChannels+1]);
 		Extractor.setFilterRadius(5);
-		Extractor.setLabelSpacing(5,5);
+		Extractor.setLabelSpacing(1,1);
 		Extractor.setNumberOfPyramidLevels(3);
-		Extractor.setPyramidDecimationRate(2.0);
+		Extractor.setPyramidDecimationRate(1.5);
 		Extractor.extract(FEATURE_EXTRACTOR_USE_LABELS);
 		Classifier.setLabelImageSize(Extractor.getImageSize());
 		Classifier.setFeatures(Extractor.getFeatures());
@@ -176,16 +176,16 @@ int main(int argc, char *argv[])
 		Classifier.scaleFeatures(SVM_CLASSIFIER_CALCULATE_EXTREMA);
 		Classifier.setNumberOfClasses(3);
 		Classifier.train();
-		Classifier.saveModel("svm_model_4-2");
+		Classifier.saveModel("svm_model");
 
 		//--- Reclassification -----------------------------------------------//
 		Extractor.extract();
 		Extractor.clearChannels(); // Free some memory!
-		Classifier.loadModel("svm_model_4-2");
+		Classifier.loadModel("svm_model");
 		Classifier.setFeatures(Extractor.getFeatures());
 		Classifier.scaleFeatures();
 		Classifier.classify();
-		Classifier.saveClassificationResult("result_label_rc_4-2.tif");
+		Classifier.saveClassificationResult("result_label_rc.tif");
 		
 		//--- Start the classification process -------------------------------//
 		for (int i=nNumberOfChannels+2; i<2*nNumberOfChannels+2; ++i)
@@ -193,13 +193,13 @@ int main(int argc, char *argv[])
 			Extractor.addInputChannel(ArgvList[i]);
 		}
 		Extractor.extract();
-		Classifier.loadModel("svm_model_4-2");
+		Classifier.loadModel("svm_model");
 		Classifier.setLabelImageSize(Extractor.getImageSize());
 		Extractor.clearChannels(); // Free some memory!
 		Classifier.setFeatures(Extractor.getFeatures());
 		Classifier.scaleFeatures();
 		Classifier.classify();
-		Classifier.saveClassificationResult("result_label_4-2.tif");
+		Classifier.saveClassificationResult("result_label.tif");
 
 // 		if (!setup(argv[1]))
 // 		{

@@ -27,16 +27,16 @@ set(sources
 set(headers
 )
 
-add_executable(svmop_4-2 ${sources})
+add_executable(svmop ${sources})
 
-target_link_libraries(svmop_4-2
+target_link_libraries(svmop
 	tiff
 	OTBCommon
 	OTBIO
 	OTBLearning
 )
 
-install(TARGETS svmop_4-2 RUNTIME DESTINATION bin)
+install(TARGETS svmop RUNTIME DESTINATION bin)
 
 # install(TARGETS ga_gisop_multi DESTINATION bin)
 

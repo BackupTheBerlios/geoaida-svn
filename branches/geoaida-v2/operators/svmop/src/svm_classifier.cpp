@@ -428,7 +428,7 @@ bool SVMClassifier::train()
 	m_pEstimator->SetNu(0.5);
 	m_pEstimator->SetCacheSize(100);
 	m_pEstimator->SetEpsilon(1.0e-3);
-	m_pEstimator->SetC(1.0e1);
+	m_pEstimator->SetC(1.0e100);
 	m_pEstimator->SetP(0.1);
 	m_pEstimator->DoShrinking(true);
 	m_pEstimator->DoProbabilityEstimates(true);
