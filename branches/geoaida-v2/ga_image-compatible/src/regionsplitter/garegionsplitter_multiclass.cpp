@@ -9,10 +9,10 @@ using namespace Ga;
 
 int relabelOutput(const Image& imageToRelabel,
 		  ClassnameMapper classnamemapper,
-		  const string& labelimagefilename, 
-		  const string& regiondescriptionfilename, int minsize, int maxsize, int greyValueDifference){
+		  const QString& labelimagefilename, 
+		  const QString& regiondescriptionfilename, int minsize, int maxsize, int greyValueDifference){
   int exit_value=EXIT_SUCCESS;
-  vector<RegDesc> regList;  
+  QList<RegDesc> regList;  
   Image maskimg = Image(typeid(int), imageToRelabel.sizeX(), imageToRelabel.sizeY(), 0);
   maskimg=1;
 
@@ -25,12 +25,14 @@ int relabelOutput(const Image& imageToRelabel,
   rSplitter.setLabelFile(labelimagefilename);
   rSplitter.split();  
 
-  tmpImage.write(labelimagefilename.c_str());
-  clog << "Finished writing labelimage to filename " << labelimagefilename << endl;
+  tmpImage.write(labelimagefilename.toLatin1().constData());
+  clog << "Finished writing labelimage to filename " 
+       << labelimagefilename.toLatin1().constData() << endl;
   int t=regionsToFile(regiondescriptionfilename, regList);
 
   if (t != EXIT_SUCCESS){
-    cerr << "Can't open regionfile " << regiondescriptionfilename << endl;
+    cerr << "Can't open regionfile " 
+	 << regiondescriptionfilename.toLatin1().constData() << endl;
     exit (EXIT_FAILURE);
   }
   return exit_value;
@@ -38,8 +40,8 @@ int relabelOutput(const Image& imageToRelabel,
 
 int simpleOutput(const Image& imageToRelabel,
 		       ClassnameMapper classnamemapper,
-		       const std::string& labelimagefilename, 
-		       const std::string& regiondescriptionfilename)
+		       const QString& labelimagefilename, 
+		       const QString& regiondescriptionfilename)
 {
    
    
@@ -66,39 +68,39 @@ int simpleOutput(const Image& imageToRelabel,
 	      }	    
 	 }
    
-   vector<RegDesc> regList;
+   QList<RegDesc> regList;
    
-   ClassnameMapper::iterator pos;
-   for (pos=classnamemapper.begin(); pos != classnamemapper.end(); ++pos)
+   for (ClassnameMapper::Iterator pos=classnamemapper.begin(); pos != classnamemapper.end(); ++pos)
      {
 
-	if (bBoxes.count(pos->first))
+       if (bBoxes.count(pos.key()))
 	  {	     
 
-	     BoundingBox cBBox = bBoxes[pos->first];
-	     RegDesc reg;
-	     reg.file_=labelimagefilename;
-	     reg.class_=pos->second;
-	     reg.name_ = "Resultat " +  pos->second;
-	     reg.id_=pos->first;
-	     reg.llx_=cBBox.llx;
-	     reg.lly_=cBBox.lly;
-	     reg.urx_=cBBox.urx;
-	     reg.ury_=cBBox.ury;
-	     regList.push_back(reg);
+	    BoundingBox cBBox = bBoxes[pos.key()];
+	    RegDesc reg;
+	    reg.file_=labelimagefilename;
+	    reg.class_=pos.value();
+	    reg.name_ = "Result " +  pos.value();
+	    reg.id_=pos.key();
+	    reg.llx_=cBBox.llx;
+	    reg.lly_=cBBox.lly;
+	    reg.urx_=cBBox.urx;
+	    reg.ury_=cBBox.ury;
+	    regList.push_back(reg);
+#if 0
 #ifdef DEBUG_MSG
-	     clog << reg.toString() << endl;
+	    clog << reg.toString() << endl;
+#endif
 #endif	    
 	  }
 	else{
-
+	  
 	}
-	
      }
    // Write Label Image
      {	
 	Image outImage = imageToRelabel;
-	outImage.write(labelimagefilename.c_str());
+	outImage.write(labelimagefilename.toLatin1().constData());
      }
    // Write Label Descriptions
    int t=regionsToFile(regiondescriptionfilename, regList);

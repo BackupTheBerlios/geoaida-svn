@@ -49,25 +49,37 @@ QString
 Operator::command(AttribList & attribList)
 {
   QString cmd = cmd_;
-  {                             // Replace the attributes known by this operator
-    QMultiHash < QString, Attribute* >::const_iterator  it = attributeDict_.constBegin();
-    for (; it!=attributeDict_.constEnd(); ++it) {
-      //D                     qDebug("Operator::command %s\n",(const char*)it.currentKey());
-      cmd.replace(QRegExp("@" + it.key() + "@", Qt::CaseInsensitive),
-                  it.value()->command(attribList));
-    }
+
+#if 1
+  qDebug("Operator::command: %s\n", cmd.toLatin1().constData());
+#endif
+
+  // Replace the attributes known by this operator
+  for ( QMultiHash < QString, Attribute* >::ConstIterator  it = attributeDict_.constBegin(); 
+       it!=attributeDict_.constEnd(); 
+       ++it) {
+#if 1
+    qDebug("Operator::command %s->%s\n",
+	   it.key().toLatin1().constData(),
+	   it.value()->command(attribList).toLatin1().constData());
+#endif
+    cmd.replace(QRegExp("@" + it.key() + "@", Qt::CaseInsensitive),
+		it.value()->command(attribList));
   }
-  {                             // Replace all unknown attributes
-    AttribListConstIterator it = attribList.constBegin();
-    for (; it!=attribList.constEnd(); ++it) {
-      //D                     qDebug("Operator::command %s\n",(const char*)it.currentKey());
-      cmd.replace(QRegExp("@" + it.key() + "@", Qt::CaseInsensitive),
-                  it.value());
-    }
+
+  // Replace all unknown attributes
+  for (AttribList::ConstIterator it = attribList.constBegin(); it!=attribList.constEnd(); ++it) {
+#if 1
+    qDebug("Operator::command %s->%s\n",
+	   it.key().toLatin1().constData(),
+	   it.value().toLatin1().constData());
+#endif
+    cmd.replace(QRegExp("@" + it.key() + "@", Qt::CaseInsensitive),
+		it.value());
   }
 
   qDebug("Operator::command: %s\n", cmd.toLatin1().constData());
-
+  
   return cmd;
 }
 

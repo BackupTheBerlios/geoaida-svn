@@ -323,6 +323,8 @@ void SNode::execOperator(Operator * op, INode * iNode, AttribList & attribs,
   attribs.replace("output", iNode->output());
   attribs.replace("tmpdir", CleanUp::getTmpDirPID());
 	
+#warning What is that?
+#if 0
 	//Returns the process pid
 	unsigned int pid = cleanUp_.getPID();
 
@@ -385,10 +387,10 @@ void SNode::execOperator(Operator * op, INode * iNode, AttribList & attribs,
 		}
 		
 		file3.close();
-
   attribs.replace("fuzzysets", new QString(fuzzysetsFile));
 
 //Rodrigo
+#endif
   
   
   QString cmd=op->command(attribs);
@@ -555,7 +557,7 @@ void SNode::execTopDownOp(INode * iNode)
     cleanUp_.append(maskfile);
   }
   else 
-    attribs.replace("mask_file", "");
+    attribs.replace("mask_file", "\"\"");
 
   attribs.replace("minRes", geoImageList->minResolution());
   attribs.replace("maxRes", geoImageList->maxResolution());

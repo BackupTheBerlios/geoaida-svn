@@ -64,6 +64,7 @@ SET(classheaders
   )
 
 SET(mocheaders  
+    project.h
     analysis.h
     geoimagecache.h
     judge.h

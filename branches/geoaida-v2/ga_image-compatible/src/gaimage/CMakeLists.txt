@@ -24,20 +24,14 @@ set(headers gaall.h
            gapainter.h
            gapoint.h
            garegion.h
-           garegionsplittert.h
            garegiont.h
            gashareddata.h
            gashareddatat.h
-           gasplit2regionst.h
-           garegionsplitter.h
-	   garegionsplitter_multiclass.h	
-           garegionsplittert.hpp
            gavariance.h
            gavectorizet.h
 )
 
 set(templateheaders
-           gasplit2regionst.hpp
            gavectorizet.hpp
 )
 
@@ -51,8 +45,6 @@ set(sources gacanny.cpp
            gaimage.cpp
            gapainter.cpp
            garegion.cpp
-           garegionsplitter.cpp
-	   garegionsplitter_multiclass.cpp		   
            gavariance.cpp
 )
 

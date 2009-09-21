@@ -40,7 +40,7 @@ using namespace std;
 #define SMALL_REGIONS_TO_1 1
 
 template <class RegDescT, class RegionFinderClassT>
-RegionSplitterT<RegDescT,RegionFinderClassT>::RegionSplitterT(vector<RegDescT>& regList, 
+RegionSplitterT<RegDescT,RegionFinderClassT>::RegionSplitterT(QList<RegDescT>& regList, 
                                                               Ga::Image& labelImg, 
                                                               RegionFinderClassT& testClass, 
                                                               int minSize, int maxSize, 
@@ -73,12 +73,12 @@ void RegionSplitterT<RegDescT,RegionFinderClassT>::setBgId(int id) {
 }
 
 template <class RegDescT, class RegionFinderClassT>
-void RegionSplitterT<RegDescT,RegionFinderClassT>::setRegionClass(string regionClass){
+void RegionSplitterT<RegDescT,RegionFinderClassT>::setRegionClass(QString regionClass){
     regionClass_ = regionClass;
 }
 
 template <class RegDescT, class RegionFinderClassT>
-void RegionSplitterT<RegDescT,RegionFinderClassT>::setLabelFile(string labelfilename){
+void RegionSplitterT<RegDescT,RegionFinderClassT>::setLabelFile(QString labelfilename){
     labelfilename_=labelfilename;
 }
 
@@ -336,7 +336,8 @@ int RegionSplitterT<RegDescT,RegionFinderClassT>::split()
      {
 	int id=2;
 	if (int(regionList_.size())<startId_) {
-	   regionList_.reserve(startId_);
+	  // Use this for QVector:
+	  // regionList_.reserve(startId_);
 	   RegDescT reg;   
 	   while (int(regionList_.size())!=startId_) {
 	      reg.setId(id++);
@@ -465,11 +466,11 @@ int RegionSplitterT<RegDescT,RegionFinderClassT>::split()
 
 /*
 template <class RegDescT,class RegionFinderClassT>
-vector<RegDescT>* splitIntoRegionsT(Ga::Image& lpic,
+QList<RegDescT>* splitIntoRegionsT(Ga::Image& lpic,
                                     RegionFinderClassT tclass, 
                                     int minSize, int maxSize)
 {
-  vector<RegDescT>* regionList=new vector<RegDescT>();
+  QList<RegDescT>* regionList=new QList<RegDescT>();
   RegionSplitterT<RegDescT, RegionFinderClassT> splitter(*regionList,lpic,tclass,minSize,maxSize);
   splitter.split();
   return regionList;

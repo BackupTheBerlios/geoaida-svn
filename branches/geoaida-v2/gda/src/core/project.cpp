@@ -1,11 +1,13 @@
 #include "project.h"
 #include <QFile>
 #include "FileIOException"
+#include <QCoreApplication>
 
 /** Consctructor */
 Project::Project()
-  : mapImage_(0)
+  : mapImage_(0),analysis_(0),analysisRunning_(false)
 {
+  
 }
 
 /** Desctructor */
@@ -160,7 +162,16 @@ void Project::analyze()
 {
   if (!analysis_) delete analysis_;
   analysis_=new Analysis(&semanticNet_,&geoImageList_,&labelImageList_);
+  connect(analysis_,SIGNAL(sigFinished()),this,SLOT(analysisFinished()));
+  analysisRunning_=true;
   analysis_->start();
+  while (analysisRunning_) 
+    QCoreApplication::processEvents(QEventLoop::AllEvents,30);
+}
+
+void Project::analysisFinished()
+{
+  analysisRunning_=false;
 }
 
 #if 0

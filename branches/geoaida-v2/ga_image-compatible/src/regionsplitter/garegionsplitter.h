@@ -38,10 +38,7 @@
 #define GAREGIONSPLITTER
 
 #include <cstdlib>
-#include <vector>
-#include <sstream>
-#include <fstream>
-#include <iterator>
+#include <QList>
 #include <limits>
 
 #include <gaimage.h>
@@ -124,8 +121,8 @@ namespace Ga{
           in RegionSplitterT should be used;
         */
         
-        virtual std::string getRegionClass(int x, int y, int channel=0){
-            std::string out = "";
+        virtual QString getRegionClass(int x, int y, int channel=0){
+            QString out = "";
             return out;
         }
 
@@ -139,16 +136,16 @@ namespace Ga{
     
 
 
-    std::vector<RegDesc> splitIntoRegions(Image &labelpic,  
+    QList<RegDesc> splitIntoRegions(Image &labelpic,  
                                      RegionFinder& regfind,
-                                     std::string regionclass,
-                                     std::string labelfilename="",
+                                     QString regionclass,
+                                     QString labelfilename="",
                                      int minsize=0, int maxsize=INT_MAX);
-    std::vector<RegDesc> splitIntoRegions(Image &labelpic,  
+    QList<RegDesc> splitIntoRegions(Image &labelpic,  
                                      RegionFinder& regfind,
                                      int minsize=0, int maxsize=INT_MAX);
     
-    int regionsToFile(std::string filename, std::vector<RegDesc>& reglist);
+    int regionsToFile(QString filename, QList<RegDesc>& reglist);
 }
 
 #endif

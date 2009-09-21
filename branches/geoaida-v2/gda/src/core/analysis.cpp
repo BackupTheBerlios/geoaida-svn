@@ -287,6 +287,7 @@ void Analysis::ready()
   qDebug("######## READY ########\n");
 //!  cleanUp_.deleteFiles();
   emit sigReady(iNodeRoot_, map_);
+  emit sigFinished();
 }
 
 /** is called when a INode was changed or created */

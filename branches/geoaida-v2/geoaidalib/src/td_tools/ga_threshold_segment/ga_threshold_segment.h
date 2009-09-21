@@ -33,19 +33,14 @@ namespace Ga{
       double average_;
       int regsize_;
 
-      virtual std::string attributes2string()
-          {            
-              std::string s = RegDesc::attributes2string();
-              std::ostringstream out;
-
-              // clog << "Old attributes " << s << endl;
-              // clog << "New attribute Average: " << average_ << endl;
-              out << s;
-              out << " average=\"" << average_ << "\" ";
-              out << " reg_size=\"" << regsize_ << "\" ";
-
-              return out.str();
-          }
+      virtual QXmlStreamWriter& writeAttributes(QXmlStreamWriter& fp) const
+      {            
+	RegDesc::writeAttributes(fp);
+	fp.writeAttribute(" average", QString::number(average_));
+	fp.writeAttribute(" reg_size", QString::number(regsize_));
+	
+	return fp;
+      }
   };
 
 class RegionFinderThres : public RegionFinder{

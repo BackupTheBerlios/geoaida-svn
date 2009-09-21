@@ -7,6 +7,7 @@ include_directories(.
         ${CMAKE_SOURCE_DIR}/pfm/libpfm
         ${CMAKE_SOURCE_DIR}/parser
         ${CMAKE_SOURCE_DIR}/ga_image-compatible/src/gaimage
+        ${CMAKE_SOURCE_DIR}/ga_image-compatible/src/regionsplitter
 	${QT_INCLUDES}
 	)
 
@@ -32,7 +33,7 @@ macro(mod_tool name extra_sources)
   add_executable(${name} ${sources} ${mocsrc})
 
 
-  target_link_libraries(${name} gaimage pfm pnm  ${QT_QTCORE_LIBRARY}  )
+  target_link_libraries(${name} gaimage garegionsplitter pfm pnm  ${QT_QTCORE_LIBRARY}  )
 
   install(TARGETS ${name} DESTINATION bin)
   install(FILES ${data} DESTINATION share/data/modules)

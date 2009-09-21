@@ -175,6 +175,8 @@ protected:                     // Protected members
 signals:                       // Signals
   /** emitted signal when the analyze is ready  */
   void sigReady(INode *, GeoImage *);
+  /** emitted signal when the analyze has finished ready  */
+  void sigFinished();
   /** emitted signal when a node in the instances node was changes */
   void sigNodeChange(INode *);
   void sigMapView(INode *, GeoImage *);

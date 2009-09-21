@@ -2,11 +2,11 @@
 #define REGIONSPLITTER_MULTICLASS
 
 #include "garegionsplitter.h"
-#include <map>
-#include <string>
+#include <QMap>
+#include <QString>
 
 
-typedef std::map<int, std::string> ClassnameMapper;
+typedef QMap<int, QString> ClassnameMapper;
 
 
 class MulticlassRegionFinder : public Ga::RegionFinder
@@ -26,7 +26,7 @@ public:
     in RegionSplitterT should be used;
   */
   
-  virtual std::string getRegionClass(int x, int y, int channel=0){	  	  
+  virtual QString getRegionClass(int x, int y, int channel=0){	  	  
     return classnamemapper_[data_.getInt(x, y, channel)];
   }
   
@@ -72,14 +72,14 @@ public:
   }	
 
  private:
-	std::map<int, std::string> classnamemapper_;
+	QMap<int, QString> classnamemapper_;
 
 };
 
 int relabelOutput(const Ga::Image& imageToRelabel,
 		   ClassnameMapper classnamemapper,
-		   const std::string& labelimagefilename, 
-		   const std::string& regiondescriptionfilename, 
+		   const QString& labelimagefilename, 
+		   const QString& regiondescriptionfilename, 
 		  int minsize=0, int maxsize=INT_MAX, int greyLevelDifference=0);
 
 struct BoundingBox 
@@ -108,6 +108,6 @@ struct BoundingBox
  */
 int simpleOutput(const Ga::Image& imageToRelabel,
 		       ClassnameMapper classnamemapper,
-		       const std::string& labelimagefilename, 
-		       const std::string& regiondescriptionfilename);
+		       const QString& labelimagefilename, 
+		       const QString& regiondescriptionfilename);
 #endif

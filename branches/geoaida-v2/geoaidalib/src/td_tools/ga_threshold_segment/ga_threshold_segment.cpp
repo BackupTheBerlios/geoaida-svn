@@ -21,6 +21,9 @@
 #include <garegionsplittert.h>
 #include <garegion.h>
 #include <sstream>
+#include <QVector>
+#include <QFile>
+#include <QXmlStreamWriter>
 
 #include "ga_threshold_segment.h"
 
@@ -108,7 +111,7 @@ int main(int argc, char **argv)
   blowshrink(src, 2);
   
   RegionFinderThres rf(maskimg, src, 0);
-  vector<RegDescThres> regList;
+  QList<RegDescThres> regList;
 
   
 	RegionSplitterT<RegDescThres, RegionFinderThres> rSplitter(regList,labelimg,rf,minsize,maxsize);
@@ -119,8 +122,8 @@ int main(int argc, char **argv)
   
   
   
-  vector<double> avgValues((int)regList.size(), 0);
-  vector<int> regionSizes(regList.size(), 0);
+  QVector<double> avgValues((int)regList.size(), 0);
+  QVector<int> regionSizes(regList.size(), 0);
   for (int x=0; x < src.sizeX(); x++){
       for (int y=0; y < src.sizeY(); y++){
           avgValues[labelimg.getInt(x, y)] += srcOrig.getFloat(x, y);
@@ -144,23 +147,27 @@ int main(int argc, char **argv)
   
 //  int t=regionsToFile(regionname, regList);
 
-	ostringstream out;
-	// vector<RegDesc>::iterator regIter= reglist.begin();
-
-	for (int i=2; i < regList.size(); i++) // Skip the first 2 elements because they contain id 0 and 1 (= background regions), 
-                                         // I'm not sure why they are included in the list at all...
-	{
-		RegDescThres reg = regList[i];
-    out << reg.toString() << endl;
+  QFile fp(regionname);
+  if (!fp.open(QIODevice::WriteOnly)) {
+    cerr << "can't open region output file \"" << regionname << "\"" << endl;
+    return EXIT_FAILURE;
   }
-	ofstream outputFile(regionname, ios::out);
+  
+  QXmlStreamWriter out(&fp);
+  out.setAutoFormatting(true);
+  out.writeStartDocument();
+  out.writeStartElement("regionlist");
 
-	if (!outputFile)
-	{
-      cerr << "can't open region output file \"" << regionname << "\"" << endl;
-      return EXIT_FAILURE;
-	}
-	outputFile << out.str();
+  // QList<RegDesc>::iterator regIter= reglist.begin();
+  
+  for (int i=2; i < regList.size(); i++) {
+    // Skip the first 2 elements because they contain id 0 and 1 (= background regions),  
+    // I'm not sure why they are included in the list at all...
+    RegDescThres reg = regList[i];
+    reg.write(out);
+  }
+  out.writeEndElement();
+  out.writeEndDocument();
 
   return EXIT_SUCCESS;
 

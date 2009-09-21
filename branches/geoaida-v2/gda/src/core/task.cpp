@@ -538,10 +538,10 @@ bool Task::systemLoad()
     arguments << "-c" << "cat /proc/cpuinfo | grep processor | wc -l";
     script.setReadChannel(QProcess::StandardOutput);
     script.start(program,arguments);
-    if (script.waitForStarted()) {
-      while (!script.canReadLine());
+    if (script.waitForFinished()) {
       QString s = script.readLine();
       num_cpus = s.toInt();
+      if (num_cpus==0) num_cpus=1;
     }
     else
       num_cpus = 1;

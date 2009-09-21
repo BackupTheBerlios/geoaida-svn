@@ -1,3 +1,4 @@
+#include <QObject>
 #include <QString>
 #include <QIODevice>
 #include <QDir>
@@ -8,9 +9,9 @@
 #include "GeoImageList"
 #include "FileList"
 
-class Project 
+class Project : public QObject
 {
-public:
+Q_OBJECT public:
   Project();
   ~Project();
   void setFilename(QString filename);
@@ -32,5 +33,8 @@ private:
   GeoImage *mapImage_;
   GeoImageList labelImageList_;
   Analysis *analysis_;
+  bool analysisRunning_;
+protected slots:
+  void analysisFinished();
 };
 

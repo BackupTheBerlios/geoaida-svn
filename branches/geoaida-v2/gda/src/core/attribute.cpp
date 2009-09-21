@@ -133,7 +133,7 @@ Attribute::~Attribute()
 void
 Attribute::init(QString name, QString label, QString tip)
 {
-  name_ = name;
+  name_ = name.toLower();
   cmd_ = "";
   defaultExt_ = "";
   prefix_="";
@@ -171,6 +171,7 @@ void
 Attribute::set(ArgDict & attribs)
 {
   MLParser::setString(name_, &attribs, "name");
+  name_=name_.toLower();
   MLParser::setString(label_, &attribs, "label");
   MLParser::setString(tip_, &attribs, "tip");
   type_ = STRING;
@@ -236,13 +237,20 @@ QString
 Attribute::command(ArgDict & argdict)
 {
   QString cmd = cmd_;
+#if 1 
+  // DEBUG
+  qDebug("Attribute::command: start cmd=%s\n",cmd.toLatin1().constData());
+  for (ArgDict::ConstIterator it=argdict.constBegin();
+       it!=argdict.constEnd();
+       ++it)
+    qDebug("%s -> %s",it.key().toLatin1().constData(),it.value().toLatin1().constData());
+#endif
   if (!argdict.contains(name_) || argdict[name_].isEmpty())
     return "";
-  ArgDictConstIterator it=argdict.constBegin();
-  for (; it==argdict.constEnd(); ++it) {
+  for (ArgDictConstIterator it=argdict.constBegin(); it==argdict.constEnd(); ++it) {
     cmd.replace(QRegExp("@" + it.key() + "@", Qt::CaseInsensitive), it.value());
   }
-  qDebug("Attribute::command %s\n", cmd.toLatin1().constData());
+  //  qDebug("Attribute::command end %s\n", cmd.toLatin1().constData());
   return cmd;
 }
 

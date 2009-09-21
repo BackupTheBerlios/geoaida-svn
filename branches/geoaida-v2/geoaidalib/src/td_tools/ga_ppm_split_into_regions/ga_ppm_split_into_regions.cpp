@@ -253,7 +253,7 @@ int main(int argc, char **argv)
   Image maskImage(typeid(int),src.sizeX(),src.sizeY());
   // Split h-Image
   {
-    vector<RegDesc> hList;
+    QList<RegDesc> hList;
     HRegion hRegion(maskImage,hue,hLevel);
 
     RegionSplitterT<RegDesc,HRegion> hSplitter(hList,labelImage,hRegion,minsize,maxsize);
@@ -264,7 +264,7 @@ int main(int argc, char **argv)
   }
   // Split s-Image
   {
-    vector<RegDesc> sList;
+    QList<RegDesc> sList;
     SRegion sRegion(maskImage,sat,sLevel);
     RegionSplitterT<RegDesc,SRegion> sSplitter(sList,labelImage,sRegion,minsize,maxsize);
     sSplitter.split();
@@ -273,7 +273,7 @@ int main(int argc, char **argv)
   }
   // Split v-Image
   {
-    vector<RegDesc> vList;
+    QList<RegDesc> vList;
     VRegion vRegion(maskImage,src,vLevel);
     RegionSplitterT<RegDesc,VRegion> vSplitter(vList,labelImage,vRegion,minsize,maxsize);
     vSplitter.split();
@@ -283,7 +283,7 @@ int main(int argc, char **argv)
   labelImage=maskImage;
 
 
-//  vector<RegDesc>* regList=splitIntoRegions<RegDesc>(src,labelimg,SameRegion(),minsize,maxsize);
+//  QList<RegDesc>* regList=splitIntoRegions<RegDesc>(src,labelimg,SameRegion(),minsize,maxsize);
   labelImage.write(labelfile);
   FILE *fp=fopen(regionfile,"w");
   if (!fp) {
