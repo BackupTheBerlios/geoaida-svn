@@ -23,7 +23,10 @@ Q_OBJECT public:
   void readSemanticNet(MLParser& parser);
   void readInstanceNet(MLParser& parser);
   void analyze();
+  void saveResults();
   SemanticNet& semanticNet();
+protected:
+  void writeInstanceNet(QString fname);
 private:
   QString filename_;
   SemanticNet semanticNet_;

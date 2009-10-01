@@ -35,37 +35,53 @@
 #include "GeoImageList"
 
 #ifdef INTERIMAGE
-Analysis::Analysis():iNodeRoot_(0), semNet_(0)
+Analysis::Analysis()
+ :iNodeRoot_(0), 
+  trashNodeRoot_(0),
+  semanticNet_(0),
+  map_(0)
 {                               //default constructor
   init();
 }
 
-Analysis::Analysis(const QString & prjfile):iNodeRoot_(0), semNet_(0)
+Analysis::Analysis(const QString & prjfile)
+ :iNodeRoot_(0), 
+  trashNodeRoot_(0),
+  semanticNet_(0),
+  map_(0)
 {                               //file constructor
   init();
   readProject(prjfile);
 }
 
-Analysis::Analysis(SemanticNet * sn):iNodeRoot_(0), semNet_(0)
+Analysis::Analysis(SemanticNet * sn)
+ :iNodeRoot_(0), 
+  trashNodeRoot_(0),
+  semanticNet_(0),
+  map_(0)
 {
   init();
-  semNet_ = sn;
+  semanticNet_ = sn;
 }
 #endif
 
 Analysis::Analysis(SemanticNet * sn, GeoImageList * gil, GeoImageList * lil)
-  :iNodeRoot_(0), semNet_(0)
+ :iNodeRoot_(0), 
+  trashNodeRoot_(0),
+  semanticNet_(0),
+  map_(0)
 {
   init();
-  semNet_ = sn;
+  semanticNet_ = sn;
   geoImageList_ = gil;
   labelImageList_ = lil;
 }
 
 Analysis::~Analysis()
 {                               //destructor
-  if (iNodeRoot_)
+  if (iNodeRoot_) {
     delete iNodeRoot_;
+  }
   if (map_)
     delete map_;
 }
@@ -74,12 +90,12 @@ void Analysis::init(void)
 {                               //initialize - default
   synchron_ = FALSE;
   stepwise_ = FALSE;
-  no_map_ = FALSE;
+  noMap_ = FALSE;
   iNodeRoot_ = 0;
   trashNodeRoot_ = 0;
   geoImageList_ = 0;
   labelImageList_ = 0;
-  semNet_ = 0;
+  semanticNet_ = 0;
   map_ = 0;
   error_ = false;
 }
@@ -173,18 +189,19 @@ void Analysis::readProject(QString fname)
 /** read the semantic net */
 void Analysis::readSemanticNet(QString fname)
 {
-  if (semNet_)
-    delete semNet_;
-  semNet_ = new SemanticNet;
-  semNet_->read(fname);
+  if (semanticNet_)
+    delete semanticNet_;
+  semanticNet_ = new SemanticNet;
+  semanticNet_->read(fname);
 }
 
 /** write the semantic net to the given file */
 void Analysis::writeSemanticNet(QString fname)
 {
-  semNet_->write(fname);
+  semanticNet_->write(fname);
 }
 
+#if 0
 /** write the instance net to the given file */
 void Analysis::writeInstanceNet(QString fname)
 {
@@ -200,6 +217,7 @@ void Analysis::writeInstanceNet(QString fname)
   str.writeEndElement();
   str.writeEndDocument();
 }
+#endif
 
 /** calculate the judgement for this search tree node */
 void Analysis::calcJudge(void)
@@ -222,15 +240,16 @@ void Analysis::synchron(bool b)
     It is the root node of the "Semantic Net" */
 int Analysis::genGoal(INode* iNode)
 {
-  if (!semNet_ || iNodeRoot_) { //WRONG: semNet must exist but no iNodeRoot_
-    return 1;                   // WRONG: semNet must exist
+  if (!semanticNet_ || iNodeRoot_) { //WRONG: semanticNet must exist but no iNodeRoot_
+    return 1;                   // WRONG: semanticNet must exist
     qDebug("  (warning) Analysis::genGoal(): I'm at a loss what to do! \n");
   }
 
   if (!iNode)
-    iNodeRoot_ = new INode(semNet_->rootNode());  //generate root INote
+    iNodeRoot_ = new INode(semanticNet_->rootNode());  //generate root INote
   else
     iNodeRoot_=iNode;
+
   Q_CHECK_PTR(iNodeRoot_);
   if (geoImageList_) {
     iNodeRoot_->attribute("geoNorth", geoImageList_->geoNorth());
@@ -262,13 +281,13 @@ void Analysis::slotstart()
 void Analysis::start()
 {
   if (genGoal() == 0) {
-	if ((iNodeRoot_->sNode())->temporal())
-	  emit message("Analysis aborted: temporal node cannot be root!");
-	else {
+    if ((iNodeRoot_->sNode())->temporal())
+      emit message("Analysis aborted: temporal node cannot be root!");
+    else {
       emit message("Starting analysis");
       (iNodeRoot_->sNode())->synchron(synchron());
       iNodeRoot_->startAnalyze();
-	}
+    }
   }
 }
 
@@ -279,7 +298,7 @@ void Analysis::ready()
     emit message("Analysis aborted");
   }
   else {
-    if (!no_map_)
+    if (!noMap_)
       prepareResultImage();
     emit message("Analysis finished");
 

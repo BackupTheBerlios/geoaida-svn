@@ -398,7 +398,7 @@ QString
   if (dx <= 0 || dy <= 0) {
     qDebug("#  (ERROR) GeoImage::part: (dx=%d=%d-%d || dy=%d=%d-%d)", dx, rx2,
            rx1, dy, ry2, ry1);
-    throw ImageException(rx1,rx2,dx,ry1,ry2,dy); 
+    throw ImageException(ImageException::Dimension,rx1,rx2,dx,ry1,ry2,dy); 
   }
 
   FILE *of = fopen(fname.toLatin1().constData(), "w");

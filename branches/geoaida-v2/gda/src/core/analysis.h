@@ -61,15 +61,27 @@ Q_OBJECT public:
   void init(void);
 
   /** return a pointer to the "Semantic Net" */
-  SemanticNet *semNet(void)
+  SemanticNet *semanticNet(void)
   {
-    return semNet_;
+    return semanticNet_;
   };
 
   /** set the pointer to the "Semantic Net" */
-  void semNet(SemanticNet * sn)
+  void setSemanticeNet(SemanticNet * snet)
   {
-    semNet_ = sn;
+    semanticNet_ = snet;
+  };
+
+  /** return a pointer to the "Instance Net" */
+  INode *instanceRootNode(void)
+  {
+    return iNodeRoot_;
+  };
+
+  /** return a pointer to the "Map Image" */
+  GeoImage *mapImage(void)
+  {
+    return map_;
   };
 
   /** calculate the judgement for the whole interpretation */
@@ -97,9 +109,9 @@ Q_OBJECT public:
     stepwise_ = b;
   };
   /** Sets the operator call for the analysis */
-  void map_mode(bool b)
+  void mapMode(bool b)
   {
-    no_map_ = b;
+    noMap_ = b;
   };
   
   /** Get the operator call for the analysis */
@@ -133,8 +145,10 @@ Q_OBJECT public:
   void readSemanticNet(QString fname);
   /** write the semantic net to the given file */
   void writeSemanticNet(QString fname);
+#if 0
   /** write the instance net to the given file */
   void writeInstanceNet(QString fname);
+#endif
   /** return the geo image list - a QStringList with the keys of the images */
   QStringList imagelist();
   /** Prepare the result image with the given instantiated net and the corresponding label image tiles */
@@ -153,7 +167,7 @@ protected:                     // Protected members
   /** pointer to the root INode of the INode tree for this search tree node  */
   INode *trashNodeRoot_;
   /** pointer to the root of the semantic net */
-  SemanticNet *semNet_;
+  SemanticNet *semanticNet_;
   /** pointer to the result map */
   GeoImage* map_;
   /** pointer to the infos for the used input images */
@@ -165,7 +179,7 @@ protected:                     // Protected members
   /** TRUE for stepwise  analyze working otherwise FALSE (default: FALSE)  */
   bool stepwise_;
   /** TRUE if no result map wished (default: FALSE)  */
-  bool no_map_;
+  bool noMap_;
   /** TRUE if there was an error while executing an operator */
   bool error_;
   public slots:                 // Public slots

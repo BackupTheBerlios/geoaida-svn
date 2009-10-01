@@ -25,6 +25,15 @@ class Exception
   virtual QString what() const;
 };
 
+class GeneralException : public Exception
+{
+ public:
+  GeneralException(QString errorMessage);
+  QString what() const;
+ private:
+  QString message_;
+};
+
 class FileIOException : public Exception
 {
  public:
@@ -39,12 +48,13 @@ class FileIOException : public Exception
 class ImageException : public Exception
 {
  public:
-  enum {
-    ImageDimension
+  enum ExceptionType {
+    Dimension
   };
-  ImageException(int x1, int x2, int dx, int y1, int y2, int dy);
+  ImageException(ExceptionType type, int x1, int x2, int dx, int y1, int y2, int dy);
   QString what() const;
  private:
+  ExceptionType type_;
   int x1_;
   int x2_;
   int dx_;

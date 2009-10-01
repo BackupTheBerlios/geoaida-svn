@@ -1,8 +1,9 @@
-<ui version="4.0" >
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
  <author>Martin Pahl</author>
  <class>MainWindow</class>
- <widget class="QMainWindow" name="MainWindow" >
-  <property name="geometry" >
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
@@ -10,49 +11,49 @@
     <height>821</height>
    </rect>
   </property>
-  <property name="windowTitle" >
+  <property name="windowTitle">
    <string>Geo Data Analyzer - GeoAIDA</string>
   </property>
-  <property name="dockOptions" >
+  <property name="dockOptions">
    <set>QMainWindow::AllowTabbedDocks|QMainWindow::AnimatedDocks</set>
   </property>
-  <widget class="QWidget" name="centralwidget" >
-   <layout class="QVBoxLayout" >
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout">
     <item>
-     <widget class="QDockWidget" name="dockWidget" >
-      <property name="floating" >
+     <widget class="QDockWidget" name="dockWidget">
+      <property name="floating">
        <bool>false</bool>
       </property>
-      <property name="features" >
-       <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable|QDockWidget::NoDockWidgetFeatures</set>
+      <property name="features">
+       <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
       </property>
-      <property name="windowTitle" >
+      <property name="windowTitle">
        <string>Semantic Net Editor</string>
       </property>
-      <widget class="QWidget" name="dockWidgetContents" >
-       <layout class="QVBoxLayout" >
+      <widget class="QWidget" name="dockWidgetContents">
+       <layout class="QVBoxLayout">
         <item>
-         <layout class="QHBoxLayout" >
+         <layout class="QHBoxLayout">
           <item>
-           <widget class="QPushButton" name="pushButton" >
-            <property name="text" >
+           <widget class="QPushButton" name="pushButton">
+            <property name="text">
              <string>Expand Tree</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="pushButton_2" >
-            <property name="text" >
+           <widget class="QPushButton" name="pushButton_2">
+            <property name="text">
              <string>Collapse Tree</string>
             </property>
            </widget>
           </item>
           <item>
            <spacer>
-            <property name="orientation" >
+            <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
-            <property name="sizeHint" >
+            <property name="sizeHint" stdset="0">
              <size>
               <width>531</width>
               <height>20</height>
@@ -63,32 +64,32 @@
          </layout>
         </item>
         <item>
-         <widget class="QSplitter" name="splitter" >
-          <property name="orientation" >
+         <widget class="QSplitter" name="splitter">
+          <property name="orientation">
            <enum>Qt::Horizontal</enum>
           </property>
-          <widget class="QTreeView" name="semNetEditor_" >
-           <property name="sizePolicy" >
-            <sizepolicy vsizetype="MinimumExpanding" hsizetype="Expanding" >
+          <widget class="QTreeView" name="semNetEditor_">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
-           <property name="uniformRowHeights" >
+           <property name="uniformRowHeights">
             <bool>true</bool>
            </property>
-           <property name="allColumnsShowFocus" >
+           <property name="allColumnsShowFocus">
             <bool>true</bool>
            </property>
           </widget>
-          <widget class="AttributeEditor" name="attributeEditor_" >
-           <property name="sizePolicy" >
-            <sizepolicy vsizetype="MinimumExpanding" hsizetype="Expanding" >
+          <widget class="AttributeEditor" name="attributeEditor_">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
-           <property name="itemsExpandable" >
+           <property name="itemsExpandable">
             <bool>true</bool>
            </property>
           </widget>
@@ -99,35 +100,35 @@
      </widget>
     </item>
     <item>
-     <widget class="QDockWidget" name="taskViewerDock_" >
-      <property name="floating" >
+     <widget class="QDockWidget" name="taskViewerDock_">
+      <property name="floating">
        <bool>false</bool>
       </property>
-      <property name="features" >
-       <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable|QDockWidget::NoDockWidgetFeatures</set>
+      <property name="features">
+       <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
       </property>
-      <property name="windowTitle" >
+      <property name="windowTitle">
        <string>Taskviewer</string>
       </property>
-      <widget class="QWidget" name="dockWidgetContents_2" >
-       <layout class="QVBoxLayout" >
+      <widget class="QWidget" name="dockWidgetContents_2">
+       <layout class="QVBoxLayout">
         <item>
-         <widget class="TaskViewer" name="taskViewer_" >
-          <property name="columnCount" >
+         <widget class="TaskViewer" name="taskViewer_">
+          <property name="columnCount">
            <number>3</number>
           </property>
           <column>
-           <property name="text" >
+           <property name="text">
             <string>PID</string>
            </property>
           </column>
           <column>
-           <property name="text" >
+           <property name="text">
             <string>Node</string>
            </property>
           </column>
           <column>
-           <property name="text" >
+           <property name="text">
             <string>Command</string>
            </property>
           </column>
@@ -139,163 +140,224 @@
     </item>
    </layout>
   </widget>
-  <widget class="QMenuBar" name="menubar" >
-   <property name="geometry" >
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>24</height>
+     <height>23</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menu_File" >
-    <property name="title" >
+   <widget class="QMenu" name="menu_File">
+    <property name="title">
      <string>&amp;File</string>
     </property>
-    <addaction name="action_New" />
-    <addaction name="actionNetLoad" />
-    <addaction name="action_Save_Net" />
-    <addaction name="actionLoad_Result" />
-    <addaction name="actionSave_Result" />
-    <addaction name="actionProjectLoad" />
-    <addaction name="separator" />
-    <addaction name="actionQuit" />
+    <addaction name="action_New"/>
+    <addaction name="actionNetLoad"/>
+    <addaction name="action_Save_Net"/>
+    <addaction name="actionLoad_Result"/>
+    <addaction name="actionSave_Result"/>
+    <addaction name="actionProjectLoad"/>
+    <addaction name="separator"/>
+    <addaction name="actionQuit"/>
    </widget>
-   <widget class="QMenu" name="menu_View" >
-    <property name="title" >
+   <widget class="QMenu" name="menu_View">
+    <property name="title">
      <string>&amp;View</string>
     </property>
-    <addaction name="action_Scene_Viewer" />
-    <addaction name="action_Trash_Viewer" />
-    <addaction name="action_Map_Viewer" />
-    <addaction name="actionDebug_Labelimage_Viewer" />
+    <addaction name="action_Scene_Viewer"/>
+    <addaction name="action_Trash_Viewer"/>
+    <addaction name="action_Map_Viewer"/>
+    <addaction name="actionDebug_Labelimage_Viewer"/>
    </widget>
-   <widget class="QMenu" name="menu_Help" >
-    <property name="title" >
+   <widget class="QMenu" name="menu_Help">
+    <property name="title">
      <string>&amp;Help</string>
     </property>
-    <addaction name="action_About" />
+    <addaction name="action_About"/>
    </widget>
-   <widget class="QMenu" name="menu_Analyze" >
-    <property name="title" >
+   <widget class="QMenu" name="menu_Analyze">
+    <property name="title">
      <string>&amp;Analyze</string>
     </property>
-    <addaction name="actionStart" />
+    <addaction name="actionStart"/>
    </widget>
-   <addaction name="menu_File" />
-   <addaction name="menu_View" />
-   <addaction name="menu_Help" />
-   <addaction name="menu_Analyze" />
+   <widget class="QMenu" name="menu_Edit">
+    <property name="title">
+     <string>&amp;Edit</string>
+    </property>
+    <widget class="QMenu" name="menuAdd">
+     <property name="title">
+      <string>Add</string>
+     </property>
+     <addaction name="actionNodeAddAbove"/>
+     <addaction name="actionNodeAddBelow"/>
+     <addaction name="actionNodeAddChild"/>
+    </widget>
+    <addaction name="actionNodeCut"/>
+    <addaction name="actionNodeCopy"/>
+    <addaction name="actionNodePaste"/>
+    <addaction name="menuAdd"/>
+   </widget>
+   <addaction name="menu_File"/>
+   <addaction name="menu_Edit"/>
+   <addaction name="menu_View"/>
+   <addaction name="menu_Help"/>
+   <addaction name="menu_Analyze"/>
   </widget>
-  <widget class="QStatusBar" name="statusbar" />
-  <widget class="QToolBar" name="toolBar" >
-   <property name="windowTitle" >
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
     <string>toolBar</string>
    </property>
-   <attribute name="toolBarArea" >
+   <attribute name="toolBarArea">
     <enum>TopToolBarArea</enum>
    </attribute>
-   <attribute name="toolBarBreak" >
+   <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="action_New" />
-   <addaction name="actionNetLoad" />
-   <addaction name="action_Save_Net" />
-   <addaction name="separator" />
-   <addaction name="separator" />
-   <addaction name="actionStart" />
+   <addaction name="action_New"/>
+   <addaction name="actionNetLoad"/>
+   <addaction name="action_Save_Net"/>
+   <addaction name="separator"/>
+   <addaction name="separator"/>
+   <addaction name="actionStart"/>
   </widget>
-  <action name="action_New" >
-   <property name="icon" >
-    <iconset resource="gda.qrc" >:/gda/filenew.xpm</iconset>
+  <action name="action_New">
+   <property name="icon">
+    <iconset resource="gda.qrc">
+     <normaloff>:/gda/filenew.xpm</normaloff>:/gda/filenew.xpm</iconset>
    </property>
-   <property name="text" >
+   <property name="text">
     <string>&amp;New</string>
    </property>
   </action>
-  <action name="actionNetLoad" >
-   <property name="icon" >
-    <iconset resource="gda.qrc" >:/gda/fileopen.xpm</iconset>
+  <action name="actionNetLoad">
+   <property name="icon">
+    <iconset resource="gda.qrc">
+     <normaloff>:/gda/fileopen.xpm</normaloff>:/gda/fileopen.xpm</iconset>
    </property>
-   <property name="text" >
+   <property name="text">
     <string>&amp;Load Net</string>
    </property>
   </action>
-  <action name="action_Save_Net" >
-   <property name="icon" >
-    <iconset resource="gda.qrc" >:/gda/filesave.xpm</iconset>
+  <action name="action_Save_Net">
+   <property name="icon">
+    <iconset resource="gda.qrc">
+     <normaloff>:/gda/filesave.xpm</normaloff>:/gda/filesave.xpm</iconset>
    </property>
-   <property name="text" >
+   <property name="text">
     <string>&amp;Save Net</string>
    </property>
   </action>
-  <action name="actionLoad_Result" >
-   <property name="text" >
+  <action name="actionLoad_Result">
+   <property name="text">
     <string>Load Result</string>
    </property>
   </action>
-  <action name="actionSave_Result" >
-   <property name="text" >
+  <action name="actionSave_Result">
+   <property name="text">
     <string>Save Result</string>
    </property>
   </action>
-  <action name="actionProjectLoad" >
-   <property name="text" >
+  <action name="actionProjectLoad">
+   <property name="text">
     <string>Load &amp;Project</string>
    </property>
   </action>
-  <action name="actionQuit" >
-   <property name="text" >
+  <action name="actionQuit">
+   <property name="text">
     <string>&amp;Quit</string>
    </property>
-   <property name="shortcut" >
+   <property name="shortcut">
     <string>Ctrl+Q</string>
    </property>
-   <property name="shortcutContext" >
+   <property name="shortcutContext">
     <enum>Qt::ApplicationShortcut</enum>
    </property>
   </action>
-  <action name="action_Scene_Viewer" >
-   <property name="text" >
+  <action name="action_Scene_Viewer">
+   <property name="text">
     <string>&amp;Scene Viewer</string>
    </property>
   </action>
-  <action name="action_Trash_Viewer" >
-   <property name="text" >
+  <action name="action_Trash_Viewer">
+   <property name="text">
     <string>&amp;Trash Viewer</string>
    </property>
   </action>
-  <action name="action_Map_Viewer" >
-   <property name="text" >
+  <action name="action_Map_Viewer">
+   <property name="text">
     <string>&amp;Map Viewer</string>
    </property>
   </action>
-  <action name="actionDebug_Label_Image_Viewer" >
-   <property name="text" >
+  <action name="actionDebug_Label_Image_Viewer">
+   <property name="text">
     <string>Debug Label Image Viewer</string>
    </property>
   </action>
-  <action name="actionDebug_Labelimage_Viewer" >
-   <property name="text" >
+  <action name="actionDebug_Labelimage_Viewer">
+   <property name="text">
     <string>Debug Labelimage Viewer</string>
    </property>
   </action>
-  <action name="action_About" >
-   <property name="text" >
+  <action name="action_About">
+   <property name="text">
     <string>&amp;About</string>
    </property>
   </action>
-  <action name="action_Analyze" >
-   <property name="text" >
+  <action name="action_Analyze">
+   <property name="text">
     <string>&amp;Analyze</string>
    </property>
   </action>
-  <action name="actionStart" >
-   <property name="icon" >
-    <iconset resource="gda.qrc" >:/gda/start.png</iconset>
+  <action name="actionStart">
+   <property name="icon">
+    <iconset resource="gda.qrc">
+     <normaloff>:/gda/start.png</normaloff>:/gda/start.png</iconset>
    </property>
-   <property name="text" >
+   <property name="text">
     <string>&amp;Start</string>
+   </property>
+  </action>
+  <action name="actionNodeCut">
+   <property name="text">
+    <string>Cut</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+X</string>
+   </property>
+  </action>
+  <action name="actionNodeCopy">
+   <property name="text">
+    <string>&amp;Copy</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+C</string>
+   </property>
+  </action>
+  <action name="actionNodePaste">
+   <property name="text">
+    <string>&amp;Paste</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+V</string>
+   </property>
+  </action>
+  <action name="actionNodeAddAbove">
+   <property name="text">
+    <string>Above</string>
+   </property>
+  </action>
+  <action name="actionNodeAddBelow">
+   <property name="text">
+    <string>Below</string>
+   </property>
+  </action>
+  <action name="actionNodeAddChild">
+   <property name="text">
+    <string>Child</string>
    </property>
   </action>
  </widget>
@@ -312,7 +374,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="gda.qrc" />
+  <include location="gda.qrc"/>
  </resources>
  <connections>
   <connection>
@@ -321,11 +383,11 @@
    <receiver>semNetEditor_</receiver>
    <slot>expandAll()</slot>
    <hints>
-    <hint type="sourcelabel" >
+    <hint type="sourcelabel">
      <x>102</x>
      <y>70</y>
     </hint>
-    <hint type="destinationlabel" >
+    <hint type="destinationlabel">
      <x>110</x>
      <y>170</y>
     </hint>
@@ -337,11 +399,11 @@
    <receiver>semNetEditor_</receiver>
    <slot>collapseAll()</slot>
    <hints>
-    <hint type="sourcelabel" >
+    <hint type="sourcelabel">
      <x>545</x>
      <y>71</y>
     </hint>
-    <hint type="destinationlabel" >
+    <hint type="destinationlabel">
      <x>237</x>
      <y>250</y>
     </hint>
@@ -349,19 +411,19 @@
   </connection>
  </connections>
  <designerdata>
-  <property name="gridDeltaX" >
+  <property name="gridDeltaX">
    <number>10</number>
   </property>
-  <property name="gridDeltaY" >
+  <property name="gridDeltaY">
    <number>10</number>
   </property>
-  <property name="gridSnapX" >
+  <property name="gridSnapX">
    <bool>true</bool>
   </property>
-  <property name="gridSnapY" >
+  <property name="gridSnapY">
    <bool>true</bool>
   </property>
-  <property name="gridVisible" >
+  <property name="gridVisible">
    <bool>true</bool>
   </property>
  </designerdata>

@@ -6,6 +6,16 @@ QString Exception::what() const
   return QObject::tr("General Exception"); 
 }
 
+GeneralException::GeneralException(QString errorMessage)
+{
+  message_=errorMessage;
+}
+
+QString GeneralException::what() const
+{
+  return message_;
+}
+
 FileIOException::FileIOException(ExceptionType type, QString filename)
   : type_(type), filename_(filename)
 {
@@ -21,8 +31,8 @@ QString FileIOException::what() const
   }
 }
 
-ImageException::ImageException(int x1, int x2, int dx, int y1, int y2, int dy)
-  : x1_(x1), x2_(x2), dx_(dx), y1_(y1), y2_(y2), dy_(dy)
+ImageException::ImageException(ExceptionType type, int x1, int x2, int dx, int y1, int y2, int dy)
+  : type_(type), x1_(x1), x2_(x2), dx_(dx), y1_(y1), y2_(y2), dy_(dy)
 {
 }
 

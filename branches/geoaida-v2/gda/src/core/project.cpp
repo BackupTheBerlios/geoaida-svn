@@ -1,7 +1,9 @@
 #include "project.h"
 #include <QFile>
+#include <QFileInfo>
 #include "FileIOException"
 #include <QCoreApplication>
+#include "GeneralException"
 
 /** Consctructor */
 Project::Project()
@@ -167,11 +169,23 @@ void Project::analyze()
   analysis_->start();
   while (analysisRunning_) 
     QCoreApplication::processEvents(QEventLoop::AllEvents,30);
+  instanceNet_.setRootNode(analysis_->instanceRootNode());
+  mapImage_=analysis_->mapImage();
 }
 
 void Project::analysisFinished()
 {
   analysisRunning_=false;
+}
+
+void Project::saveResults()
+{
+  instanceNet_.write();
+  QFileInfo finfo(instanceNet_.filename());
+  finfo.setFile(finfo.dir().dirName(),finfo.baseName()+".map");
+  if (!mapImage_) throw GeneralException(QObject::tr("Map doesn't exists!"));
+  mapImage_->replace("file",finfo.filePath());
+  mapImage_->write();
 }
 
 #if 0

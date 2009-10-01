@@ -59,6 +59,7 @@ public:
   void read(const QString & fname);
   void read(QIODevice& fp);
   virtual void readfile(MLParser& parser);
+  void setRootNode(GNode* node);
   GNode *rootNode(void);
   void write();
   void write(QTextStream & fp);
