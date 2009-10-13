@@ -26,14 +26,13 @@
 
 //--- Program header ---------------------------------------------------------//
 #include "ImageEngineBase"
+#include "ImageEngineCommons"
 
 //--- Misc header ------------------------------------------------------------//
 #include <QTcpSocket>
 #include <QThread>
 
 //--- Constants --------------------------------------------------------------//
-const quint16 REQUEST_PART_OF_IMAGE	= 1;
-const quint16 REQUEST_SETUP_SERVER	= 2;
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -69,6 +68,7 @@ class ImageServerThread : public QThread
 		//--- Private Variables ----------------------------------------------//
 		QTcpSocket*			m_pClientSocket;	///< Socket for connection
 		quint16				m_nHeader;			///< Header for data transfer
+		quint64				m_nStreamSize;		///< Size of data stream
 		
 		int m_nSocketDescriptor;				///< Associated to socket for this connection
 

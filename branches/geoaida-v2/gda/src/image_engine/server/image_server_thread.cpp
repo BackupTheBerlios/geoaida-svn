@@ -81,6 +81,7 @@ void ImageServerThread::threadStarted()
 		return;
 	}
 	m_nHeader = 0;
+	m_nStreamSize = 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -98,9 +99,10 @@ void ImageServerThread::getRequest()
 	
 	if (m_nHeader == 0)
 	{
+		// Header is 2 bytes (sizeof(quint16))
 		if (m_pClientSocket->bytesAvailable() < (int)sizeof(quint16))
 			return;
-
+		
 		std::cout << "ImageServerThread: Bytes available at socket: " << 
 					m_pClientSocket->bytesAvailable() << std::endl;
 
@@ -114,9 +116,34 @@ void ImageServerThread::getRequest()
 	
 	std::cout << "ImageServerThread: Incoming request = " << requestString(m_nHeader)
 				<< std::endl;
+	
+	if (m_nStreamSize == 0)
+	{
+		// Header is 2 bytes (sizeof(quint16))
+		if (m_pClientSocket->bytesAvailable() < (int)sizeof(quint64))
+			return;
+		
+		std::cout << "ImageServerThread: Bytes available at socket: " << 
+					m_pClientSocket->bytesAvailable() << std::endl;
 
-	if (m_nHeader == REQUEST_PART_OF_IMAGE)
-		m_pImageEngine->getPartOfImage("Test 1", 1, 1, 1, 1, "Test 2");
+		in >> m_nStreamSize;
+		std::cout << "ImageServerThread: Size of stream: " << m_nStreamSize << std::endl;
+	}
+
+	switch (m_nHeader)
+	{
+		case REQUEST_SETUP_SERVER:
+		{
+			break;
+		}
+		case REQUEST_PART_OF_IMAGE:
+		{
+			m_pImageEngine->getPartOfImage("Test 1", 1, 1, 1, 1, "Test 2");
+			break;
+		}
+		default:
+			std::cout << "ImageServerThread: Unknown request " << m_nHeader << std::endl;
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////

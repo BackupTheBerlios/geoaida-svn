@@ -8,6 +8,7 @@ set(QT_USE_QTNETWORK 1)
 include_directories(
 	${QT_QTCORE_INCLUDE_DIR}
 	${QT_QTNETWORK_INCLUDE_DIR}
+	..
 )
 
 set(sources
@@ -36,4 +37,5 @@ target_link_libraries(image_server
 
 install(TARGETS image_server
             RUNTIME DESTINATION bin)
+
 

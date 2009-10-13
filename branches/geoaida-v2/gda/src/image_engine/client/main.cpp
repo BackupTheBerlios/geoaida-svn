@@ -78,8 +78,14 @@ int main(int argc, char *argv[])
 	
 	if (std::string(argv[2]) == "poi")
 		Client.getPartOfImage("Test 01", 1,1,1,1, "Test 02");
-	if (std::string(argv[2]) == "sus")
+	else if (std::string(argv[2]) == "sus")
 		Client.setupServer();
+	else
+	{
+		std::cerr << "Unknown request." << std::endl;
+		usage();
+		return EXIT_FAILURE;
+	}
 	
 	app.exec();
 

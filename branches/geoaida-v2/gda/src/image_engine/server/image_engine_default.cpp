@@ -30,12 +30,16 @@
 /// \param GeoSouth Geo coordinate south of part to be cut
 /// \param FileName File name
 ///
+/// \return Getting the image part succeeded/failed
+///
 ///////////////////////////////////////////////////////////////////////////////
-void ImageEngineDefault::getPartOfImage(QString InputImage,
+bool ImageEngineDefault::getPartOfImage(QString InputImage,
 										float GeoWest, float GeoNorth,
 										float GeoEast, float GeoSouth,
 										QString FileName
 										) const
 {
 	std::cout << "ImageEngineDefault: Part of image requested" << std::endl;
+	
+	return true;
 }

@@ -47,7 +47,7 @@ class ImageEngineBase
 		//--- Methods --------------------------------------------------------//
 		
     	//--- Constant Methods -----------------------------------------------//
-		virtual void getPartOfImage(QString InputImage,
+		virtual bool getPartOfImage(QString InputImage,
 									float GeoWest, float GeoNorth,
 									float GeoEast, float GeoSouth,
 									QString FileName

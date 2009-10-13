@@ -88,6 +88,7 @@ void ImageClient::connectionEstablished()
 	out.setVersion(QDataStream::Qt_4_0);
 	
 	out << (quint16)m_nRequest;
+	out << (quint64)(230);
 
 	/// \todo Depending on m_nRequest, all other information should be transferred
 	

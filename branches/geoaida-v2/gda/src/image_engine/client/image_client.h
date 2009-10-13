@@ -24,14 +24,11 @@
 #include <iostream>
 
 //--- Program header ---------------------------------------------------------//
+#include "ImageEngineCommons"
 
 //--- Misc header ------------------------------------------------------------//
 #include <QHostAddress>
 #include <QTcpSocket>
-
-//--- Constants --------------------------------------------------------------//
-const quint16 REQUEST_PART_OF_IMAGE	= 1;
-const quint16 REQUEST_SETUP_SERVER	= 2;
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
