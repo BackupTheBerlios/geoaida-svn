@@ -923,7 +923,7 @@ bool Stack::run(QString cmd)
     // Debug Stack types
     cout << "(" << count() << "): ";
     {
-      for (Iterator it=begin(); it=end(); ++it) {
+      for (Iterator it=begin(); it!=end(); ++it) {
         cout << (*it)->typeName() << " ";
       }
       cout << endl;

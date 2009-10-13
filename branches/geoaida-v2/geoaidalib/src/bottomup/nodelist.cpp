@@ -290,7 +290,7 @@ void  NodeList::info(void){
 }
 
 void NodeList::insert(QString key, BottomUpLib::Node* node){
-  insert( key, node );//insert node
+  QHash<QString,BottomUpLib::Node*>::insert( key, node );//insert node
 //	QHash<QString, BottomUpLib::Node*>::insert( key, node );//insert node
   list_ += key; //fill additional list of image names
 }
@@ -418,7 +418,7 @@ NodeList* NodeList::merge (bool newReg, QString outImgName) {
   
   //generate a sorted list of nodes using 'p' the weighing
   SortPtrList sortlist;
-  for (ConstIterator it=begin(); it!=end(); ++it) {
+  for (ConstIterator it=constBegin(); it!=constEnd(); ++it) {
     BottomUpLib::Node* node = it.value();
     SortElement* e;
     if (node->contains( "p" ))

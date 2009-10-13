@@ -94,24 +94,24 @@ public:
   /** return the rows numbers of the image */
   int rows(QString imgKey);
   /** return geoNorth value of the image*/
-	float geoNorth(QString imgKey);
+  float geoNorth(QString imgKey);
   /** return geoSouth value of the image*/
-	float geoSouth(QString imgKey);
+  float geoSouth(QString imgKey);
   /** return geoEast value of the image*/
-	float geoEast(QString imgKey);
+  float geoEast(QString imgKey);
   /** return geoWest  valueof the image*/
-	float geoWest(QString imgKey);
+  float geoWest(QString imgKey);
   /** return Info the image*/
-	void info(QString imgKey);
+  void info(QString imgKey);
   /** Returns the number of items in the list.*/
-	int size() {return list_.count();};
-	/** Overloading insert function*/
-	void insert(QString key, BottomUpLib::Node* node);
-	/** calculate new geo coordinates and resolution using all images belong to included nodes*/
-	void calcNewGEOValues(float &gn,float &gs,float &gw,float &ge,int &sizeX,int &sizeY,float &xRes,float &yRes);
+  int size() {return list_.count();};
+  /** Overloading insert function*/
+  void insert(QString key, BottomUpLib::Node* node);
+  /** calculate new geo coordinates and resolution using all images belong to included nodes*/
+  void calcNewGEOValues(float &gn,float &gs,float &gw,float &ge,int &sizeX,int &sizeY,float &xRes,float &yRes);
 #if 0	
   /** write a scrap of the data to a file*/
-	QString part(QString imgKey, float north, float south, float west, float east, QString fname="");
+  QString part(QString imgKey, float north, float south, float west, float east, QString fname="");
 #endif	
   /** return a list of pointer to the objects of specified class type */
   NodeList* selectClass (QString classname);
