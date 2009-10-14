@@ -23,10 +23,13 @@
 ///
 /// \brief Constructor
 ///
+/// \param Host Name of host to connect to
 /// \param unPort Port for this connection
 ///
 ///////////////////////////////////////////////////////////////////////////////
-ImageClient::ImageClient(const quint16& unPort) : m_unPort(unPort)
+ImageClient::ImageClient(const QString& Host,
+						 const quint16& unPort) : m_unPort(unPort),
+												  m_Host(Host)
 {
 	pTcpSocket = new QTcpSocket(this);
 	
@@ -78,12 +81,6 @@ void ImageClient::getPartOfImage(QString InputImage,
 	m_ParameterList.push_back(GeoEast);
 	m_ParameterList.push_back(GeoSouth);
 	m_ParameterList.push_back(FileName);
-// 	m_ParaSizeList.push_back(sizeof(InputImage));
-// 	m_ParaSizeList.push_back(sizeof(float));
-// 	m_ParaSizeList.push_back(sizeof(float));
-// 	m_ParaSizeList.push_back(sizeof(float));
-// 	m_ParaSizeList.push_back(sizeof(float));
-// 	m_ParaSizeList.push_back(sizeof(FileName));
 	connectToServer();
 }
 
@@ -166,5 +163,5 @@ void ImageClient::connectToServer() const
 {
 	std::cout << "ImageClient: Connecting to server." << std::endl;
 	pTcpSocket->abort();
-	pTcpSocket->connectToHost(QHostAddress::LocalHost, m_unPort);
+	pTcpSocket->connectToHost(m_Host, m_unPort);
 }

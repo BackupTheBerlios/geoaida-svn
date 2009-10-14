@@ -46,12 +46,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 void usage()
 {
-	std::cout << "Usage: image_client <port> <request>" << std::endl;
+	std::cout << "Usage: image_client <host> <port> <request>" << std::endl;
+	std::cout << "  <host>: Host where the server is running on." << std::endl;
 	std::cout << "  <port>: Port for connection" << std::endl;
 	std::cout << "  <request>:" << std::endl;
 	std::cout << "     poi: part of image" << std::endl;
 	std::cout << "     sus: setup server" << std::endl;
-	std::cout << "Example: image_client 19209 poi" << std::endl;
+	std::cout << "Example: image_client localhost 19209 poi" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -67,18 +68,19 @@ void usage()
 ////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char *argv[])
 {
-	if (argc != 3)
+	if (argc != 4)
 	{
 		usage();
 		return EXIT_FAILURE;
 	}
 
 	QCoreApplication app(argc, argv);
-	ImageClient Client(atoi(argv[1]));
+	std::cout << argv[1] << std::endl;
+	ImageClient Client(QString(argv[1]), atoi(argv[2]));
 	
-	if (std::string(argv[2]) == "poi")
-		Client.getPartOfImage("Test 01lkasdh lasdfjhjj3e893m klashdf", 1.837483, 2, 3, 4, "Test 00002");
-	else if (std::string(argv[2]) == "sus")
+	if (std::string(argv[3]) == "poi")
+		Client.getPartOfImage("Test 01", 1.837483, 0.7356, 1.0e20, -19.0, "Test 00002");
+	else if (std::string(argv[3]) == "sus")
 		Client.setupServer();
 	else
 	{

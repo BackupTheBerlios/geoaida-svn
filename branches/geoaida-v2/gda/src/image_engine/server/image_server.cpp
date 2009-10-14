@@ -31,7 +31,7 @@
 ImageServer::ImageServer(const quint16& unPort, QObject* pParent) : QTcpServer(pParent)
 {
 	// Server setup
-	if (!this->listen(QHostAddress::LocalHost, unPort))
+	if (!this->listen(QHostAddress::Any, unPort))
 	{
 		std::cerr << "ImageServer: Error, server not running." << std::endl;
 		this->close();
