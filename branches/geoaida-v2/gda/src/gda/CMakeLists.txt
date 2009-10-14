@@ -28,9 +28,14 @@ SET(sources main.cpp )
 #QT4_WRAP_CPP(moclib ${mocheaders})
 
 ADD_EXECUTABLE(gda-gui ${sources})
+#ADD_LIBRARY(pnm STATIC IMPORTED IMPORTED_LOCATION${CMAKE_SOURCE_DIR}/3rdparty/netpbm/lib/libnetpbm.a)
 
 
+IF(WIN32)
+TARGET_LINK_LIBRARIES(gda-gui gdagui gdacore mlparser pfm ${CMAKE_SOURCE_DIR}/3rdparty/netpbm/lib/libnetpbm.dll.a ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} ${QT_QTXML_LIBRARY})
+ELSE(WIN32)
 TARGET_LINK_LIBRARIES(gda-gui gdagui gdacore mlparser pfm pnm ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} ${QT_QTXML_LIBRARY})
+ENDIF(WIN32)
 
 INSTALL(TARGETS gda-gui DESTINATION bin)
 

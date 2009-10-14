@@ -30,7 +30,11 @@ SET(sources main.cpp )
 ADD_EXECUTABLE(gda ${sources})
 
 
+IF(WIN32)
+TARGET_LINK_LIBRARIES(gda gdacore mlparser pfm ${CMAKE_SOURCE_DIR}/3rdparty/netpbm/lib/libnetpbm.dll.a ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} ${QT_QTXML_LIBRARY})
+ELSE(WIN32)
 TARGET_LINK_LIBRARIES(gda gdacore mlparser pfm pnm ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} ${QT_QTXML_LIBRARY})
+ENDIF(WIN32)
 
 INSTALL(TARGETS gda DESTINATION bin)
 

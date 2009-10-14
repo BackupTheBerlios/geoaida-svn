@@ -104,7 +104,7 @@ static FILE *check_compression(char *buffer, FILE *fp)
 {
 #ifdef WIN32
   return fp;
-#endif
+#else
   long filepos;
   filepos=ftell(fp);
   read_buffer(buffer,1023,fp);
@@ -125,6 +125,7 @@ static FILE *check_compression(char *buffer, FILE *fp)
     read_buffer(buffer,1023,fp);
   }
   return fp;
+#endif
 }
 
 static FILE* stop_decompression(FILE *fp)
