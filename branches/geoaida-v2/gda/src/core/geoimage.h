@@ -239,7 +239,7 @@ public:
   void geoBBox(int llx, int lly, int urx, int ury, float &gW, float &gN,
                float &gE, float &gS);
   /** size of data */
-  int dataSize();
+  int dataSize() const;
   /** frees the data */
   void freeData();
 

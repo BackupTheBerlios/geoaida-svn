@@ -338,7 +338,6 @@ void Task::check()
 {
 #ifdef DEBUG_MSG
     qDebug("Task::check(%d)\n",process_.count());
-    qDebug("conferindo...");
 #endif
   int status;
   while (!failedJobs_.isEmpty()) {
@@ -416,9 +415,6 @@ void Task::check()
 #else //WIN32
   int pid = waitpid(-1, &status, WNOHANG);
 #endif
-#ifdef DEBUG_MSG
-  qDebug("conferindo2...");
-#endif
   switch (pid) {
   case -1:
 #ifdef DEBUG_MSG
@@ -466,9 +462,6 @@ void Task::check()
     delete p;
     break;
   }
-#ifdef DEBUG_MSG
-  qDebug("conferindo3...");
-#endif
 }
 
 /** Wait until process pid finished   */

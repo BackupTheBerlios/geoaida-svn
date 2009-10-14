@@ -26,7 +26,6 @@
 #include <QXmlStreamWriter>
 #include "cleanup.h"
 #ifdef WIN32
-#include <stdlib.h> // für exit
 #include <QMessageBox>
 #endif
 
@@ -226,12 +225,7 @@ void SNode::isCompound(bool val)
 GNode *SNode::copy()
 {
   GNode *gn = new SNode(*this);
-#ifdef WIN32
-  if (gn == 0){
-    //cout << "Out of Memory..15";
-    exit(1);
-  }
-#endif
+  Q_ASSERT(gn != 0);
   return gn;
 }
 
@@ -239,12 +233,7 @@ GNode *SNode::copy()
 GNode *SNode::newNode()
 {
   GNode *gn = new SNode();
-#ifdef WIN32
-  if (gn == 0){
-    //cout << "Out of Memory..16";
-    exit(1);
-  }
-#endif
+  Q_ASSERT(gn != 0);
   return gn;
 }
 
@@ -252,15 +241,11 @@ GNode *SNode::newNode()
 void SNode::setVars()
 {
   GNode::setVars();
-//  MLParser::setInt(min_, &attribList_, "min");
-//  MLParser::setInt(max_, &attribList_, "max");
   QString val;
   val = "";
   MLParser::setString(val, &attribList_, "topdown");
   if (!val.isEmpty())
     topDown_ = operatorList_[val];
-#define OLD_NET_COMPATIBILITY
-#ifdef OLD_NET_COMPATIBILITY
   if (topDown_) {
     AttributeDictionary *attribs = topDown_->attributeDesc();
     if (attribs) {
@@ -278,12 +263,11 @@ void SNode::setVars()
       }
     }
   }
-#endif
+
   val = "";
   MLParser::setString(val, &attribList_, "bottomup");
   bottomUp_ = operatorList_[val];
 
-#ifdef OLD_NET_COMPATIBILITY
   if (bottomUp_) {
     AttributeDictionary *attribs = bottomUp_->attributeDesc();
     if (attribs) {
@@ -301,7 +285,7 @@ void SNode::setVars()
       }
     }
   }
-#endif
+
   val = "";
   MLParser::setString(val, &attribList_, "evaluation");
   evaluation_ = operatorList_[val];
@@ -396,16 +380,16 @@ void SNode::execOperator(Operator * op, INode * iNode, AttribList & attribs,
   
   QString cmd=op->command(attribs);
   
- cmd.replace("\n"," "); //GILSON: must replace new line, or else Windows batch file will not run properly 
+#ifdef WIN32
+  cmd.replace("\n"," "); //GILSON: must replace new line, or else Windows batch file will not run properly 
+#endif
 
-  QString stdout_file=iNode->output()+".stdout";
   QString stderr_file=iNode->output()+".stderr";
   QFile fp(iNode->output()+".cmd");
   if (fp.open(QIODevice::WriteOnly)) {
     fp.write(cmd.toLatin1().constData(),cmd.length());
     fp.close();
   }
-//  cmd+=" >"+stdout_file+" 2>"+stderr_file;
   cmd+=" 2>"+stderr_file;
   taskTable.queue(cmd, iNode);
   counter++;
@@ -435,24 +419,18 @@ void SNode::execTopDownOp(INode * iNode)
   Q_ASSERT(geoImageList);
 #ifdef DEBUG_MSG
   qDebug("#* SNode::execTopDown(%s) (%p)", name_.toLatin1().constData(), this);
-#ifdef WIN32
-  QMessageBox::information(0,"SNode","execTopDown",QMessageBox::Default);
-#endif
 #endif
   Q_ASSERT(iNode->parent());
-//((*(TreeGNode*)(&(*(TreeNode<GNode,TreeGNode>*)(&(*(GNode*)(&(*(TreeNode<INode,GNode>*)(&*iNode))))))))).parent_
-
-//Hier Absturz weil parent = 0
-//Darf nur aus Analyze::start() gestartet werden, nicht aus MainGui::Start()!
 
   INode *parent = 0;
 
   if (iNode)
     if (iNode->parent()) {
-    	if (((this->parent())->temporal()) && ((iNode->parent())->temporalProcessing()))
-    		parent = iNode; //if iNode is a result of temporal top-down processing, its own info will be used 
-    	else
-    		parent = iNode->parent();
+      if (((this->parent())->temporal()) 
+	  && ((iNode->parent())->temporalProcessing()))
+	parent = iNode; //if iNode is a result of temporal top-down processing, its own info will be used 
+      else
+	parent = iNode->parent();
     }
     else
       parent = iNode;
@@ -563,22 +541,12 @@ void SNode::execTopDownOp(INode * iNode)
   attribs.replace("minRes", geoImageList->minResolution());
   attribs.replace("maxRes", geoImageList->maxResolution());
   attribs.replace("numRegions",SNode::parent()->refCounter_);
-#if 1
   putAttribs(*this, attribs, "generic");
   putAttribs(*this, attribs, "topDown");
-#else
-  {
-    QDictIterator < QString > it(attribList());
-    for (; it.current(); ++it) {
-      attribs.replace(it.currentKey(), it.current());
-    }
-  }
-#endif
+
 #ifdef DEBUG_MSG
   {
     qDebug("SNode::execTopDown: attributes");
-    //QTextOStream ts(stderr);
-    //ts << attribs;
   }
 #endif
   execOperator(topDown_, iNode, attribs, parent->path(), tdCounter_);
@@ -801,29 +769,18 @@ void SNode::execBottomUpOp(INode * iNode)
   if (!iNode->parent()) {     //! Debug
     qDebug("SNode::execBottomUp: root node evaluated");
   }
-#if 0                           // This code deletes the trashnodes
-  {                           // Delete trash nodes
-    QListIterator < INode > it =
-      QListIterator < INode > (iNode->children());
-    while (it.current()) {
-      INode *node = it.current();
-      if (node->status() == TRASH) {
-	iNode->childUnlink(node);
-	delete node;
-      }
-      else
-	++it;
-    }
-  }
-#endif
+
+//! Maybe insert some code for deleting trash nodes here
+
   for (QList < INode* >::ConstIterator it = iNode->children().constBegin(); 
        it!=iNode->children().constEnd();
        ++it) {
     INode *node = *it;
-#if 1                           // If trashnode is not deleted (s.a.) trashnodes must be skipped here
+
+    // If trashnode is not deleted (s.a.) trashnodes must be skipped here
     if (node->status() == TRASH)
       continue;
-#endif
+
     GeoImage *img = node->labelImage();
     if (img) {
       node->attribute("file_geoWest", img->geoWest());
@@ -840,13 +797,10 @@ void SNode::execBottomUpOp(INode * iNode)
   str.writeEndDocument();
   ifp.close();
 
-#if 1
   AttribList attribs;
   putAttribs(*this, attribs, "generic");
   putAttribs(*this, attribs, "bottomUp");
-#else
-  AttribList attribs(attribList());
-#endif
+  
   iNode->attribute("input", iname);
   {
     for (AttribListConstIterator it= iNode->attribList().constBegin(); 
@@ -856,6 +810,7 @@ void SNode::execBottomUpOp(INode * iNode)
     }
   }
   execOperator(bottomUp_, iNode, attribs, iNode->path(), buCounter_);
+
 }
 
 #if 0
@@ -1026,14 +981,8 @@ QList <INode*> *SNode::evalTemporalTopDown(INode * inode)
 /** Evaluates the result of the temporal bottom-up-operator   */
 QList <INode*> &SNode::evalTemporalBottomUp(INode * iNode)
 {
-//QFile fDebug("debug_evalTemporalBottomUp.txt");
-//fDebug.open(IO_WriteOnly);
-//Q3TextStream strDebug(&fDebug);
-//strDebug << ".1" << endl;
-
 #ifdef DEBUG_MSG
   qDebug("#* SNode::evalTemporalBottomUp(%s)", name_.toLatin1().constData());
-  //cout << "#* SNode::evalTemporalBottomUp(%s)" << name_.toLatin1().constData() << endl;
 #endif
 
   //decrement buCounter_ of all tempral siblings
@@ -1054,7 +1003,6 @@ QList <INode*> &SNode::evalTemporalBottomUp(INode * iNode)
   //groupList->setAutoDelete(false);
 
   INode *list = 0;
-//strDebug << ".2" << endl;
   cleanUp_.append(iNode->output());
   QFile fp(iNode->output());
   if (!fp.open(QIODevice::ReadOnly)) {
@@ -1064,7 +1012,6 @@ QList <INode*> &SNode::evalTemporalBottomUp(INode * iNode)
   }
   MLParser parser(&fp);
  
-//strDebug << ".3" << endl;
   
 #ifdef DEBUG_MSG
   qDebug("SNode::evalTemporalBottomUp: Parsing %s\n", iNode->output().toLatin1().constData());
@@ -1073,10 +1020,8 @@ QList <INode*> &SNode::evalTemporalBottomUp(INode * iNode)
   int tag;
   do {
     tag = parser.tag(nodeTagTable);
-//strDebug << ".3 tag: " << tag << endl;
 #ifdef DEBUG_MSG
     qDebug("tag=%d\n", tag);
-    //cout << "tag = " << tag << endl;
 #endif
     AttribList *attribList = parser.args();
     INode *node;
@@ -1088,14 +1033,12 @@ QList <INode*> &SNode::evalTemporalBottomUp(INode * iNode)
       SNode *sNode;
       QString classNameRegion = attribList->value("class");
 
-//strDebug << ".4 TOK_GROUP: *classNameRegion: " << *classNameRegion << endl;
 
       if (!classNameRegion.isEmpty()) {
         sNode = ((iNode->sNode())->parent())->findClass(classNameRegion);
       }
       else
         sNode = 0;
-//strDebug << ".5 TOK_GROUP: sNode: " << sNode << endl;
 
       if (sNode) {
 #ifdef DEBUG_MSG
@@ -1104,12 +1047,7 @@ QList <INode*> &SNode::evalTemporalBottomUp(INode * iNode)
 #endif
     	foundSNode = true;
         list = new INode(sNode);
-#ifdef WIN32
-        if (list == 0){
-          //cout << "Out of Memory..16";
-          exit(1);
-        }
-#endif
+	Q_ASSERT(list != 0);
         list->update(iNode->attribList());
         list->attributeRemove("llx");
         list->attributeRemove("urx");
@@ -1123,7 +1061,6 @@ QList <INode*> &SNode::evalTemporalBottomUp(INode * iNode)
         if (!attribList->contains("name") && attribList->contains("id"))
           list->attribute("name", sNode->name() + QString().sprintf("_t%03d",(attribList->value("id").toInt())));
 		  
-//strDebug << ".6 TOK_GROUP: foundSNode: " << foundSNode << endl;
       }
       else {
     	foundSNode = false;
@@ -1133,8 +1070,7 @@ QList <INode*> &SNode::evalTemporalBottomUp(INode * iNode)
 
     case -TOK_GROUP:
       if (foundSNode) {
-//strDebug << ".7 -TOK_GROUP: list->children().count(): " << list->children().count() << endl;
-        if (list->children().count() != 0) {
+        if (!list->children().isEmpty()) {
           list->setGeoRegion(list->attributeFloat("file_geoWest"),
                              list->attributeFloat("file_geoNorth"),
                              list->attributeFloat("file_geoEast"),
@@ -1147,36 +1083,25 @@ QList <INode*> &SNode::evalTemporalBottomUp(INode * iNode)
       }
 #ifdef DEBUG_MSG
       qDebug("End of group\n");
-      //cout << "end of group " << endl;
 #endif
       list = 0;
       break;
     case TOK_NODE:
       if (foundSNode) {
-//strDebug << ".8 TOK_NODE: (*attribList)[addr]: " << *((*attribList)["addr"]) << endl;
         QString s = attribList->value("addr");
         if (s.isEmpty())
 			break;
         node = 0;
 		if (sscanf(s.toLatin1().constData(), "%p", &node) != 1)
 			break;  
-//strDebug << ".9 TOK_NODE: node.attribute(class): " << node->attribute("class") << endl;
-//Q3DictIterator < QString > it(*attribList);
-//for (; it.current(); ++it)
-//strDebug << ".10 TOK_NODE:" << it.currentKey() << ": " << it.current()->latin1() << endl;
 		node->update(*attribList);
-//strDebug << ".11 TOK_NODE" << endl;
         node->attributeRemove("addr");
-//strDebug << ".12 TOK_NODE" << endl;
         node->setGeoRegion(node->attributeFloat("file_geoWest"),
                            node->attributeFloat("file_geoNorth"),
                            node->attributeFloat("file_geoEast"),
                            node->attributeFloat("file_geoSouth"));
-//strDebug << ".13 TOK_NODE" << endl;
         cleanUp_.append(node->attribute("file"));  
-//strDebug << ".14 TOK_NODE: list: " << list << endl;
         list->childLink(node);
-//strDebug << ".15 TOK_NODE: node.attribute(file): " << node->attribute("file") << endl;
       }
       break;
     case -TOK_NODE:
@@ -1187,12 +1112,10 @@ QList <INode*> &SNode::evalTemporalBottomUp(INode * iNode)
 
   if (list)
     delete list;
-//fDebug.close();
   QList<INode*>::iterator it = groupList->begin();
   for (; it != groupList->end(); ++it) {
 #ifdef DEBUG_MSG
     qDebug("count=%d\n", (*it)->children().count());
-    //cout << "count= " << it.current()->children().count() << endl;
 #endif
   }
   return *groupList;
@@ -1235,12 +1158,12 @@ QList < INode* > &SNode::evalBottomUp(INode * iNode)
     tag = parser.tag(nodeTagTable);
 #ifdef DEBUG_MSG
     qDebug("tag=%d\n", tag);
-    //cout << "tag = " << tag << endl;
 #endif
     AttribList *attribList = parser.args();
     INode *node;
     switch (tag) {
     case TOK_GROUP:
+      Q_ASSERT(list==0);
       list = new INode(this);
       Q_ASSERT(list);
       list->update(iNode->attribList());
@@ -1259,7 +1182,7 @@ QList < INode* > &SNode::evalBottomUp(INode * iNode)
 			+ QString().sprintf("_%03d",(attribList->value("id").toInt())));
       break;
     case -TOK_GROUP:
-      if (list->children().count() != 0) {
+      if (!list->children().isEmpty()) {
         list->setGeoRegion(list->attributeFloat("file_geoWest"),
                            list->attributeFloat("file_geoNorth"),
                            list->attributeFloat("file_geoEast"),
@@ -1267,12 +1190,10 @@ QList < INode* > &SNode::evalBottomUp(INode * iNode)
         cleanUp_.append(list->attribute("file"));
         groupList->append(list);
       }
-      else
+      else {
         delete list;
-#ifdef DEBUG_MSG
-      qDebug("End of group\n");
-      //cout << "end of group " << endl;
-#endif
+      }
+
       list = 0;
       break;
     case TOK_NODE:
@@ -1308,36 +1229,9 @@ QList < INode* > &SNode::evalBottomUp(INode * iNode)
   } while (tag != MLParser::END_OF_FILE);
 //!     fp.remove();
  
-
   if (list)
     delete list;
-  if (!iNode->parent()) {
-#ifdef DEBUG_MSG
-    qDebug
-      ("#  (Warning) %s(%p) has no parent -> write result './new_result1.net'\n",
-       iNode->attribute("name").toLatin1().constData(), iNode);
-#endif
-    QFile fp("new_result1.net");
-    fp.open(QIODevice::WriteOnly);
-    QXmlStreamWriter str(&fp);
-    str.setAutoFormatting(true);
-    str.writeStartDocument();
-    str.writeStartElement("nodelist");
-    iNode->write(str);
-    str.writeEndElement();
-    str.writeEndDocument();
-    fp.close();
-  }
 
-  {                             // Debug
-    for (QList < INode* >::const_iterator it = groupList->constBegin(); 
-	 it!=groupList->constEnd(); 
-	 ++it) {
-#ifdef DEBUG_MSG
-      qDebug("count=%d\n", (*it)->children().count());
-#endif
-    }
-  }
   return *groupList;
 }
 

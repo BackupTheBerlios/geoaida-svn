@@ -97,12 +97,15 @@ QXmlStreamWriter& operator<<(QXmlStreamWriter& fp, ArgDict& argDict)
 /*****************************************************************
 CLASS: MLTagTable
 *****************************************************************/
-MLTagTable::MLTagTable() : QHash<QString,int>()
+MLTagTable::MLTagTable() 
+  : QHash<QString,int>(),
+    tagtable_(0)
 {
-  tagtable_=0;
 }
 
-MLTagTable::MLTagTable(const QString *table) : QHash<QString,int>() 
+MLTagTable::MLTagTable(const QString *table) 
+  : QHash<QString,int>(), 
+    tagtable_(0)
 {
   set(table);
 }
@@ -113,7 +116,8 @@ void MLTagTable::set(const QString *table)
   int size;
 
   for (size=0; !table[size].isEmpty(); size++);
-  
+
+  if (tagtable_) delete tagtable_;
   tagtable_=new int[size];
 
   for (i=0; !table[i].isEmpty(); i++) {

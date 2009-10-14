@@ -306,7 +306,7 @@ const void *GeoImage::data()
 }
 
 /** size of data */
-int GeoImage::dataSize()
+int GeoImage::dataSize() const
 {
   return dataSize_;
 }

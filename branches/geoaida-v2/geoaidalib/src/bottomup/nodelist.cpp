@@ -430,7 +430,6 @@ NodeList* NodeList::merge (bool newReg, QString outImgName) {
 			  node->p(),
 			  it.key());
     sortlist.append(e);
-    ++it;
   }
   qSort(sortlist.begin(), sortlist.end());
   

@@ -439,14 +439,13 @@ int INode::evalBottomUp(int pid)
           }
 #endif
           trashNode->status(TRASH);
-          {                     // normally this code should do nothing because the children are already moved
-            INode *el;
-            while (children().count()) {
-              el = (children()).first();
-              trashNode->childLink(el);
-              analysis_->nodeChange(el);
-            }
-          }
+	  // normally this code should do nothing because the children are already moved
+	  // Relink all children nodes to trashnode
+	  while (!children().isEmpty()) {
+	    INode *el = (children()).first();
+	    trashNode->childLink(el);
+	    analysis_->nodeChange(el);
+	  }
 #if 0
           delete trashNode;
 #else
@@ -454,15 +453,16 @@ int INode::evalBottomUp(int pid)
 #endif
         }
         {
-          INode *el;
+	  Q_ASSERT(!nodeList.isEmpty());
           INode *iNode = nodeList.first();
           update(iNode->attribList());
           labelImage(iNode->labelImage());
-          el = (iNode->children()).first();
-          while (el) {
+
+	  // Relink all children nodes from iNode to this
+          while (!iNode->children().isEmpty()) {
+	    INode *el = (iNode->children()).first();
             childLink(el);
             analysis_->nodeChange(el);
-            el = (iNode->children()).first();
           }
           delete iNode;
         }

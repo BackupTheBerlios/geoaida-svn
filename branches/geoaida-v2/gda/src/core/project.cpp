@@ -122,6 +122,7 @@ void Project::read(MLParser& parser)
         MLParser::setString(map,args,"map");  //read tempor.
         QDir d(dir);
 	try {
+	  instanceNet_.setFilename(netfile);
 	  instanceNet_.read(d.filePath(netfile));
 	  INode *rootNode=instanceNet_.rootNode();
 	  if (rootNode) {
