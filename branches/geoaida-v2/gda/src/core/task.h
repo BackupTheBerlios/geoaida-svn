@@ -34,8 +34,12 @@
 #include <QQueue>
 #include <QString>
 #include <QProcess>
-
+#ifdef INTERIMAGE
+class Q3ListViewItem;
+#else
 class QTreeWidgetItem;
+#endif
+
 
 class Task:public QObject
 {
@@ -54,7 +58,7 @@ Q_OBJECT public:
   /** set the maximum number of jobs running parallel */
   void setMaxJobs(int maxJobs);
   /** No descriptions */
-#ifdef WIN32
+#ifdef INTERIMAGE
   void setGuiPtr(ProcessEntry * pEntry, Q3ListViewItem * ptr);
 #else
   void setGuiPtr(ProcessEntry * pEntry, QTreeWidgetItem * ptr);
@@ -71,7 +75,7 @@ public:
     int status_;                // exit status
     QString cmd_;               // command line
     INode *node_;
-#ifdef WIN32
+#ifdef INTERIMAGE
     Q3ListViewItem *guiPtr_;
 #else
     QTreeWidgetItem *guiPtr_;
@@ -97,14 +101,14 @@ signals:                    // Signals
   void newProcess(ProcessEntry *);
   /** signal is emitted whenever the state of process changes.
     guiPtr, pid, nodename and commandline are transmitted */
-#ifdef WIN32
+#ifdef INTERIMAGE
   void stateChanged(Q3ListViewItem *, int, QString, QString, float load);
 #else
   void stateChanged(QTreeWidgetItem *, int, QString, QString, float load);
 #endif
 
   /** signal is emitted when a process is finished */
-#ifdef WIN32
+#ifdef INTERIMAGE
   void processFinished(Q3ListViewItem *);
 #else
   void processFinished(QTreeWidgetItem *);

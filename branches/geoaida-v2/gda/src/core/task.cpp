@@ -507,7 +507,7 @@ void Task::setMaxJobs(int maxJobs)
 }
 
 /** No descriptions */
-#ifdef WIN32
+#ifdef INTERIMAGE
 void Task::setGuiPtr(ProcessEntry * pEntry, Q3ListViewItem * ptr)
 #else
 void Task::setGuiPtr(ProcessEntry * pEntry, QTreeWidgetItem * ptr)

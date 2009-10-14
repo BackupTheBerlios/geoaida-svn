@@ -2,7 +2,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include "OperatorList"
-#include "Exception"
+#include "GeneralException"
 
 /*!
  * \brief constructor
@@ -61,7 +61,7 @@ void MainWindow::on_actionNetLoad_triggered()
    project_.semanticNet().read(fileSemanticNet_);
    connectSemanticNetEditor();
  }
- catch ( const Exception& err ) {
+ catch ( const GeneralException& err ) {
    QMessageBox::information(this,tr("Info"),err.what());
 
  }

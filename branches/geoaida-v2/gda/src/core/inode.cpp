@@ -26,6 +26,10 @@
 #include <assert.h>
 #include "inode.h"
 #include "FileIOException"
+#ifdef WIN32
+//! INTERIMAGE
+#include <QMessageBox>
+#endif
 
 
 const char *const INode::iTypeName[] = {

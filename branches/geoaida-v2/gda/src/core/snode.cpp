@@ -338,9 +338,8 @@ void SNode::execOperator(Operator * op, INode * iNode, AttribList & attribs,
 			 return;
 
 		 QFile file1(fileName);
-		 if (!file1.open(QFile::ReadOnly | QFile::Text)) {
-			 return;
-		 }
+                 if (file1.open(QFile::ReadOnly | QFile::Text)) {
+
 
 		QXmlStreamReader reader(&file1);
 
@@ -387,7 +386,9 @@ void SNode::execOperator(Operator * op, INode * iNode, AttribList & attribs,
 		}
 		
 		file3.close();
+
   attribs.replace("fuzzysets", new QString(fuzzysetsFile));
+                 }
 
 //Rodrigo
 #endif
