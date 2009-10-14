@@ -9,10 +9,10 @@ int __isnanf(float);
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 
 #ifndef WIN32
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
 #endif
@@ -64,15 +64,14 @@ static void read_buffer(char* buffer, int maxlen, FILE *fp)
   } while (buffer[0]=='#' || buffer[0]==0 || buffer[0]==10 || buffer[0]==13);
 }
 
+#ifndef WIN32
 static FILE* start_decompression(FILE* fp, const char* command)
 {
   char cmd[1024];
   char buffer[1025];
   int num_char;
   FILE *fifofp;
-#ifndef WIN32
   sprintf(fifoname_,"/tmp/pfm.%d",getpid());
-#endif
   mkfifo(fifoname_,0700);
   sprintf(cmd,command,fifoname_);
 #ifdef DEBUG
@@ -99,9 +98,13 @@ static FILE* start_decompression(FILE* fp, const char* command)
   }
   return fp;
 }
+#endif
 
 static FILE *check_compression(char *buffer, FILE *fp)
 {
+#ifdef WIN32
+  return fp;
+#endif
   long filepos;
   filepos=ftell(fp);
   read_buffer(buffer,1023,fp);
@@ -126,14 +129,14 @@ static FILE *check_compression(char *buffer, FILE *fp)
 
 static FILE* stop_decompression(FILE *fp)
 {
+#ifndef WIN32
   if (!compressed_) return fp;
   kill(pid_,SIGTERM);
-#ifndef WIN32
   waitpid(pid_,0,0);
-#endif
   pid_=0;
   pclose(fp);
   unlink(fifoname_);
+#endif
   return fp_;
 }
 
