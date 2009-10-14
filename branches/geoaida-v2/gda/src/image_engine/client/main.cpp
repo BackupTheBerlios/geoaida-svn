@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
 	ImageClient Client(atoi(argv[1]));
 	
 	if (std::string(argv[2]) == "poi")
-		Client.getPartOfImage("Test 01", 1,1,1,1, "Test 02");
+		Client.getPartOfImage("Test 01lkasdh lasdfjhjj3e893m klashdf", 1.837483, 2, 3, 4, "Test 00002");
 	else if (std::string(argv[2]) == "sus")
 		Client.setupServer();
 	else

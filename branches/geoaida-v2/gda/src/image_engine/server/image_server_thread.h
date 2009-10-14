@@ -29,8 +29,10 @@
 #include "ImageEngineCommons"
 
 //--- Misc header ------------------------------------------------------------//
+#include <QList>
 #include <QTcpSocket>
 #include <QThread>
+#include <QVariant>
 
 //--- Constants --------------------------------------------------------------//
 
@@ -66,13 +68,16 @@ class ImageServerThread : public QThread
 		const std::string requestString(const quint16& nRequest) const;
 
 		//--- Private Variables ----------------------------------------------//
-		QTcpSocket*			m_pClientSocket;	///< Socket for connection
-		quint16				m_nHeader;			///< Header for data transfer
-		quint64				m_nStreamSize;		///< Size of data stream
+		QTcpSocket*			m_pClientSocket;		///< Socket for connection
+		quint16				m_nHeader;				///< Header for data transfer
+		quint8				m_nNumberOfParameters;	///< Number of parameters
+		quint64				m_nStreamSize;			///< Size of data stream
 		
-		int m_nSocketDescriptor;				///< Associated to socket for this connection
+		QList<QVariant> 	m_ParameterList;		///< List of parameters depending on method call
+		
+		int m_nSocketDescriptor;					///< Associated to socket for this connection
 
-		const ImageEngineBase* const m_pImageEngine;	///< Pointer to image engine
+		const ImageEngineBase* const m_pImageEngine;///< Pointer to image engine
 
 };
 

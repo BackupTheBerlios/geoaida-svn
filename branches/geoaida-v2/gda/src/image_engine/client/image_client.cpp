@@ -72,6 +72,18 @@ void ImageClient::getPartOfImage(QString InputImage,
 										)
 {
 	m_nRequest = REQUEST_PART_OF_IMAGE;
+	m_ParameterList.push_back(InputImage);
+	m_ParameterList.push_back(GeoWest);
+	m_ParameterList.push_back(GeoNorth);
+	m_ParameterList.push_back(GeoEast);
+	m_ParameterList.push_back(GeoSouth);
+	m_ParameterList.push_back(FileName);
+// 	m_ParaSizeList.push_back(sizeof(InputImage));
+// 	m_ParaSizeList.push_back(sizeof(float));
+// 	m_ParaSizeList.push_back(sizeof(float));
+// 	m_ParaSizeList.push_back(sizeof(float));
+// 	m_ParaSizeList.push_back(sizeof(float));
+// 	m_ParaSizeList.push_back(sizeof(FileName));
 	connectToServer();
 }
 
@@ -87,18 +99,25 @@ void ImageClient::connectionEstablished()
 	QDataStream out(&block, QIODevice::WriteOnly);
 	out.setVersion(QDataStream::Qt_4_0);
 	
-	out << (quint16)m_nRequest;
-	out << (quint64)(230);
-
-	/// \todo Depending on m_nRequest, all other information should be transferred
+	quint8 nNumberOfParameters = m_ParameterList.size();
+// 	quint16 nBlockSize = 0;
 	
+	out << (quint64)0; // Reserved for size of data stream
+	out << (quint16)m_nRequest;
+	out << (quint8)(nNumberOfParameters);
+	for (QList<QVariant>::const_iterator ci=m_ParameterList.begin();
+										ci!=m_ParameterList.end(); ++ci)
+	{
+		out << (*ci);
+	}
+	
+	std::cout << "ImageClient: Stream size = " << block.size() << std::endl;
+	out.device()->seek(0);
+	out << (quint64)(block.size());
+
 	connect(pTcpSocket, SIGNAL(disconnected()), pTcpSocket, SLOT(deleteLater()));
 	
 	pTcpSocket->write(block);
-	
-	/// \todo If all data is transferred, wait for answer, probably using
-	///       slot that connects to readyReadSignal.
-	
 	pTcpSocket->disconnectFromHost();
 	
 	switch (m_nRequest)

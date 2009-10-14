@@ -39,7 +39,15 @@ bool ImageEngineDefault::getPartOfImage(QString InputImage,
 										QString FileName
 										) const
 {
-	std::cout << "ImageEngineDefault: Part of image requested" << std::endl;
+	std::cout << "ImageEngineDefault: getPartOfImage requested" << std::endl;
+	
+	std::cout << "ImageEngineDefault: Parameters:" << std::endl;
+	std::cout << "  InputImage = " << InputImage.toStdString() << std::endl;
+	std::cout << "  GeoWest    = " << GeoWest << std::endl;
+	std::cout << "  GeoNorth   = " << GeoNorth << std::endl;
+	std::cout << "  GeoEast    = " << GeoEast << std::endl;
+	std::cout << "  GeoSouth   = " << GeoSouth << std::endl;
+	std::cout << "  FileName   = " << FileName.toStdString() << std::endl;
 	
 	return true;
 }

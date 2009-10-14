@@ -82,6 +82,7 @@ void ImageServerThread::threadStarted()
 	}
 	m_nHeader = 0;
 	m_nStreamSize = 0;
+	m_nNumberOfParameters = 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -90,46 +91,84 @@ void ImageServerThread::threadStarted()
 ///
 ///////////////////////////////////////////////////////////////////////////////
 void ImageServerThread::getRequest()
-{
-	std::cout << "ImageServerThread: Ready to receive data." << std::endl;
-	
+{	
 	// Prepare outstream to request part of image
 	QDataStream in(m_pClientSocket);
 	in.setVersion(QDataStream::Qt_4_0);
 	
-	if (m_nHeader == 0)
-	{
-		// Header is 2 bytes (sizeof(quint16))
-		if (m_pClientSocket->bytesAvailable() < (int)sizeof(quint16))
-			return;
-		
-		std::cout << "ImageServerThread: Bytes available at socket: " << 
+	std::cout << "ImageServerThread: Bytes available at socket: " << 
 					m_pClientSocket->bytesAvailable() << std::endl;
 
-		in >> m_nHeader;
-	}
-	
-	/// \todo Depending on what was requested, prepare to receive other information.
-	///       If ready, send answer to client.
-// 	if (m_pClientSocket->bytesAvailable() < m_nBlockSize)
-// 		return;
-	
-	std::cout << "ImageServerThread: Incoming request = " << requestString(m_nHeader)
-				<< std::endl;
-	
+	// Get the size of the data stream
 	if (m_nStreamSize == 0)
 	{
-		// Header is 2 bytes (sizeof(quint16))
 		if (m_pClientSocket->bytesAvailable() < (int)sizeof(quint64))
 			return;
 		
-		std::cout << "ImageServerThread: Bytes available at socket: " << 
-					m_pClientSocket->bytesAvailable() << std::endl;
-
 		in >> m_nStreamSize;
-		std::cout << "ImageServerThread: Size of stream: " << m_nStreamSize << std::endl;
+		
+		std::cout << "ImageServerThread: Stream size: " << 
+					m_nStreamSize << std::endl;
 	}
 
+	if ((m_pClientSocket->bytesAvailable() == m_nStreamSize-(int)sizeof(quint64)) &&
+		(m_nStreamSize != 0))
+	{	
+		in >> m_nHeader;
+		in >> m_nNumberOfParameters;
+		std::cout << "ImageServerThread: Incoming request = " << requestString(m_nHeader)
+				<< std::endl;
+		std::cout << "ImageServerThread: Number of parameters = " << int(m_nNumberOfParameters)
+				<< std::endl;
+		switch (m_nHeader)
+		{
+			case REQUEST_PART_OF_IMAGE:
+			{
+				if (m_nNumberOfParameters != 6)
+				{
+					std::cout << "ImageServerThread: Wrong number of parameters." << std::endl;
+					return;
+				}
+				QVariant InputImage;
+				QVariant GeoWest;
+				QVariant GeoNorth;
+				QVariant GeoEast;
+				QVariant GeoSouth;
+				QVariant FileName;
+				in >> InputImage;
+				in >> GeoWest;
+				in >> GeoNorth;
+				in >> GeoEast;
+				in >> GeoSouth;
+				in >> FileName;
+				
+				m_pImageEngine->getPartOfImage(InputImage.toString(), GeoWest.toDouble(),
+											   GeoNorth.toDouble(), GeoEast.toDouble(),
+											   GeoSouth.toDouble(), FileName.toString());
+				break;
+			}
+			case REQUEST_SETUP_SERVER:
+			{
+				break;
+			}
+			default:
+				std::cout << "ImageServerThread: Unknown request " << m_nHeader << std::endl;
+		}
+	}
+	
+// 	if (m_nStreamSize == 0)
+// 	{
+// 		// Header is 2 bytes (sizeof(quint16))
+// 		if (m_pClientSocket->bytesAvailable() < (int)sizeof(quint64))
+// 			return;
+// 		
+// 		std::cout << "ImageServerThread: Bytes available at socket: " << 
+// 					m_pClientSocket->bytesAvailable() << std::endl;
+// 
+// 		in >> m_nStreamSize;
+// 		std::cout << "ImageServerThread: Size of stream: " << m_nStreamSize << std::endl;
+// 	}
+/*
 	switch (m_nHeader)
 	{
 		case REQUEST_SETUP_SERVER:
@@ -143,7 +182,7 @@ void ImageServerThread::getRequest()
 		}
 		default:
 			std::cout << "ImageServerThread: Unknown request " << m_nHeader << std::endl;
-	}
+	}*/
 }
 
 ///////////////////////////////////////////////////////////////////////////////

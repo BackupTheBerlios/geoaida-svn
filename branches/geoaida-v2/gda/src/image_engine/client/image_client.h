@@ -28,7 +28,9 @@
 
 //--- Misc header ------------------------------------------------------------//
 #include <QHostAddress>
+#include <QList>
 #include <QTcpSocket>
+#include <QVariant>
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -67,9 +69,11 @@ class ImageClient : public QObject
 		void connectToServer() const;
 	  
 		//--- Private Variables ----------------------------------------------//
-		QTcpSocket* pTcpSocket;		///< Socked for this connection
-		quint8		m_nRequest;		///< Request header description
-		quint16		m_unPort;		///< Port for connection
+		QTcpSocket* pTcpSocket;				///< Socked for this connection
+		quint8		m_nRequest;				///< Request header description
+		quint16		m_unPort;				///< Port for connection
+		
+		QList<QVariant> m_ParameterList;	///< List of parameters depending on method call
 };
 
 #endif
