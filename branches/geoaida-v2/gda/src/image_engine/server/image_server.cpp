@@ -20,6 +20,8 @@
 #include "ImageServer"
 #include "ImageServerThread"
 
+using namespace GA::IE;
+
 ////////////////////////////////////////////////////////////////////////////////
 ///
 /// \brief Constructor

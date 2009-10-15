@@ -17,6 +17,7 @@ set(sources
 	image_server.cpp
 	image_server_thread.cpp
 	main.cpp
+	../image_engine_commons.cpp
 )
 
 set(moc_headers

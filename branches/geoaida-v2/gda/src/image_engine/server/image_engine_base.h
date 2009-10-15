@@ -27,8 +27,8 @@
 
 //--- Misc header ------------------------------------------------------------//
 #include <QString>
-// #include <QTcpServer>
-// #include <QTcpSocket>
+
+namespace GA{namespace IE{
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -57,5 +57,7 @@ class ImageEngineBase
 
 		//--- Private Variables ----------------------------------------------//
 };
+
+}}
 
 #endif

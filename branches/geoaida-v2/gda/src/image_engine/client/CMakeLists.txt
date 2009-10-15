@@ -14,6 +14,7 @@ include_directories(
 
 set(lib_sources
 	image_client.cpp
+	../image_engine_commons.cpp
 )
 set(exe_sources
 	main.cpp
@@ -23,6 +24,8 @@ set(moc_headers
 	image_client.h
 )
 set(inst_headers
+	../image_engine_commons.h
+	../ImageEngineCommons
 	ImageClient
 )
 

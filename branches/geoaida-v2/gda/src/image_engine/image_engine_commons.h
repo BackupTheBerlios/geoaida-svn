@@ -9,23 +9,31 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-/// \file		image_engine_base.cpp
-/// \brief		Implementation of class "ImageEngineBase"
+/// \file		image_engine_commons.h
+/// \brief		Common variables for image engine
 ///
-/// \date		2009-05-19
+///	\date		2009-10-13
 /// \author		Torsten Bueschenfeld (bfeld@tnt.uni-hannover.de)
 ///
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "ImageEngineBase"
+#ifndef __IMAGE_ENGINE_COMMONS_H
+#define __IMAGE_ENGINE_COMMONS_H
 
-using namespace GA::IE;
+#include <QObject>
+#include <string>
 
-///////////////////////////////////////////////////////////////////////////////
-///
-/// \brief Constructor
-///
-///////////////////////////////////////////////////////////////////////////////
-ImageEngineBase::ImageEngineBase()
-{
-}
+namespace GA{namespace IE{
+
+//--- Constants --------------------------------------------------------------//
+const quint16 REQUEST_PART_OF_IMAGE	= 1;
+const quint16 REQUEST_SETUP_SERVER	= 2;
+const quint16 REQUEST_RETURN_VALUE_ACCEPT = 3;
+const quint16 REQUEST_RETURN_VALUE_WRONG_PARAM = 4;
+
+//--- Functions --------------------------------------------------------------//
+const std::string constToString(const quint16& nConst);
+
+}}
+
+#endif

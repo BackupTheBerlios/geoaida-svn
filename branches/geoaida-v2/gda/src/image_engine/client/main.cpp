@@ -75,11 +75,20 @@ int main(int argc, char *argv[])
 	}
 
 	QCoreApplication app(argc, argv);
-	std::cout << argv[1] << std::endl;
-	ImageClient Client(QString(argv[1]), atoi(argv[2]));
+	GA::IE::ImageClient Client(QString(argv[1]), atoi(argv[2]));
+	GA::IE::ImageClient Client1(QString(argv[1]), atoi(argv[2]));
+	GA::IE::ImageClient Client2(QString(argv[1]), atoi(argv[2]));
+	GA::IE::ImageClient Client3(QString(argv[1]), atoi(argv[2]));
+	GA::IE::ImageClient Client4(QString(argv[1]), atoi(argv[2]));
 	
 	if (std::string(argv[3]) == "poi")
-		Client.getPartOfImage("Test 01", 1.837483, 0.7356, 1.0e20, -19.0, "Test 00002");
+	{
+		Client.getPartOfImage("Test 01", 1.837483, 0.7356, 1.0e20, -19.0, "Test 00001");
+		Client1.getPartOfImage("Test 02", 1.837483, 0.7356, 1.0e20, -19.0, "Test 00002");
+		Client2.getPartOfImage("Test 03", 1.837483, 0.7356, 1.0e20, -19.0, "Test 00003");
+		Client3.getPartOfImage("Test 04", 1.837483, 0.7356, 1.0e20, -19.0, "Test 00004");
+		Client4.getPartOfImage("Test 05", 1.837483, 0.7356, 1.0e20, -19.0, "Test 00005");
+	}
 	else if (std::string(argv[3]) == "sus")
 		Client.setupServer();
 	else
@@ -88,8 +97,6 @@ int main(int argc, char *argv[])
 		usage();
 		return EXIT_FAILURE;
 	}
-	
-	app.exec();
 
-	return EXIT_SUCCESS;
+	return app.exec();
 }

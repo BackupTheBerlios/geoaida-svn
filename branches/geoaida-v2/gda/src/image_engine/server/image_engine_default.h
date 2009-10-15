@@ -27,9 +27,11 @@
 
 //--- Misc header ------------------------------------------------------------//
 
+namespace GA{namespace IE{
+
 ////////////////////////////////////////////////////////////////////////////////
 ///
-/// \brief Class providing the common interface for image engine implementations
+/// \brief Class implementing a default version of the image engine
 /// 
 ////////////////////////////////////////////////////////////////////////////////
 class ImageEngineDefault : public ImageEngineBase
@@ -51,5 +53,7 @@ class ImageEngineDefault : public ImageEngineBase
 							) const;
 
 };
+
+}}
 
 #endif

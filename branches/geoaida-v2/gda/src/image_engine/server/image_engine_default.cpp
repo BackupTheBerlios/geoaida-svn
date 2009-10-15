@@ -19,6 +19,8 @@
 
 #include "ImageEngineDefault"
 
+using namespace GA::IE;
+
 ///////////////////////////////////////////////////////////////////////////////
 ///
 /// \brief Method to receive a part of an image

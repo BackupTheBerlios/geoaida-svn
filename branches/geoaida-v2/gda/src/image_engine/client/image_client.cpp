@@ -19,6 +19,8 @@
 
 #include "ImageClient"
 
+using namespace GA::IE;
+
 ///////////////////////////////////////////////////////////////////////////////
 ///
 /// \brief Constructor
@@ -31,13 +33,14 @@ ImageClient::ImageClient(const QString& Host,
 						 const quint16& unPort) : m_unPort(unPort),
 												  m_Host(Host)
 {
-	pTcpSocket = new QTcpSocket(this);
+	m_pTcpSocket = new QTcpSocket(this);
 	
 	// Establish connections
-	connect(pTcpSocket, SIGNAL(error(QAbstractSocket::SocketError)),
+	connect(m_pTcpSocket, SIGNAL(error(QAbstractSocket::SocketError)),
              this, SLOT(displayError(QAbstractSocket::SocketError)));
 			 
-	connect(pTcpSocket, SIGNAL(connected()), this, SLOT(connectionEstablished()));
+	connect(m_pTcpSocket, SIGNAL(connected()), this, SLOT(sendRequest()));
+	connect(m_pTcpSocket, SIGNAL(disconnected()), m_pTcpSocket, SLOT(deleteLater()));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -47,10 +50,10 @@ ImageClient::ImageClient(const QString& Host,
 ///////////////////////////////////////////////////////////////////////////////
 ImageClient::~ImageClient()
 {
-	if (pTcpSocket != 0)
+	if (m_pTcpSocket != 0)
 	{
-		delete pTcpSocket;
-		pTcpSocket = 0;
+		delete m_pTcpSocket;
+		m_pTcpSocket = 0;
 	}
 }
 
@@ -86,46 +89,16 @@ void ImageClient::getPartOfImage(QString InputImage,
 
 ///////////////////////////////////////////////////////////////////////////////
 ///
-/// \brief If connection is established, this method will begin the data transfer
+/// \brief Method to setup the image server
+///
+/// This method connects to the image server and sets it up by transfering
+/// image data and geocoordinates.
 ///
 ///////////////////////////////////////////////////////////////////////////////
-void ImageClient::connectionEstablished()
+void ImageClient::setupServer()
 {
-	// Prepare outstream to request part of image
-	QByteArray block;
-	QDataStream out(&block, QIODevice::WriteOnly);
-	out.setVersion(QDataStream::Qt_4_0);
-	
-	quint8 nNumberOfParameters = m_ParameterList.size();
-// 	quint16 nBlockSize = 0;
-	
-	out << (quint64)0; // Reserved for size of data stream
-	out << (quint16)m_nRequest;
-	out << (quint8)(nNumberOfParameters);
-	for (QList<QVariant>::const_iterator ci=m_ParameterList.begin();
-										ci!=m_ParameterList.end(); ++ci)
-	{
-		out << (*ci);
-	}
-	
-	std::cout << "ImageClient: Stream size = " << block.size() << std::endl;
-	out.device()->seek(0);
-	out << (quint64)(block.size());
-
-	connect(pTcpSocket, SIGNAL(disconnected()), pTcpSocket, SLOT(deleteLater()));
-	
-	pTcpSocket->write(block);
-	pTcpSocket->disconnectFromHost();
-	
-	switch (m_nRequest)
-	{
-		case REQUEST_PART_OF_IMAGE:
-			std::cout << "ImageClient: Sending REQUEST_PART_OF_IMAGE." << std::endl;
-			break;
-		case REQUEST_SETUP_SERVER:
-			std::cout << "ImageClient: Sending REQUEST_SETUP_SERVER." << std::endl;
-			break;
-	}
+	m_nRequest = REQUEST_SETUP_SERVER;
+	connectToServer();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -142,16 +115,59 @@ void ImageClient::displayError(QAbstractSocket::SocketError)
 
 ///////////////////////////////////////////////////////////////////////////////
 ///
-/// \brief Method to setup the image server
-///
-/// This method connects to the image server and sets it up by transfering
-/// image data and geocoordinates.
+/// \brief If connection is established, this method will begin the data transfer
 ///
 ///////////////////////////////////////////////////////////////////////////////
-void ImageClient::setupServer()
+void ImageClient::sendRequest()
 {
-	m_nRequest = REQUEST_SETUP_SERVER;
-	connectToServer();
+	std::cout << "ImageClient: Sending " << constToString(m_nRequest) << std::endl;
+	
+	// Prepare outstream to request part of image
+	QByteArray block;
+	QDataStream out(&block, QIODevice::WriteOnly);
+	out.setVersion(QDataStream::Qt_4_0);
+	
+	quint8 nNumberOfParameters = m_ParameterList.size();
+
+	// Stream header information and parameters
+	out << (quint64)0; // Reserved for size of data stream
+	out << (quint16)m_nRequest;
+	out << (quint8)(nNumberOfParameters);
+	for (QList<QVariant>::const_iterator ci=m_ParameterList.begin();
+										ci!=m_ParameterList.end(); ++ci)
+	{
+		out << (*ci);
+	}
+	std::cout << "ImageClient: Stream size = " << block.size() << std::endl;
+	out.device()->seek(0);
+	out << (quint64)(block.size()); // Write size of data stream
+	
+	m_pTcpSocket->write(block);
+	
+	connect(m_pTcpSocket, SIGNAL(readyRead()), this, SLOT(receiveData()));
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///
+/// \brief Method receiving the data that was requested.
+///
+///////////////////////////////////////////////////////////////////////////////
+void ImageClient::receiveData()
+{
+	// Prepare stream to request the data
+	QDataStream in(m_pTcpSocket);
+	in.setVersion(QDataStream::Qt_4_0);
+	
+	quint16 nReturnVal = 0;
+	
+	if (m_pTcpSocket->bytesAvailable() == sizeof(quint16))
+		in >> nReturnVal;
+	
+	std::cout << "ImageClient: Received return value from server: " 
+				<< constToString(nReturnVal) << std::endl;
+	
+	std::cout << "ImageClient: Disconnecting from server." << std::endl;
+	m_pTcpSocket->disconnectFromHost();	
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -162,6 +178,6 @@ void ImageClient::setupServer()
 void ImageClient::connectToServer() const
 {
 	std::cout << "ImageClient: Connecting to server." << std::endl;
-	pTcpSocket->abort();
-	pTcpSocket->connectToHost(m_Host, m_unPort);
+	m_pTcpSocket->abort();
+	m_pTcpSocket->connectToHost(m_Host, m_unPort);
 }

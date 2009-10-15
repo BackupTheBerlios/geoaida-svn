@@ -33,6 +33,8 @@
 #include <QTcpSocket>
 #include <QVariant>
 
+namespace GA{namespace IE{
+
 ////////////////////////////////////////////////////////////////////////////////
 ///
 /// \brief Class that implements a TCP client to connect to image server.
@@ -62,20 +64,26 @@ class ImageClient : public QObject
 	private slots:
 
 		//--- Methods --------------------------------------------------------//
-		void connectionEstablished();
 		void displayError(QAbstractSocket::SocketError);
+		void receiveData();
+		void sendRequest();
 
 	private:
 		//--- Constant Methods -----------------------------------------------//
 		void connectToServer() const;
+		
+		//--- Methods --------------------------------------------------------//
+		
 	  
 		//--- Private Variables ----------------------------------------------//
-		QTcpSocket*		pTcpSocket;				///< Socked for this connection
+		QTcpSocket*		m_pTcpSocket;			///< Socked for this connection
 		quint8			m_nRequest;				///< Request header description
 		quint16			m_unPort;				///< Port for connection
 		QString			m_Host;					///< Host for connection
 		
 		QList<QVariant> m_ParameterList;		///< List of parameters depending on method call
 };
+
+}}
 
 #endif

@@ -9,23 +9,38 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-/// \file		image_engine_base.cpp
-/// \brief		Implementation of class "ImageEngineBase"
+/// \file		image_client_commons.cpp
+/// \brief		Implementation of common variables and functions
 ///
-/// \date		2009-05-19
+/// \date		2009-10-14
 /// \author		Torsten Bueschenfeld (bfeld@tnt.uni-hannover.de)
 ///
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "ImageEngineBase"
+#include "ImageEngineCommons"
 
 using namespace GA::IE;
 
 ///////////////////////////////////////////////////////////////////////////////
 ///
-/// \brief Constructor
+/// \brief Translates constants to string for output.
+///
+/// \param nConst Constant descriptor
 ///
 ///////////////////////////////////////////////////////////////////////////////
-ImageEngineBase::ImageEngineBase()
+const std::string GA::IE::constToString(const quint16& nConst)
 {
+	switch(nConst)
+	{
+		case REQUEST_PART_OF_IMAGE:
+			return "REQUEST_PART_OF_IMAGE";
+		case REQUEST_SETUP_SERVER:
+			return "REQUEST_SETUP_SERVER";
+		case REQUEST_RETURN_VALUE_ACCEPT:
+			return "REQUEST_RETURN_VALUE_ACCEPT";
+		case REQUEST_RETURN_VALUE_WRONG_PARAM:
+			return "REQUEST_RETURN_VALUE_WRONG_PARAM";
+		default:
+			return "REQUEST_UNKNOWN";
+	}
 }

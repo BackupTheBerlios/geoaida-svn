@@ -22,7 +22,6 @@
 
 //--- Standard header --------------------------------------------------------//
 #include <iostream>
-#include <string>
 
 //--- Program header ---------------------------------------------------------//
 #include "ImageEngineBase"
@@ -35,6 +34,8 @@
 #include <QVariant>
 
 //--- Constants --------------------------------------------------------------//
+
+namespace GA{namespace IE{
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -65,7 +66,7 @@ class ImageServerThread : public QThread
 
 	private:
 		//--- Constant Methods -----------------------------------------------//
-		const std::string requestString(const quint16& nRequest) const;
+		void sendRequestReturnValue(const quint16& nReturn) const;
 
 		//--- Private Variables ----------------------------------------------//
 		QTcpSocket*			m_pClientSocket;		///< Socket for connection
@@ -80,5 +81,7 @@ class ImageServerThread : public QThread
 		const ImageEngineBase* const m_pImageEngine;///< Pointer to image engine
 
 };
+
+}}
 
 #endif

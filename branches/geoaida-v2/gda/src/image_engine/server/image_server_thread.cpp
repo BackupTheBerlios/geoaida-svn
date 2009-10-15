@@ -19,6 +19,8 @@
 
 #include "ImageServerThread"
 
+using namespace GA::IE;
+
 ///////////////////////////////////////////////////////////////////////////////
 ///
 /// \brief Constructor
@@ -92,7 +94,7 @@ void ImageServerThread::threadStarted()
 ///////////////////////////////////////////////////////////////////////////////
 void ImageServerThread::getRequest()
 {	
-	// Prepare outstream to request part of image
+	// Prepare stream to request part of image
 	QDataStream in(m_pClientSocket);
 	in.setVersion(QDataStream::Qt_4_0);
 	
@@ -111,12 +113,13 @@ void ImageServerThread::getRequest()
 					m_nStreamSize << std::endl;
 	}
 
+	// Read header and request
 	if ((m_pClientSocket->bytesAvailable() == m_nStreamSize-(int)sizeof(quint64)) &&
 		(m_nStreamSize != 0))
 	{	
 		in >> m_nHeader;
 		in >> m_nNumberOfParameters;
-		std::cout << "ImageServerThread: Incoming request = " << requestString(m_nHeader)
+		std::cout << "ImageServerThread: Incoming request = " << constToString(m_nHeader)
 				<< std::endl;
 		std::cout << "ImageServerThread: Number of parameters = " << int(m_nNumberOfParameters)
 				<< std::endl;
@@ -127,6 +130,7 @@ void ImageServerThread::getRequest()
 				if (m_nNumberOfParameters != 6)
 				{
 					std::cout << "ImageServerThread: Wrong number of parameters." << std::endl;
+					this->sendRequestReturnValue(REQUEST_RETURN_VALUE_WRONG_PARAM);
 					return;
 				}
 				QVariant InputImage;
@@ -141,10 +145,12 @@ void ImageServerThread::getRequest()
 				in >> GeoEast;
 				in >> GeoSouth;
 				in >> FileName;
-				
+
 				m_pImageEngine->getPartOfImage(InputImage.toString(), GeoWest.toDouble(),
 											   GeoNorth.toDouble(), GeoEast.toDouble(),
 											   GeoSouth.toDouble(), FileName.toString());
+				   
+				this->sendRequestReturnValue(REQUEST_RETURN_VALUE_ACCEPT);
 				break;
 			}
 			case REQUEST_SETUP_SERVER:
@@ -155,52 +161,26 @@ void ImageServerThread::getRequest()
 				std::cout << "ImageServerThread: Unknown request " << m_nHeader << std::endl;
 		}
 	}
-	
-// 	if (m_nStreamSize == 0)
-// 	{
-// 		// Header is 2 bytes (sizeof(quint16))
-// 		if (m_pClientSocket->bytesAvailable() < (int)sizeof(quint64))
-// 			return;
-// 		
-// 		std::cout << "ImageServerThread: Bytes available at socket: " << 
-// 					m_pClientSocket->bytesAvailable() << std::endl;
-// 
-// 		in >> m_nStreamSize;
-// 		std::cout << "ImageServerThread: Size of stream: " << m_nStreamSize << std::endl;
-// 	}
-/*
-	switch (m_nHeader)
-	{
-		case REQUEST_SETUP_SERVER:
-		{
-			break;
-		}
-		case REQUEST_PART_OF_IMAGE:
-		{
-			m_pImageEngine->getPartOfImage("Test 1", 1, 1, 1, 1, "Test 2");
-			break;
-		}
-		default:
-			std::cout << "ImageServerThread: Unknown request " << m_nHeader << std::endl;
-	}*/
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 ///
-/// \brief Translates request constant into string.
+/// \brief Send return value back to client.
 ///
-/// \param nRequest Request descriptor
+/// \param nReturnValue
 ///
 ///////////////////////////////////////////////////////////////////////////////
-const std::string ImageServerThread::requestString(const quint16& nRequest) const
+void ImageServerThread::sendRequestReturnValue(const quint16& nReturn) const
 {
-	switch(nRequest)
-	{
-		case REQUEST_PART_OF_IMAGE:
-			return "REQUEST_PART_OF_IMAGE";
-		case REQUEST_SETUP_SERVER:
-			return "REQUEST_SETUP_SERVER";
-		default:
-			return "REQUEST_UNKNOWN";
-	}
+	std::cout << "ImageServerThread: Sending " << constToString(nReturn) 
+				<< std::endl;
+	
+	// Prepare outstream to send return value
+	QByteArray block;
+	QDataStream out(&block, QIODevice::WriteOnly);
+	out.setVersion(QDataStream::Qt_4_0);
+	
+	// Send return value
+	out << nReturn;
+	m_pClientSocket->write(block);
 }

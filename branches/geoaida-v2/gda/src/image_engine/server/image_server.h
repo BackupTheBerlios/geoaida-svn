@@ -31,6 +31,8 @@
 
 //--- Constants --------------------------------------------------------------//
 
+namespace GA{namespace IE{
+
 ////////////////////////////////////////////////////////////////////////////////
 ///
 /// \brief Class that implements a TCP server to handle images.
@@ -57,11 +59,12 @@ class ImageServer : public QTcpServer
 	private:
 
 		//--- Methods --------------------------------------------------------//
-// 		void setup();
 
 		//--- Private Variables ----------------------------------------------//
 		ImageEngineBase*	m_pImageEngine;		///< Pointer to image engine
 
 };
+
+}}
 
 #endif
