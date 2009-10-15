@@ -38,7 +38,7 @@ GeoImageList::GeoImageList(QString filename)
   read(filename);
 }
 
-/** denstructor */
+/** destructor */
 GeoImageList::~GeoImageList()
 {
   clear();

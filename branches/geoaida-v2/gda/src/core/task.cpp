@@ -509,14 +509,6 @@ void Task::setGuiPtr(ProcessEntry * pEntry, QTreeWidgetItem * ptr)
   pEntry->guiPtr_ = ptr;
 }
 
-#ifdef linux
-#if 0
-#include <stdlib.h>
-#include <errno.h>
-#endif
-#include <qprocess.h>
-#endif
-
 /** return the system load on Linux-Systems */
 bool Task::systemLoad()
 {

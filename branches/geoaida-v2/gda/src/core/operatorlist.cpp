@@ -84,12 +84,7 @@ OperatorList::read(QIODevice & fp)
     case TOK_OPERATOR:
       {
         Operator *op = new Operator(parser);
-#ifdef WIN32
-        if (op == 0){
-          //cout << "Out of Memory..13";
-          exit(1);
-        }
-#endif
+	Q_ASSERT(op!=0);
         insert(op->name(), op);
         QString type = op->type();
         if (!keys_[type]) {

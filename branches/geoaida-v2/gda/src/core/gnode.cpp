@@ -28,8 +28,6 @@ const MLTagTable nodeTagTable(keywords);
 GNode::GNode()
 {
   init();
-
-
 }
 
 GNode::~GNode()
