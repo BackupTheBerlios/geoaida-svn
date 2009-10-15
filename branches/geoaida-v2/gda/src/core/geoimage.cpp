@@ -44,12 +44,12 @@ GeoImage::GeoImage(ArgDict & dict)
 }
 
 /** label-picture constructor */
-GeoImage::GeoImage(QString fname, QString key, float west, float north,
-                   float east, float south)
+GeoImage::GeoImage(QString fname, QString key, 
+		   float west, float north, float east, float south)
 {
   init();
-  insert("type", new QString("LABEL"));
-  insert("key", new QString(key));
+  insert("type", "LABEL");
+  insert("key", key);
   type_ = PFM_UINT16;
   geoNorth_ = north;
   geoSouth_ = south;
@@ -69,8 +69,8 @@ GeoImage::GeoImage(QString fname, QString key, int xsize, int ysize,
   init();
   cols_ = xsize;
   rows_ = ysize;
-  insert("type", new QString("LABEL"));
-  insert("key", new QString(key));
+  insert("type", "LABEL");
+  insert("key", key);
   type_ = PFM_SINT;
   geoNorth_ = north;
   geoSouth_ = south;
@@ -81,16 +81,8 @@ GeoImage::GeoImage(QString fname, QString key, int xsize, int ysize,
   insert("geoWest", west);
   insert("geoEast", east);
   insert("file", fname);
-  data_ = new int[xsize * ysize];
-#ifdef WIN32
-  if (data_ == 0){
-    //cout << "Out of Memory..5";
-    exit(1);
-  }
-#endif
-
-  for (int i = 0; i < xsize * ysize; i++)
-    ((int *) data_)[i] = 0;
+  data_ = pfm_alloc_type(xsize,ysize,type_);
+  Q_ASSERT(data_ != 0);
 }
 
 GeoImage::~GeoImage()
@@ -121,19 +113,19 @@ void GeoImage::read(MLParser & parser)
   MLParser::setFloat(geoWest_, this, "geoWest");
   MLParser::setFloat(geoEast_, this, "geoEast");
   if (!contains("type"))
-    insert("type", QString("not set"));
+    insert("type", "not set");
   if (!contains("file"))
-    insert("file", QString("not set"));
+    insert("file", "not set");
   if (!contains("dir"))
     insert("dir", "");
   if (!contains("res_x"))
-    insert("res_x", QString("not set"));
+    insert("res_x", "not set");
   if (!contains("res_y"))
-    insert("res_y", QString("not set"));
+    insert("res_y", "not set");
   if (!contains("size_x"))
-    insert("size_x", QString("not set"));
+    insert("size_x", "not set");
   if (!contains("size_y"))
-    insert("size_y", QString("not set"));
+    insert("size_y", "not set");
 }
 
 /** configure attributes for this GeoImage through dictionary */
@@ -155,19 +147,19 @@ void GeoImage::configure(ArgDict & dict)
   MLParser::setFloat(geoWest_, this, "geoWest");
   MLParser::setFloat(geoEast_, this, "geoEast");
   if (!contains("type"))
-    insert("type", new QString("not set"));
+    insert("type", "not set");
   if (!contains("file"))
-    insert("file", new QString("not set"));
+    insert("file", "not set");
   if (!contains("dir"))
-    insert("dir", new QString(""));
+    insert("dir", "");
   if (!contains("x_res"))
-    insert("x_res", new QString("not set"));
+    insert("x_res", "not set");
   if (!contains("y_res"))
-    insert("y_res", new QString("not set"));
+    insert("y_res", "not set");
   if (!contains("size_x"))
-    insert("size_x", new QString("not set"));
+    insert("size_x", "not set");
   if (!contains("size_y"))
-    insert("size_y", new QString("not set"));
+    insert("size_y", "not set");
 #undef copyarg
 }
 
@@ -327,14 +319,14 @@ void GeoImage::freeData()
       break;
     case PFM_3BYTE:{
         PFM3Byte *ppmbuf = (PFM3Byte *) data_;
-        free(ppmbuf->r);
-        free(ppmbuf->g);
-        free(ppmbuf->b);
+        pfm_free(ppmbuf->r);
+        pfm_free(ppmbuf->g);
+        pfm_free(ppmbuf->b);
         free(data_);
       }
       break;
     default:
-      free(data_);
+      pfm_free(data_);
       break;
     }
     data_ = 0;

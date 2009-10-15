@@ -41,6 +41,18 @@ static int pid_=0;
 static char fifoname_[256];
 static int compressed_=0;
 
+static const int storage_size[]={
+  sizeof(float),
+  sizeof(signed int),
+  sizeof(unsigned int),
+  sizeof(sint16),
+  sizeof(uint16),
+  sizeof(grey),
+  sizeof(unsigned char),
+  sizeof(unsigned char),
+  sizeof(double)
+};
+
 static void read_buffer(char* buffer, int maxlen, FILE *fp)
 {
   do {
@@ -538,6 +550,17 @@ static void pfm_read_ppm(FILE *fp, int cols, int rows, PFM3Byte *ppmbuffer)
 #endif
 }
 
+void* pfm_alloc_type(int cols, int rows,
+		     int storageType)
+{
+  return calloc(cols*rows,storage_size[storageType]);
+}
+
+void pfm_free(void* data)
+{
+  free(data);
+}
+
 void *pfm_readpfm_type(FILE *fp,
            int *cols,
            int *rows,
@@ -559,17 +582,6 @@ void *pfm_readpfm_type(FILE *fp,
   int       byte_order=BYTEORDER;
   int r,c;
   int type;
-  int storage_size[]={
-          sizeof(float),
-          sizeof(signed int),
-          sizeof(unsigned int),
-          sizeof(sint16),
-          sizeof(uint16),
-          sizeof(grey),
-          sizeof(unsigned char),
-          sizeof(unsigned char),
-          sizeof(double)
-          };
   ConvertFunc* double2[]={
        double2float,
        double2sint,
@@ -739,13 +751,14 @@ void *pfm_readpfm_type(FILE *fp,
 #endif
   if (type==PFM_PPM_BIN) {
     ppmbuffer=(PFM3Byte*)malloc(sizeof(PFM3Byte));
-    ppmbuffer->r=(unsigned char*)calloc(*cols*(*rows),storage_size[storageType]);
-    ppmbuffer->g=(unsigned char*)calloc(*cols*(*rows),storage_size[storageType]);
-    ppmbuffer->b=(unsigned char*)calloc(*cols*(*rows),storage_size[storageType]);
+    ppmbuffer->r=(unsigned char*)pfm_alloc_type(*cols,*rows,storageType);
+    ppmbuffer->g=(unsigned char*)pfm_alloc_type(*cols,*rows,storageType);
+    ppmbuffer->b=(unsigned char*)pfm_alloc_type(*cols,*rows,storageType);
     if (ppmbuffer && ppmbuffer->r && ppmbuffer->g && ppmbuffer->b)
       data=(void*)ppmbuffer;
   }
-  else data =(void*)calloc(*cols*(*rows),storage_size[storageType]);
+  else 
+    data=pfm_alloc_type(*cols,*rows,storageType);
 
   if (!data)
     {
@@ -1091,8 +1104,8 @@ static void pfm_write_ppm(FILE *fp, const PFM3Byte *data,
   fprintf(fp,"%d\t%d\n",dx,dy);
   fprintf(fp,"%d\n",(int)255);
   /*  fprintf(fp,"%d\n",(int)maxval); */
-  for (x=0; x<dx*3; x++) buffer[x]=0;
-  for (y=y1; y<=y2; y++)
+  for (x=0; x<dx*3; ++x) buffer[x]=0;
+  for (y=y1; y<=y2; ++y)
     if (y<0 || y>rows-1 || x2<0 || x1>=cols)
       fwrite(emptybuffer,sizeof(unsigned char)*3,dx,fp);
     else if (x1<0) {/* y>0 y<rows */
@@ -1124,11 +1137,11 @@ int pfm_writepfm_region_type(FILE *fp, const void *data,
             int storageType)
 {
   int x,y,xi,yi;
-  float    *floatbuffer=0;
-  double   *doublebuffer=0;
-  int      *intbuffer=0;
-  uint16   *int16buffer=0;
-  grey     *greybuffer=0;
+  const float *floatbuffer=0;
+  const double *doublebuffer=0;
+  const int *intbuffer=0;
+  const uint16 *int16buffer=0;
+  const grey *greybuffer=0;
   int dx = x2-x1+1;
   int dy = y2-y1+1;
   float   *fpx;
@@ -1140,7 +1153,7 @@ int pfm_writepfm_region_type(FILE *fp, const void *data,
   
   switch (storageType) {
   case PFM_FLOAT:
-    floatbuffer=(float*)data;
+    floatbuffer=(const float*)data;
     fpx= calloc(dx,sizeof(float));
      if(!fpx) return 0;
     if (minval>maxval) {
@@ -1151,12 +1164,12 @@ int pfm_writepfm_region_type(FILE *fp, const void *data,
 #endif
       y=y1; yi=y2;
       if(y1<0) y=0;
-      if(y2>rows)yi=rows;
-      for (; y<=yi; y++) {
+      if(y2>rows-1) yi=rows-1;
+      for (; y<=yi; ++y) {
         x=x1; xi=x2;
         if(x1<0) x=0;
-        if(x2>rows)xi=cols;  
-        for (; x<=xi; x++)  {
+        if(x2>cols) xi=cols-1;  
+        for (; x<=xi; ++x)  {
           if (isnan(floatbuffer[y*cols+x])) continue;
           if (floatbuffer[y*cols+x]<minval) minval=floatbuffer[y*cols+x];
           if (floatbuffer[y*cols+x]>maxval) maxval=floatbuffer[y*cols+x];
@@ -1164,9 +1177,11 @@ int pfm_writepfm_region_type(FILE *fp, const void *data,
       }
     }
     fprintf(fp,"F4 # 4 byte float\n");
-    if (pfmGeoSet_) fprintf(fp,"#geo %f %f %f %f\n",pfmGeoWest_,pfmGeoNorth_,pfmGeoEast_,pfmGeoSouth_);
+    if (pfmGeoSet_) 
+      fprintf(fp,"#geo %f %f %f %f\n",pfmGeoWest_,pfmGeoNorth_,pfmGeoEast_,pfmGeoSouth_);
     pfmGeoSet_=0;
-    if (pfmComment_) fprintf(fp,"#comment\n#%s\n#end\n",pfmComment_);
+    if (pfmComment_) 
+      fprintf(fp,"#comment\n#%s\n#end\n",pfmComment_);
     pfmComment_=0;
 #ifdef WORDS_BIGENDIAN
     fprintf(fp,"B # Big endian\n");
@@ -1175,8 +1190,8 @@ int pfm_writepfm_region_type(FILE *fp, const void *data,
 #endif
     fprintf(fp,"%d\t%d\n",dx,dy);
     fprintf(fp,"%f\t%f\n",minval,maxval);
-    for (x=0; x<dx; x++) fpx[x]=minval;
-    for (y=y1; y<=y2; y++)
+    for (x=0; x<dx; ++x) fpx[x]=minval;
+    for (y=y1; y<=y2; ++y)
       if (y<0 || y>rows-1 || x2<0 || x1>=cols)
         fwrite(fpx,sizeof(float),dx,fp);
       else if (x1<0) {/* y>0 y<rows */
@@ -1200,7 +1215,7 @@ int pfm_writepfm_region_type(FILE *fp, const void *data,
 
     
   case PFM_DOUBLE:
-    doublebuffer=(double*)data;
+    doublebuffer=(const double*)data;
     dpx = calloc(dx,sizeof(double));
     if(!dpx) return 0;
     if (minval>maxval) {
@@ -1211,12 +1226,12 @@ int pfm_writepfm_region_type(FILE *fp, const void *data,
 #endif
       y=y1; yi=y2;
       if(y1<0) y=0;
-      if(y2>rows)yi=rows;
-      for (; y<=yi; y++) {
+      if(y2>rows-1) yi=rows-1;
+      for (; y<=yi; ++y) {
         x=x1; xi=x2;
         if(x1<0) x=0;
-        if(x2>rows)xi=cols;  
-        for (; x<=xi; x++)  {
+        if(x2>cols-1) xi=cols-1;  
+        for (; x<=xi; ++x)  {
           if (isnan(doublebuffer[y*cols+x])) continue;
           if (doublebuffer[y*cols+x]<minval) minval=doublebuffer[y*cols+x];
           if (doublebuffer[y*cols+x]>maxval) maxval=doublebuffer[y*cols+x];
@@ -1235,8 +1250,8 @@ int pfm_writepfm_region_type(FILE *fp, const void *data,
 #endif
     fprintf(fp,"%d\t%d\n",dx,dy);
     fprintf(fp,"%f\t%f\n",minval,maxval);
-    for (x=0; x<dx; x++) dpx[x]=minval;
-    for (y=y1; y<=y2; y++)
+    for (x=0; x<dx; ++x) dpx[x]=minval;
+    for (y=y1; y<=y2; ++y)
       if (y<0 || y>rows-1 || x2<0 || x1>=cols)
         fwrite(dpx,sizeof(double),dx,fp);
       else if (x1<0) {/* y>0 y<rows */
@@ -1261,28 +1276,30 @@ int pfm_writepfm_region_type(FILE *fp, const void *data,
     
   case PFM_SINT:
   case PFM_UINT:
-    intbuffer=(int*)data;
+    intbuffer=(const int*)data;
     ipx = calloc(dx,sizeof(int));
     if(!ipx) return 0;
     if (minval>maxval) {
       minval=INT_MAX; maxval=INT_MIN;
       y=y1; yi=y2;
       if(y1<0) y=0;
-      if(y2>rows)yi=rows;
-      for (; y<=yi; y++) {
+      if(y2>rows-1) yi=rows-1;
+      for (; y<=yi; ++y) {
         x=x1; xi=x2;
         if(x1<0) x=0;
-        if(x2>rows)xi=cols;  
-        for (; x<=xi; x++)  {
+        if(x2>cols-1) xi=cols-1;  
+        for (; x<=xi; ++x)  {
           if (intbuffer[y*cols+x]<minval) minval=intbuffer[y*cols+x];
           if (intbuffer[y*cols+x]>maxval) maxval=intbuffer[y*cols+x];
         }
       }
     }
     fprintf(fp,"F5 # 32 bit integer\n");
-    if (pfmGeoSet_) fprintf(fp,"#geo %f %f %f %f\n",pfmGeoWest_,pfmGeoNorth_,pfmGeoEast_,pfmGeoSouth_);
+    if (pfmGeoSet_) 
+      fprintf(fp,"#geo %f %f %f %f\n",pfmGeoWest_,pfmGeoNorth_,pfmGeoEast_,pfmGeoSouth_);
     pfmGeoSet_=0;
-    if (pfmComment_) fprintf(fp,"#comment\n#%s\n#end\n",pfmComment_);
+    if (pfmComment_) 
+      fprintf(fp,"#comment\n#%s\n#end\n",pfmComment_);
     pfmComment_=0;
 #ifdef WORDS_BIGENDIAN
     fprintf(fp,"B # Big endian\n");
@@ -1291,8 +1308,9 @@ int pfm_writepfm_region_type(FILE *fp, const void *data,
 #endif
     fprintf(fp,"%d\t%d\n",dx,dy);
     fprintf(fp,"%f\t%f\n",minval,maxval);
-    for (x=0; x<dx; x++) ipx[x]=minval;
-    for (y=y1; y<=y2; y++)
+    for (x=0; x<dx; ++x) 
+      ipx[x]=minval;
+    for (y=y1; y<=y2; ++y)
       if (y<0 || y>rows-1 || x2<0 || x1>=cols)
         fwrite(ipx,sizeof(int),dx,fp);
       else if (x1<0) {/* y>0 y<rows */
@@ -1314,28 +1332,30 @@ int pfm_writepfm_region_type(FILE *fp, const void *data,
     break;
   case PFM_SINT16:
   case PFM_UINT16:
-    int16buffer=(uint16*)data;
+    int16buffer=(const uint16*)data;
     i16px = calloc(dx,sizeof(uint16));
     if(!i16px) return 0;
     if (minval>maxval) {
       minval=INT_MAX; maxval=INT_MIN;
       y=y1; yi=y2;
       if (y1<0) y=0;
-      if (y2>rows) yi=rows;
-      for (; y<=yi; y++) {
+      if (y2>rows) yi=rows-1;
+      for (; y<=yi; ++y) {
         x=x1; xi=x2;
         if(x1<0) x=0;
-        if(x2>rows)xi=cols;  
-        for (; x<=xi; x++)  {
+        if(x2>cols-1) xi=cols-1;  
+        for (; x<=xi; ++x)  {
           if (int16buffer[y*cols+x]<minval) minval=int16buffer[y*cols+x];
           if (int16buffer[y*cols+x]>maxval) maxval=int16buffer[y*cols+x];
         }
       }
     }
     fprintf(fp,"F6 # 16 bit unsigned integer\n");
-    if (pfmGeoSet_) fprintf(fp,"#geo %f %f %f %f\n",pfmGeoWest_,pfmGeoNorth_,pfmGeoEast_,pfmGeoSouth_);
+    if (pfmGeoSet_) 
+      fprintf(fp,"#geo %f %f %f %f\n",pfmGeoWest_,pfmGeoNorth_,pfmGeoEast_,pfmGeoSouth_);
     pfmGeoSet_=0;
-    if (pfmComment_) fprintf(fp,"#comment\n#%s\n#end\n",pfmComment_);
+    if (pfmComment_) 
+      fprintf(fp,"#comment\n#%s\n#end\n",pfmComment_);
     pfmComment_=0;
 #ifdef WORDS_BIGENDIAN
     fprintf(fp,"B # Big endian\n");
@@ -1344,8 +1364,9 @@ int pfm_writepfm_region_type(FILE *fp, const void *data,
 #endif
     fprintf(fp,"%d\t%d\n",x2-x1+1,y2-y1+1);
     fprintf(fp,"%f\t%f\n",minval,maxval);
-    for (x=0; x<dx; x++) i16px[x]=minval;
-    for (y=y1; y<=y2; y++)
+    for (x=0; x<dx; ++x) 
+      i16px[x]=minval;
+    for (y=y1; y<=y2; ++y)
       if (y<0 || y>rows-1 || x2<0 || x1>=cols)
         fwrite(i16px,sizeof(uint16),dx,fp);
       else if (x1<0) {/* y>0 y<rows */
@@ -1366,34 +1387,36 @@ int pfm_writepfm_region_type(FILE *fp, const void *data,
     free(i16px);
     break;
   case PFM_BYTE:
-    greybuffer=(grey*)data;
+    greybuffer=(const grey*)data;
     gpx = calloc(dx,sizeof(grey));
     if (minval>maxval) {
       minval=INT_MAX; maxval=INT_MIN;
       y=y1; yi=y2;
       if (y1<0) y=0;
-      if (y2>rows) yi=rows;
+      if (y2>rows) yi=rows-1;
       if(!gpx) return 0;
-      for (; y<=yi; y++) {
+      for (; y<=yi; ++y) {
         x=x1; xi=x2;
         if(x1<0) x=0;
-        if(x2>rows)xi=cols;  
-        for (; x<=xi; x++)  {
+        if(x2>cols-1) xi=cols-1;  
+        for (; x<=xi; ++x)  {
           if (greybuffer[y*cols+x]<minval) minval=greybuffer[y*cols+x];
           if (greybuffer[y*cols+x]>maxval) maxval=greybuffer[y*cols+x];
         }
       }
     }
     fprintf(fp,"P5 # 8 bit unsigned integer (PGM)\n");
-    if (pfmGeoSet_) fprintf(fp,"#geo %f %f %f %f\n",pfmGeoWest_,pfmGeoNorth_,pfmGeoEast_,pfmGeoSouth_);
+    if (pfmGeoSet_) 
+      fprintf(fp,"#geo %f %f %f %f\n",pfmGeoWest_,pfmGeoNorth_,pfmGeoEast_,pfmGeoSouth_);
     pfmGeoSet_=0;
-    if (pfmComment_) fprintf(fp,"#comment\n#%s\n#end\n",pfmComment_);
+    if (pfmComment_) 
+      fprintf(fp,"#comment\n#%s\n#end\n",pfmComment_);
     pfmComment_=0;
     fprintf(fp,"%d\t%d\n",x2-x1+1,y2-y1+1);
     fprintf(fp,"%d\n",(int)255);
   /*  fprintf(fp,"%d\n",(int)maxval); */
-    for (x=0; x<dx; x++) gpx[x]=minval;
-    for (y=y1; y<=y2; y++)
+    for (x=0; x<dx; ++x) gpx[x]=minval;
+    for (y=y1; y<=y2; ++y)
       if (y<0 || y>rows-1 || x2<0 || x1>=cols)
         fwrite(gpx,sizeof(grey),dx,fp);
       else if (x1<0) {/* y>0 y<rows */

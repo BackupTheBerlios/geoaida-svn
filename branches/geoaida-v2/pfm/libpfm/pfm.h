@@ -101,6 +101,22 @@ typedef float PFMConvert(float v, float min_val, float max_val);
 extern "C" {
 #endif
 
+/** Allocate data for an image of size rows * cols with the given storageType 
+    and initializes it to 0
+*/
+void* pfm_alloc_type(int cols, int rows,
+		     int storageType);
+
+/** Frees the data previously allocated by pfm_alloc_type.
+*/
+void pfm_free(void* data);
+
+/** Write the header (rows, cols, minval and maxval) and all
+    data. The storageType must name the type of the data.
+*/
+void* pfm_alloc_type(int cols, int rows,
+		     int storageType);
+
 /** pfm_readpfm_type:
     Read an entire floatmap file into memory, returning the
     allocated array as pointer of type storageType (see above).
@@ -114,6 +130,7 @@ void *pfm_readpfm_type(FILE *fp,
            float *maxval,
            int storageType,
            PFMConvert *convFunc);
+
 /** Read an entire floatmap file into memory, returning the
     allocated array as pointer to float and filling in the
     rows, cols, minval and maxval variables.
@@ -121,6 +138,7 @@ void *pfm_readpfm_type(FILE *fp,
 float *pfm_readpfm(FILE *fp,
        int *cols, int *rows,
        float *minval, float *maxval);
+
 /** Write the header (rows, cols, minval and maxval) and the specified
     part (x1, y1, x2, y2) of the data to the giver filepointer.
     The storageType must name the type of the data. Specified part can
@@ -131,6 +149,7 @@ int pfm_writepfm_region_type(FILE *fp, const void *data,
            float minval, float maxval,
            int x1, int y1, int x2, int y2,
            int storageType);
+
 /** Write the header (rows, cols, minval and maxval) and the specified
     part (x1, y1, x2, y2) of the floatmap to the giver filepointer.
     The storageType and data type must be float. Specified part can
@@ -140,6 +159,7 @@ int pfm_writepfm_region(FILE *fp, const float *data,
       int cols, int rows,
       float minval, float maxval,
       int x1, int y1, int x2, int y2);
+
 /** Write the header (rows, cols, minval and maxval) and all
     data. The storageType must name the type of the data.
 */
@@ -147,16 +167,19 @@ int pfm_writepfm_type(FILE *fp, const void *data,
           int cols, int rows,
           float minval, float maxval,
           int storageType);
+
 /** Write the header (rows, cols, minval and maxval) and all
     data of the floatmap. The storageType and data type are float.
 */
 int pfm_writepfm(FILE *fp, const float *data,
      int cols, int rows,
      float minval, float maxval);
+
 /** This function filling in the rows and cols variables.
 */
 int pfm_readpfm_size(FILE *fp,
          int *cols, int *rows);
+
 /** This function read the header and filling in the rows, cols, minval
     and maxval variables.
 */

@@ -60,10 +60,6 @@ void ArgDict::insert(QString name, QString val) {
   QHash<QString,QString>::insert(name.toLower(),val);
 }
 
-void ArgDict::insert(QString name, const char* val) {
-  insert(name,QString(val));
-}
-
 void ArgDict::insert(QString name, bool val) {
   QString s(val ? "TRUE" : "FALSE" );
   insert(name.toLower(),s);
@@ -79,10 +75,6 @@ void ArgDict::replace(QString name, double val) {
 
 void ArgDict::replace(QString name, QString val) {
   insert(name.toLower(),val);
-}
-
-void ArgDict::replace(QString name, const char* val) {
-  insert(name.toLower(),QString(val));
 }
 
 void ArgDict::replace(QString name, bool val) {
@@ -117,7 +109,7 @@ void MLTagTable::set(const QString *table)
 
   for (size=0; !table[size].isEmpty(); size++);
 
-  if (tagtable_) delete tagtable_;
+  delete[] tagtable_;
   tagtable_=new int[size];
 
   for (i=0; !table[i].isEmpty(); i++) {
@@ -128,7 +120,7 @@ void MLTagTable::set(const QString *table)
 
 MLTagTable::~MLTagTable()
 {
-  if (tagtable_) delete tagtable_;
+  delete[] tagtable_;
 }
 
 

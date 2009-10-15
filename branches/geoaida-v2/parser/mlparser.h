@@ -58,12 +58,10 @@ class ArgDict : public QHash<QString,QString> {
   void insert(QString name, double val);
   void insert(QString name, QString val);
   void insert(QString name, bool val);
-  void insert(QString name, const char* val);
   void replace(QString name, int val);
   void replace(QString name, double val);
   void replace(QString name, QString val);
   void replace(QString name, bool val);
-  void replace(QString name, const char* val);
 };
 
 typedef ArgDict::Iterator ArgDictIterator;

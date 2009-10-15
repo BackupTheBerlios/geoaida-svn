@@ -561,25 +561,10 @@ NodeList* NodeList::merge (bool newReg, QString outImgName) {
 //    bb.getInt(node->id(),1),
 //    bb.getInt(node->id(),2),
 //    bb.getInt(node->id(),3));
-#ifdef WIN32
-    qDebug("nodelist.cpp 459:llx, llyl urx, ury");
-
-//Was denn??
-  /** get a pixel */
-//  int getInt(int x, int y, int channel=0);
-  /** get a pixel */
-//  int getInt(const void *ptr);
-//Quelltyp konnte von keinem Konstruktor angenommen werden, oder die Ueberladungsaufloesung des Konstruktors ist mehrdeutig
-    node->replace("llx",&QString((float)(bb.getInt(node->id(),0))));
-    node->replace("lly",&QString((float)(bb.getInt(node->id(),1))));
-    node->replace("urx",&QString((float)(bb.getInt(node->id(),2))));
-    node->replace("ury",&QString((float)(bb.getInt(node->id(),3))));
-#else
     node->replace("llx",bb.getInt(node->id(),0));
     node->replace("lly",bb.getInt(node->id(),1));
     node->replace("urx",bb.getInt(node->id(),2));
     node->replace("ury",bb.getInt(node->id(),3));
-#endif
     // XXX Was ist mit voellig ueberdeckten nodeen ??
     if( bb.getInt(node->id(),0)==0 && bb.getInt(node->id(),1)==0 &&
         bb.getInt(node->id(),2)==0 && bb.getInt(node->id(),3)==0 )
