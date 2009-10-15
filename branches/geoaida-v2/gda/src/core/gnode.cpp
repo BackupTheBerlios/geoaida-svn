@@ -44,10 +44,6 @@ GNode::~GNode()
 GNode::GNode(GNode & node)
 {
   init();
-#ifdef WIN32
-  qDebug ("GNode.parent_ = %x", &node);
-  parent_ = &node;
-#endif
   sections_ = node.sections_;
   attribList_=node.attribList_;
   name_ = node.name_;
@@ -69,13 +65,8 @@ GNode::GNode(MLParser & parser)
 /** Init member variables */
 void GNode::init()
 {
-#ifdef WIN32
-  name_ = QString("");    
-  guiPtr_ = NULL;
-#else
   name_ = ""; 
   guiPtr_ = 0;
-#endif
   parent_ = 0;
 //  qDebug ("GNode generiert");
   sections_ += "generic";
@@ -198,32 +189,6 @@ bool GNode::attributeRemove(QString key)
 AttribList & GNode::attribList()
 {
   return attribList_;
-}
-
-/**  Makes a copy of this node */
-GNode *GNode::copy()
-{
-  GNode *gn = new GNode(*this);
-#ifdef WIN32
-  if (gn == 0){
-    //cout << "Out of Memory..7";
-    exit(1);
-  }
-#endif
-  return gn;
-}
-
-/** return a new Node */
-GNode *GNode::newNode()
-{
-  GNode *gn = new GNode();
-#ifdef WIN32
-  if (gn == 0){
-    //cout << "Out of Memory..8";
-    exit(1);
-  }
-#endif
-  return gn;
 }
 
 /** Set the attribute key to val */

@@ -34,6 +34,7 @@ class InstanceNet : public NetModel
   INode *rootNode() {
     return static_cast<INode*>(rootNode_);
   }
+  void readfile(MLParser& parser);
 };
 
 #endif

@@ -15,10 +15,9 @@
  *                                                                         *
  ***************************************************************************/
 
-
 #include "semanticnet.h"
 #include "SNode"
-#include "NodeException"
+
 /** Read a  net  */
 void SemanticNet::readfile(MLParser& parser)
 {
@@ -30,11 +29,10 @@ void SemanticNet::readfile(MLParser& parser)
   do {
     tag = parser.tag(nodeTagTable);
   } while ((tag != TOK_NODE) && (tag != MLParser::END_OF_FILE));
-  if (tag == TOK_NODE)
+  if (tag == TOK_NODE) {
     rootNode_ = new SNode(parser);
-  if (rootNode_)
+    Q_ASSERT(rootNode_!=0);
     qDebug("NetModel: Root=%s\n", rootNode_->name().toLatin1().constData());
-  else
-    throw NodeException(NodeException::ALLOC_FAILED);
+  }
 }
 

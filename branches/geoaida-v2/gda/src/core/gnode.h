@@ -79,9 +79,9 @@ public:                        // Public attributes
   /** This node is a compound of its subnodes. */
   bool isCompound();
   /**  Makes a copy of this node */
-  virtual GNode* copy();
+  virtual GNode* copy() =0;
   /** return a new Node */
-  virtual GNode *newNode();
+  virtual GNode *newNode() =0;
   /** Set variables of this node using the attributes */
   virtual void setVars();
 #if 0

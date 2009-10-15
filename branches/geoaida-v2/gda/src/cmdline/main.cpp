@@ -45,13 +45,8 @@ int main(int argc, char **argv)
   operatorList_.readDir(d.path());	
   Project project;
   project.read(argv[1]);
-//   MainWindow *mainWindow = new MainWindow(argc,argv);
-//   mainWindow->show();
   project.analyze();
   project.saveResults();
-  //  app.exec();
-
-  //  int ret_val=app.exec();
   return 0;
 
 }

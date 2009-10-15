@@ -241,25 +241,6 @@ void NetModel::read(QIODevice & fp)
   readfile(parser);
 }
 
-/** Read a  net  */
-void NetModel::readfile(MLParser& parser)
-{
-  if (rootNode_) {
-    delete rootNode_;
-    rootNode_=0;
-  }
-  int tag;
-  do {
-    tag = parser.tag(nodeTagTable);
-  } while ((tag != TOK_NODE) && (tag != MLParser::END_OF_FILE));
-  if (tag == TOK_NODE)
-    rootNode_ = new GNode(parser);
-  if (rootNode_)
-    qDebug("NetModel: Root=%s\n", rootNode_->name().toLatin1().constData());
-  else
-    throw NodeException(NodeException::ALLOC_FAILED);
-}
-
 /** Write a  net. The filename must be set before */
 void NetModel::write()
 {

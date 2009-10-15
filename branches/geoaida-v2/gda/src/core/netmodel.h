@@ -58,7 +58,7 @@ public:
   void read();
   void read(const QString & fname);
   void read(QIODevice& fp);
-  virtual void readfile(MLParser& parser);
+  virtual void readfile(MLParser& parser)=0;
   void setRootNode(GNode* node);
   GNode *rootNode(void);
   void write();
