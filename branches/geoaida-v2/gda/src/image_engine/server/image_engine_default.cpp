@@ -1,11 +1,11 @@
 /***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- ***************************************************************************/
+*                                                                         *
+*   This program is free software; you can redistribute it and/or modify  *
+*   it under the terms of the GNU General Public License as published by  *
+*   the Free Software Foundation; either version 2 of the License, or     *
+*   (at your option) any later version.                                   *
+*                                                                         *
+***************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -36,20 +36,20 @@ using namespace GA::IE;
 ///
 ///////////////////////////////////////////////////////////////////////////////
 bool ImageEngineDefault::getPartOfImage(QString InputImage,
-										float GeoWest, float GeoNorth,
-										float GeoEast, float GeoSouth,
-										QString FileName
-										) const
+                                        float GeoWest, float GeoNorth,
+                                        float GeoEast, float GeoSouth,
+                                        QString FileName
+                                        ) const
 {
-	std::cout << "ImageEngineDefault: getPartOfImage requested" << std::endl;
-	
-	std::cout << "ImageEngineDefault: Parameters:" << std::endl;
-	std::cout << "  InputImage = " << InputImage.toStdString() << std::endl;
-	std::cout << "  GeoWest    = " << GeoWest << std::endl;
-	std::cout << "  GeoNorth   = " << GeoNorth << std::endl;
-	std::cout << "  GeoEast    = " << GeoEast << std::endl;
-	std::cout << "  GeoSouth   = " << GeoSouth << std::endl;
-	std::cout << "  FileName   = " << FileName.toStdString() << std::endl;
-	
-	return true;
+    std::cout << "ImageEngineDefault: getPartOfImage requested" << std::endl;
+    
+    std::cout << "ImageEngineDefault: Parameters:" << std::endl;
+    std::cout << "  InputImage = " << InputImage.toStdString() << std::endl;
+    std::cout << "  GeoWest    = " << GeoWest << std::endl;
+    std::cout << "  GeoNorth   = " << GeoNorth << std::endl;
+    std::cout << "  GeoEast    = " << GeoEast << std::endl;
+    std::cout << "  GeoSouth   = " << GeoSouth << std::endl;
+    std::cout << "  FileName   = " << FileName.toStdString() << std::endl;
+    
+    return true;
 }

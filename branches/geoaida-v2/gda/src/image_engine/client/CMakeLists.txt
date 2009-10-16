@@ -2,8 +2,12 @@ project(ImageClient)
 
 cmake_minimum_required(VERSION 2.6)
 
-include(FindQt4)
+find_package(Qt4 REQUIRED)
 set(QT_USE_QTNETWORK 1)
+
+# include(${QT_USE_FILE})
+
+add_definitions(${QT_DEFINITIONS})
 
 include_directories(
 	${QT_QTCORE_INCLUDE_DIR}

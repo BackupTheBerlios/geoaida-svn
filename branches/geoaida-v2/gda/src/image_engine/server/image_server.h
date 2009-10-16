@@ -1,11 +1,11 @@
 /***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- ***************************************************************************/
+*                                                                         *
+*   This program is free software; you can redistribute it and/or modify  *
+*   it under the terms of the GNU General Public License as published by  *
+*   the Free Software Foundation; either version 2 of the License, or     *
+*   (at your option) any later version.                                   *
+*                                                                         *
+***************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -41,27 +41,27 @@ namespace GA{namespace IE{
 class ImageServer : public QTcpServer
 {
 
-	Q_OBJECT
+    Q_OBJECT
 
-	public:
+    public:
 
-		//--- Constructor / Destructor----------------------------------------//
-		ImageServer(const quint16& unPort, QObject* parent=0);
+        //--- Constructor / Destructor----------------------------------------//
+        ImageServer(const quint16& unPort, QObject* parent=0);
 
-		//--- Methods --------------------------------------------------------//
+        //--- Methods --------------------------------------------------------//
 
-		//--- Constant Methods -----------------------------------------------//
-	
-	protected:
+        //--- Constant Methods -----------------------------------------------//
+    
+    protected:
 
-		void incomingConnection(int socketDescriptor);
-		
-	private:
+        void incomingConnection(int socketDescriptor);
+        
+    private:
 
-		//--- Methods --------------------------------------------------------//
+        //--- Methods --------------------------------------------------------//
 
-		//--- Private Variables ----------------------------------------------//
-		ImageEngineBase*	m_pImageEngine;		///< Pointer to image engine
+        //--- Private Variables ----------------------------------------------//
+        ImageEngineBase*	m_pImageEngine;		///< Pointer to image engine
 
 };
 

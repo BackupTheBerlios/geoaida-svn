@@ -1,11 +1,11 @@
 /***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- ***************************************************************************/
+*                                                                         *
+*   This program is free software; you can redistribute it and/or modify  *
+*   it under the terms of the GNU General Public License as published by  *
+*   the Free Software Foundation; either version 2 of the License, or     *
+*   (at your option) any later version.                                   *
+*                                                                         *
+***************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -31,10 +31,10 @@ using namespace GA::IE;
 ///
 ///////////////////////////////////////////////////////////////////////////////
 ImageServerThread::ImageServerThread(int nSocketDescriptor, QObject* pParent,
-									const ImageEngineBase* const pImageEngine) :
-									m_nSocketDescriptor(nSocketDescriptor),
-									QThread(pParent),
-									m_pImageEngine(pImageEngine)
+                                    const ImageEngineBase* const pImageEngine) :
+                                    m_nSocketDescriptor(nSocketDescriptor),
+                                    QThread(pParent),
+                                    m_pImageEngine(pImageEngine)
 {
 }
 
@@ -45,11 +45,11 @@ ImageServerThread::ImageServerThread(int nSocketDescriptor, QObject* pParent,
 ///////////////////////////////////////////////////////////////////////////////
 ImageServerThread::~ImageServerThread()
 {
-	if (m_pClientSocket!=0)
-	{
-		delete m_pClientSocket;
-		m_pClientSocket = 0;
-	}
+    if (m_pClientSocket!=0)
+    {
+        delete m_pClientSocket;
+        m_pClientSocket = 0;
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -59,8 +59,8 @@ ImageServerThread::~ImageServerThread()
 ///////////////////////////////////////////////////////////////////////////////
 void ImageServerThread::socketDisconnected()
 {
-	std::cout << "ImageServerThread: Socket disconnected, leaving thread." << std::endl;
-	quit();
+    std::cout << "ImageServerThread: Socket disconnected, leaving thread." << std::endl;
+    quit();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -70,21 +70,21 @@ void ImageServerThread::socketDisconnected()
 ///////////////////////////////////////////////////////////////////////////////
 void ImageServerThread::threadStarted()
 {
-	std::cout << "ImageServerThread: Thread running." << std::endl;
-	
-	m_pClientSocket = new QTcpSocket(this);
+    std::cout << "ImageServerThread: Thread running." << std::endl;
+    
+    m_pClientSocket = new QTcpSocket(this);
 
-	connect(m_pClientSocket, SIGNAL(disconnected()), this, SLOT(socketDisconnected()));
-	connect(m_pClientSocket, SIGNAL(readyRead()), this, SLOT(getRequest()));
-	
-	if (!m_pClientSocket->setSocketDescriptor(m_nSocketDescriptor))
-	{
-		std::cerr << "ImageServerThread: Error setting socket descriptor." << std::endl;
-		return;
-	}
-	m_nHeader = 0;
-	m_nStreamSize = 0;
-	m_nNumberOfParameters = 0;
+    connect(m_pClientSocket, SIGNAL(disconnected()), this, SLOT(socketDisconnected()));
+    connect(m_pClientSocket, SIGNAL(readyRead()), this, SLOT(getRequest()));
+    
+    if (!m_pClientSocket->setSocketDescriptor(m_nSocketDescriptor))
+    {
+        std::cerr << "ImageServerThread: Error setting socket descriptor." << std::endl;
+        return;
+    }
+    m_nHeader = 0;
+    m_nStreamSize = 0;
+    m_nNumberOfParameters = 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -94,73 +94,73 @@ void ImageServerThread::threadStarted()
 ///////////////////////////////////////////////////////////////////////////////
 void ImageServerThread::getRequest()
 {	
-	// Prepare stream to request part of image
-	QDataStream in(m_pClientSocket);
-	in.setVersion(QDataStream::Qt_4_0);
-	
-	std::cout << "ImageServerThread: Bytes available at socket: " << 
-					m_pClientSocket->bytesAvailable() << std::endl;
+    // Prepare stream to request part of image
+    QDataStream in(m_pClientSocket);
+    in.setVersion(QDataStream::Qt_4_0);
+    
+    std::cout << "ImageServerThread: Bytes available at socket: " << 
+                    m_pClientSocket->bytesAvailable() << std::endl;
 
-	// Get the size of the data stream
-	if (m_nStreamSize == 0)
-	{
-		if (m_pClientSocket->bytesAvailable() < (int)sizeof(quint64))
-			return;
-		
-		in >> m_nStreamSize;
-		
-		std::cout << "ImageServerThread: Stream size: " << 
-					m_nStreamSize << std::endl;
-	}
+    // Get the size of the data stream
+    if (m_nStreamSize == 0)
+    {
+        if (m_pClientSocket->bytesAvailable() < (int)sizeof(quint64))
+            return;
+        
+        in >> m_nStreamSize;
+        
+        std::cout << "ImageServerThread: Stream size: " << 
+                    m_nStreamSize << std::endl;
+    }
 
-	// Read header and request
-	if ((m_pClientSocket->bytesAvailable() == m_nStreamSize-(int)sizeof(quint64)) &&
-		(m_nStreamSize != 0))
-	{	
-		in >> m_nHeader;
-		in >> m_nNumberOfParameters;
-		std::cout << "ImageServerThread: Incoming request = " << constToString(m_nHeader)
-				<< std::endl;
-		std::cout << "ImageServerThread: Number of parameters = " << int(m_nNumberOfParameters)
-				<< std::endl;
-		switch (m_nHeader)
-		{
-			case REQUEST_PART_OF_IMAGE:
-			{
-				if (m_nNumberOfParameters != 6)
-				{
-					std::cout << "ImageServerThread: Wrong number of parameters." << std::endl;
-					this->sendRequestReturnValue(REQUEST_RETURN_VALUE_WRONG_PARAM);
-					return;
-				}
-				QVariant InputImage;
-				QVariant GeoWest;
-				QVariant GeoNorth;
-				QVariant GeoEast;
-				QVariant GeoSouth;
-				QVariant FileName;
-				in >> InputImage;
-				in >> GeoWest;
-				in >> GeoNorth;
-				in >> GeoEast;
-				in >> GeoSouth;
-				in >> FileName;
+    // Read header and request
+    if ((m_pClientSocket->bytesAvailable() == m_nStreamSize-(int)sizeof(quint64)) &&
+        (m_nStreamSize != 0))
+    {	
+        in >> m_nHeader;
+        in >> m_nNumberOfParameters;
+        std::cout << "ImageServerThread: Incoming request = " << constToString(m_nHeader)
+                << std::endl;
+        std::cout << "ImageServerThread: Number of parameters = " << int(m_nNumberOfParameters)
+                << std::endl;
+        switch (m_nHeader)
+        {
+            case REQUEST_PART_OF_IMAGE:
+            {
+                if (m_nNumberOfParameters != 6)
+                {
+                    std::cout << "ImageServerThread: Wrong number of parameters." << std::endl;
+                    this->sendRequestReturnValue(REQUEST_RETURN_VALUE_WRONG_PARAM);
+                    return;
+                }
+                QVariant InputImage;
+                QVariant GeoWest;
+                QVariant GeoNorth;
+                QVariant GeoEast;
+                QVariant GeoSouth;
+                QVariant FileName;
+                in >> InputImage;
+                in >> GeoWest;
+                in >> GeoNorth;
+                in >> GeoEast;
+                in >> GeoSouth;
+                in >> FileName;
 
-				m_pImageEngine->getPartOfImage(InputImage.toString(), GeoWest.toDouble(),
-											   GeoNorth.toDouble(), GeoEast.toDouble(),
-											   GeoSouth.toDouble(), FileName.toString());
-				   
-				this->sendRequestReturnValue(REQUEST_RETURN_VALUE_ACCEPT);
-				break;
-			}
-			case REQUEST_SETUP_SERVER:
-			{
-				break;
-			}
-			default:
-				std::cout << "ImageServerThread: Unknown request " << m_nHeader << std::endl;
-		}
-	}
+                m_pImageEngine->getPartOfImage(InputImage.toString(), GeoWest.toDouble(),
+                                            GeoNorth.toDouble(), GeoEast.toDouble(),
+                                            GeoSouth.toDouble(), FileName.toString());
+                
+                this->sendRequestReturnValue(REQUEST_RETURN_VALUE_ACCEPT);
+                break;
+            }
+            case REQUEST_SETUP_SERVER:
+            {
+                break;
+            }
+            default:
+                std::cout << "ImageServerThread: Unknown request " << m_nHeader << std::endl;
+        }
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -172,15 +172,15 @@ void ImageServerThread::getRequest()
 ///////////////////////////////////////////////////////////////////////////////
 void ImageServerThread::sendRequestReturnValue(const quint16& nReturn) const
 {
-	std::cout << "ImageServerThread: Sending " << constToString(nReturn) 
-				<< std::endl;
-	
-	// Prepare outstream to send return value
-	QByteArray block;
-	QDataStream out(&block, QIODevice::WriteOnly);
-	out.setVersion(QDataStream::Qt_4_0);
-	
-	// Send return value
-	out << nReturn;
-	m_pClientSocket->write(block);
+    std::cout << "ImageServerThread: Sending " << constToString(nReturn) 
+                << std::endl;
+    
+    // Prepare outstream to send return value
+    QByteArray block;
+    QDataStream out(&block, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_4_0);
+    
+    // Send return value
+    out << nReturn;
+    m_pClientSocket->write(block);
 }

@@ -1,11 +1,11 @@
 /***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- ***************************************************************************/
+*                                                                         *
+*   This program is free software; you can redistribute it and/or modify  *
+*   it under the terms of the GNU General Public License as published by  *
+*   the Free Software Foundation; either version 2 of the License, or     *
+*   (at your option) any later version.                                   *
+*                                                                         *
+***************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -43,45 +43,46 @@ namespace GA{namespace IE{
 class ImageClient : public QObject
 {
 
-	Q_OBJECT
+    Q_OBJECT
 
-	public:
+    public:
 
-		//--- Constructor / Destructor----------------------------------------//
-		ImageClient(const QString& Host, const quint16& unPort);
-		~ImageClient();
+        //--- Constructor / Destructor----------------------------------------//
+        ImageClient(const QString& Host, const quint16& unPort);
+        ~ImageClient();
 
-		//--- Constant Methods -----------------------------------------------//
-		
-		//--- Methods --------------------------------------------------------//
-		void getPartOfImage(QString InputImage,
-							float GeoWest, float GeoNorth,
-							float GeoEast, float GeoSouth,
-							QString FileName
-							);
-		void setupServer();
+        //--- Constant Methods -----------------------------------------------//
+        
+        //--- Methods --------------------------------------------------------//
+        void getPartOfImage(QString InputImage,
+                            float GeoWest, float GeoNorth,
+                            float GeoEast, float GeoSouth,
+                            QString FileName
+                            );
+        void setupServer();
 
-	private slots:
+    private slots:
 
-		//--- Methods --------------------------------------------------------//
-		void displayError(QAbstractSocket::SocketError);
-		void receiveData();
-		void sendRequest();
+        //--- Methods --------------------------------------------------------//
+        void displayError(QAbstractSocket::SocketError);
+        void receiveData();
+        void sendRequest();
 
-	private:
-		//--- Constant Methods -----------------------------------------------//
-		void connectToServer() const;
-		
-		//--- Methods --------------------------------------------------------//
-		
-	  
-		//--- Private Variables ----------------------------------------------//
-		QTcpSocket*		m_pTcpSocket;			///< Socked for this connection
-		quint8			m_nRequest;				///< Request header description
-		quint16			m_unPort;				///< Port for connection
-		QString			m_Host;					///< Host for connection
-		
-		QList<QVariant> m_ParameterList;		///< List of parameters depending on method call
+    private:
+        //--- Constant Methods -----------------------------------------------//
+        void connectToServer() const;
+        
+        //--- Methods --------------------------------------------------------//
+        
+    
+        //--- Private Variables ----------------------------------------------//
+        QTcpSocket*		m_pTcpSocket;			///< Socked for this connection
+        quint8			m_nRequest;				///< Request header description
+        quint16			m_unPort;				///< Port for connection
+        QString			m_Host;					///< Host for connection
+        
+        QList<QVariant> m_ParameterList;		///< List of parameters depending
+                                                ///  on method call
 };
 
 }}

@@ -1,11 +1,11 @@
 /***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- ***************************************************************************/
+*                                                                         *
+*   This program is free software; you can redistribute it and/or modify  *
+*   it under the terms of the GNU General Public License as published by  *
+*   the Free Software Foundation; either version 2 of the License, or     *
+*   (at your option) any later version.                                   *
+*                                                                         *
+***************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -23,13 +23,28 @@
 #include <QObject>
 #include <string>
 
+////////////////////////////////////////////////////////////////////////////////
+///
+/// \namespace GA \brief Global namespace for GeoAIDA.
+/// \namespace GA::IE \brief Namespace for image engine related code
+///
+////////////////////////////////////////////////////////////////////////////////
+
 namespace GA{namespace IE{
 
 //--- Constants --------------------------------------------------------------//
-const quint16 REQUEST_PART_OF_IMAGE	= 1;
-const quint16 REQUEST_SETUP_SERVER	= 2;
-const quint16 REQUEST_RETURN_VALUE_ACCEPT = 3;
-const quint16 REQUEST_RETURN_VALUE_WRONG_PARAM = 4;
+const quint16 REQUEST_PART_OF_IMAGE	= 1;			///< Signal to ask server
+                                                    ///  for getPartOfImage
+                                                    ///  method
+const quint16 REQUEST_SETUP_SERVER	= 2;			///< Signal to ask server
+                                                    ///  for setup method
+const quint16 REQUEST_RETURN_VALUE_ACCEPT = 3;		///< Signal from server 
+                                                    ///  showing that request
+                                                    ///  is accepted
+const quint16 REQUEST_RETURN_VALUE_WRONG_PARAM = 4; ///< Signal from server
+                                                    ///  showing that a wrong
+                                                    ///  number of parameters
+                                                    ///  was transmitted
 
 //--- Functions --------------------------------------------------------------//
 const std::string constToString(const quint16& nConst);

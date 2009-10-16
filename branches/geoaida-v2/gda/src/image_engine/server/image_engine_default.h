@@ -1,11 +1,11 @@
 /***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- ***************************************************************************/
+*                                                                         *
+*   This program is free software; you can redistribute it and/or modify  *
+*   it under the terms of the GNU General Public License as published by  *
+*   the Free Software Foundation; either version 2 of the License, or     *
+*   (at your option) any later version.                                   *
+*                                                                         *
+***************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -37,20 +37,20 @@ namespace GA{namespace IE{
 class ImageEngineDefault : public ImageEngineBase
 {
 
-	public:
+    public:
 
-		//--- Constructor / Destructor ---------------------------------------//
-		ImageEngineDefault(){}
-		~ImageEngineDefault(){}
+        //--- Constructor / Destructor ---------------------------------------//
+        ImageEngineDefault(){}
+        ~ImageEngineDefault(){}
 
-		//--- Methods --------------------------------------------------------//
+        //--- Methods --------------------------------------------------------//
 
-		//--- Constant Methods -----------------------------------------------//
-		bool getPartOfImage(QString InputImage,
-							float GeoWest, float GeoNorth,
-							float GeoEast, float GeoSouth,
-							QString FileName
-							) const;
+        //--- Constant Methods -----------------------------------------------//
+        bool getPartOfImage(QString InputImage,
+                            float GeoWest, float GeoNorth,
+                            float GeoEast, float GeoSouth,
+                            QString FileName
+                            ) const;
 
 };
 
