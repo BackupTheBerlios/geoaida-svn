@@ -27,6 +27,7 @@
 #include "ImageEngineCommons"
 
 //--- Misc header ------------------------------------------------------------//
+#include <QCoreApplication>
 #include <QHostAddress>
 #include <QList>
 #include <QString>
@@ -60,6 +61,7 @@ class ImageClient : public QObject
                             QString FileName
                             );
         void setupServer();
+        void shutDownServer();
 
     private slots:
 
@@ -71,17 +73,21 @@ class ImageClient : public QObject
     private:
         //--- Constant Methods -----------------------------------------------//
         void connectToServer() const;
+        //--- Methods --------------------------------------------------------//
+        void eventLoop();
         
         //--- Methods --------------------------------------------------------//
         
     
         //--- Private Variables ----------------------------------------------//
-        QTcpSocket*		m_pTcpSocket;			///< Socked for this connection
-        quint8			m_nRequest;				///< Request header description
-        quint16			m_unPort;				///< Port for connection
-        QString			m_Host;					///< Host for connection
+        QTcpSocket*     m_pTcpSocket;           ///< Socked for this connection
+        quint8          m_nRequest;             ///< Request header description
+        quint16         m_unPort;               ///< Port for connection
+        QString         m_Host;                 ///< Host for connection
         
-        QList<QVariant> m_ParameterList;		///< List of parameters depending
+        bool            m_bFinished;            ///< Flags if eventloop is finished
+        
+        QList<QVariant> m_ParameterList;        ///< List of parameters depending
                                                 ///  on method call
 };
 

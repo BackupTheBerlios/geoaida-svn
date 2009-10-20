@@ -30,8 +30,10 @@ using namespace GA::IE;
 ///
 ///////////////////////////////////////////////////////////////////////////////
 ImageClient::ImageClient(const QString& Host,
-                        const quint16& unPort) : m_unPort(unPort),
-                                                m_Host(Host)
+                         const quint16& unPort) : m_pTcpSocket(0),
+                                                  m_unPort(unPort),
+                                                  m_Host(Host),
+                                                  m_bFinished(false)
 {
     m_pTcpSocket = new QTcpSocket(this);
     
@@ -40,7 +42,6 @@ ImageClient::ImageClient(const QString& Host,
             this, SLOT(displayError(QAbstractSocket::SocketError)));
             
     connect(m_pTcpSocket, SIGNAL(connected()), this, SLOT(sendRequest()));
-    connect(m_pTcpSocket, SIGNAL(disconnected()), m_pTcpSocket, SLOT(deleteLater()));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -85,6 +86,7 @@ void ImageClient::getPartOfImage(QString InputImage,
     m_ParameterList.push_back(GeoSouth);
     m_ParameterList.push_back(FileName);
     connectToServer();
+    eventLoop();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -99,6 +101,22 @@ void ImageClient::setupServer()
 {
     m_nRequest = REQUEST_SETUP_SERVER;
     connectToServer();
+    eventLoop();
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///
+/// \brief Method to shut down the image server
+///
+/// This method connects to the image server and sends a method to shut down
+/// the server. That means, that its global event loop is stopped.
+///
+///////////////////////////////////////////////////////////////////////////////
+void ImageClient::shutDownServer()
+{
+    m_nRequest = REQUEST_SHUTDOWN_SERVER;
+    connectToServer();
+    eventLoop();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -111,6 +129,9 @@ void ImageClient::setupServer()
 void ImageClient::displayError(QAbstractSocket::SocketError)
 {
     std::cout << "ImageClient: Error, no connection." << std::endl;
+    
+    // Stop event loop
+    m_bFinished = true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -167,7 +188,10 @@ void ImageClient::receiveData()
                 << constToString(nReturnVal) << std::endl;
     
     std::cout << "ImageClient: Disconnecting from server." << std::endl;
-    m_pTcpSocket->disconnectFromHost();	
+    m_pTcpSocket->disconnectFromHost();
+    
+    // Stop event loop
+    m_bFinished = true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -180,4 +204,19 @@ void ImageClient::connectToServer() const
     std::cout << "ImageClient: Connecting to server." << std::endl;
     m_pTcpSocket->abort();
     m_pTcpSocket->connectToHost(m_Host, m_unPort);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///
+/// \brief Method to establish a connection to image server
+///
+///////////////////////////////////////////////////////////////////////////////
+void ImageClient::eventLoop()
+{
+    m_bFinished = false;
+    while (!m_bFinished) 
+        QCoreApplication::processEvents(QEventLoop::AllEvents,30);
+    
+    // Has to be connected _after_ event loop is started
+    connect(m_pTcpSocket, SIGNAL(disconnected()), m_pTcpSocket, SLOT(deleteLater()));
 }

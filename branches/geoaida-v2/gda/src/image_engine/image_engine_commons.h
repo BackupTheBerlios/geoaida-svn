@@ -33,15 +33,17 @@
 namespace GA{namespace IE{
 
 //--- Constants --------------------------------------------------------------//
-const quint16 REQUEST_PART_OF_IMAGE	= 1;			///< Signal to ask server
+const quint16 REQUEST_PART_OF_IMAGE	= 1;            ///< Signal to ask server
                                                     ///  for getPartOfImage
                                                     ///  method
-const quint16 REQUEST_SETUP_SERVER	= 2;			///< Signal to ask server
+const quint16 REQUEST_SETUP_SERVER	= 2;            ///< Signal to ask server
                                                     ///  for setup method
-const quint16 REQUEST_RETURN_VALUE_ACCEPT = 3;		///< Signal from server 
+const quint16 REQUEST_SHUTDOWN_SERVER  = 3;         ///< Signal to ask server
+                                                    ///  to shut itsself down
+const quint16 REQUEST_RETURN_VALUE_ACCEPT = 4;      ///< Signal from server 
                                                     ///  showing that request
                                                     ///  is accepted
-const quint16 REQUEST_RETURN_VALUE_WRONG_PARAM = 4; ///< Signal from server
+const quint16 REQUEST_RETURN_VALUE_WRONG_PARAM = 5; ///< Signal from server
                                                     ///  showing that a wrong
                                                     ///  number of parameters
                                                     ///  was transmitted

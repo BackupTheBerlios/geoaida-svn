@@ -157,6 +157,10 @@ void ImageServerThread::getRequest()
             {
                 break;
             }
+            case REQUEST_SHUTDOWN_SERVER:
+            {
+                break;
+            }
             default:
                 std::cout << "ImageServerThread: Unknown request " << m_nHeader << std::endl;
         }

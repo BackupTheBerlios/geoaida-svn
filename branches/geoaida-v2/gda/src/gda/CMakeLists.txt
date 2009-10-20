@@ -32,9 +32,11 @@ ADD_EXECUTABLE(gda-gui ${sources})
 
 
 IF(WIN32)
-TARGET_LINK_LIBRARIES(gda-gui gdagui gdacore mlparser pfm ${CMAKE_SOURCE_DIR}/3rdparty/netpbm/lib/libnetpbm.dll.a ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} ${QT_QTXML_LIBRARY})
+TARGET_LINK_LIBRARIES(gda-gui gdagui gdacore imageengine mlparser pfm ${CMAKE_SOURCE_DIR}/3rdparty/netpbm/lib/libnetpbm.dll.a
+  ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} ${QT_QTXML_LIBRARY} ${QT_QTNETWORK_LIBRARY})
 ELSE(WIN32)
-TARGET_LINK_LIBRARIES(gda-gui gdagui gdacore mlparser pfm pnm ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} ${QT_QTXML_LIBRARY})
+TARGET_LINK_LIBRARIES(gda-gui gdagui gdacore imageengine mlparser pfm pnm 
+  ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} ${QT_QTXML_LIBRARY} ${QT_QTNETWORK_LIBRARY})
 ENDIF(WIN32)
 
 INSTALL(TARGETS gda-gui DESTINATION bin)
