@@ -2,23 +2,14 @@ project(ImageClient)
 
 cmake_minimum_required(VERSION 2.6)
 
-include(FindQt4)
-
-
-
 find_package(Qt4 REQUIRED)
 
-
-
 add_definitions(${QT_DEFINITONS})
-
-
 
 set(QT_USE_QTNETWORK 1)
 
 include_directories(
 	${QT_INCLUDES}
-
 	..
 	.
 )
@@ -60,8 +51,6 @@ add_executable(image_client ${exe_sources})
 target_link_libraries(image_client ${QT_QTCORE_LIBRARY} imageengine)
 
 install(TARGETS imageengine DESTINATION lib)
-
 install(TARGETS image_client DESTINATION bin)
-
 install(FILES ${moc_headers} ${inst_headers} DESTINATION include)
 
