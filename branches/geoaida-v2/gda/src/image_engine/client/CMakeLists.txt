@@ -2,16 +2,23 @@ project(ImageClient)
 
 cmake_minimum_required(VERSION 2.6)
 
+include(FindQt4)
+
+
+
 find_package(Qt4 REQUIRED)
+
+
+
+add_definitions(${QT_DEFINITONS})
+
+
+
 set(QT_USE_QTNETWORK 1)
 
-# include(${QT_USE_FILE})
-
-add_definitions(${QT_DEFINITIONS})
-
 include_directories(
-	${QT_QTCORE_INCLUDE_DIR}
-	${QT_QTNETWORK_INCLUDE_DIR}
+	${QT_INCLUDES}
+
 	..
 	.
 )
@@ -20,6 +27,7 @@ set(lib_sources
 	image_client.cpp
 	../image_engine_commons.cpp
 )
+
 set(exe_sources
 	main.cpp
 )
@@ -27,6 +35,7 @@ set(exe_sources
 set(moc_headers
 	image_client.h
 )
+
 set(inst_headers
 	../image_engine_commons.h
 	../ImageEngineCommons
@@ -37,19 +46,22 @@ if(QT_WRAP_CPP)
 	qt_wrap_cpp(ImageClient lib_sources ${moc_headers})
 endif(QT_WRAP_CPP)
 
-add_executable(image_client ${exe_sources})
 add_library(imageengine SHARED ${lib_sources})
 
-target_link_libraries(image_client
-	${QT_QTCORE_LIBRARY}
-	${QT_QTNETWORK_LIBRARY}
-	imageengine
-)
+#new: from Gilson
+target_link_libraries(imageengine ${QT_QTCORE_LIBRARY} ${QT_QTNETWORK_LIBRARY})
 
-install(TARGETS image_client imageengine
-            RUNTIME DESTINATION bin
-			LIBRARY DESTINATION lib
-		)
+add_executable(image_client ${exe_sources})
+
+#old: from Torsten
+#target_link_libraries(image_client ${QT_LIBRARIES} imageengine)
+#install(TARGETS imageengine image_client LIBRARY DESTINATION lib RUNTIME DESTINATION bin)
+
+target_link_libraries(image_client ${QT_QTCORE_LIBRARY} imageengine)
+
+install(TARGETS imageengine DESTINATION lib)
+
+install(TARGETS image_client DESTINATION bin)
+
 install(FILES ${moc_headers} ${inst_headers} DESTINATION include)
-
 
