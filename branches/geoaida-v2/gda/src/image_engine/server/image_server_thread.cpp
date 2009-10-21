@@ -155,6 +155,7 @@ void ImageServerThread::getRequest()
             }
             case REQUEST_SETUP_SERVER:
             {
+                this->sendRequestReturnValue(REQUEST_RETURN_VALUE_ACCEPT);
                 break;
             }
             case REQUEST_SHUTDOWN_SERVER:
