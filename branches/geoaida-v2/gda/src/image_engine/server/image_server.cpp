@@ -30,7 +30,8 @@ using namespace GA::IE;
 /// \param pParent Qt parent object
 ///
 ////////////////////////////////////////////////////////////////////////////////
-ImageServer::ImageServer(const quint16& unPort, QObject* pParent) : QTcpServer(pParent)
+ImageServer::ImageServer(const quint16& unPort, QObject* pParent) : QTcpServer(pParent),
+                                                                    m_bFinished(false)
 {
     // Server setup
     if (!this->listen(QHostAddress::Any, unPort))
@@ -45,6 +46,39 @@ ImageServer::ImageServer(const quint16& unPort, QObject* pParent) : QTcpServer(p
 
     // Create instance of image engine
     m_pImageEngine = new ImageEngineDefault;
+    
+    // Start the event loop
+    eventLoop();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// \brief Shuts down the server
+///
+/// \todo Shutting down the server is not 100 percent clean yet. The thread
+///       that was instanciated by the shutdown request will be quit correctly
+///       but others should also. Therefore, the ImageServer could have a listen
+///       of threads. These have to be quit before shutting down. To make the
+///       server know that a thread ended, a signal could be send to delete it
+///       from threadlist.
+///
+////////////////////////////////////////////////////////////////////////////////
+void ImageServer::shutdown()
+{
+    std::cout << "ImageServer: Shutting down." << std::endl;
+    m_bFinished = true;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///
+/// \brief Starts the event loop
+///
+///////////////////////////////////////////////////////////////////////////////
+void ImageServer::eventLoop()
+{
+    m_bFinished = false;
+    while (!m_bFinished) 
+        QCoreApplication::processEvents(QEventLoop::AllEvents,30);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -61,6 +95,7 @@ void ImageServer::incomingConnection(int nSocketDescriptor)
     ImageServerThread* pThread = new ImageServerThread(nSocketDescriptor, this, m_pImageEngine);
     connect(pThread, SIGNAL(finished()), pThread, SLOT(deleteLater()));
     connect(pThread, SIGNAL(started() ), pThread, SLOT(threadStarted()));
+    connect(pThread, SIGNAL(shutdown()), this   , SLOT(shutdown()));
     
     pThread->start();
 }

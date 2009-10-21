@@ -112,7 +112,7 @@ void ImageClient::setupServer()
 /// the server. That means, that its global event loop is stopped.
 ///
 ///////////////////////////////////////////////////////////////////////////////
-void ImageClient::shutDownServer()
+void ImageClient::shutdownServer()
 {
     m_nRequest = REQUEST_SHUTDOWN_SERVER;
     connectToServer();
@@ -208,7 +208,7 @@ void ImageClient::connectToServer() const
 
 ///////////////////////////////////////////////////////////////////////////////
 ///
-/// \brief Method to establish a connection to image server
+/// \brief Starts the event loop
 ///
 ///////////////////////////////////////////////////////////////////////////////
 void ImageClient::eventLoop()

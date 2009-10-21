@@ -63,20 +63,23 @@ class ImageServerThread : public QThread
         void socketDisconnected();
         void threadStarted();
         void getRequest();
+        
+    signals:
+        void shutdown();
 
     private:
         //--- Constant Methods -----------------------------------------------//
         void sendRequestReturnValue(const quint16& nReturn) const;
 
         //--- Private Variables ----------------------------------------------//
-        QTcpSocket*			m_pClientSocket;		///< Socket for connection
-        quint16				m_nHeader;				///< Header for data transfer
-        quint8				m_nNumberOfParameters;	///< Number of parameters
-        quint64				m_nStreamSize;			///< Size of data stream
+        QTcpSocket*         m_pClientSocket;        ///< Socket for connection
+        quint16             m_nHeader;              ///< Header for data transfer
+        quint8              m_nNumberOfParameters;  ///< Number of parameters
+        quint64             m_nStreamSize;          ///< Size of data stream
+        QList<QVariant>     m_ParameterList;        ///< List of parameters depending on method call
         
-        QList<QVariant> 	m_ParameterList;		///< List of parameters depending on method call
-        
-        int m_nSocketDescriptor;					///< Associated to socket for this connection
+        bool m_bShutdownRequested;                  ///< Flags if server should be shut down
+        int m_nSocketDescriptor;                    ///< Associated to socket for this connection
 
         const ImageEngineBase* const m_pImageEngine;///< Pointer to image engine
 

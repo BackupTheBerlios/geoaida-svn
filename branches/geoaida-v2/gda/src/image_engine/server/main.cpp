@@ -68,5 +68,5 @@ int main(int argc, char *argv[])
     QCoreApplication app(argc, argv);
     GA::IE::ImageServer Server(atoi(argv[1]));
     
-    return app.exec();
+    return EXIT_SUCCESS;
 }

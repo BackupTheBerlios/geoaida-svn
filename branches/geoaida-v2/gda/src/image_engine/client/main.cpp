@@ -52,6 +52,7 @@ void usage()
     std::cout << "  <request>:" << std::endl;
     std::cout << "     poi: part of image" << std::endl;
     std::cout << "     sus: setup server" << std::endl;
+    std::cout << "     sds: shutdown server" << std::endl;
     std::cout << "Example: image_client localhost 19209 poi" << std::endl;
 }
 
@@ -91,6 +92,8 @@ int main(int argc, char *argv[])
     }
     else if (std::string(argv[3]) == "sus")
         Client.setupServer();
+    else if (std::string(argv[3]) == "sds")
+        Client.shutdownServer();
     else
     {
         std::cerr << "Unknown request." << std::endl;

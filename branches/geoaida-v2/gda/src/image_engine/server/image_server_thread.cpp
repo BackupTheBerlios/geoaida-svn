@@ -32,8 +32,9 @@ using namespace GA::IE;
 ///////////////////////////////////////////////////////////////////////////////
 ImageServerThread::ImageServerThread(int nSocketDescriptor, QObject* pParent,
                                     const ImageEngineBase* const pImageEngine) :
-                                    m_nSocketDescriptor(nSocketDescriptor),
                                     QThread(pParent),
+                                    m_bShutdownRequested(false),
+                                    m_nSocketDescriptor(nSocketDescriptor),
                                     m_pImageEngine(pImageEngine)
 {
 }
@@ -61,6 +62,11 @@ void ImageServerThread::socketDisconnected()
 {
     std::cout << "ImageServerThread: Socket disconnected, leaving thread." << std::endl;
     quit();
+    // Shutting down here to allow thread to finish
+    if (m_bShutdownRequested)
+    {
+        emit shutdown();
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -104,7 +110,7 @@ void ImageServerThread::getRequest()
     // Get the size of the data stream
     if (m_nStreamSize == 0)
     {
-        if (m_pClientSocket->bytesAvailable() < (int)sizeof(quint64))
+        if (m_pClientSocket->bytesAvailable() < (qint64)sizeof(quint64))
             return;
         
         in >> m_nStreamSize;
@@ -114,7 +120,7 @@ void ImageServerThread::getRequest()
     }
 
     // Read header and request
-    if ((m_pClientSocket->bytesAvailable() == m_nStreamSize-(int)sizeof(quint64)) &&
+    if ((m_pClientSocket->bytesAvailable() == (qint64)m_nStreamSize-(int)sizeof(quint64)) &&
         (m_nStreamSize != 0))
     {	
         in >> m_nHeader;
@@ -160,6 +166,8 @@ void ImageServerThread::getRequest()
             }
             case REQUEST_SHUTDOWN_SERVER:
             {
+                m_bShutdownRequested = true;
+                this->sendRequestReturnValue(REQUEST_RETURN_VALUE_ACCEPT);
                 break;
             }
             default:

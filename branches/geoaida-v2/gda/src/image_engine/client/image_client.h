@@ -61,7 +61,7 @@ class ImageClient : public QObject
                             QString FileName
                             );
         void setupServer();
-        void shutDownServer();
+        void shutdownServer();
 
     private slots:
 

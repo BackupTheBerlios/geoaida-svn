@@ -27,6 +27,7 @@
 #include "ImageEngineDefault"
 
 //--- Misc header ------------------------------------------------------------//
+#include <QCoreApplication>
 #include <QTcpServer>
 
 //--- Constants --------------------------------------------------------------//
@@ -52,17 +53,18 @@ class ImageServer : public QTcpServer
 
         //--- Constant Methods -----------------------------------------------//
     
-    protected:
-
-        void incomingConnection(int socketDescriptor);
-        
+    private slots:
+        void shutdown();
+    
     private:
 
         //--- Methods --------------------------------------------------------//
+        void eventLoop();
+        void incomingConnection(int socketDescriptor);
 
         //--- Private Variables ----------------------------------------------//
-        ImageEngineBase*	m_pImageEngine;		///< Pointer to image engine
-
+        bool                m_bFinished;        ///< Flags if event loop is still running
+        ImageEngineBase*    m_pImageEngine;     ///< Pointer to image engine
 };
 
 }}
