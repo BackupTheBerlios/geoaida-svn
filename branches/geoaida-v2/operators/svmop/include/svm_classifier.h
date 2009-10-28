@@ -36,7 +36,7 @@ const bool SVM_CLASSIFIER_CALCULATE_EXTREMA = true;
 /// \brief Classifier class using a support vector machine
 ///
 ////////////////////////////////////////////////////////////////////////////////
-class SVMClassifier : virtual public CLogBase
+class SVMClassifier
 {
 	
 	public:
@@ -111,12 +111,12 @@ class SVMClassifier : virtual public CLogBase
 ///////////////////////////////////////////////////////////////////////////////
 inline void SVMClassifier::setFeatures(const FeaturePointSetType::Pointer _pFeatures)
 {
-	METHOD_ENTRY(m_Log, "SVMClassifier::setFeatures(const FeaturePointSetType::Pointer)");
+	METHOD_ENTRY("SVMClassifier::setFeatures(const FeaturePointSetType::Pointer)");
 
 	m_pFeatures = _pFeatures;
 	m_bGotFeatures = true;
 
-	METHOD_EXIT(m_Log, "SVMClassifier::setFeatures(const FeaturePointSetType::Pointer)");
+	METHOD_EXIT("SVMClassifier::setFeatures(const FeaturePointSetType::Pointer)");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -128,12 +128,12 @@ inline void SVMClassifier::setFeatures(const FeaturePointSetType::Pointer _pFeat
 ///////////////////////////////////////////////////////////////////////////////
 inline void SVMClassifier::setLabels(const LabelPointSetType::Pointer _pLabels)
 {
-	METHOD_ENTRY(m_Log, "SVMClassifier::setFeatures(const LabelPointSetType::Pointer)");
+	METHOD_ENTRY("SVMClassifier::setFeatures(const LabelPointSetType::Pointer)");
 
 	m_pLabels = _pLabels;
 	m_bGotLabels = true;
 
-	METHOD_EXIT(m_Log, "SVMClassifier::setFeatures(const LabelPointSetType::Pointer)");
+	METHOD_EXIT("SVMClassifier::setFeatures(const LabelPointSetType::Pointer)");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -145,12 +145,12 @@ inline void SVMClassifier::setLabels(const LabelPointSetType::Pointer _pLabels)
 ///////////////////////////////////////////////////////////////////////////////
 inline void SVMClassifier::setLabelImageSize(const LabelImageType::SizeType& _Size)
 {
-	METHOD_ENTRY(m_Log, "SVMClassifier::setLabelImageSize(const LabelImageType::SizeType)");
+	METHOD_ENTRY("SVMClassifier::setLabelImageSize(const LabelImageType::SizeType)");
 
 	m_LabelImageSize = _Size;
 	m_bGotSize = true;
 
-	METHOD_EXIT(m_Log, "SVMClassifier::setLabelImageSize(const LabelImageType::SizeType)");
+	METHOD_EXIT("SVMClassifier::setLabelImageSize(const LabelImageType::SizeType)");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -162,11 +162,11 @@ inline void SVMClassifier::setLabelImageSize(const LabelImageType::SizeType& _Si
 ///////////////////////////////////////////////////////////////////////////////
 inline void SVMClassifier::setNumberOfClasses(const uint& _unNOC)
 {
-	METHOD_ENTRY(m_Log, "SVMClassifier::setNumberOfClasses(const uint&)");
+	METHOD_ENTRY("SVMClassifier::setNumberOfClasses(const uint&)");
 
 	m_unNumberOfClasses = _unNOC;
 
-	METHOD_EXIT(m_Log, "SVMClassifier::setNumberOfClasses(const uint&)");
+	METHOD_EXIT("SVMClassifier::setNumberOfClasses(const uint&)");
 }
 
 #endif

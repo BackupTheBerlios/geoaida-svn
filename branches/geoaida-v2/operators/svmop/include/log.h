@@ -68,9 +68,11 @@ const bool LOG_DYNSET_OFF = false;				///< Dynamic changes of loglevel/domain no
 ///
 /// \brief Logging class
 ///
-/// This class receives messages from methods. Depending on the state of the
-/// message it is just printed on the shell or saved to a global logfile.
-/// Because of global use it is implemented as a Meyers-Singleton.
+/// This class receives messages from methods. Because of global use it is
+/// implemented as a Meyers-Singleton. Even though the global instance is
+/// automatically created within this file, a singleton/class form was chosen.
+/// Hence, the class may be easily changed to use differently named or local
+/// instances.
 ///
 /// \todo Greater buffer for looped logentries.
 ///
@@ -151,29 +153,31 @@ class CLog
 
 };
 
-////////////////////////////////////////////////////////////////////////////////
-///
-/// \brief Base class for logging
-///
-/// This class is the base class for all classes using logging. It just defines
-/// a constructor that initializes the meyers-singleton for the logging instance.
-/// 
-////////////////////////////////////////////////////////////////////////////////
-class CLogBase
-{
-	public:
-		virtual ~CLogBase(){};
+extern CLog& Log; ///< Global logging instance
 
-	protected:
-		//--- Protected constructor ------------------------------------------//
-		CLogBase():m_Log(CLog::getInstance())
-		{
-			CTOR_CALL(m_Log, "LogBase");
-		};
-
-		//--- Protected variables --------------------------------------------//
-		CLog&	m_Log;					///< Instance of logging class
-};
+// ////////////////////////////////////////////////////////////////////////////////
+// ///
+// /// \brief Base class for logging
+// ///
+// /// This class is the base class for all classes using logging. It just defines
+// /// a constructor that initializes the meyers-singleton for the logging instance.
+// /// 
+// ////////////////////////////////////////////////////////////////////////////////
+// class CLogBase
+// {
+// 	public:
+// 		virtual ~CLogBase(){};
+// 
+// 	protected:
+// 		//--- Protected constructor ------------------------------------------//
+// 		CLogBase():m_Log(CLog::getInstance())
+// 		{
+// 			CTOR_CALL(m_Log, "LogBase");
+// 		};
+// 
+// 		//--- Protected variables --------------------------------------------//
+// 		CLog&	m_Log;					///< Instance of logging class
+// };
 
 
 //--- Implementation goes here for inline reasons ----------------------------//
@@ -187,20 +191,20 @@ class CLogBase
 ////////////////////////////////////////////////////////////////////////////////
 inline void CLog::setBreak(const unsigned short& _unCols)
 {
-	METHOD_ENTRY((*this), "CLog::setBreak(const unsigned short&)");
+	METHOD_ENTRY("CLog::setBreak(const unsigned short&)");
 
 	if (_unCols < m_unColsMax)
 	{
-		DEBUG_MSG((*this), "Logging", "Max. number of columns: " << _unCols, LOG_DOMAIN_VAR);
+		DEBUG_MSG("Logging", "Max. number of columns: " << _unCols, LOG_DOMAIN_VAR);
 		m_unColsMax = _unCols;
 	}
 	else
 	{
 		m_unColsMax = _unCols;
-		DEBUG_MSG((*this), "Logging", "Max. number of columns: " << _unCols, LOG_DOMAIN_VAR);
+		DEBUG_MSG("Logging", "Max. number of columns: " << _unCols, LOG_DOMAIN_VAR);
 	}
 
-	METHOD_EXIT((*this), "CLog::setBreak(const unsigned short&)");
+	METHOD_EXIT("CLog::setBreak(const unsigned short&)");
 }
 
 #endif

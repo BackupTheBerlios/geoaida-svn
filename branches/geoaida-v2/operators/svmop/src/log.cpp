@@ -20,6 +20,7 @@
 #include "log.h"
 
 std::ostringstream	CLog::s_strStr;	///< Used for streaming functionality in macros
+CLog& Log=CLog::getInstance();
 
 ///////////////////////////////////////////////////////////////////////////////
 ///
@@ -30,24 +31,24 @@ std::ostringstream	CLog::s_strStr;	///< Used for streaming functionality in macr
 ///////////////////////////////////////////////////////////////////////////////
 CLog::~CLog()
 {
-	METHOD_ENTRY((*this), "CLog::~CLog");
-	DTOR_CALL((*this), "CLog::~CLog");
+	METHOD_ENTRY("CLog::~CLog");
+	DTOR_CALL("CLog::~CLog");
 	
 	#ifdef DOMAIN_MEMORY
 		// The memory domain is given by the enclosing macro
 		if (m_nMemCounter > 0)
 		{
-			WARNING_MSG((*this), "Logging", "There may be memory leaks, please check: " << m_nMemCounter, LOG_DOMAIN_NONE);
-			DEBUG_MSG((*this), "IMPORTANT", "The last message results from debug information. A lower loglevel won't display it.", LOG_DOMAIN_NONE);
+			WARNING_MSG("Logging", "There may be memory leaks, please check: " << m_nMemCounter, LOG_DOMAIN_NONE);
+			DEBUG_MSG("IMPORTANT", "The last message results from debug information. A lower loglevel won't display it.", LOG_DOMAIN_NONE);
 		}
 		if (m_nMemCounter < 0)
 		{
-			WARNING_MSG((*this), "Logging", "Maybe more memory freed than allocated, please check.", LOG_DOMAIN_NONE);
-			DEBUG_MSG((*this), "IMPORTANT", "The last message results from debug information. A lower loglevel won't display it.", LOG_DOMAIN_NONE);
+			WARNING_MSG("Logging", "Maybe more memory freed than allocated, please check.", LOG_DOMAIN_NONE);
+			DEBUG_MSG("IMPORTANT", "The last message results from debug information. A lower loglevel won't display it.", LOG_DOMAIN_NONE);
 		}
 	#endif
 
-	METHOD_EXIT((*this), "CLog::~CLog");
+	METHOD_EXIT("CLog::~CLog");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -60,10 +61,10 @@ CLog::~CLog()
 CLog& CLog::getInstance()
 {
 	static CLog Instance;
-
-	METHOD_ENTRY(Instance, "CLog::getInstance");
-
-	METHOD_EXIT(Instance, "CLog::getInstance");
+	
+	// !!! Do not log the getInstance method, since there is no reference yet !!!
+	// 	METHOD_ENTRY("CLog::getInstance");
+	// 	METHOD_EXIT("CLog::getInstance");
 	return (Instance);
 }
 
@@ -85,7 +86,7 @@ void CLog::log(	const std::string& _strSrc, const std::string& _strMessage,
 				const LogLevelType& _Level, const LogDomainType& _Domain)
 {
 	// !!! Do not log the logging method, this action will never stop !!!
-	// METHOD_ENTRY((*this), "CLog::log");
+	// METHOD_ENTRY("CLog::log");
 
 	if (!m_bLock)
 	{
@@ -231,7 +232,7 @@ void CLog::log(	const std::string& _strSrc, const std::string& _strMessage,
 		m_MsgBufDom = _Domain;
 	}
 	// !!! Do not log the logging method, this action will never stop
-	// METHOD_EXIT((*this), "CLog::log");
+	// METHOD_EXIT("CLog::log");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -245,7 +246,7 @@ void CLog::log(	const std::string& _strSrc, const std::string& _strMessage,
 void CLog::logSeparator(LogLevelType _Level)
 {
 	// Method entry isn't really nice here
-	// METHOD_ENTRY((*this), "CLog::logSeparator(LogSevType)");
+	// METHOD_ENTRY("CLog::logSeparator(LogSevType)");
 
 	if (!m_bLock)
 	{
@@ -307,7 +308,7 @@ void CLog::logSeparator(LogLevelType _Level)
 	}
 
 	// Method exit isn't really nice here
-	//METHOD_EXIT((*this), "CLog::logSeparator(LogSevType)");
+	//METHOD_EXIT("CLog::logSeparator(LogSevType)");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -319,11 +320,11 @@ void CLog::logSeparator(LogLevelType _Level)
 ///////////////////////////////////////////////////////////////////////////////
 void CLog::setDynSetting(const bool& _bDynSet)
 {
-	METHOD_ENTRY((*this), "CLog::setDynSetting(const bool&)");
+	METHOD_ENTRY("CLog::setDynSetting(const bool&)");
 
 	m_bDynSetting = _bDynSet;
 
-	METHOD_EXIT((*this), "CLog::setDynSetting(const bool&)");
+	METHOD_EXIT("CLog::setDynSetting(const bool&)");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -338,13 +339,13 @@ void CLog::setDynSetting(const bool& _bDynSet)
 ///////////////////////////////////////////////////////////////////////////////
 void CLog::setLoglevel(const LogLevelType& _Loglevel)
 {
-	METHOD_ENTRY((*this), "CLog::setLoglevel(const LogLevelType&)");
+	METHOD_ENTRY("CLog::setLoglevel(const LogLevelType&)");
 
 	if (m_bDynSetting)
 	{
 		if (_Loglevel > m_LogLevelCompiled)
 		{
-			NOTICE_MSG((*this), "Logging", "Loglevel "+convLogLev2Str(_Loglevel)+
+			NOTICE_MSG("Logging", "Loglevel "+convLogLev2Str(_Loglevel)+
 			" not compiled, using "+convLogLev2Str(m_LogLevelCompiled), LOG_DOMAIN_NONE);
 			m_LogLevel = m_LogLevelCompiled;
 		}
@@ -352,18 +353,18 @@ void CLog::setLoglevel(const LogLevelType& _Loglevel)
 		{
 			if (_Loglevel < m_LogLevel)
 			{
-				DEBUG_MSG((*this), "Logging", "Dynamically setting loglevel "+convLogLev2Str(_Loglevel), LOG_DOMAIN_NONE);
+				DEBUG_MSG("Logging", "Dynamically setting loglevel "+convLogLev2Str(_Loglevel), LOG_DOMAIN_NONE);
 				m_LogLevel = _Loglevel;
 			}
 			else
 			{
 				m_LogLevel = _Loglevel;
-				DEBUG_MSG((*this), "Logging", "Dynamically setting loglevel "+convLogLev2Str(_Loglevel), LOG_DOMAIN_NONE);
+				DEBUG_MSG("Logging", "Dynamically setting loglevel "+convLogLev2Str(_Loglevel), LOG_DOMAIN_NONE);
 			}
 		}
 	}
 
-	METHOD_EXIT((*this), "CLog::setLoglevel(const LogLevelType&)");
+	METHOD_EXIT("CLog::setLoglevel(const LogLevelType&)");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -378,15 +379,15 @@ void CLog::setLoglevel(const LogLevelType& _Loglevel)
 ///////////////////////////////////////////////////////////////////////////////
 void CLog::setDomain(const LogDomainType& _Domain)
 {
-	METHOD_ENTRY((*this), "CLog::setDomain(const LogDomainType&)");
+	METHOD_ENTRY("CLog::setDomain(const LogDomainType&)");
 
 	if (m_bDynSetting)
 	{
 		m_abDomain[_Domain] = true;
-		DEBUG_MSG((*this), "Logging", "Set domain "+convLogDom2Str(_Domain), LOG_DOMAIN_NONE);
+		DEBUG_MSG("Logging", "Set domain "+convLogDom2Str(_Domain), LOG_DOMAIN_NONE);
 	}
 
-	METHOD_EXIT((*this), "CLog::setDomain(const LogDomainType&)");
+	METHOD_EXIT("CLog::setDomain(const LogDomainType&)");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -404,13 +405,13 @@ void CLog::unsetDomain(const LogDomainType& _Domain)
 	if (m_bDynSetting)
 	{
 		if (_Domain != LOG_DOMAIN_METHOD_ENTRY)
-			METHOD_ENTRY((*this), "CLog::unsetDomain(const LogDomainType&)");
+			METHOD_ENTRY("CLog::unsetDomain(const LogDomainType&)");
 	
 		m_abDomain[_Domain] = false;
-		DEBUG_MSG((*this), "Logging", "Unset domain "+convLogDom2Str(_Domain), LOG_DOMAIN_NONE);
+		DEBUG_MSG("Logging", "Unset domain "+convLogDom2Str(_Domain), LOG_DOMAIN_NONE);
 	}
 
-	METHOD_EXIT((*this), "CLog::unsetDomain(const LogDomainType&)");
+	METHOD_EXIT("CLog::unsetDomain(const LogDomainType&)");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -422,7 +423,7 @@ void CLog::unsetDomain(const LogDomainType& _Domain)
 ///////////////////////////////////////////////////////////////////////////////
 void CLog::setColouredOutput(const bool& _bColorState)
 {
-	METHOD_ENTRY((*this), "CLog::setColouredOutput(const bool&)");
+	METHOD_ENTRY("CLog::setColouredOutput(const bool&)");
 
 	if (_bColorState)
 	{
@@ -447,7 +448,7 @@ void CLog::setColouredOutput(const bool& _bColorState)
 		m_strColRepetition = "";
 	}
 
-	METHOD_EXIT((*this), "CLog::setColouredOutput(const bool&)");
+	METHOD_EXIT("CLog::setColouredOutput(const bool&)");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -461,7 +462,7 @@ void CLog::setColouredOutput(const bool& _bColorState)
 ///////////////////////////////////////////////////////////////////////////////
 void CLog::progressBar(const int& _nI, const int& _nLoopSize, const int& _nBarSize)
 {
-	// METHOD_ENTRY((*this), "CLog::progressBar(const int&, const int&, const int&)");
+	METHOD_ENTRY("CLog::progressBar(const int&, const int&, const int&)");
 
 	if (m_bFirstCall == true)
 	{
@@ -528,7 +529,7 @@ void CLog::progressBar(const int& _nI, const int& _nLoopSize, const int& _nBarSi
 
 	std::cout << m_strColDefault;
 
-	// METHOD_EXIT((*this), "CLog::progressBar(const int&, const int&, const int&)");
+	METHOD_EXIT("CLog::progressBar(const int&, const int&, const int&)");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -637,10 +638,10 @@ CLog::CLog():	m_bDynSetting(LOG_DYNSET_ON),
 	// Entry appears late, because just now the Logging class is initialized.
 	// The entry domain is needed for correct indenting when appropriate
 	// domains an debuglevel is used.
-	METHOD_ENTRY((*this), "CLog::CLog");
+// 	METHOD_ENTRY("CLog::CLog");
 
-	CTOR_CALL((*this), "CLog::CLog");
-	METHOD_EXIT((*this), "CLog::CLog");
+// 	CTOR_CALL("CLog::CLog");
+// 	METHOD_EXIT("CLog::CLog");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -652,7 +653,7 @@ CLog::CLog():	m_bDynSetting(LOG_DYNSET_ON),
 ///////////////////////////////////////////////////////////////////////////////
 std::string CLog::convLogDom2Str(const LogDomainType& _LogDomain)
 {
-	METHOD_ENTRY((*this), "CLog::convLogDom2Str(const LogDomainType&)");
+	METHOD_ENTRY("CLog::convLogDom2Str(const LogDomainType&)");
 
 	std::string strOut;
 
@@ -687,7 +688,7 @@ std::string CLog::convLogDom2Str(const LogDomainType& _LogDomain)
 			break;
 	}
 
-	METHOD_EXIT((*this), "CLog::convLogDom2Str(const LogDomainType&)");
+	METHOD_EXIT("CLog::convLogDom2Str(const LogDomainType&)");
 	return strOut;
 }
 
@@ -700,7 +701,7 @@ std::string CLog::convLogDom2Str(const LogDomainType& _LogDomain)
 ///////////////////////////////////////////////////////////////////////////////
 std::string CLog::convLogLev2Str(const LogLevelType& _Loglevel)
 {
-	METHOD_ENTRY((*this), "CLog::convLogLev2Str(const LogLevelType&)");
+	METHOD_ENTRY("CLog::convLogLev2Str(const LogLevelType&)");
 
 	std::string strOut;
 
@@ -726,6 +727,6 @@ std::string CLog::convLogLev2Str(const LogLevelType& _Loglevel)
 			break;
 	}
 
-	METHOD_EXIT((*this), "CLog::convLogLev2Str(const LogLevelType&)");
+	METHOD_EXIT("CLog::convLogLev2Str(const LogLevelType&)");
 	return strOut;
 }

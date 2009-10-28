@@ -28,7 +28,6 @@
 #include <sys/time.h>
 
 //--- Program header ---------------------------------------------------------//
-// #include "log.h"
 
 /// Factor to upscale time from u-seconds to seconds
 const double TIMER_OUTPUT_SEC_FACTOR = 0.000001;
@@ -38,7 +37,7 @@ const double TIMER_OUTPUT_SEC_FACTOR = 0.000001;
 /// \brief Class providing timer functions
 /// 
 ////////////////////////////////////////////////////////////////////////////////
-class CTimer/* : virtual public CLogBase*/
+class CTimer
 {
 
 	public:

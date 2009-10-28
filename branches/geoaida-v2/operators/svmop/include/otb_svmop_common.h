@@ -28,15 +28,9 @@
 #include "itkPointSetToListAdaptor.h"
 #include "itkRescaleIntensityImageFilter.h"
 
-// #include "otbDrawLineSpatialObjectListFilter.h"
-// #include "otbEdgeDensityImageFilter.h"
-// #include "itkCannyEdgeDetectionImageFilter.h"
-// #include "otbBinaryImageDensityFunction.h"
-
 #include "otbImage.h"
 #include "otbImageList.h"
 #include "otbImageFileReader.h"
-// #include "otbLineSegmentDetector.h"
 #include "otbMorphologicalPyramidAnalysisFilter.h"
 #include "otbOpeningClosingMorphologicalFilter.h"
 #include "otbStreamingImageFileWriter.h"
@@ -95,7 +89,7 @@ typedef FeaturePointSetType::PointType							FeaturePointType;
 typedef FeaturePointSetType::PointsContainer					FeaturePointContainer;
 typedef FeaturePointSetType::PointDataContainer					FeaturePointDataContainer;
 
-typedef itk::PointSet<FeatureVectorType,32>						TestFeaturePointSetType;
+typedef itk::PointSet<FeatureVectorType,24>						TestFeaturePointSetType;
 typedef TestFeaturePointSetType::PointType						TestFeaturePointType;
 typedef TestFeaturePointSetType::PointsContainer				TestFeaturePointContainer;
 // typedef FeaturePointSetType::PointDataContainer					TestFeaturePointDataContainer;

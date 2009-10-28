@@ -50,7 +50,7 @@ const int		FEATURE_EXTRACTOR_DEFAULT_SPACING = 5; ///< Default value that fits f
 /// \brief Class for extraction of features from images
 /// 
 ////////////////////////////////////////////////////////////////////////////////
-class FeatureExtractor : virtual public CLogBase
+class FeatureExtractor
 {
 
 	public:
