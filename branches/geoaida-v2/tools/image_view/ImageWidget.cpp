@@ -21,6 +21,8 @@
 
 #include <QtGui>
 
+#include <algorithm>
+
 /**************************************
 *
 *	Constructor / Destructor
@@ -28,7 +30,7 @@
 ***************************************/
 
 ImageWidget::ImageWidget(QWidget *parent)
-	: QWidget(parent), _image(0), _affineTransformation(new float[9]), _invAffineTransformation(new float[9]), _currentTimestamp(0), _contrast(1.0), _brightness(0.0)
+	: QWidget(parent), _currentTimestamp(0), _contrast(1.0), _brightness(0.0)
 {
 	_cmMode = CM_OneChannelMode;
 	_channelMapping[0] = _channelMapping[1] = _channelMapping[2] = 0;
@@ -47,9 +49,6 @@ ImageWidget::ImageWidget(QWidget *parent)
 ImageWidget::~ImageWidget()
 {
 	Clear();
-
-	delete[] _affineTransformation;
-	delete[] _invAffineTransformation;
 }
 
 /**************************************
@@ -64,25 +63,40 @@ void ImageWidget::Clear()
 
 	_bounds = QRect();
 	_offset = QPoint();
+	_scaleFactor = 1.0f;
 
 	_contrast = 1.0;
 	_brightness = 0.0;
 
 	_selection = QRect();
 
-	if (_image)
-	{
-		delete _image;
-		_image = 0;
-	}
+	_images.clear();
+	_channels.clear();
 }
 
 void ImageWidget::Open(QString filename)
 {
 	Clear();
-	_image = new Ga::Image(filename.toStdString());
 
-	if (_image->noChannels() < 3)
+	// Load image
+	ReaderType::Pointer reader = ReaderType::New();
+	reader->SetFileName(filename.toStdString().c_str());
+	reader->UpdateOutputInformation();
+	_images.append(reader);
+
+	// Split into channels
+	for (int i = 0; i < reader->GetOutput()->GetNumberOfComponentsPerPixel(); i++)
+	{
+		ChannelExtractType::Pointer extractor = ChannelExtractType::New();
+		extractor->SetExtractionRegion(reader->GetOutput()->GetLargestPossibleRegion());
+		extractor->SetChannel(i + 1);
+		extractor->SetInput(reader->GetOutput());
+		extractor->UpdateOutputInformation();
+		_channels.append(extractor);
+	}
+
+	// Initialize channel mapping
+	if (channelCount() < 3)
 	{
 		_cmMode = CM_OneChannelMode;
 		_channelMapping[0] = _channelMapping[1] = _channelMapping[2] = 0;
@@ -101,29 +115,89 @@ void ImageWidget::Open(QString filename)
 
 void ImageWidget::AddChannels(QString filename)
 {
-	if (!_image)
-		return;
-
-	Ga::Image *addImage = new Ga::Image(filename.toStdString());
-
-	if ((_image->sizeX() != addImage->sizeX()) || (_image->sizeY() != addImage->sizeY()))
+	if (!isValidImage())
 	{
-		emit ShowWarning(tr("Das neue Bild muss dieselbe Größe haben wie das bereits geladene!"));
+		Open(filename);
+		return;
 	}
+	
+	// Load image
+	ReaderType::Pointer reader = ReaderType::New();
+	reader->SetFileName(filename.toStdString().c_str());
+	reader->UpdateOutputInformation();
+	
+	if ((imageWidth() != reader->GetOutput()->GetLargestPossibleRegion().GetSize()[0]) || (imageHeight() != reader->GetOutput()->GetLargestPossibleRegion().GetSize()[1]))
+		emit ShowWarning(tr("Das neue Bild muss dieselbe Größe haben wie das bereits geladene!"));
 	else
 	{
-		_image->pImage()->addChannels(*(addImage->pImage()));
-	}
+		_images.append(reader);
 
-	delete addImage;
+		// Split into channels
+		for (int i = 0; i < reader->GetOutput()->GetNumberOfComponentsPerPixel(); i++)
+		{
+			ChannelExtractType::Pointer extractor = ChannelExtractType::New();
+			extractor->SetExtractionRegion(reader->GetOutput()->GetLargestPossibleRegion());
+			extractor->SetChannel(i + 1);
+			extractor->SetInput(reader->GetOutput());
+			extractor->UpdateOutputInformation();
+			_channels.append(extractor);
+		}
+	}
 }
 
-void ImageWidget::Save(QString filename)
+void ImageWidget::SaveSelection(QString filename)
 {
-	if (!_image)
+	if (!isValidImage())
 		return;
 
-	_image->write(filename.toStdString().c_str());
+	// Combine channels to form the output image
+	switch (_cmMode)
+	{
+		case CM_OneChannelMode:
+		{
+			ExtractRegionChannelType::Pointer extractregion = ExtractRegionChannelType::New();
+			ChannelType::RegionType::IndexType region_topleft;
+			region_topleft[0] = _selection.isEmpty() ? 0 : _selection.left();
+			region_topleft[1] = _selection.isEmpty() ? 0 : _selection.top();
+			ChannelType::RegionType::SizeType region_size;
+			region_size[0] = _selection.isEmpty() ? imageWidth() : _selection.width();
+			region_size[1] = _selection.isEmpty() ? imageHeight() : _selection.height();
+			extractregion->SetExtractionRegion(ChannelType::RegionType(region_topleft, region_size));
+			extractregion->SetInput(_channels[_channelMapping[0]]->GetOutput());
+			
+			WriterChannelType::Pointer writer = WriterChannelType::New();
+			writer->SetFileName(filename.toStdString().c_str());
+			writer->SetInput(extractregion->GetOutput());
+
+			writer->Update();
+		}
+		break;
+
+		case CM_ThreeChannelMode:
+		{
+			ChannelComposeRGBType::Pointer composer = ChannelComposeRGBType::New();
+			composer->SetInput1(_channels[_channelMapping[0]]->GetOutput());
+			composer->SetInput2(_channels[_channelMapping[1]]->GetOutput());
+			composer->SetInput3(_channels[_channelMapping[2]]->GetOutput());
+			
+			ExtractRegionRGBType::Pointer extractregion = ExtractRegionRGBType::New();
+			ChannelType::RegionType::IndexType region_topleft;
+			region_topleft[0] = _selection.isEmpty() ? 0 : _selection.left();
+			region_topleft[1] = _selection.isEmpty() ? 0 : _selection.top();
+			ChannelType::RegionType::SizeType region_size;
+			region_size[0] = _selection.isEmpty() ? imageWidth() : _selection.width();
+			region_size[1] = _selection.isEmpty() ? imageHeight() : _selection.height();
+			extractregion->SetExtractionRegion(ChannelType::RegionType(region_topleft, region_size));
+			extractregion->SetInput(composer->GetOutput());
+
+			WriterRGBType::Pointer writer = WriterRGBType::New();
+			writer->SetFileName(filename.toStdString().c_str());
+			writer->SetInput(extractregion->GetOutput());
+
+			writer->Update();
+		}
+		break;
+	}
 }
 
 /**************************************
@@ -171,7 +245,7 @@ void ImageWidget::resizeEvent(QResizeEvent *event)
 
 void ImageWidget::paintEvent(QPaintEvent *event)
 {
-	if (!_image)
+	if (!isValidImage())
 		return;
 
 	QPainter painter;
@@ -195,15 +269,7 @@ void ImageWidget::paintEvent(QPaintEvent *event)
 			{
 				TileInfo &tinfo = _currentTiles[id];
 				tinfo.timestamp = _currentTimestamp;
-
-				if (tinfo.thumbnail)
-				{
-					painter.drawPixmap(x * TileSize - _offset.x(), y * TileSize - _offset.y(), TileSize, TileSize, tinfo.pixmap);
-					if (!_loadingTiles.contains(id))
-						_loadingTiles.push_back(id);
-				}
-				else
-					painter.drawPixmap(x * TileSize - _offset.x(), y * TileSize - _offset.y(), tinfo.pixmap);
+				painter.drawPixmap(x * TileSize - _offset.x(), y * TileSize - _offset.y(), tinfo.pixmap);
 			}
 			else if (!_loadingTiles.contains(id))
 				_loadingTiles.push_front(id);
@@ -213,20 +279,20 @@ void ImageWidget::paintEvent(QPaintEvent *event)
 	// Draw the selection rectangle
 	QPointF points[4];
 	points[0] = QPointF(
-			_selection.left() * _invAffineTransformation[0] + _selection.top() * _invAffineTransformation[1] + _invAffineTransformation[2] - _offset.x(),
-			_selection.left() * _invAffineTransformation[3] + _selection.top() * _invAffineTransformation[4] + _invAffineTransformation[5] - _offset.y()
+			_selection.left() * _scaleFactor - _offset.x(),
+			_selection.top() * _scaleFactor - _offset.y()
 	);
 	points[1] = QPointF(
-			_selection.right() * _invAffineTransformation[0] + _selection.top() * _invAffineTransformation[1] + _invAffineTransformation[2] - _offset.x(),
-			_selection.right() * _invAffineTransformation[3] + _selection.top() * _invAffineTransformation[4] + _invAffineTransformation[5] - _offset.y()
+			_selection.right() * _scaleFactor - _offset.x(),
+			_selection.top() * _scaleFactor - _offset.y()
 	);
 	points[2] = QPointF(
-			_selection.right() * _invAffineTransformation[0] + _selection.bottom() * _invAffineTransformation[1] + _invAffineTransformation[2] - _offset.x(),
-			_selection.right() * _invAffineTransformation[3] + _selection.bottom() * _invAffineTransformation[4] + _invAffineTransformation[5] - _offset.y()
+			_selection.right() * _scaleFactor - _offset.x(),
+			_selection.bottom() * _scaleFactor - _offset.y()
 	);
 	points[3] = QPointF(
-			_selection.left() * _invAffineTransformation[0] + _selection.bottom() * _invAffineTransformation[1] + _invAffineTransformation[2] - _offset.x(),
-			_selection.left() * _invAffineTransformation[3] + _selection.bottom() * _invAffineTransformation[4] + _invAffineTransformation[5] - _offset.y()
+			_selection.left() * _scaleFactor - _offset.x(),
+			_selection.bottom() * _scaleFactor - _offset.y()
 	);
 	
 	painter.setPen(QPen(QBrush(QColor(255, 0, 0)), 2, Qt::DashDotLine));
@@ -246,8 +312,8 @@ void ImageWidget::mousePressEvent(QMouseEvent *event)
 	{
 		QPoint pos = event->pos() + _offset;
 		QPoint transformedPoint(
-				pos.x() * _affineTransformation[0] + pos.y() * _affineTransformation[1] + _affineTransformation[2] + 0.5,
-				pos.x() * _affineTransformation[3] + pos.y() * _affineTransformation[4] + _affineTransformation[5] + 0.5
+				pos.x() / _scaleFactor + 0.5,
+				pos.y() / _scaleFactor + 0.5
 		);
 
 		_selection.setTopLeft(transformedPoint);
@@ -264,8 +330,8 @@ void ImageWidget::mouseMoveEvent(QMouseEvent *event)
 	{
 		QPoint pos = event->pos() + _offset;
 		QPoint transformedPoint(
-				pos.x() * _affineTransformation[0] + pos.y() * _affineTransformation[1] + _affineTransformation[2] + 0.5,
-				pos.x() * _affineTransformation[3] + pos.y() * _affineTransformation[4] + _affineTransformation[5] + 0.5
+				pos.x() / _scaleFactor + 0.5,
+				pos.y() / _scaleFactor + 0.5
 		);
 
 		_selection.setBottomRight(transformedPoint);
@@ -274,24 +340,47 @@ void ImageWidget::mouseMoveEvent(QMouseEvent *event)
 	}
 
 	// Current pixel value
-	if (_image)
+	/*
+	if (isValidImage())
 	{
 		int px = event->x() + _offset.x();
 		int py = event->y() + _offset.y();
-		int posx = static_cast<int>(px * _affineTransformation[0] + py * _affineTransformation[1] + _affineTransformation[2] + 0.5);
-		int posy = static_cast<int>(px * _affineTransformation[3] + py * _affineTransformation[4] + _affineTransformation[5] + 0.5);
 
+		ChannelType::RegionType::IndexType index;
+		index[0] = static_cast<int>(px / _scaleFactor);
+		index[1] = static_cast<int>(py / _scaleFactor);
+
+		ChannelType::RegionType::SizeType size;
+		size[0] = 1;
+		size[1] = 1;
+		
 		switch (_cmMode)
 		{
 			case CM_OneChannelMode:
-				emit ShowMessage(tr("Pixel an Position (%1, %2) = %3").arg(posx).arg(posy).arg(_image->getPixel(posx, posy, _channelMapping[0])));
+				{
+					_channels[_channelMapping[0]]->GetOutput()->SetRequestedRegion(ChannelType::RegionType(index, size));
+					_channels[_channelMapping[0]]->Update();
+					ChannelType::PixelType pixel = _channels[_channelMapping[0]]->GetOutput()->GetPixel(index);
+					emit ShowMessage(tr("Pixel an Position (%1, %2) = %3").arg(index[0]).arg(index[1]).arg(pixel));
+				}
 				break;
 
 			case CM_ThreeChannelMode:
-				emit ShowMessage(tr("Pixel an Position (%1, %2) = (%3, %4, %5)").arg(posx).arg(posy).arg(_image->getPixel(posx, posy, _channelMapping[0])).arg(_image->getPixel(posx, posy, _channelMapping[1])).arg(_image->getPixel(posx, posy, _channelMapping[2])));
+				{
+					for (int i = 0; i < 3; i++)
+					{
+						_channels[_channelMapping[i]]->GetOutput()->SetRequestedRegion(ChannelType::RegionType(index, size));
+						_channels[_channelMapping[i]]->Update();
+					}
+					ChannelType::PixelType pixelR = _channels[_channelMapping[0]]->GetOutput()->GetPixel(index);
+					ChannelType::PixelType pixelG = _channels[_channelMapping[1]]->GetOutput()->GetPixel(index);
+					ChannelType::PixelType pixelB = _channels[_channelMapping[2]]->GetOutput()->GetPixel(index);
+					emit ShowMessage(tr("Pixel an Position (%1, %2) = (%3, %4, %5)").arg(index[0]).arg(index[1]).arg(pixelR).arg(pixelG).arg(pixelB));
+				}
 				break;
 		}
 	}
+	*/
 }
 
 void ImageWidget::mouseReleaseEvent(QMouseEvent *event)
@@ -299,12 +388,13 @@ void ImageWidget::mouseReleaseEvent(QMouseEvent *event)
 	// Selection rectangle
 	QPoint pos = event->pos() + _offset;
 	QPoint transformedPoint(
-			pos.x() * _affineTransformation[0] + pos.y() * _affineTransformation[1] + _affineTransformation[2] + 0.5,
-			pos.x() * _affineTransformation[3] + pos.y() * _affineTransformation[4] + _affineTransformation[5] + 0.5
+			pos.x() / _scaleFactor + 0.5,
+			pos.y() / _scaleFactor + 0.5
 	);
 
 	_selection.setBottomRight(transformedPoint);
 	_selection = _selection.normalized();
+	_selection = _selection & QRect(0, 0, imageWidth(), imageHeight());
 
 	if (_selection.width() * _selection.height() < 4)
 		_selection = QRect();
@@ -327,7 +417,7 @@ void ImageWidget::ClearTileCache()
 
 void ImageWidget::LoadNextTile()
 {
-	if (!_image)
+	if (!isValidImage())
 		return;
 
 	// Visible region of the image
@@ -341,48 +431,63 @@ retry:
 	// Get next tile-id from list and check if it needs to be loaded
 	TileID id = _loadingTiles.takeFirst();
 
-	if (_currentTiles.contains(id) && !_currentTiles[id].thumbnail)
-		goto retry;
-
 	QPoint tilePosition = PositionFromId(id) * TileSize;
 	QRect tileRect(tilePosition, QSize(TileSize, TileSize));
 	if (!visibleRect.intersects(tileRect))
 		goto retry;
 
 	// Load tile data and generate pixmap
-	int offx = tilePosition.x(), offy = tilePosition.y();
+	int offx = tilePosition.x();
+	int offy = tilePosition.y();
+
+	ChannelType::RegionType::IndexType otbTileIndex;
+	otbTileIndex[0] = offx / _scaleFactor;
+	otbTileIndex[1] = offy / _scaleFactor;
+
+	if ((imageWidth() < otbTileIndex[0]) || (imageHeight() < otbTileIndex[1]))
+		goto retry;
+
+	ChannelType::RegionType::SizeType otbTileSize, otbRequestSize;
+	otbRequestSize[0] = std::min(imageWidth() - otbTileIndex[0], (long)(TileSize / _scaleFactor));
+	otbRequestSize[1] = std::min(imageHeight() - otbTileIndex[1], (long)(TileSize / _scaleFactor));
+	otbTileSize[0] = otbRequestSize[0] * _scaleFactor;
+	otbTileSize[1] = otbRequestSize[1] * _scaleFactor;
+
+	QImage tmpImage(TileSize, TileSize, QImage::Format_RGB32);
+	if ((otbTileSize[0] != TileSize) || (otbTileSize[1] != TileSize))
+		tmpImage.fill(qRgb(0, 0, 0));
+
+	int sx_dx = otbTileSize[0];	// Use bresenham line drawing algorithm to interpolate pixel coordinates for image zoom
+	int sx_dy = otbRequestSize[0];
+	int sx_error = sx_dx - 1;
+	int sy_dx = otbTileSize[1];
+	int sy_dy = otbRequestSize[1];
+	int sy_error = sy_dx - 1;
+
+	RealType fMin = 0;
+	RealType fMax = 255;
+	RealType fScale = (255 / (fMax - fMin)) * _contrast;
+	RealType fAdd = fMin + _brightness;
+
+	int x = 0, y = 0;
 	quint8 r, g, b;
-
-	Ga::ImageBase *pImage = _image->pImage();
-	double fMin = pImage->fileMin();
-	double fMax = pImage->fileMax();
-	double fScale = (255.0 / (fMax - fMin)) * _contrast;
-	double fAdd = fMin + _brightness;
-
-	//bool createThumbnail = !_currentTiles.contains(id);
-	bool createThumbnail = false;
-	int tileSize = createThumbnail ? SmallTileSize : TileSize;
-	int scaleShift = createThumbnail ? TileSizeShift : 0;
-	QImage tmpImage(tileSize, tileSize, QImage::Format_RGB32);
+	int color;
 
 	switch (_cmMode)
 	{
 		case CM_OneChannelMode:
 		{
-			if (_randomMapping)
+			ChannelExtractType::Pointer channel = _channels[_channelMapping[0]];
+			channel->GetOutput()->SetRequestedRegion(ChannelType::RegionType(otbTileIndex, otbRequestSize));
+			channel->Update();
+			
+			for (int y = 0; y < otbTileSize[1]; y++)
 			{
-				double value;
-				int color;
-				for (int y = 0; y < tileSize; y++)
+				for (int x = 0; x < otbTileSize[0]; x++)
 				{
-					for (int x = 0; x < tileSize; x++)
+					ChannelType::PixelType value = channel->GetOutput()->GetPixel(otbTileIndex);
+					if (_randomMapping)
 					{
-						int px = (x << scaleShift) + offx;
-						int py = (y << scaleShift) + offy;
-						int posx = static_cast<int>(px * _affineTransformation[0] + py * _affineTransformation[1] + _affineTransformation[2]);
-						int posy = static_cast<int>(px * _affineTransformation[3] + py * _affineTransformation[4] + _affineTransformation[5]);
-	
-						value = pImage->getPixelAsDoubleFast(posx, posy, _channelMapping[0]);
 						if (_randomMap.contains(value))
 							color = _randomMap[value];
 						else
@@ -390,65 +495,76 @@ retry:
 							color = qRgb(rand() % 256, rand() % 256, rand() % 256);
 							_randomMap[value] = color;
 						}
-	
-						tmpImage.setPixel(x, y, color);
 					}
-				}
-			}
-			else
-			{
-				for (int y = 0; y < tileSize; y++)
-				{
-					for (int x = 0; x < tileSize; x++)
+					else
 					{
-						int px = (x << scaleShift) + offx;
-						int py = (y << scaleShift) + offy;
-						int posx = static_cast<int>(px * _affineTransformation[0] + py * _affineTransformation[1] + _affineTransformation[2]);
-						int posy = static_cast<int>(px * _affineTransformation[3] + py * _affineTransformation[4] + _affineTransformation[5]);
-	
-						g = static_cast<quint8>(std::max(0.0, std::min((pImage->getPixelAsDoubleFast(posx, posy, _channelMapping[0]) + fAdd) * fScale, 255.0)));
-	
-						tmpImage.setPixel(x, y, qRgb(g, g, g));
+						g = static_cast<quint8>(std::max(static_cast<RealType>(0), std::min((value + fAdd) * fScale, static_cast<RealType>(255))));
+						color = qRgb(g, g, g);
+					}
+					tmpImage.setPixel(x, y, color);
+					
+					sx_error -= sx_dy;
+					while (sx_error < 0)
+					{
+						otbTileIndex[0]++;
+						sx_error += sx_dx;
 					}
 				}
+				
+				otbTileIndex[0] -= otbRequestSize[0];
+				
+				sy_error -= sy_dy;
+				while (sy_error < 0)
+				{
+					otbTileIndex[1]++;
+					sy_error += sy_dx;
+				}
 			}
-			break;
 		}
+		break;
 
 		case CM_ThreeChannelMode:
 		{
-			for (int y = 0; y < tileSize; y++)
+			ChannelExtractType::Pointer channel[] = {_channels[_channelMapping[0]], _channels[_channelMapping[1]], _channels[_channelMapping[2]]};
+			for (int i = 0; i < 3; i++)
 			{
-				for (int x = 0; x < tileSize; x++)
+				channel[i]->GetOutput()->SetRequestedRegion(ChannelType::RegionType(otbTileIndex, otbRequestSize));
+				channel[i]->Update();
+			}
+			
+			for (int y = 0; y < otbTileSize[1]; y++)
+			{
+				for (int x = 0; x < otbTileSize[0]; x++)
 				{
-					int px = (x << scaleShift) + offx;
-					int py = (y << scaleShift) + offy;
-					int posx = static_cast<int>(px * _affineTransformation[0] + py * _affineTransformation[1] + _affineTransformation[2]);
-					int posy = static_cast<int>(px * _affineTransformation[3] + py * _affineTransformation[4] + _affineTransformation[5]);
-
-					r = static_cast<quint8>(std::max(0.0, std::min((pImage->getPixelAsDoubleFast(posx, posy, _channelMapping[0]) + fAdd) * fScale, 255.0)));
-					g = static_cast<quint8>(std::max(0.0, std::min((pImage->getPixelAsDoubleFast(posx, posy, _channelMapping[1]) + fAdd) * fScale, 255.0)));
-					b = static_cast<quint8>(std::max(0.0, std::min((pImage->getPixelAsDoubleFast(posx, posy, _channelMapping[2]) + fAdd) * fScale, 255.0)));
-
-					tmpImage.setPixel(x, y, qRgb(r, g, b));
+					r = static_cast<quint8>(std::max(static_cast<RealType>(0), std::min((channel[0]->GetOutput()->GetPixel(otbTileIndex) + fAdd) * fScale, static_cast<RealType>(255))));
+					g = static_cast<quint8>(std::max(static_cast<RealType>(0), std::min((channel[1]->GetOutput()->GetPixel(otbTileIndex) + fAdd) * fScale, static_cast<RealType>(255))));
+					b = static_cast<quint8>(std::max(static_cast<RealType>(0), std::min((channel[2]->GetOutput()->GetPixel(otbTileIndex) + fAdd) * fScale, static_cast<RealType>(255))));
+					
+					color = qRgb(r, g, b);
+					tmpImage.setPixel(x, y, color);
+					
+					sx_error -= sx_dy;
+					while (sx_error < 0)
+					{
+						otbTileIndex[0]++;
+						sx_error += sx_dx;
+					}
+				}
+				
+				otbTileIndex[0] -= otbRequestSize[0];
+				
+				sy_error -= sy_dy;
+				while (sy_error < 0)
+				{
+					otbTileIndex[1]++;
+					sy_error += sy_dx;
 				}
 			}
-			break;
 		}
+		break;
 	}
-
-	/*if (createThumbnail)
-	{
-		_currentTiles.insert(id, TileInfo(id, _currentTimestamp, tmpImage));
-	}
-	else
-	{
-		_currentTiles[id].pixmap = QPixmap::fromImage(tmpImage);
-		_currentTiles[id].thumbnail = false;
-	}*/
 
 	_currentTiles.insert(id, TileInfo(id, _currentTimestamp, tmpImage));
-	_currentTiles[id].thumbnail = false;
 
 	QRect updateRect = tileRect.translated(-_offset) & this->rect();
 	update(updateRect);
@@ -456,7 +572,7 @@ retry:
 
 void ImageWidget::RemoveOldTiles()
 {
-	if (!_image)
+	if (!isValidImage())
 		return;
 
 	while (_currentTiles.size() > _maxTilesCached)
@@ -494,190 +610,32 @@ void ImageWidget::RemoveOldTiles()
 *
 ***************************************/
 
-void ImageWidget::ResetView(bool recalc)
+void ImageWidget::ResetView()
 {
-	// Save center pixel
-	if (recalc)
-	{
-		_tempCenterPixel.setX((_offset.x() + width()/2) * _affineTransformation[0] + (_offset.y() + height()/2) * _affineTransformation[1] + _affineTransformation[2]);
-		_tempCenterPixel.setY((_offset.x() + width()/2) * _affineTransformation[3] + (_offset.y() + height()/2) * _affineTransformation[4] + _affineTransformation[5]);
-	}
-
-	// Apply transformation
-	_affineTransformation[0] = 1.0f;
-	_affineTransformation[1] = 0.0f;
-	_affineTransformation[2] = 0.0f;
-	_affineTransformation[3] = 0.0f;
-	_affineTransformation[4] = 1.0f;
-	_affineTransformation[5] = 0.0f;
-	_affineTransformation[6] = 0.0f;
-	_affineTransformation[7] = 0.0f;
-	_affineTransformation[8] = 1.0f;
-
-	memcpy(_invAffineTransformation, _affineTransformation, sizeof(float) * 9);
-
-	if (recalc)
-		RecalculateBounds();
+	_scaleFactor = 1.0;
+	
+	RecalculateBounds();
+	Redraw();
 }
 
-void ImageWidget::ZoomView(float zoomX, float zoomY, bool recalc)
+void ImageWidget::ZoomView(RealType zoomfactor)
 {
-	// Save center pixel
-	if (recalc)
-	{
-		_tempCenterPixel.setX((_offset.x() + width()/2) * _affineTransformation[0] + (_offset.y() + height()/2) * _affineTransformation[1] + _affineTransformation[2]);
-		_tempCenterPixel.setY((_offset.x() + width()/2) * _affineTransformation[3] + (_offset.y() + height()/2) * _affineTransformation[4] + _affineTransformation[5]);
-	}
-
-	// Apply transformation
-	float matrix[9] = {
-		1.0f / zoomX, 0.0f, 0.0f,
-		0.0f, 1.0f / zoomY, 0.0f,
-		0.0f, 0.0f, 1.0f
-	};
-
-	float invmatrix[9] = {
-		zoomX, 0.0f, 0.0f,
-		0.0f, zoomY, 0.0f,
-		0.0f, 0.0f, 1.0f
-	};
-
-	MultiplyMatrixRight(matrix, true);
-	MultiplyMatrixLeft(invmatrix, false);
-
-	if (recalc)
-		RecalculateBounds();
-}
-
-void ImageWidget::RotateView(float angle, bool recalc)
-{
-	// Save center pixel
-	if (recalc)
-	{
-		_tempCenterPixel.setX((_offset.x() + width()/2) * _affineTransformation[0] + (_offset.y() + height()/2) * _affineTransformation[1] + _affineTransformation[2]);
-		_tempCenterPixel.setY((_offset.x() + width()/2) * _affineTransformation[3] + (_offset.y() + height()/2) * _affineTransformation[4] + _affineTransformation[5]);
-	}
-
-	// Apply transformation
-	float sina = sin(angle);
-	float cosa = cos(angle);
-
-	float matrix[9] = {
-		+cosa, -sina, 0.0f,
-		+sina, +cosa, 0.0f,
-		0.0f, 0.0f, 1.0f
-	};
-
-	float invmatrix[9] = {
-		+cosa, +sina, 0.0f,
-		-sina, +cosa, 0.0f,
-		0.0f, 0.0f, 1.0f
-	};
-
-	MultiplyMatrixRight(matrix, true);
-	MultiplyMatrixLeft(invmatrix, false);
-
-	if (recalc)
-		RecalculateBounds();
-}
-
-void ImageWidget::TranslateView(float transX, float transY, bool recalc)
-{
-	// Save center pixel
-	if (recalc)
-	{
-		_tempCenterPixel.setX((_offset.x() + width()/2) * _affineTransformation[0] + (_offset.y() + height()/2) * _affineTransformation[1] + _affineTransformation[2]);
-		_tempCenterPixel.setY((_offset.x() + width()/2) * _affineTransformation[3] + (_offset.y() + height()/2) * _affineTransformation[4] + _affineTransformation[5]);
-	}
-
-	// Apply transformation
-	float matrix[9] = {
-		1.0f, 0.0f, -transX,
-		0.0f, 1.0f, -transY,
-		0.0f, 0.0f, 1.0f
-	};
-
-	float invmatrix[9] = {
-		1.0f, 0.0f, transX,
-		0.0f, 1.0f, transY,
-		0.0f, 0.0f, 1.0f
-	};
-
-	MultiplyMatrixRight(matrix, true);
-	MultiplyMatrixLeft(invmatrix, false);
-
-	if (recalc)
-		RecalculateBounds();
+	if ((_scaleFactor * zoomfactor > 128.0) || (_scaleFactor * zoomfactor < 1.0/128.0))
+		return;
+	
+	_scaleFactor *= zoomfactor;
+	
+	RecalculateBounds();
+	Redraw();
 }
 
 void ImageWidget::RecalculateBounds()
 {
-	if (!_image)
-		return;
-
-	float minX = std::numeric_limits<float>::max();
-	float maxX = std::numeric_limits<float>::min();
-	float minY = std::numeric_limits<float>::max();
-	float maxY = std::numeric_limits<float>::min();
-
-	for (int i = 0; i < 4; i++)
-	{
-		float x = (i & 1) ? _image->sizeX() : 0.0f;
-		float y = (i & 2) ? _image->sizeY() : 0.0f;
-
-		float px = x * _invAffineTransformation[0] + y * _invAffineTransformation[1] + _invAffineTransformation[2];
-		float py = x * _invAffineTransformation[3] + y * _invAffineTransformation[4] + _invAffineTransformation[5];
-
-		minX = std::min(minX, px);
-		maxX = std::max(maxX, px);
-		minY = std::min(minY, py);
-		maxY = std::max(maxY, py);
-	}
-
-	TranslateView(-minX, -minY, false);
-	_bounds = QRect(0, 0, maxX - minX, maxY - minY);
-
-	// Restore center pixel
-	_offset.setX(_tempCenterPixel.x() * _invAffineTransformation[0] + _tempCenterPixel.y() * _invAffineTransformation[1] + _invAffineTransformation[2] - width()/2);
-	_offset.setY(_tempCenterPixel.x() * _invAffineTransformation[3] + _tempCenterPixel.y() * _invAffineTransformation[4] + _invAffineTransformation[5] - height()/2);
+	_bounds = QRect(0, 0, imageWidth() * _scaleFactor, imageHeight() * _scaleFactor);
 
 	// Redraw and update scrollbars
 	ClearTileCache();
 	emit UpdateScrollBars();
-}
-
-void ImageWidget::MultiplyMatrixRight(float *matrix, bool target)
-{
-	float tmpMatrix[9];
-	float *targetMatrix = target ? _affineTransformation : _invAffineTransformation;
-	memcpy(tmpMatrix, targetMatrix, sizeof(float) * 9);
-
-	for (int i = 0; i < 3; i++)
-	{
-		for (int j = 0; j < 3; j++)
-		{
-			targetMatrix[j*3 + i] = 0.0f;
-			for (int k = 0; k < 3; k++)
-				targetMatrix[j*3 + i] += tmpMatrix[j*3 + k] * matrix[k*3 + i];
-		}
-	}
-}
-
-void ImageWidget::MultiplyMatrixLeft(float *matrix, bool target)
-{
-	float tmpMatrix[9];
-	float *targetMatrix = target ? _affineTransformation : _invAffineTransformation;
-	memcpy(tmpMatrix, targetMatrix, sizeof(float) * 9);
-
-	for (int i = 0; i < 3; i++)
-	{
-		for (int j = 0; j < 3; j++)
-		{
-			targetMatrix[j*3 + i] = 0.0f;
-			for (int k = 0; k < 3; k++)
-				targetMatrix[j*3 + i] += matrix[j*3 + k] * tmpMatrix[k*3 + i];
-		}
-	}
 }
 
 /**************************************
@@ -688,6 +646,7 @@ void ImageWidget::MultiplyMatrixLeft(float *matrix, bool target)
 
 QVector<double> ImageWidget::CalculateHistogram(float coverage, int channel)
 {
+	/*
 	assert(_image);
 	assert((channel >= 0) && (channel < _image->noChannels()));
 	assert((coverage > 0.0f) && (coverage <= 1.0f));
@@ -750,6 +709,7 @@ QVector<double> ImageWidget::CalculateHistogram(float coverage, int channel)
 
 	qSort(returnList);
 	return returnList;
+	*/
 }
 
 /**************************************
@@ -772,6 +732,7 @@ void ImageWidget::ChangeOffsetY(int offsetY)
 
 void ImageWidget::CalculateAutoCB(float coverage)
 {
+	/*
 	if (!_image)
 		return;
 
@@ -823,6 +784,7 @@ void ImageWidget::CalculateAutoCB(float coverage)
 	}
 
 	Redraw();
+	*/
 }
 
 void ImageWidget::SetRandomMapping(bool activate)
@@ -834,13 +796,13 @@ void ImageWidget::SetRandomMapping(bool activate)
 		Redraw();
 }
 
-void ImageWidget::SetContrast(double contrast)
+void ImageWidget::SetContrast(RealType contrast)
 {
 	_contrast = contrast;
 	Redraw();
 }
 
-void ImageWidget::SetBrightness(double brightness)
+void ImageWidget::SetBrightness(RealType brightness)
 {
 	_brightness = brightness;
 	Redraw();

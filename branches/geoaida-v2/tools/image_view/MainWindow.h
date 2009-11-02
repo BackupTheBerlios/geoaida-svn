@@ -50,8 +50,6 @@ class MainWindow : public QMainWindow
 		void ResetView();
 		void ZoomPlus();
 		void ZoomMinus();
-		void RotatePlus();
-		void RotateMinus();
 
 		void ScrollUp();
 		void ScrollDown();

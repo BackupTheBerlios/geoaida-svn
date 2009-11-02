@@ -25,29 +25,58 @@
 #include <QMap>
 #include <QLinkedList>
 
-#include <Image>
+#include <itkRGBPixel.h>
+#include <otbImage.h>
+#include <otbVectorImage.h>
+
+#include <otbImageFileReader.h>
+#include <otbImageFileWriter.h>
+
+#include <otbMultiToMonoChannelExtractROI.h>
+#include <itkComposeRGBImageFilter.h>
+#include <itkExtractImageFilter.h>
+
+#include <itkImageRegion.h>
+#include <itkImageRegionConstIterator.h>
+
+typedef float RealType;
+typedef RealType PixelType;
+typedef itk::RGBPixel<RealType> PixelRGBType;
+
+typedef otb::Image<PixelType, 2> ChannelType;
+typedef otb::VectorImage<PixelType, 2> ImageType;
+typedef otb::Image<PixelRGBType, 2> OutputRGBType;
+
+typedef otb::ImageFileReader<ImageType> ReaderType;
+typedef otb::ImageFileWriter<ChannelType> WriterChannelType;
+typedef otb::ImageFileWriter<OutputRGBType> WriterRGBType;
+
+typedef otb::MultiToMonoChannelExtractROI<PixelType, PixelType> ChannelExtractType;
+typedef itk::ComposeRGBImageFilter<ChannelType, OutputRGBType> ChannelComposeRGBType;
+typedef itk::ExtractImageFilter<ChannelType, ChannelType> ExtractRegionChannelType;
+typedef itk::ExtractImageFilter<OutputRGBType, OutputRGBType> ExtractRegionRGBType;
+
+typedef itk::ImageRegionConstIterator<ChannelType> ConstChannelIteratorType;
+typedef itk::ImageRegionConstIterator<ImageType> ConstIteratorType;
 
 typedef quint32 TileID;
 typedef quint32 TimeStamp;
 
 const int TileSize = 128;
-const int SmallTileSize = 8;
-const int TileSizeShift = 4;
 
 struct TileInfo
 {
 	TileID id;
 	TimeStamp timestamp;
-	bool thumbnail;
 	QPixmap pixmap;
 
 	TileInfo()
-		: id(-1), timestamp(0), thumbnail(true), pixmap()
+		: id(-1), timestamp(0), pixmap()
 	{
 	}
 
 	TileInfo(TileID id, TimeStamp timestamp, const QImage &image)
-		: id(id), timestamp(timestamp), thumbnail(true), pixmap(QPixmap::fromImage(image))
+		: id(id), timestamp(timestamp), pixmap(QPixmap::fromImage(image))
 	{
 	}
 };
@@ -69,18 +98,18 @@ class ImageWidget : public QWidget
 		void Clear();
 		void Open(QString filename);
 		void AddChannels(QString filename);
-		void Save(QString filename);
+		void SaveSelection(QString filename);
 
-		bool isValidImage()	{ return (_image != 0); }
-		int imageWidth()	{ return (isValidImage() ? _image->sizeX() : 0); }
-		int imageHeight()	{ return (isValidImage() ? _image->sizeY() : 0); }
+		bool isValidImage()	{ return !_images.isEmpty(); }
+		int imageWidth()	{ return (isValidImage() ? _images[0]->GetOutput()->GetLargestPossibleRegion().GetSize()[0] : 0); }
+		int imageHeight()	{ return (isValidImage() ? _images[0]->GetOutput()->GetLargestPossibleRegion().GetSize()[1] : 0); }
 		int boundsWidth()	{ return _bounds.width(); }
 		int boundsHeight()	{ return _bounds.height(); }
 		int offsetX()		{ return _offset.x(); }
 		int offsetY()		{ return _offset.y(); }
 		QRect selection()	{ return _selection; }
 
-		int channelCount()						{ return (_image ? _image->noChannels() : 0); }
+		int channelCount()						{ return (isValidImage() ? _channels.size() : 0); }
 		ChannelMappingMode channelMappingMode()	{ return _cmMode; }
 		int channelMapping(int nr)				{ return _channelMapping[nr]; }
 		void setChannelMapping(ChannelMappingMode mode, int mapping1, int mapping2, int mapping3)
@@ -93,10 +122,10 @@ class ImageWidget : public QWidget
 			Redraw();
 		}
 
-		double contrast()						{ return _contrast; }
-		double brightness()						{ return _brightness; }
+		RealType contrast()						{ return _contrast; }
+		RealType brightness()					{ return _brightness; }
 
-		QVector<double> GetHistogram(int nr, double coverage=0.1)
+		QVector<double> GetHistogram(int nr, RealType coverage=0.1)
 		{
 			return CalculateHistogram(coverage, _channelMapping[nr]);
 		}
@@ -120,15 +149,13 @@ class ImageWidget : public QWidget
 		void ChangeOffsetX(int offsetX);
 		void ChangeOffsetY(int offsetY);
 
-		void CalculateAutoCB(float coverage=1.0f);
+		void CalculateAutoCB(RealType coverage=1.0);
 		void SetRandomMapping(bool activate);
-		void SetContrast(double contrast);
-		void SetBrightness(double brightness);
+		void SetContrast(RealType contrast);
+		void SetBrightness(RealType brightness);
 
-		void ResetView(bool recalc=true);
-		void ZoomView(float zoomX, float zoomY, bool recalc=true);
-		void RotateView(float angle, bool recalc=true);
-		void TranslateView(float transX, float transY, bool recalc=true);
+		void ResetView();
+		void ZoomView(RealType zoomfactor);
 
 		void Redraw();
 
@@ -140,13 +167,12 @@ class ImageWidget : public QWidget
 		void RecalculateBounds();
 
 	private:
-		Ga::Image *_image;
+		QVector<ReaderType::Pointer> _images;
+		QVector<ChannelExtractType::Pointer> _channels;
 
 		QRect _bounds;
 		QPoint _offset;
-		QPoint _tempCenterPixel;
-		float *_affineTransformation;
-		float *_invAffineTransformation;
+		RealType _scaleFactor;
 
 		TimeStamp _currentTimestamp;
 		int _maxTilesCached;
@@ -156,10 +182,10 @@ class ImageWidget : public QWidget
 		ChannelMappingMode _cmMode;
 		int _channelMapping[3];
 		bool _randomMapping;
-		QMap<double, int> _randomMap;
+		QMap<PixelType, int> _randomMap;
 
-		double _contrast;
-		double _brightness;
+		RealType _contrast;
+		RealType _brightness;
 
 		QRect _selection;
 
@@ -169,9 +195,6 @@ class ImageWidget : public QWidget
 
 		QVector<double> CalculateHistogram(float coverage, int channel=0);
 		void CalculateHistogram3(float coverage, int channel1, QVector<double> &histogram1, int channel2, QVector<double> &histogram2, int channel3, QVector<double> &histogram3);
-
-		void MultiplyMatrixRight(float *matrix, bool target);
-		void MultiplyMatrixLeft(float *matrix, bool target);
 };
 
 #endif

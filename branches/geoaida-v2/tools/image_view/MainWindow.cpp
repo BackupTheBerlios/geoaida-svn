@@ -115,7 +115,7 @@ QMenuBar *MainWindow::createMenuBar()
 	QAction *fileAddChannelsAction = fileMenu->addAction(tr("Kanäle &Hinzufügen..."));
 	connect(fileAddChannelsAction, SIGNAL(triggered()), this, SLOT(AddChannelsDialog()));
 
-	QAction *fileSaveAction = fileMenu->addAction(tr("Bild &Speichern..."));
+	QAction *fileSaveAction = fileMenu->addAction(tr("Selektion &Speichern..."));
 	connect(fileSaveAction, SIGNAL(triggered()), this, SLOT(SaveFileDialog()));
 
 	fileMenu->addSeparator();
@@ -168,16 +168,6 @@ QMenuBar *MainWindow::createMenuBar()
 	viewZoomMAction->setShortcut(Qt::Key_Minus);
 	connect(viewZoomMAction, SIGNAL(triggered()), this, SLOT(ZoomMinus()));
 
-	viewMenu->addSeparator();
-
-	QAction *viewRotatePAction = viewMenu->addAction(tr("Rotate +"));
-	viewRotatePAction->setShortcut(Qt::Key_PageDown);
-	connect(viewRotatePAction, SIGNAL(triggered()), this, SLOT(RotatePlus()));
-
-	QAction *viewRotateMAction = viewMenu->addAction(tr("Rotate -"));
-	viewRotateMAction->setShortcut(Qt::Key_PageUp);
-	connect(viewRotateMAction, SIGNAL(triggered()), this, SLOT(RotateMinus()));
-
 	return menuBar;
 }
 
@@ -211,12 +201,12 @@ void MainWindow::AddChannelsDialog()
 
 void MainWindow::SaveFileDialog()
 {
-	QString filename = QFileDialog::getSaveFileName(this, tr("Bild speichern"), _currentDirectory, tr("Bilder ( *.tif *.tiff ) ;; Alle ( *.* )"));
+	QString filename = QFileDialog::getSaveFileName(this, tr("Selektion speichern"), _currentDirectory, tr("Bilder ( *.tif *.tiff ) ;; Alle ( *.* )"));
 	if (filename.isEmpty())
 		return;
 
 	_currentDirectory = QFileInfo(filename).absolutePath();
-	_imageWidget->Save(filename);
+	_imageWidget->SaveSelection(filename);
 }
 
 void MainWindow::QuitApplication()
@@ -337,25 +327,13 @@ void MainWindow::ResetView()
 
 void MainWindow::ZoomPlus()
 {
-	_imageWidget->ZoomView(2.0f, 2.0f);
+	_imageWidget->ZoomView(2.0f);
 	_imageWidget->update();
 }
 
 void MainWindow::ZoomMinus()
 {
-	_imageWidget->ZoomView(0.5f, 0.5f);
-	_imageWidget->update();
-}
-
-void MainWindow::RotatePlus()
-{
-	_imageWidget->RotateView(-3.14159265f / 4.0f);
-	_imageWidget->update();
-}
-
-void MainWindow::RotateMinus()
-{
-	_imageWidget->RotateView(3.14159265f / 4.0f);
+	_imageWidget->ZoomView(0.5f);
 	_imageWidget->update();
 }
 
