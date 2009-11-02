@@ -150,54 +150,47 @@ void ImageWidget::SaveSelection(QString filename)
 	if (!isValidImage())
 		return;
 
-	// Combine channels to form the output image
+	// Create list of channels to be exported
+	typedef otb::ImageList<ChannelType> cilTempType;
+	cilTempType::Pointer channelList = cilTempType::New();
 	switch (_cmMode)
 	{
 		case CM_OneChannelMode:
-		{
-			ExtractRegionChannelType::Pointer extractregion = ExtractRegionChannelType::New();
-			ChannelType::RegionType::IndexType region_topleft;
-			region_topleft[0] = _selection.isEmpty() ? 0 : _selection.left();
-			region_topleft[1] = _selection.isEmpty() ? 0 : _selection.top();
-			ChannelType::RegionType::SizeType region_size;
-			region_size[0] = _selection.isEmpty() ? imageWidth() : _selection.width();
-			region_size[1] = _selection.isEmpty() ? imageHeight() : _selection.height();
-			extractregion->SetExtractionRegion(ChannelType::RegionType(region_topleft, region_size));
-			extractregion->SetInput(_channels[_channelMapping[0]]->GetOutput());
-			
-			WriterChannelType::Pointer writer = WriterChannelType::New();
-			writer->SetFileName(filename.toStdString().c_str());
-			writer->SetInput(extractregion->GetOutput());
-
-			writer->Update();
-		}
-		break;
+			channelList->PushBack(_channels[_channelMapping[0]]->GetOutput());
+			break;
 
 		case CM_ThreeChannelMode:
-		{
-			ChannelComposeRGBType::Pointer composer = ChannelComposeRGBType::New();
-			composer->SetInput1(_channels[_channelMapping[0]]->GetOutput());
-			composer->SetInput2(_channels[_channelMapping[1]]->GetOutput());
-			composer->SetInput3(_channels[_channelMapping[2]]->GetOutput());
-			
-			ExtractRegionRGBType::Pointer extractregion = ExtractRegionRGBType::New();
-			ChannelType::RegionType::IndexType region_topleft;
-			region_topleft[0] = _selection.isEmpty() ? 0 : _selection.left();
-			region_topleft[1] = _selection.isEmpty() ? 0 : _selection.top();
-			ChannelType::RegionType::SizeType region_size;
-			region_size[0] = _selection.isEmpty() ? imageWidth() : _selection.width();
-			region_size[1] = _selection.isEmpty() ? imageHeight() : _selection.height();
-			extractregion->SetExtractionRegion(ChannelType::RegionType(region_topleft, region_size));
-			extractregion->SetInput(composer->GetOutput());
-
-			WriterRGBType::Pointer writer = WriterRGBType::New();
-			writer->SetFileName(filename.toStdString().c_str());
-			writer->SetInput(extractregion->GetOutput());
-
-			writer->Update();
-		}
-		break;
+			for (int i = 0; i < 3; i++)
+				channelList->PushBack(_channels[_channelMapping[i]]->GetOutput());
+			break;
 	}
+
+	// Convert image-list to vector-image
+	typedef otb::ImageListToVectorImageFilter<cilTempType, ImageType> il2viTempType;
+	il2viTempType::Pointer converter = il2viTempType::New();
+	
+	converter->SetInput(channelList);
+	
+	// Setup cropping region
+	typedef itk::ExtractImageFilter<ImageType, ImageType> eiTempType;
+	eiTempType::Pointer extractregion = eiTempType::New();
+
+	ImageType::RegionType::IndexType region_topleft;
+	region_topleft[0] = _selection.isEmpty() ? 0 : _selection.left();
+	region_topleft[1] = _selection.isEmpty() ? 0 : _selection.top();
+	ImageType::RegionType::SizeType region_size;
+	region_size[0] = _selection.isEmpty() ? imageWidth() : _selection.width();
+	region_size[1] = _selection.isEmpty() ? imageHeight() : _selection.height();
+	extractregion->SetExtractionRegion(ImageType::RegionType(region_topleft, region_size));
+	extractregion->SetInput(converter->GetOutput());
+
+	// Write image
+	typedef otb::ImageFileWriter<ImageType> wviTempType;
+	wviTempType::Pointer writer = wviTempType::New();
+	writer->SetFileName(filename.toStdString().c_str());
+	writer->SetInput(extractregion->GetOutput());
+
+	writer->Update();
 }
 
 /**************************************

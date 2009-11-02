@@ -28,6 +28,7 @@
 #include <itkRGBPixel.h>
 #include <otbImage.h>
 #include <otbVectorImage.h>
+#include <otbImageList.h>
 
 #include <otbImageFileReader.h>
 #include <otbImageFileWriter.h>
@@ -35,26 +36,18 @@
 #include <otbMultiToMonoChannelExtractROI.h>
 #include <itkComposeRGBImageFilter.h>
 #include <itkExtractImageFilter.h>
+#include <otbImageListToVectorImageFilter.h>
 
 #include <itkImageRegion.h>
 #include <itkImageRegionConstIterator.h>
 
 typedef float RealType;
 typedef RealType PixelType;
-typedef itk::RGBPixel<RealType> PixelRGBType;
 
 typedef otb::Image<PixelType, 2> ChannelType;
 typedef otb::VectorImage<PixelType, 2> ImageType;
-typedef otb::Image<PixelRGBType, 2> OutputRGBType;
-
 typedef otb::ImageFileReader<ImageType> ReaderType;
-typedef otb::ImageFileWriter<ChannelType> WriterChannelType;
-typedef otb::ImageFileWriter<OutputRGBType> WriterRGBType;
-
 typedef otb::MultiToMonoChannelExtractROI<PixelType, PixelType> ChannelExtractType;
-typedef itk::ComposeRGBImageFilter<ChannelType, OutputRGBType> ChannelComposeRGBType;
-typedef itk::ExtractImageFilter<ChannelType, ChannelType> ExtractRegionChannelType;
-typedef itk::ExtractImageFilter<OutputRGBType, OutputRGBType> ExtractRegionRGBType;
 
 typedef itk::ImageRegionConstIterator<ChannelType> ConstChannelIteratorType;
 typedef itk::ImageRegionConstIterator<ImageType> ConstIteratorType;
