@@ -24,7 +24,7 @@
 #include <QDoubleSpinBox>
 #include <QPushButton>
 
-AutoCBDialog::AutoCBDialog(double startCoverage, QWidget *parent) : QDialog(parent)
+AutoCBDialog::AutoCBDialog(RealType startCoverage, QWidget *parent) : QDialog(parent)
 {
 	setWindowTitle(tr("Auto Kontrast / Helligkeit"));
 

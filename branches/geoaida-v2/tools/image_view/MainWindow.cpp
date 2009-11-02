@@ -25,6 +25,7 @@
 #include <QStatusBar>
 #include <QMessageBox>
 
+#include "SaveSelectionDialog.h"
 #include "ChannelMappingDialog.h"
 #include "CBDialog.h"
 #include "AutoCBDialog.h"
@@ -143,14 +144,14 @@ QMenuBar *MainWindow::createMenuBar()
 	QAction *channelContrastBrightnessAction = channelMenu->addAction(tr("Kontrast / Helligkeit &Ändern..."));
 	connect(channelContrastBrightnessAction, SIGNAL(triggered()), this, SLOT(ChangeContrastBrightness()));
 
-	QAction *channelAutoContrastBrightnessAction = channelMenu->addAction(tr("&Auto Kontrast / Helligkeit..."));
+	QAction *channelAutoContrastBrightnessAction = channelMenu->addAction(tr("&Auto Kontrast / Helligkeit"));
 	channelAutoContrastBrightnessAction->setShortcut(Qt::CTRL + Qt::Key_A);
 	connect(channelAutoContrastBrightnessAction, SIGNAL(triggered()), this, SLOT(CalculateAutoContrastBrightness()));
 
-	channelMenu->addSeparator();
+	//channelMenu->addSeparator();
 
-	QAction *channelShowHistogramAction = channelMenu->addAction(tr("&Histogramm Anzeigen..."));
-	connect(channelShowHistogramAction, SIGNAL(triggered()), this, SLOT(ShowHistogram()));
+	//QAction *channelShowHistogramAction = channelMenu->addAction(tr("&Histogramm Anzeigen..."));
+	//connect(channelShowHistogramAction, SIGNAL(triggered()), this, SLOT(ShowHistogram()));
 
 	// View menu
 	QMenu *viewMenu = menuBar->addMenu(tr("&Ansicht"));
@@ -201,12 +202,17 @@ void MainWindow::AddChannelsDialog()
 
 void MainWindow::SaveFileDialog()
 {
-	QString filename = QFileDialog::getSaveFileName(this, tr("Selektion speichern"), _currentDirectory, tr("Bilder ( *.tif *.tiff ) ;; Alle ( *.* )"));
-	if (filename.isEmpty())
+	if (!_imageWidget->isValidImage())
 		return;
 
-	_currentDirectory = QFileInfo(filename).absolutePath();
-	_imageWidget->SaveSelection(filename);
+	SaveSelectionDialog dialog(_imageWidget->channelCount(), _currentDirectory, this);
+	int result = dialog.exec();
+
+	if (result == QDialog::Accepted)
+	{
+		_currentDirectory = QFileInfo(dialog.filename()).absolutePath();
+		_imageWidget->SaveSelection(dialog.filename(), dialog.channels(), dialog.colordepth());
+	}
 }
 
 void MainWindow::QuitApplication()
@@ -256,6 +262,7 @@ void MainWindow::CalculateAutoContrastBrightness()
 	if (!_imageWidget->isValidImage())
 		return;
 
+	/*
 	// Calculate start coverage value
 	double expectedPixelCount = 100000.0;
 	double startCoverage;
@@ -274,10 +281,14 @@ void MainWindow::CalculateAutoContrastBrightness()
 
 	if (result == QDialog::Accepted)
 		_imageWidget->CalculateAutoCB(dialog.coverage());
+	*/
+
+	_imageWidget->CalculateAutoCB();
 }
 
 void MainWindow::ShowHistogram()
 {
+	/*
 	if (!_imageWidget->isValidImage())
 		return;
 
@@ -317,6 +328,7 @@ void MainWindow::ShowHistogram()
 
 		dialog->show();
 	}
+	*/
 }
 
 void MainWindow::ResetView()

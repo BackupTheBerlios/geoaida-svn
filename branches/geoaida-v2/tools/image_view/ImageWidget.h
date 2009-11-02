@@ -29,6 +29,8 @@
 #include <otbImage.h>
 #include <otbVectorImage.h>
 #include <otbImageList.h>
+#include <itkCastImageFilter.h>
+#include <otbPerBandVectorImageFilter.h>
 
 #include <otbImageFileReader.h>
 #include <otbImageFileWriter.h>
@@ -41,7 +43,10 @@
 #include <itkImageRegion.h>
 #include <itkImageRegionConstIterator.h>
 
-typedef float RealType;
+#include <itkMinimumMaximumImageCalculator.h>
+
+#include "Definitions.h"
+
 typedef RealType PixelType;
 
 typedef otb::Image<PixelType, 2> ChannelType;
@@ -74,12 +79,6 @@ struct TileInfo
 	}
 };
 
-enum ChannelMappingMode
-{
-	CM_OneChannelMode,
-	CM_ThreeChannelMode
-};
-
 class ImageWidget : public QWidget
 {
 	Q_OBJECT
@@ -91,7 +90,7 @@ class ImageWidget : public QWidget
 		void Clear();
 		void Open(QString filename);
 		void AddChannels(QString filename);
-		void SaveSelection(QString filename);
+		void SaveSelection(QString filename, QVector<bool> channels, ColorDepth colordepth);
 
 		bool isValidImage()	{ return !_images.isEmpty(); }
 		int imageWidth()	{ return (isValidImage() ? _images[0]->GetOutput()->GetLargestPossibleRegion().GetSize()[0] : 0); }
@@ -118,10 +117,10 @@ class ImageWidget : public QWidget
 		RealType contrast()						{ return _contrast; }
 		RealType brightness()					{ return _brightness; }
 
-		QVector<double> GetHistogram(int nr, RealType coverage=0.1)
+		/*QVector<double> GetHistogram(int nr, RealType coverage=0.1)
 		{
 			return CalculateHistogram(coverage, _channelMapping[nr]);
-		}
+		}*/
 
 	protected:
 		void resizeEvent(QResizeEvent *event);
@@ -142,10 +141,10 @@ class ImageWidget : public QWidget
 		void ChangeOffsetX(int offsetX);
 		void ChangeOffsetY(int offsetY);
 
-		void CalculateAutoCB(RealType coverage=1.0);
+		void CalculateAutoCB();
 		void SetRandomMapping(bool activate);
-		void SetContrast(RealType contrast);
-		void SetBrightness(RealType brightness);
+		void SetContrast(double contrast);
+		void SetBrightness(double brightness);
 
 		void ResetView();
 		void ZoomView(RealType zoomfactor);
@@ -186,8 +185,8 @@ class ImageWidget : public QWidget
 		TileID IdFromPosition(const QPoint &point) const;
 		QPoint PositionFromId(const TileID id) const;
 
-		QVector<double> CalculateHistogram(float coverage, int channel=0);
-		void CalculateHistogram3(float coverage, int channel1, QVector<double> &histogram1, int channel2, QVector<double> &histogram2, int channel3, QVector<double> &histogram3);
+		//QVector<double> CalculateHistogram(float coverage, int channel=0);
+		//void CalculateHistogram3(float coverage, int channel1, QVector<double> &histogram1, int channel2, QVector<double> &histogram2, int channel3, QVector<double> &histogram3);
 };
 
 #endif

@@ -24,6 +24,7 @@
 #include <QMenuBar>
 #include <QScrollBar>
 
+#include "Definitions.h"
 #include "ImageWidget.h"
 
 class MainWindow : public QMainWindow

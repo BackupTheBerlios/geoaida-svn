@@ -145,7 +145,7 @@ void ImageWidget::AddChannels(QString filename)
 	}
 }
 
-void ImageWidget::SaveSelection(QString filename)
+void ImageWidget::SaveSelection(QString filename, QVector<bool> channels, ColorDepth colordepth)
 {
 	if (!isValidImage())
 		return;
@@ -153,22 +153,14 @@ void ImageWidget::SaveSelection(QString filename)
 	// Create list of channels to be exported
 	typedef otb::ImageList<ChannelType> cilTempType;
 	cilTempType::Pointer channelList = cilTempType::New();
-	switch (_cmMode)
-	{
-		case CM_OneChannelMode:
-			channelList->PushBack(_channels[_channelMapping[0]]->GetOutput());
-			break;
-
-		case CM_ThreeChannelMode:
-			for (int i = 0; i < 3; i++)
-				channelList->PushBack(_channels[_channelMapping[i]]->GetOutput());
-			break;
-	}
+	
+	for (int i = 0; i < std::min(channelCount(), channels.size()); i++)
+		if (channels[i])
+			channelList->PushBack(_channels[i]->GetOutput());
 
 	// Convert image-list to vector-image
 	typedef otb::ImageListToVectorImageFilter<cilTempType, ImageType> il2viTempType;
 	il2viTempType::Pointer converter = il2viTempType::New();
-	
 	converter->SetInput(channelList);
 	
 	// Setup cropping region
@@ -185,12 +177,56 @@ void ImageWidget::SaveSelection(QString filename)
 	extractregion->SetInput(converter->GetOutput());
 
 	// Write image
-	typedef otb::ImageFileWriter<ImageType> wviTempType;
-	wviTempType::Pointer writer = wviTempType::New();
-	writer->SetFileName(filename.toStdString().c_str());
-	writer->SetInput(extractregion->GetOutput());
-
-	writer->Update();
+	switch (colordepth)
+	{
+		case CD_INTEGER_8BIT:
+		{
+			typedef otb::VectorImage<quint8, 2> ExportImageTempType;
+			typedef itk::CastImageFilter<otb::Image<RealType, 2>, otb::Image<quint8, 2> > CastTempType;
+			typedef otb::PerBandVectorImageFilter<ImageType, ExportImageTempType, CastTempType> PerBandCastTempType;
+			PerBandCastTempType::Pointer caster = PerBandCastTempType::New();
+			caster->SetInput(extractregion->GetOutput());
+			
+			typedef otb::ImageFileWriter<ExportImageTempType> wviTempType;
+			wviTempType::Pointer writer = wviTempType::New();
+			writer->SetFileName(filename.toStdString().c_str());
+			writer->SetInput(caster->GetOutput());
+			
+			writer->Update();
+		}
+		break;
+		
+		case CD_INTEGER_16BIT:
+		{
+			typedef otb::VectorImage<quint16, 2> ExportImageTempType;
+			typedef itk::CastImageFilter<otb::Image<RealType, 2>, otb::Image<quint16, 2> > CastTempType;
+			typedef otb::PerBandVectorImageFilter<ImageType, ExportImageTempType, CastTempType> PerBandCastTempType;
+			PerBandCastTempType::Pointer caster = PerBandCastTempType::New();
+			caster->SetInput(extractregion->GetOutput());
+			
+			typedef otb::ImageFileWriter<ExportImageTempType> wviTempType;
+			wviTempType::Pointer writer = wviTempType::New();
+			writer->SetFileName(filename.toStdString().c_str());
+			writer->SetInput(caster->GetOutput());
+			
+			writer->Update();
+		}
+		break;
+		
+		case CD_FLOAT_32BIT:
+		{
+			typedef otb::ImageFileWriter<ImageType> wviTempType;
+			wviTempType::Pointer writer = wviTempType::New();
+			writer->SetFileName(filename.toStdString().c_str());
+			writer->SetInput(extractregion->GetOutput());
+			
+			writer->Update();
+		}
+		break;
+		
+		default:
+			emit ShowWarning(tr("Die gewählte Farbtiefe ist ungültig!"));
+	}
 }
 
 /**************************************
@@ -637,9 +673,9 @@ void ImageWidget::RecalculateBounds()
 *
 ***************************************/
 
+/*
 QVector<double> ImageWidget::CalculateHistogram(float coverage, int channel)
 {
-	/*
 	assert(_image);
 	assert((channel >= 0) && (channel < _image->noChannels()));
 	assert((coverage > 0.0f) && (coverage <= 1.0f));
@@ -702,8 +738,8 @@ QVector<double> ImageWidget::CalculateHistogram(float coverage, int channel)
 
 	qSort(returnList);
 	return returnList;
-	*/
 }
+*/
 
 /**************************************
 *
@@ -723,61 +759,67 @@ void ImageWidget::ChangeOffsetY(int offsetY)
 	update();
 }
 
-void ImageWidget::CalculateAutoCB(float coverage)
+void ImageWidget::CalculateAutoCB()
 {
-	/*
-	if (!_image)
+	if (!isValidImage())
 		return;
 
-	if ((coverage <= 0.0f) || (coverage > 1.0f))
-		return;
+	// Calculate min, max pixel intensities
+	typedef itk::MinimumMaximumImageCalculator<ChannelType> mmcTempType;
 
-	Ga::ImageBase *pImage = _image->pImage();
-	double fMin = pImage->fileMin();
-	double fMax = pImage->fileMax();
+	RealType minvalue = std::numeric_limits<RealType>::infinity();
+	RealType maxvalue = -std::numeric_limits<RealType>::infinity();
+
+	ChannelType::RegionType::IndexType region_topleft;
+	region_topleft[0] = _selection.isEmpty() ? 0 : _selection.left();
+	region_topleft[1] = _selection.isEmpty() ? 0 : _selection.top();
+	ChannelType::RegionType::SizeType region_size;
+	region_size[0] = _selection.isEmpty() ? imageWidth() : _selection.width();
+	region_size[1] = _selection.isEmpty() ? imageHeight() : _selection.height();
 
 	switch (_cmMode)
 	{
 		case CM_OneChannelMode:
 		{
-			QVector<double> histogram = CalculateHistogram(coverage, _channelMapping[0]);
+			_channels[_channelMapping[0]]->GetOutput()->SetRequestedRegion(ChannelType::RegionType(region_topleft, region_size));
+			_channels[_channelMapping[0]]->Update();
+			
+			mmcTempType::Pointer mmcalc = mmcTempType::New();
+			mmcalc->SetRegion(ChannelType::RegionType(region_topleft, region_size));
+			mmcalc->SetImage(_channels[_channelMapping[0]]->GetOutput());
+			mmcalc->Compute();
 
-			if (histogram.size() < 2)
-				return;
+			minvalue = std::min(minvalue, mmcalc->GetMinimum());
+			maxvalue = std::max(maxvalue, mmcalc->GetMaximum());
 
-			int histogramFrame = histogram.size() * 0.01;
-			double minValue = (histogram[histogramFrame] - fMin) / (fMax - fMin);
-			double maxValue = (histogram[histogram.size() - 1 - histogramFrame] - fMin) / (fMax - fMin);
-
-			_brightness = -minValue * (fMax - fMin);
-			_contrast = 1.0 / (maxValue - minValue);
-
-			break;
+			_brightness = -minvalue;
+			_contrast = 255.0 / (maxvalue - minvalue);
 		}
-
+		break;
+	
 		case CM_ThreeChannelMode:
 		{
-			QVector<double> histogram0 = CalculateHistogram(coverage, _channelMapping[0]);
-			QVector<double> histogram1 = CalculateHistogram(coverage, _channelMapping[1]);
-			QVector<double> histogram2 = CalculateHistogram(coverage, _channelMapping[2]);
+			for (int i = 0; i < 3; i++)
+			{
+				_channels[_channelMapping[i]]->GetOutput()->SetRequestedRegion(ChannelType::RegionType(region_topleft, region_size));
+				_channels[_channelMapping[i]]->Update();
+				
+				mmcTempType::Pointer mmcalc = mmcTempType::New();
+				mmcalc->SetRegion(ChannelType::RegionType(region_topleft, region_size));
+				mmcalc->SetImage(_channels[_channelMapping[i]]->GetOutput());
+				mmcalc->Compute();
 
-			assert((histogram0.size() == histogram1.size()) && (histogram1.size() == histogram2.size()));
-			if (histogram0.size() < 2)
-				return;
-
-			int histogramFrame = histogram0.size() * 0.01;
-			double minValue = (std::min(histogram0[histogramFrame], std::min(histogram1[histogramFrame], histogram2[histogramFrame])) - fMin) / (fMax - fMin);
-			double maxValue = (std::max(histogram0[histogram0.size() - 1 - histogramFrame], std::max(histogram1[histogram0.size() - 1 - histogramFrame], histogram2[histogram0.size() - 1 - histogramFrame])) - fMin) / (fMax - fMin);
-
-			_brightness = -minValue * (fMax - fMin);
-			_contrast = 1.0 / (maxValue - minValue);
-
-			break;
+				minvalue = std::min(minvalue, mmcalc->GetMinimum());
+				maxvalue = std::max(maxvalue, mmcalc->GetMaximum());
+			}
+			
+			_brightness = -minvalue;
+			_contrast = 255.0 / (maxvalue - minvalue);
 		}
+		break;
 	}
 
 	Redraw();
-	*/
 }
 
 void ImageWidget::SetRandomMapping(bool activate)
@@ -789,13 +831,13 @@ void ImageWidget::SetRandomMapping(bool activate)
 		Redraw();
 }
 
-void ImageWidget::SetContrast(RealType contrast)
+void ImageWidget::SetContrast(double contrast)
 {
 	_contrast = contrast;
 	Redraw();
 }
 
-void ImageWidget::SetBrightness(RealType brightness)
+void ImageWidget::SetBrightness(double brightness)
 {
 	_brightness = brightness;
 	Redraw();

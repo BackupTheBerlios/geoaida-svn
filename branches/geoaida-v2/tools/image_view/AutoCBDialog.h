@@ -23,14 +23,16 @@
 #include <QDialog>
 #include <QDoubleSpinBox>
 
+#include "Definitions.h"
+
 class AutoCBDialog : public QDialog
 {
 	Q_OBJECT
 
 	public:
-		AutoCBDialog(double startCoverage, QWidget *parent=0);
+		AutoCBDialog(RealType startCoverage, QWidget *parent=0);
 
-		double coverage() { return (_coverageSpin->value() / 100.0); }
+		RealType coverage() { return (_coverageSpin->value() / 100.0); }
 
 	signals:
 

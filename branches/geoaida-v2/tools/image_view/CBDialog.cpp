@@ -27,7 +27,7 @@
 #include <QDoubleSpinBox>
 #include <QPushButton>
 
-CBDialog::CBDialog(double startContrast, double startBrightness, QWidget *parent)
+CBDialog::CBDialog(RealType startContrast, RealType startBrightness, QWidget *parent)
 	: QDialog(parent), _startContrast(startContrast), _startBrightness(startBrightness)
 {
 	setWindowTitle(tr("Kontrast / Helligkeit Ändern"));

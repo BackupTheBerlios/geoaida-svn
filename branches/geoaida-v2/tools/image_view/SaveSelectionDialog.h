@@ -1,8 +1,8 @@
 /***************************************************************************
-                          CBDialog.h  -
+                          SaveSelectionDialog.h  -
                              -------------------
-    begin                : Wed Jul 16 2008
-    copyright            : (C) 2008 TNT, Uni Hannover
+    begin                : Mon Nov 2 2009
+    copyright            : (C) 2009 TNT, Uni Hannover
     authors              : Karsten Vogt
 
     email                : vogt@tnt.uni-hannover.de
@@ -17,34 +17,39 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef _CBDIALOG_H_
-#define _CBDIALOG_H_
+#ifndef _SAVESELECTIONDIALOG_H_
+#define _SAVESELECTIONDIALOG_H_
 
 #include <QDialog>
-#include <QDoubleSpinBox>
+#include <QLineEdit>
+#include <QCheckBox>
+#include <QRadioButton>
 
-#include "Definitions.h"
+#include "ImageWidget.h"
 
-class CBDialog : public QDialog
+class SaveSelectionDialog : public QDialog
 {
 	Q_OBJECT
 
 	public:
-		CBDialog(RealType startContrast, RealType startBrightness, QWidget *parent=0);
-
-	signals:
-		void contrastChanged(double contrast=1.0);
-		void brightnessChanged(double brightness=0.0);
-
+		SaveSelectionDialog(int channelCount, QString currentDirectoy, QWidget *parent=0);
+		
+		QString filename();
+		QVector<bool> channels();
+		ColorDepth colordepth();
+		
 	private slots:
-		void resetValues();
-
+		void FilenameRequested();
+		
 	private:
-		QDoubleSpinBox *_contrastSpin;
-		QDoubleSpinBox *_brightnessSpin;
-
-		RealType _startContrast;
-		RealType _startBrightness;
+		QString					_currentDirectory;
+		QLineEdit				*_filenameEdit;
+		
+		QVector<QCheckBox *>	_channelCheckBoxes;
+		
+		QRadioButton			*_8bitButton;
+		QRadioButton			*_16bitButton;
+		QRadioButton			*_floatButton;
 };
 
 #endif
