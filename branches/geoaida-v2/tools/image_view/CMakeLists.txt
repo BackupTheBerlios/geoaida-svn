@@ -13,9 +13,9 @@ ENDIF(OTB_FOUND)
 
 include(${QT_USE_FILE})
 
-set(image_view_SRCS main.cpp MainWindow.cpp ImageWidget.cpp SaveSelectionDialog.cpp ChannelMappingDialog.cpp CBDialog.cpp AutoCBDialog.cpp HistogramDialog.cpp)
+set(image_view_SRCS main.cpp MainWindow.cpp ImageWidget.cpp SaveSelectionDialog.cpp ChannelMappingDialog.cpp CBDialog.cpp HistogramDialog.cpp)
 
-set(image_view_MOC_HDRS MainWindow.h ImageWidget.h SaveSelectionDialog.h ChannelMappingDialog.h CBDialog.h AutoCBDialog.h HistogramDialog.h Definitions.h)
+set(image_view_MOC_HDRS MainWindow.h ImageWidget.h SaveSelectionDialog.h ChannelMappingDialog.h CBDialog.h HistogramDialog.h Definitions.h)
 
 set(data image_view.mod)
 

@@ -27,8 +27,6 @@
 
 #include "SaveSelectionDialog.h"
 #include "ChannelMappingDialog.h"
-#include "CBDialog.h"
-#include "AutoCBDialog.h"
 #include "HistogramDialog.h"
 
 /**************************************
@@ -38,7 +36,7 @@
 ***************************************/
 
 MainWindow::MainWindow(const QString &filename, QWidget *parent)
-	: QMainWindow(parent)
+	: QMainWindow(parent), _cbdialog(0)
 {
 	// Create central widget
 	_centralWidget = new QWidget();
@@ -180,24 +178,29 @@ QMenuBar *MainWindow::createMenuBar()
 
 void MainWindow::LoadFileDialog()
 {
-	QString filename = QFileDialog::getOpenFileName(this, tr("Bild öffnen"), _currentDirectory, tr("Bilder ( *.tif *.tiff *.jpg *.jpeg *.png *.ppm *.pgm *.pfm *.pbm ) ;; Alle ( *.* )"));
-	if (filename.isEmpty())
+	QStringList filenames = QFileDialog::getOpenFileNames(this, tr("Bild öffnen"), _currentDirectory, tr("Bilder ( *.tif *.tiff *.jpg *.jpeg *.png *.ppm *.pgm *.pfm *.pbm ) ;; Alle ( *.* )"));
+	if (filenames.isEmpty())
 		return;
 
-	_currentDirectory = QFileInfo(filename).absolutePath();
-	_imageWidget->Open(filename);
+	_currentDirectory = QFileInfo(filenames[0]).absolutePath();
+	_imageWidget->Open(filenames[0]);
 
-	setWindowTitle(QFileInfo(filename).fileName() + tr(" (%1 x %2)").arg(_imageWidget->imageWidth()).arg(_imageWidget->imageHeight()));
+	setWindowTitle(QFileInfo(filenames[0]).fileName() + tr(" (%1 x %2)").arg(_imageWidget->imageWidth()).arg(_imageWidget->imageHeight()));
+
+	for (int i = 1; i < filenames.size(); i++)
+		_imageWidget->AddChannels(filenames[i]);
 }
 
 void MainWindow::AddChannelsDialog()
 {
-	QString filename = QFileDialog::getOpenFileName(this, tr("Bild öffnen"), _currentDirectory, tr("Bilder ( *.tif *.tiff *.jpg *.jpeg *.png *.ppm *.pgm *.pfm *.pbm ) ;; Alle ( *.* )"));
-	if (filename.isEmpty())
+	QStringList filenames = QFileDialog::getOpenFileNames(this, tr("Bild öffnen"), _currentDirectory, tr("Bilder ( *.tif *.tiff *.jpg *.jpeg *.png *.ppm *.pgm *.pfm *.pbm ) ;; Alle ( *.* )"));
+	if (filenames.isEmpty())
 		return;
 
-	_currentDirectory = QFileInfo(filename).absolutePath();
-	_imageWidget->AddChannels(filename);
+	_currentDirectory = QFileInfo(filenames[0]).absolutePath();
+
+	for (int i = 0; i < filenames.size(); i++)
+		_imageWidget->AddChannels(filenames[i]);
 }
 
 void MainWindow::SaveFileDialog()
@@ -251,14 +254,17 @@ void MainWindow::ChangeContrastBrightness()
 	if (!_imageWidget->isValidImage())
 		return;
 
-	CBDialog *dialog = new CBDialog(_imageWidget->contrast(), _imageWidget->brightness(), _imageWidget->bitdepth(), this);
-	dialog->setModal(true);
+	if (!_cbdialog)
+	{
+		_cbdialog = new CBDialog(this);
 
-	connect(dialog, SIGNAL(contrastChanged(double)), _imageWidget, SLOT(SetContrast(double)));
-	connect(dialog, SIGNAL(brightnessChanged(double)), _imageWidget, SLOT(SetBrightness(double)));
-	connect(dialog, SIGNAL(bitdepthChanged(int)), _imageWidget, SLOT(SetBitdepth(int)));
+		connect(_cbdialog, SIGNAL(contrastChanged(double)), _imageWidget, SLOT(SetContrast(double)));
+		connect(_cbdialog, SIGNAL(brightnessChanged(double)), _imageWidget, SLOT(SetBrightness(double)));
+	}
 
-	dialog->show();
+	_cbdialog->setContrast(_imageWidget->contrast());
+	_cbdialog->setBrightness(_imageWidget->brightness());
+	_cbdialog->show();
 }
 
 void MainWindow::CalculateAutoContrastBrightness()

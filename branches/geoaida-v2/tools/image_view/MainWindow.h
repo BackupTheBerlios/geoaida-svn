@@ -26,6 +26,7 @@
 
 #include "Definitions.h"
 #include "ImageWidget.h"
+#include "CBDialog.h"
 
 class MainWindow : public QMainWindow
 {
@@ -66,6 +67,8 @@ class MainWindow : public QMainWindow
 		QScrollBar *_verticalScrollbar;
 		ImageWidget *_imageWidget;
 		QString _currentDirectory;
+
+		CBDialog *_cbdialog;
 
 		QMenuBar *createMenuBar();
 };

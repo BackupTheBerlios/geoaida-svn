@@ -67,7 +67,6 @@ void ImageWidget::Clear()
 
 	_contrast = 1.0;
 	_brightness = 0.0;
-	_bitdepth = 8;
 
 	_selection = QRect();
 
@@ -146,10 +145,20 @@ void ImageWidget::AddChannels(QString filename)
 	}
 }
 
-void ImageWidget::SaveSelection(QString filename, QVector<bool> channels, ColorDepth colordepth, bool applycontrastbrightness)
+void ImageWidget::SaveSelection(QString filenametemplate, QVector<bool> channels, ColorDepth colordepth, bool applycontrastbrightness)
 {
 	if (!isValidImage())
 		return;
+
+	// Create filename template
+	QString path = QFileInfo(filenametemplate).absolutePath();
+	QString base = QFileInfo(filenametemplate).baseName();
+	QString suffix = QFileInfo(filenametemplate).completeSuffix();
+
+	if (suffix.isEmpty())
+		suffix = "tif";
+
+	QString filename = QString("%1/%2.%4").arg(path).arg(base).arg(suffix);
 
 	// Create list of channels to be exported
 	typedef otb::ImageList<ChannelType> cilTempType;
@@ -179,7 +188,7 @@ void ImageWidget::SaveSelection(QString filename, QVector<bool> channels, ColorD
 
 	// Write image
 	RealType fMin = 0;
-	RealType fMax = (1 << bitdepth()) - 1;
+	RealType fMax = 255;
 	RealType fScale = 1 / (fMax - fMin);
 	RealType fAdd = fMin;
 
@@ -259,10 +268,6 @@ void ImageWidget::SaveSelectionSeparatedChannels(QString filenametemplate, QVect
 	if (suffix.isEmpty())
 		suffix = "tif";
 
-	std::cout << path.toStdString() << std::endl;
-	std::cout << base.toStdString() << std::endl;
-	std::cout << suffix.toStdString() << std::endl;
-
 	// Export each selected channel
 	for (int i = 0; i < std::min(channelCount(), channels.size()); i++)
 	{
@@ -286,7 +291,7 @@ void ImageWidget::SaveSelectionSeparatedChannels(QString filenametemplate, QVect
 
 		// Write image
 		RealType fMin = 0;
-		RealType fMax = (1 << bitdepth()) - 1;
+		RealType fMax = 255;
 		RealType fScale = 1 / (fMax - fMin);
 		RealType fAdd = fMin;
 
@@ -616,7 +621,7 @@ retry:
 	int sy_error = sy_dx - 1;
 
 	RealType fMin = 0;
-	RealType fMax = (1 << bitdepth()) - 1;
+	RealType fMax = 255;
 	RealType fScale = (255 / (fMax - fMin)) * _contrast;
 	RealType fAdd = fMin + _brightness;
 
@@ -763,19 +768,32 @@ void ImageWidget::RemoveOldTiles()
 
 void ImageWidget::ResetView()
 {
-	_scaleFactor = 1.0;
-	
-	RecalculateBounds();
-	Redraw();
+	ZoomView(1.0 / _scaleFactor);
 }
 
 void ImageWidget::ZoomView(RealType zoomfactor)
 {
 	if ((_scaleFactor * zoomfactor > 128.0) || (_scaleFactor * zoomfactor < 1.0/128.0))
 		return;
-	
+
+	// Store center point
+	QPoint center;
+	center.setX((_offset.x() + width() / 2) / _scaleFactor);
+	center.setY((_offset.y() + height() / 2) / _scaleFactor);
+
+	// Zoom
 	_scaleFactor *= zoomfactor;
-	
+
+	// Restore center point
+	_offset.setX(center.x() * _scaleFactor - width() / 2);
+	_offset.setY(center.y() * _scaleFactor - height() / 2);
+
+	if (_offset.x() < 0)	_offset.setX(0);
+	if (_offset.y() < 0)	_offset.setY(0);
+	if (_offset.x() + width() > _bounds.width())	_offset.setX(_bounds.width() - width());
+	if (_offset.y() + height() > _bounds.height())	_offset.setY(_bounds.height() - height());
+
+	// Redraw
 	RecalculateBounds();
 	Redraw();
 }
@@ -890,7 +908,7 @@ void ImageWidget::CalculateAutoCB()
 	typedef itk::MinimumMaximumImageCalculator<ChannelType> mmcTempType;
 
 	RealType fMin = 0;
-	RealType fMax = (1 << bitdepth()) - 1;
+	RealType fMax = 255;
 	RealType minvalue = std::numeric_limits<RealType>::infinity();
 	RealType maxvalue = -std::numeric_limits<RealType>::infinity();
 
@@ -901,40 +919,18 @@ void ImageWidget::CalculateAutoCB()
 	region_size[0] = _selection.isEmpty() ? imageWidth() : _selection.width();
 	region_size[1] = _selection.isEmpty() ? imageHeight() : _selection.height();
 
-	switch (_cmMode)
+	for (int i = 0; i < channelCount(); i++)
 	{
-		case CM_OneChannelMode:
-		{
-			_channels[_channelMapping[0]]->GetOutput()->SetRequestedRegion(ChannelType::RegionType(region_topleft, region_size));
-			_channels[_channelMapping[0]]->Update();
-			
-			mmcTempType::Pointer mmcalc = mmcTempType::New();
-			mmcalc->SetRegion(ChannelType::RegionType(region_topleft, region_size));
-			mmcalc->SetImage(_channels[_channelMapping[0]]->GetOutput());
-			mmcalc->Compute();
+		_channels[i]->GetOutput()->SetRequestedRegion(ChannelType::RegionType(region_topleft, region_size));
+		_channels[i]->Update();
 
-			minvalue = std::min(minvalue, mmcalc->GetMinimum());
-			maxvalue = std::max(maxvalue, mmcalc->GetMaximum());
-		}
-		break;
-	
-		case CM_ThreeChannelMode:
-		{
-			for (int i = 0; i < 3; i++)
-			{
-				_channels[_channelMapping[i]]->GetOutput()->SetRequestedRegion(ChannelType::RegionType(region_topleft, region_size));
-				_channels[_channelMapping[i]]->Update();
-				
-				mmcTempType::Pointer mmcalc = mmcTempType::New();
-				mmcalc->SetRegion(ChannelType::RegionType(region_topleft, region_size));
-				mmcalc->SetImage(_channels[_channelMapping[i]]->GetOutput());
-				mmcalc->Compute();
+		mmcTempType::Pointer mmcalc = mmcTempType::New();
+		mmcalc->SetRegion(ChannelType::RegionType(region_topleft, region_size));
+		mmcalc->SetImage(_channels[_channelMapping[i]]->GetOutput());
+		mmcalc->Compute();
 
-				minvalue = std::min(minvalue, mmcalc->GetMinimum());
-				maxvalue = std::max(maxvalue, mmcalc->GetMaximum());
-			}
-		}
-		break;
+		minvalue = std::min(minvalue, mmcalc->GetMinimum());
+		maxvalue = std::max(maxvalue, mmcalc->GetMaximum());
 	}
 
 	_brightness = -minvalue / (fMax - fMin);
@@ -961,12 +957,6 @@ void ImageWidget::SetContrast(double contrast)
 void ImageWidget::SetBrightness(double brightness)
 {
 	_brightness = brightness;
-	Redraw();
-}
-
-void ImageWidget::SetBitdepth(int bitdepth)
-{
-	_bitdepth = bitdepth;
 	Redraw();
 }
 

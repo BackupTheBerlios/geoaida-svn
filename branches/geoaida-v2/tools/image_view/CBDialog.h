@@ -21,7 +21,6 @@
 #define _CBDIALOG_H_
 
 #include <QDialog>
-#include <QSpinBox>
 #include <QDoubleSpinBox>
 
 #include "Definitions.h"
@@ -31,12 +30,14 @@ class CBDialog : public QDialog
 	Q_OBJECT
 
 	public:
-		CBDialog(RealType startContrast, RealType startBrightness, int startBitdepth, QWidget *parent=0);
+		CBDialog(QWidget *parent=0);
+
+		void setContrast(double contrast=1.0);
+		void setBrightness(double brightness=0.0);
 
 	signals:
 		void contrastChanged(double contrast=1.0);
 		void brightnessChanged(double brightness=0.0);
-		void bitdepthChanged(int bitdepth=8);
 
 	private slots:
 		void resetValues();
@@ -44,12 +45,6 @@ class CBDialog : public QDialog
 	private:
 		QDoubleSpinBox	*_contrastSpin;
 		QDoubleSpinBox	*_brightnessSpin;
-
-		QSpinBox		*_bitdepthSpin;
-
-		RealType		_startContrast;
-		RealType		_startBrightness;
-		int				_startBitdepth;
 };
 
 #endif

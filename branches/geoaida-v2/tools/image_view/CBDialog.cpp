@@ -19,16 +19,12 @@
 
 #include "CBDialog.h"
 
-#include <QHBoxLayout>
-#include <QVBoxLayout>
 #include <QGridLayout>
 #include <QLabel>
-#include <QSlider>
-#include <QDoubleSpinBox>
 #include <QPushButton>
 
-CBDialog::CBDialog(RealType startContrast, RealType startBrightness, int startBitdepth, QWidget *parent)
-	: QDialog(parent), _startContrast(startContrast), _startBrightness(startBrightness), _startBitdepth(startBitdepth)
+CBDialog::CBDialog(QWidget *parent)
+	: QDialog(parent)
 {
 	setWindowTitle(tr("Kontrast / Helligkeit Ändern"));
 
@@ -41,7 +37,8 @@ CBDialog::CBDialog(RealType startContrast, RealType startBrightness, int startBi
 
 	_brightnessSpin = new QDoubleSpinBox(this);
 	_brightnessSpin->setRange(-10000.0, 10000.0);
-	_brightnessSpin->setValue(startBrightness);
+	_brightnessSpin->setDecimals(4);
+	_brightnessSpin->setSingleStep(10.0);
 	mainLayout->addWidget(_brightnessSpin, 0, 1, 1, 1);
 	connect(_brightnessSpin, SIGNAL(valueChanged(double)), this, SIGNAL(brightnessChanged(double)));
 
@@ -49,18 +46,10 @@ CBDialog::CBDialog(RealType startContrast, RealType startBrightness, int startBi
 
 	_contrastSpin = new QDoubleSpinBox(this);
 	_contrastSpin->setRange(-10000.0, 10000.0);
-	_contrastSpin->setValue(startContrast);
+	_contrastSpin->setDecimals(4);
+	_contrastSpin->setSingleStep(0.1);
 	mainLayout->addWidget(_contrastSpin, 1, 1, 1, 1);
 	connect(_contrastSpin, SIGNAL(valueChanged(double)), this, SIGNAL(contrastChanged(double)));
-
-	// Create bit-depth controls
-	mainLayout->addWidget(new QLabel(tr("Farbtiefe (bit / Kanal)")), 2, 0, 1, 1);
-
-	_bitdepthSpin = new QSpinBox(this);
-	_bitdepthSpin->setRange(1, 32);
-	_bitdepthSpin->setValue(startBitdepth);
-	mainLayout->addWidget(_bitdepthSpin, 2, 1, 1, 1);
-	connect(_bitdepthSpin, SIGNAL(valueChanged(int)), this, SIGNAL(bitdepthChanged(int)));
 
 	// Buttons
 	QPushButton *resetButton = new QPushButton(tr("&Zurücksetzen"));
@@ -74,9 +63,18 @@ CBDialog::CBDialog(RealType startContrast, RealType startBrightness, int startBi
 	closeButton->setDefault(true);
 }
 
+void CBDialog::setContrast(double contrast)
+{
+	_contrastSpin->setValue(contrast);
+}
+
+void CBDialog::setBrightness(double brightness)
+{
+	_brightnessSpin->setValue(brightness);
+}
+
 void CBDialog::resetValues()
 {
-	_contrastSpin->setValue(_startContrast);
-	_brightnessSpin->setValue(_startBrightness);
-	_bitdepthSpin->setValue(_startBitdepth);
+	_contrastSpin->setValue(1.0);
+	_brightnessSpin->setValue(0.0);
 }

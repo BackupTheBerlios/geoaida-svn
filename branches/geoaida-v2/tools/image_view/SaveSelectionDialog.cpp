@@ -41,7 +41,7 @@ SaveSelectionDialog::SaveSelectionDialog(int channelCount, QString currentDirect
 	mainLayout->addWidget(filenameLabel, 0, 0, 1, 1);
 
 	_filenameEdit = new QLineEdit(this);
-	_filenameEdit->setReadOnly(true);
+	//_filenameEdit->setReadOnly(true);
 	mainLayout->addWidget(_filenameEdit, 0, 1, 1, 2);
 
 	QPushButton *selectFilenameButton = new QPushButton(tr("..."), this);
@@ -86,6 +86,7 @@ SaveSelectionDialog::SaveSelectionDialog(int channelCount, QString currentDirect
 	mainLayout->addWidget(_separatechannelsCheckBox, 2, 0, 1, 4);
 
 	_applycbCheckBox = new QCheckBox(tr("Kontrast / Helligkeit anwenden"), this);
+	_applycbCheckBox->toggle();
 	mainLayout->addWidget(_applycbCheckBox, 3, 0, 1, 4);
 
 	// Create buttons

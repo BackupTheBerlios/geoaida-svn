@@ -88,7 +88,7 @@ class ImageWidget : public QWidget
 		void Clear();
 		void Open(QString filename);
 		void AddChannels(QString filename);
-		void SaveSelection(QString filename, QVector<bool> channels, ColorDepth colordepth, bool applycontrastbrightness);
+		void SaveSelection(QString filenametemplate, QVector<bool> channels, ColorDepth colordepth, bool applycontrastbrightness);
 		void SaveSelectionSeparatedChannels(QString filenametemplate, QVector<bool> channels, ColorDepth colordepth, bool applycontrastbrightness);
 
 		bool isValidImage()	{ return !_images.isEmpty(); }
@@ -115,7 +115,6 @@ class ImageWidget : public QWidget
 
 		RealType contrast()						{ return _contrast; }
 		RealType brightness()					{ return _brightness; }
-		int bitdepth()							{ return _bitdepth; }
 
 		/*QVector<double> GetHistogram(int nr, RealType coverage=0.1)
 		{
@@ -145,7 +144,6 @@ class ImageWidget : public QWidget
 		void SetRandomMapping(bool activate);
 		void SetContrast(double contrast);
 		void SetBrightness(double brightness);
-		void SetBitdepth(int bitdepth);
 
 		void ResetView();
 		void ZoomView(RealType zoomfactor);
@@ -179,7 +177,6 @@ class ImageWidget : public QWidget
 
 		RealType _contrast;
 		RealType _brightness;
-		int _bitdepth;
 
 		QRect _selection;
 
