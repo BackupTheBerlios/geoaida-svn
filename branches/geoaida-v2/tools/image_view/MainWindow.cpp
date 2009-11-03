@@ -211,7 +211,7 @@ void MainWindow::SaveFileDialog()
 	if (result == QDialog::Accepted)
 	{
 		_currentDirectory = QFileInfo(dialog.filename()).absolutePath();
-		_imageWidget->SaveSelection(dialog.filename(), dialog.channels(), dialog.colordepth());
+		_imageWidget->SaveSelection(dialog.filename(), dialog.channels(), dialog.colordepth(), dialog.applycontrastbrightness());
 	}
 }
 
@@ -261,27 +261,6 @@ void MainWindow::CalculateAutoContrastBrightness()
 {
 	if (!_imageWidget->isValidImage())
 		return;
-
-	/*
-	// Calculate start coverage value
-	double expectedPixelCount = 100000.0;
-	double startCoverage;
-
-	QRect selection = _imageWidget->selection();
-	if (!selection.isValid() || selection.isEmpty() || selection.isNull())
-		startCoverage = expectedPixelCount / static_cast<double>(_imageWidget->imageWidth() * _imageWidget->imageHeight());
-	else
-		startCoverage = expectedPixelCount / static_cast<double>(selection.width() * selection.height());
-
-	startCoverage = std::max(0.25, std::min(startCoverage, 1.0));
-
-	// Show dialog
-	AutoCBDialog dialog(startCoverage * 100.0, this);
-	int result = dialog.exec();
-
-	if (result == QDialog::Accepted)
-		_imageWidget->CalculateAutoCB(dialog.coverage());
-	*/
 
 	_imageWidget->CalculateAutoCB();
 }

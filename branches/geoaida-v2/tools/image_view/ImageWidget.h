@@ -44,6 +44,7 @@
 #include <itkImageRegionConstIterator.h>
 
 #include <itkMinimumMaximumImageCalculator.h>
+#include <itkShiftScaleImageFilter.h>
 
 #include "Definitions.h"
 
@@ -90,7 +91,7 @@ class ImageWidget : public QWidget
 		void Clear();
 		void Open(QString filename);
 		void AddChannels(QString filename);
-		void SaveSelection(QString filename, QVector<bool> channels, ColorDepth colordepth);
+		void SaveSelection(QString filename, QVector<bool> channels, ColorDepth colordepth, bool applycontrastbrightness);
 
 		bool isValidImage()	{ return !_images.isEmpty(); }
 		int imageWidth()	{ return (isValidImage() ? _images[0]->GetOutput()->GetLargestPossibleRegion().GetSize()[0] : 0); }

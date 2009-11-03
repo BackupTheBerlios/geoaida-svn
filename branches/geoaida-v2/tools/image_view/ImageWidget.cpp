@@ -145,7 +145,7 @@ void ImageWidget::AddChannels(QString filename)
 	}
 }
 
-void ImageWidget::SaveSelection(QString filename, QVector<bool> channels, ColorDepth colordepth)
+void ImageWidget::SaveSelection(QString filename, QVector<bool> channels, ColorDepth colordepth, bool applycontrastbrightness)
 {
 	if (!isValidImage())
 		return;
@@ -182,9 +182,11 @@ void ImageWidget::SaveSelection(QString filename, QVector<bool> channels, ColorD
 		case CD_INTEGER_8BIT:
 		{
 			typedef otb::VectorImage<quint8, 2> ExportImageTempType;
-			typedef itk::CastImageFilter<otb::Image<RealType, 2>, otb::Image<quint8, 2> > CastTempType;
-			typedef otb::PerBandVectorImageFilter<ImageType, ExportImageTempType, CastTempType> PerBandCastTempType;
-			PerBandCastTempType::Pointer caster = PerBandCastTempType::New();
+			typedef itk::ShiftScaleImageFilter<otb::Image<RealType, 2>, otb::Image<quint8, 2> > cbTempType;
+			typedef otb::PerBandVectorImageFilter<ImageType, ExportImageTempType, cbTempType> pbcbTempType;
+			pbcbTempType::Pointer caster = pbcbTempType::New();
+			caster->GetFilter()->SetShift(applycontrastbrightness ? brightness() : 0.0);
+			caster->GetFilter()->SetScale(applycontrastbrightness ? contrast() : 1.0);
 			caster->SetInput(extractregion->GetOutput());
 			
 			typedef otb::ImageFileWriter<ExportImageTempType> wviTempType;
@@ -199,9 +201,11 @@ void ImageWidget::SaveSelection(QString filename, QVector<bool> channels, ColorD
 		case CD_INTEGER_16BIT:
 		{
 			typedef otb::VectorImage<quint16, 2> ExportImageTempType;
-			typedef itk::CastImageFilter<otb::Image<RealType, 2>, otb::Image<quint16, 2> > CastTempType;
-			typedef otb::PerBandVectorImageFilter<ImageType, ExportImageTempType, CastTempType> PerBandCastTempType;
-			PerBandCastTempType::Pointer caster = PerBandCastTempType::New();
+			typedef itk::ShiftScaleImageFilter<otb::Image<RealType, 2>, otb::Image<quint16, 2> > cbTempType;
+			typedef otb::PerBandVectorImageFilter<ImageType, ExportImageTempType, cbTempType> pbcbTempType;
+			pbcbTempType::Pointer caster = pbcbTempType::New();
+			caster->GetFilter()->SetShift(applycontrastbrightness ? brightness() : 0.0);
+			caster->GetFilter()->SetScale(applycontrastbrightness ? contrast() : 1.0);
 			caster->SetInput(extractregion->GetOutput());
 			
 			typedef otb::ImageFileWriter<ExportImageTempType> wviTempType;
@@ -215,10 +219,17 @@ void ImageWidget::SaveSelection(QString filename, QVector<bool> channels, ColorD
 		
 		case CD_FLOAT_32BIT:
 		{
+			typedef itk::ShiftScaleImageFilter<otb::Image<RealType, 2>, otb::Image<RealType, 2> > cbTempType;
+			typedef otb::PerBandVectorImageFilter<ImageType, ImageType, cbTempType> pbcbTempType;
+			pbcbTempType::Pointer caster = pbcbTempType::New();
+			caster->GetFilter()->SetShift(applycontrastbrightness ? brightness() : 0.0);
+			caster->GetFilter()->SetScale(applycontrastbrightness ? contrast() : 1.0);
+			caster->SetInput(extractregion->GetOutput());
+			
 			typedef otb::ImageFileWriter<ImageType> wviTempType;
 			wviTempType::Pointer writer = wviTempType::New();
 			writer->SetFileName(filename.toStdString().c_str());
-			writer->SetInput(extractregion->GetOutput());
+			writer->SetInput(caster->GetOutput());
 			
 			writer->Update();
 		}

@@ -65,7 +65,7 @@ SaveSelectionDialog::SaveSelectionDialog(int channelCount, QString currentDirect
 	channelGroup->setLayout(vboxchannels);
 
 	// Create color depth selection
-	QGroupBox *colordepthGroup = new QGroupBox(tr("Farbtiefe"), this);
+	QGroupBox *colordepthGroup = new QGroupBox(tr("Farbtiefe / Kanal"), this);
 	mainLayout->addWidget(colordepthGroup, 1, 2, 1, 2);
 
 	_8bitButton = new QRadioButton(tr("8 Bit Integer"));
@@ -81,13 +81,17 @@ SaveSelectionDialog::SaveSelectionDialog(int channelCount, QString currentDirect
 
 	_8bitButton->toggle();
 
+	// Create apply contrast/brightness checkbox
+	_applycbCheckBox = new QCheckBox(tr("Kontrast / Helligkeit anwenden"), this);
+	mainLayout->addWidget(_applycbCheckBox, 2, 0, 1, 4);
+
 	// Create buttons
 	QPushButton *acceptButton = new QPushButton(tr("&OK"), this);
-	mainLayout->addWidget(acceptButton, 2, 0, 1, 2);
+	mainLayout->addWidget(acceptButton, 3, 0, 1, 2);
 	connect(acceptButton, SIGNAL(clicked()), this, SLOT(accept()));
 
 	QPushButton *cancelButton = new QPushButton(tr("&Abbrechen"), this);
-	mainLayout->addWidget(cancelButton, 2, 2, 1, 2);
+	mainLayout->addWidget(cancelButton, 3, 2, 1, 2);
 	connect(cancelButton, SIGNAL(clicked()), this, SLOT(reject()));
 
 	acceptButton->setDefault(true);
@@ -117,6 +121,11 @@ ColorDepth SaveSelectionDialog::colordepth()
 		return CD_FLOAT_32BIT;
 	else
 		return CD_UNSUPPORTED;
+}
+
+bool SaveSelectionDialog::applycontrastbrightness()
+{
+	return _applycbCheckBox->isChecked();
 }
 
 void SaveSelectionDialog::FilenameRequested()
