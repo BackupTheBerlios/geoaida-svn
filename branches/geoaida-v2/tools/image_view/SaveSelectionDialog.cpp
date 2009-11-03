@@ -81,17 +81,20 @@ SaveSelectionDialog::SaveSelectionDialog(int channelCount, QString currentDirect
 
 	_8bitButton->toggle();
 
-	// Create apply contrast/brightness checkbox
+	// Create apply option checkboxes
+	_separatechannelsCheckBox = new QCheckBox(tr("Farbkanäle separieren"), this);
+	mainLayout->addWidget(_separatechannelsCheckBox, 2, 0, 1, 4);
+
 	_applycbCheckBox = new QCheckBox(tr("Kontrast / Helligkeit anwenden"), this);
-	mainLayout->addWidget(_applycbCheckBox, 2, 0, 1, 4);
+	mainLayout->addWidget(_applycbCheckBox, 3, 0, 1, 4);
 
 	// Create buttons
 	QPushButton *acceptButton = new QPushButton(tr("&OK"), this);
-	mainLayout->addWidget(acceptButton, 3, 0, 1, 2);
+	mainLayout->addWidget(acceptButton, 4, 0, 1, 2);
 	connect(acceptButton, SIGNAL(clicked()), this, SLOT(accept()));
 
 	QPushButton *cancelButton = new QPushButton(tr("&Abbrechen"), this);
-	mainLayout->addWidget(cancelButton, 3, 2, 1, 2);
+	mainLayout->addWidget(cancelButton, 4, 2, 1, 2);
 	connect(cancelButton, SIGNAL(clicked()), this, SLOT(reject()));
 
 	acceptButton->setDefault(true);
@@ -121,6 +124,11 @@ ColorDepth SaveSelectionDialog::colordepth()
 		return CD_FLOAT_32BIT;
 	else
 		return CD_UNSUPPORTED;
+}
+
+bool SaveSelectionDialog::separatechannels()
+{
+	return _separatechannelsCheckBox->isChecked();
 }
 
 bool SaveSelectionDialog::applycontrastbrightness()

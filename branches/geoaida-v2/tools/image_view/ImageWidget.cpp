@@ -67,6 +67,7 @@ void ImageWidget::Clear()
 
 	_contrast = 1.0;
 	_brightness = 0.0;
+	_bitdepth = 8;
 
 	_selection = QRect();
 
@@ -177,6 +178,11 @@ void ImageWidget::SaveSelection(QString filename, QVector<bool> channels, ColorD
 	extractregion->SetInput(converter->GetOutput());
 
 	// Write image
+	RealType fMin = 0;
+	RealType fMax = (1 << bitdepth()) - 1;
+	RealType fScale = 1 / (fMax - fMin);
+	RealType fAdd = fMin;
+
 	switch (colordepth)
 	{
 		case CD_INTEGER_8BIT:
@@ -185,8 +191,8 @@ void ImageWidget::SaveSelection(QString filename, QVector<bool> channels, ColorD
 			typedef itk::ShiftScaleImageFilter<otb::Image<RealType, 2>, otb::Image<quint8, 2> > cbTempType;
 			typedef otb::PerBandVectorImageFilter<ImageType, ExportImageTempType, cbTempType> pbcbTempType;
 			pbcbTempType::Pointer caster = pbcbTempType::New();
-			caster->GetFilter()->SetShift(applycontrastbrightness ? brightness() : 0.0);
-			caster->GetFilter()->SetScale(applycontrastbrightness ? contrast() : 1.0);
+			caster->GetFilter()->SetShift(fAdd + (applycontrastbrightness ? brightness() : 0));
+			caster->GetFilter()->SetScale(((1 << 8) - 1) * fScale * (applycontrastbrightness ? contrast() : 1.0));
 			caster->SetInput(extractregion->GetOutput());
 			
 			typedef otb::ImageFileWriter<ExportImageTempType> wviTempType;
@@ -204,8 +210,8 @@ void ImageWidget::SaveSelection(QString filename, QVector<bool> channels, ColorD
 			typedef itk::ShiftScaleImageFilter<otb::Image<RealType, 2>, otb::Image<quint16, 2> > cbTempType;
 			typedef otb::PerBandVectorImageFilter<ImageType, ExportImageTempType, cbTempType> pbcbTempType;
 			pbcbTempType::Pointer caster = pbcbTempType::New();
-			caster->GetFilter()->SetShift(applycontrastbrightness ? brightness() : 0.0);
-			caster->GetFilter()->SetScale(applycontrastbrightness ? contrast() : 1.0);
+			caster->GetFilter()->SetShift(fAdd + (applycontrastbrightness ? brightness() : 0));
+			caster->GetFilter()->SetScale(((1 << 16) - 1) * fScale * (applycontrastbrightness ? contrast() : 1.0));
 			caster->SetInput(extractregion->GetOutput());
 			
 			typedef otb::ImageFileWriter<ExportImageTempType> wviTempType;
@@ -222,8 +228,8 @@ void ImageWidget::SaveSelection(QString filename, QVector<bool> channels, ColorD
 			typedef itk::ShiftScaleImageFilter<otb::Image<RealType, 2>, otb::Image<RealType, 2> > cbTempType;
 			typedef otb::PerBandVectorImageFilter<ImageType, ImageType, cbTempType> pbcbTempType;
 			pbcbTempType::Pointer caster = pbcbTempType::New();
-			caster->GetFilter()->SetShift(applycontrastbrightness ? brightness() : 0.0);
-			caster->GetFilter()->SetScale(applycontrastbrightness ? contrast() : 1.0);
+			caster->GetFilter()->SetShift(fAdd + (applycontrastbrightness ? brightness() : 0));
+			caster->GetFilter()->SetScale(fScale * (applycontrastbrightness ? contrast() : 1.0));
 			caster->SetInput(extractregion->GetOutput());
 			
 			typedef otb::ImageFileWriter<ImageType> wviTempType;
@@ -237,6 +243,107 @@ void ImageWidget::SaveSelection(QString filename, QVector<bool> channels, ColorD
 		
 		default:
 			emit ShowWarning(tr("Die gewählte Farbtiefe ist ungültig!"));
+	}
+}
+
+void ImageWidget::SaveSelectionSeparatedChannels(QString filenametemplate, QVector<bool> channels, ColorDepth colordepth, bool applycontrastbrightness)
+{
+	if (!isValidImage())
+		return;
+
+	// Create filename template
+	QString path = QFileInfo(filenametemplate).canonicalPath();
+	QString base = QFileInfo(filenametemplate).baseName();
+	QString suffix = QFileInfo(filenametemplate).completeSuffix();
+
+	if (suffix.isEmpty())
+		suffix = "tif";
+
+	// Export each selected channel
+	for (int i = 0; i < std::min(channelCount(), channels.size()); i++)
+	{
+		if (!channels[i])
+			continue;
+
+		QString filename = QString("%1/%2_%3.%4").arg(path).arg(base).arg(i).arg(suffix);
+
+		// Setup cropping region
+		typedef itk::ExtractImageFilter<ChannelType, ChannelType> eiTempType;
+		eiTempType::Pointer extractregion = eiTempType::New();
+
+		ImageType::RegionType::IndexType region_topleft;
+		region_topleft[0] = _selection.isEmpty() ? 0 : _selection.left();
+		region_topleft[1] = _selection.isEmpty() ? 0 : _selection.top();
+		ImageType::RegionType::SizeType region_size;
+		region_size[0] = _selection.isEmpty() ? imageWidth() : _selection.width();
+		region_size[1] = _selection.isEmpty() ? imageHeight() : _selection.height();
+		extractregion->SetExtractionRegion(ImageType::RegionType(region_topleft, region_size));
+		extractregion->SetInput(_channels[i]->GetOutput());
+
+		// Write image
+		RealType fMin = 0;
+		RealType fMax = (1 << bitdepth()) - 1;
+		RealType fScale = 1 / (fMax - fMin);
+		RealType fAdd = fMin;
+
+		switch (colordepth)
+		{
+			case CD_INTEGER_8BIT:
+			{
+				typedef otb::Image<quint8, 2> ExportImageTempType;
+				typedef itk::ShiftScaleImageFilter<otb::Image<RealType, 2>, otb::Image<quint8, 2> > cbTempType;
+				cbTempType::Pointer caster = cbTempType::New();
+				caster->SetShift(fAdd + (applycontrastbrightness ? brightness() : 0));
+				caster->SetScale(((1 << 8) - 1) * fScale * (applycontrastbrightness ? contrast() : 1.0));
+				caster->SetInput(extractregion->GetOutput());
+				
+				typedef otb::ImageFileWriter<ExportImageTempType> wviTempType;
+				wviTempType::Pointer writer = wviTempType::New();
+				writer->SetFileName(filename.toStdString().c_str());
+				writer->SetInput(caster->GetOutput());
+				
+				writer->Update();
+			}
+			break;
+			
+			case CD_INTEGER_16BIT:
+			{
+				typedef otb::Image<quint16, 2> ExportImageTempType;
+				typedef itk::ShiftScaleImageFilter<otb::Image<RealType, 2>, otb::Image<quint16, 2> > cbTempType;
+				cbTempType::Pointer caster = cbTempType::New();
+				caster->SetShift(fAdd + (applycontrastbrightness ? brightness() : 0));
+				caster->SetScale(((1 << 16) - 1) * fScale * (applycontrastbrightness ? contrast() : 1.0));
+				caster->SetInput(extractregion->GetOutput());
+				
+				typedef otb::ImageFileWriter<ExportImageTempType> wviTempType;
+				wviTempType::Pointer writer = wviTempType::New();
+				writer->SetFileName(filename.toStdString().c_str());
+				writer->SetInput(caster->GetOutput());
+				
+				writer->Update();
+			}
+			break;
+			
+			case CD_FLOAT_32BIT:
+			{
+				typedef itk::ShiftScaleImageFilter<otb::Image<RealType, 2>, otb::Image<RealType, 2> > cbTempType;
+				cbTempType::Pointer caster = cbTempType::New();
+				caster->SetShift(fAdd + (applycontrastbrightness ? brightness() : 0));
+				caster->SetScale(fScale * (applycontrastbrightness ? contrast() : 1.0));
+				caster->SetInput(extractregion->GetOutput());
+				
+				typedef otb::ImageFileWriter<ChannelType> wviTempType;
+				wviTempType::Pointer writer = wviTempType::New();
+				writer->SetFileName(filename.toStdString().c_str());
+				writer->SetInput(caster->GetOutput());
+				
+				writer->Update();
+			}
+			break;
+			
+			default:
+				emit ShowWarning(tr("Die gewählte Farbtiefe ist ungültig!"));
+		}
 	}
 }
 
@@ -505,7 +612,7 @@ retry:
 	int sy_error = sy_dx - 1;
 
 	RealType fMin = 0;
-	RealType fMax = 255;
+	RealType fMax = (1 << bitdepth()) - 1;
 	RealType fScale = (255 / (fMax - fMin)) * _contrast;
 	RealType fAdd = fMin + _brightness;
 
@@ -778,6 +885,8 @@ void ImageWidget::CalculateAutoCB()
 	// Calculate min, max pixel intensities
 	typedef itk::MinimumMaximumImageCalculator<ChannelType> mmcTempType;
 
+	RealType fMin = 0;
+	RealType fMax = (1 << bitdepth()) - 1;
 	RealType minvalue = std::numeric_limits<RealType>::infinity();
 	RealType maxvalue = -std::numeric_limits<RealType>::infinity();
 
@@ -802,9 +911,6 @@ void ImageWidget::CalculateAutoCB()
 
 			minvalue = std::min(minvalue, mmcalc->GetMinimum());
 			maxvalue = std::max(maxvalue, mmcalc->GetMaximum());
-
-			_brightness = -minvalue;
-			_contrast = 255.0 / (maxvalue - minvalue);
 		}
 		break;
 	
@@ -823,12 +929,12 @@ void ImageWidget::CalculateAutoCB()
 				minvalue = std::min(minvalue, mmcalc->GetMinimum());
 				maxvalue = std::max(maxvalue, mmcalc->GetMaximum());
 			}
-			
-			_brightness = -minvalue;
-			_contrast = 255.0 / (maxvalue - minvalue);
 		}
 		break;
 	}
+
+	_brightness = -minvalue / (fMax - fMin);
+	_contrast = (fMax - fMin) / (maxvalue - minvalue);
 
 	Redraw();
 }
@@ -851,6 +957,12 @@ void ImageWidget::SetContrast(double contrast)
 void ImageWidget::SetBrightness(double brightness)
 {
 	_brightness = brightness;
+	Redraw();
+}
+
+void ImageWidget::SetBitdepth(int bitdepth)
+{
+	_bitdepth = bitdepth;
 	Redraw();
 }
 

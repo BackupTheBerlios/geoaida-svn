@@ -37,6 +37,7 @@ class SaveSelectionDialog : public QDialog
 		QString filename();
 		QVector<bool> channels();
 		ColorDepth colordepth();
+		bool separatechannels();
 		bool applycontrastbrightness();
 		
 	private slots:
@@ -52,6 +53,7 @@ class SaveSelectionDialog : public QDialog
 		QRadioButton			*_16bitButton;
 		QRadioButton			*_floatButton;
 
+		QCheckBox				*_separatechannelsCheckBox;
 		QCheckBox				*_applycbCheckBox;
 };
 

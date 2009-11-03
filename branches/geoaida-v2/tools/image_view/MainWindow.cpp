@@ -211,7 +211,10 @@ void MainWindow::SaveFileDialog()
 	if (result == QDialog::Accepted)
 	{
 		_currentDirectory = QFileInfo(dialog.filename()).absolutePath();
-		_imageWidget->SaveSelection(dialog.filename(), dialog.channels(), dialog.colordepth(), dialog.applycontrastbrightness());
+		if (dialog.separatechannels())
+			_imageWidget->SaveSelectionSeparatedChannels(dialog.filename(), dialog.channels(), dialog.colordepth(), dialog.applycontrastbrightness());
+		else
+			_imageWidget->SaveSelection(dialog.filename(), dialog.channels(), dialog.colordepth(), dialog.applycontrastbrightness());
 	}
 }
 
@@ -248,11 +251,12 @@ void MainWindow::ChangeContrastBrightness()
 	if (!_imageWidget->isValidImage())
 		return;
 
-	CBDialog *dialog = new CBDialog(_imageWidget->contrast(), _imageWidget->brightness(), this);
+	CBDialog *dialog = new CBDialog(_imageWidget->contrast(), _imageWidget->brightness(), _imageWidget->bitdepth(), this);
 	dialog->setModal(true);
 
 	connect(dialog, SIGNAL(contrastChanged(double)), _imageWidget, SLOT(SetContrast(double)));
 	connect(dialog, SIGNAL(brightnessChanged(double)), _imageWidget, SLOT(SetBrightness(double)));
+	connect(dialog, SIGNAL(bitdepthChanged(int)), _imageWidget, SLOT(SetBitdepth(int)));
 
 	dialog->show();
 }

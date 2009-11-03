@@ -3,12 +3,12 @@ cmake_minimum_required(VERSION 2.4)
 
 FIND_PACKAGE(Qt4 REQUIRED)
 
-FIND_PACKAGE(OTB)  
-IF(OTB_FOUND)  
-  INCLUDE(${OTB_USE_FILE})  
-ELSE(OTB_FOUND)  
-  MESSAGE(FATAL_ERROR  
-      "Cannot build OTB project without OTB.  Please set OTB_DIR.")  
+FIND_PACKAGE(OTB)
+IF(OTB_FOUND)
+  INCLUDE(${OTB_USE_FILE})
+ELSE(OTB_FOUND)
+  MESSAGE(FATAL_ERROR
+      "Cannot build OTB project without OTB.  Please set OTB_DIR.")
 ENDIF(OTB_FOUND)
 
 include(${QT_USE_FILE})
