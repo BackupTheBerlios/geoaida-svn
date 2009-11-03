@@ -926,7 +926,7 @@ void ImageWidget::CalculateAutoCB()
 
 		mmcTempType::Pointer mmcalc = mmcTempType::New();
 		mmcalc->SetRegion(ChannelType::RegionType(region_topleft, region_size));
-		mmcalc->SetImage(_channels[_channelMapping[i]]->GetOutput());
+		mmcalc->SetImage(_channels[i]->GetOutput());
 		mmcalc->Compute();
 
 		minvalue = std::min(minvalue, mmcalc->GetMinimum());
