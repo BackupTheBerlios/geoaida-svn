@@ -252,12 +252,16 @@ void ImageWidget::SaveSelectionSeparatedChannels(QString filenametemplate, QVect
 		return;
 
 	// Create filename template
-	QString path = QFileInfo(filenametemplate).canonicalPath();
+	QString path = QFileInfo(filenametemplate).absolutePath();
 	QString base = QFileInfo(filenametemplate).baseName();
 	QString suffix = QFileInfo(filenametemplate).completeSuffix();
 
 	if (suffix.isEmpty())
 		suffix = "tif";
+
+	std::cout << path.toStdString() << std::endl;
+	std::cout << base.toStdString() << std::endl;
+	std::cout << suffix.toStdString() << std::endl;
 
 	// Export each selected channel
 	for (int i = 0; i < std::min(channelCount(), channels.size()); i++)
