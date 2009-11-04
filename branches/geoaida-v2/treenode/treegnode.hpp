@@ -25,30 +25,28 @@
 
 #include "treegnode.h"
 
-inline TreeGNode::TreeGNode()
+inline TreeGNode::TreeGNode() 
+  : parent_(0)
 {
-  parent_=0;
-}
-
-inline TreeGNode::~TreeGNode(){
+  
 }
 
 /** Get the parent of this node */
 inline TreeGNode* TreeGNode::parent()
 {
-	return parent_;
+  return parent_;
 }
 
 /** set the parent */
 inline void TreeGNode::parent(TreeGNode* node)
 {
-	parent_=node;
+  parent_=node;
 }
 
 /** Get the List of children */
 inline QList<TreeGNode*>& TreeGNode::children()
 {
-	return children_;
+  return children_;
 }
 
 /** add a child to the tree */

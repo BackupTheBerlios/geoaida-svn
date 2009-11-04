@@ -15,13 +15,6 @@
  *                                                                         *
  ***************************************************************************/
 
-/*
- * $Source: /data/cvs/ga_image/ga_image/gaimage/treenode.hpp,v $
- * $Revision: 1.1 $
- * $Date: 2001/12/03 13:00:07 $
- * $Author: stahlhut $
- * $Locker:  $
- */
 
 template <class T, class Base>
 TreeNode<T, Base>::TreeNode(){

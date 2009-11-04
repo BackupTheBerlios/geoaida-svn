@@ -15,19 +15,11 @@
  *                                                                         *
  ***************************************************************************/
 
-/*
- * $Source: /data/cvs/ga_image/ga_image/gaimage/treenode.h,v $
- * $Revision: 1.1 $
- * $Date: 2001/12/03 13:00:07 $
- * $Author: stahlhut $
- * $Locker:  $
- */
-
 #ifndef TREENODE_H
 #define TREENODE_H
 
-#include <qstring.h>
 #include <QList>
+
 /**Template class for a tree
   *@author Martin Pahl
   */
@@ -36,11 +28,9 @@ template <class T, class Base>
 class TreeNode : public Base
 {
 public: 
-	TreeNode();
-	virtual ~TreeNode();
-  /** Get the parent of this node */
+  TreeNode();
+  virtual ~TreeNode();
   T* parent();
-  /** Get the List of children */
   QList<T*>& children();
   QList<T*>& child(int row);
 };

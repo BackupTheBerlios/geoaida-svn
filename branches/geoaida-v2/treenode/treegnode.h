@@ -15,45 +15,30 @@
  *                                                                         *
  ***************************************************************************/
 
-/*
- * $Source: /data/cvs/ga_image/ga_image/gaimage/treegnode.h,v $
- * $Revision: 1.1 $
- * $Date: 2001/12/03 13:00:07 $
- * $Author: stahlhut $
- * $Locker:  $
- */
-
 #ifndef TREEGNODE_H
 #define TREEGNODE_H
 
-#include <qlist.h>
-#include <qstring.h>
+#include <QList>
+#include <QString>
+
 /**TreeGNode for trees
   *@author Martin Pahl
   */
 
 class TreeGNode {
-public:
-	TreeGNode();
-	virtual ~TreeGNode();
-	  /** Get the parent of this node */
+ public:
+  TreeGNode();
+  virtual ~TreeGNode() = 0;
   TreeGNode* parent();
-  /** Get the List of children */
   QList<TreeGNode*>& children();
-  /** set the parent */
   void parent(TreeGNode*);
-  /** Remove a child from the list of children */
   void childUnlink(TreeGNode *node);
-  /** add a child to the tree */
   void childLink(TreeGNode *node);
-  /** returns the name of this node */
   virtual const QString& name() const = 0;
-protected: // Protected attributes
-  /** List of children */
+ protected: // Protected attributes
   QList<TreeGNode*> children_;
-  /** parent of this node */
   TreeGNode* parent_;
-	};
+};
 
 #include "treegnode.hpp"
 

@@ -25,23 +25,21 @@ const static QString nullString("");
 static QString keywords[] = { "node", "region", "group", "" };
 const MLTagTable nodeTagTable(keywords);
 
-GNode::GNode()
+GNode::GNode() 
+  : name_("")
 {
-  init();
 }
 
 GNode::~GNode()
 {
-  qDeleteAll(children()); // while (!children().isEmpty()) delete children().takeFirst();
-#if defined WITH_GUI_SUPPORT || WIN32
-  if (guiPtr_) delete guiPtr_;
-#endif
+  qDeleteAll(children()); 
 }
 
 /** Copy constructor */
-GNode::GNode(GNode & node)
+GNode::GNode(GNode & node) 
+  : name_(node.name_)
+
 {
-  init();
   attribList_=node.attribList_;
   name_ = node.name_;
   {
@@ -50,22 +48,6 @@ GNode::GNode(GNode & node)
       childLink((*it)->copy());
     }
   }
-}
-
-/** Construct a GNode by parsing a file */
-GNode::GNode(MLParser & parser)
-{
-  init();
-  read(parser);
-}
-
-/** Init member variables */
-void GNode::init()
-{
-  name_ = ""; 
-  parent_ = 0;
-//  qDebug ("GNode generiert");
-
 }
 
 /** Read GNode by parsing a file */
