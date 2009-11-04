@@ -44,7 +44,7 @@ void GeoImageCache::setMaxCosts(int maxCosts)
 /** No descriptions */
 void GeoImageCache::useImage(GeoImage* img)
 {
-  qDebug("GeoImageCache::useImage(: costs %d maxcosts %d\n",costs_,maxCosts_);
+  qDebug("GeoImageCache::useImage(: addr %08x costs %d maxcosts %d\n",img,costs_,maxCosts_);
   if (removeAll(img)) {
     costs_-=img->dataSize();
   }
@@ -62,6 +62,8 @@ void GeoImageCache::useImage(GeoImage* img)
     costs_-=im->dataSize();
     im->freeData();
     removeLast();
+    if (isEmpty()) 
+      break;
     im=last();
   }
   qDebug("GeoImageCache::useImage): costs %d maxcosts %d\n",costs_,maxCosts_);
@@ -70,7 +72,11 @@ void GeoImageCache::useImage(GeoImage* img)
 /** Remove image from the cache */
 void GeoImageCache::removeImage(GeoImage* img)
 {
-  if (removeAll(img)) {
+  qDebug("GeoImageCache::removeImage: addr %08x\n",img);
+  int count=removeAll(img);
+  //  int count=1;
+  if (count) {
+    qDebug("GeoImageCache::removeImage count %d\n",count);
     costs_-=img->dataSize();
   }
   qDebug("GeoImageCache::removeImage: costs %d maxcosts %d\n",costs_,maxCosts_);

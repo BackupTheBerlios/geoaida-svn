@@ -41,6 +41,7 @@ GeoImageList::GeoImageList(QString filename)
 /** destructor */
 GeoImageList::~GeoImageList()
 {
+  GeoImage::clearCache();
   clear();
 }
 

@@ -17,7 +17,6 @@
 
 #include "gnode.h"
 
-#warning Use of this file is deprecated. Will be replaced by treenode library in the future
 
 // #define DEBUGMSG
 
@@ -43,7 +42,6 @@ GNode::~GNode()
 GNode::GNode(GNode & node)
 {
   init();
-  sections_ = node.sections_;
   attribList_=node.attribList_;
   name_ = node.name_;
   {
@@ -65,11 +63,9 @@ GNode::GNode(MLParser & parser)
 void GNode::init()
 {
   name_ = ""; 
-  guiPtr_ = 0;
   parent_ = 0;
 //  qDebug ("GNode generiert");
-  sections_ += "generic";
-  showDetails_ = true;
+
 }
 
 /** Read GNode by parsing a file */
@@ -185,7 +181,7 @@ bool GNode::attributeRemove(QString key)
 }
 
 /** Get the attribute list */
-AttribList & GNode::attribList()
+ArgDict & GNode::attribList()
 {
   return attribList_;
 }
@@ -210,47 +206,20 @@ bool GNode::isA(QString cname)
   return (cname == "GNode");
 }
 
-/** Returns the attribute sections of this node */
-const QStringList & GNode::attributeSections()
-{
-  return sections_;
-}
-
-/** Get the attribute description for the specified section */
-QMultiHash < QString, Attribute* > *GNode::attributeDesc(QString section)
-{
-  return 0;
-}
 
 /** Configure this node using attribList    */
-void GNode::configure(AttribList & attribList)
+void GNode::configure(ArgDict & attribList)
 {
   attribList_=attribList;
 }
 
 /** Update attributes of this node with the given attribute list  */
-void GNode::update(AttribList & attribList)
+void GNode::update(ArgDict & attribList)
 {
-  AttribListConstIterator it = attribList.constBegin();
+  ArgDictConstIterator it = attribList.constBegin();
   for (; it!=attribList.constEnd(); ++it) {
     attributeSet(it.key(), it.value());
   }
 }
 
-/** return true if detail should be shown */
-bool GNode::showDetails()
-{
-  return showDetails_;
-}
-
-/** Set the ShowDetail state */
-void GNode::setShowDetails(bool state)
-{
-  showDetails_ = state;
-}
-
-void GNode::setGuiPtr(TreeItem * ptr)
-{
-  guiPtr_ = ptr;
-}
 

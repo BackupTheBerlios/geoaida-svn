@@ -251,7 +251,9 @@ public:
     PPM,
     UNKNOWN
   };
-
+  static void clearCache() {
+    cache_.clear();
+  }
 protected:                     // Protected attributes
   void *data_;
   int dataSize_;
