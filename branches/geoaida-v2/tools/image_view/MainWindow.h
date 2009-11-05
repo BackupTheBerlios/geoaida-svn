@@ -47,7 +47,6 @@ class MainWindow : public QMainWindow
 		void ResetContrastBrightness();
 		void ChangeContrastBrightness();
 		void CalculateAutoContrastBrightness();
-		void ShowHistogram();
 
 		void ResetView();
 		void ZoomPlus();

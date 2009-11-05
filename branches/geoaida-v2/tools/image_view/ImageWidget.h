@@ -43,6 +43,8 @@
 #include <itkMinimumMaximumImageCalculator.h>
 #include <itkShiftScaleImageFilter.h>
 
+#include <itkScalarImageToHistogramGenerator.h>
+
 #include "Definitions.h"
 
 typedef RealType PixelType;
@@ -113,13 +115,8 @@ class ImageWidget : public QWidget
 			Redraw();
 		}
 
-		RealType contrast()						{ return _contrast; }
-		RealType brightness()					{ return _brightness; }
-
-		/*QVector<double> GetHistogram(int nr, RealType coverage=0.1)
-		{
-			return CalculateHistogram(coverage, _channelMapping[nr]);
-		}*/
+		RealType contrast()		{ return _contrast; }
+		RealType brightness()	{ return _brightness; }
 
 	protected:
 		void resizeEvent(QResizeEvent *event);
@@ -183,9 +180,6 @@ class ImageWidget : public QWidget
 		TileID IdFromPosition(int x, int y) const;
 		TileID IdFromPosition(const QPoint &point) const;
 		QPoint PositionFromId(const TileID id) const;
-
-		//QVector<double> CalculateHistogram(float coverage, int channel=0);
-		//void CalculateHistogram3(float coverage, int channel1, QVector<double> &histogram1, int channel2, QVector<double> &histogram2, int channel3, QVector<double> &histogram3);
 };
 
 #endif
