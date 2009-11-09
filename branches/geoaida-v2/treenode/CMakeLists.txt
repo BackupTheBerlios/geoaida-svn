@@ -35,6 +35,6 @@ SET(sources
 
 ADD_LIBRARY(treenode STATIC ${sources})
 
-INSTALL(TARGETS treenode DESTINATION treenode)
+INSTALL(TARGETS treenode DESTINATION lib)
 INSTALL(FILES ${headers} DESTINATION include/treenode)
 INSTALL(FILES ${classheaders} DESTINATION include/treenode)
