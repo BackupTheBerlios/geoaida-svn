@@ -28,7 +28,6 @@
 class TreeGNode {
  public:
   TreeGNode();
-  virtual ~TreeGNode() = 0;
   TreeGNode* parent();
   QList<TreeGNode*>& children();
   void parent(TreeGNode*);
