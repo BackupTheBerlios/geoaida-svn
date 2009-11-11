@@ -37,6 +37,7 @@ SVMClassifier::SVMClassifier() : 	m_unNumberOfClasses(SVM_CLASSIFIER_DEFAULT_NUM
 									m_bGotFeatures(false),
 									m_bGotLabels(false),
 									m_bGotModel(false),
+                                    m_bGotScaling(false),
 									m_bGotSize(false)
 {
 	METHOD_ENTRY("SVMClassifier::SVMClassifier()");
@@ -86,6 +87,41 @@ bool SVMClassifier::saveClassificationResult(const std::string& _strFilename) co
 
 	METHOD_EXIT("SVMClassifier::saveClassificationResult(const std::string&)");
 	return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///
+/// \brief Saves the scaling values from training
+///
+/// \param _strFilename Filename
+///
+/// \return Returns if saving was succesful
+///
+///////////////////////////////////////////////////////////////////////////////
+bool SVMClassifier::saveScaling(const std::string& _strFilename) const
+{
+    METHOD_ENTRY("SVMClassifier::saveScaling(const std::string&)");
+
+    if (!m_bGotScaling)
+    {
+        WARNING_MSG("SVM Classifier", "Feature scale has not been loaded or calculated, "
+                    "you are about to save default values. ", LOG_DOMAIN_NONE);
+    }
+
+    ofstream outfile;
+    outfile.open(_strFilename.c_str());
+    if (outfile.fail())
+    {
+        ERROR_MSG("SVM Classifier", "Can't create " << _strFilename, LOG_DOMAIN_FILEIO);
+        METHOD_EXIT("SVMClassifier::saveScaling(const std::string&)");
+        return false;
+    }
+    outfile << m_fMin << "\n" << m_fMax << "\n";
+    outfile.close();
+    INFO_MSG("SVM Classifier", "SVM scaling stored in " << _strFilename, LOG_DOMAIN_NONE);
+
+    METHOD_EXIT("SVMClassifier::saveScaling(const std::string&)");
+    return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -177,8 +213,45 @@ bool SVMClassifier::loadModel(const std::string& _strFilename)
 	m_pModel->LoadModel(_strFilename.c_str());
 	m_bGotModel = true;
 
-	METHOD_EXIT("SVMClassifier::importModel(const std::string&)");
+	METHOD_EXIT("SVMClassifier::loadModel(const std::string&)");
 	return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///
+/// \brief Loads SVM scaling based on training
+///
+/// \param _strFilename Filename of scaling to be loaded
+///
+/// \return Returns if loading was succesfull
+///
+///////////////////////////////////////////////////////////////////////////////
+bool SVMClassifier::loadScaling(const std::string& _strFilename)
+{
+    METHOD_ENTRY("SVMClassifier::loadScaling(const std::string&)");
+
+    INFO_MSG("SVM Classifier", "Loading SVM scaling " << _strFilename << ".", LOG_DOMAIN_NONE);
+
+    if (m_bGotScaling)
+    {
+        NOTICE_MSG("SVM Classifier", "SVM scaling already exists. Replacing.", LOG_DOMAIN_NONE);
+    }
+    ifstream infile;
+    infile.open(_strFilename.c_str());
+    if (infile.fail())
+    {
+        ERROR_MSG("SVM Classifier", "Can't open " << _strFilename, LOG_DOMAIN_FILEIO);
+        METHOD_EXIT("SVMClassifier::loadScaling(const std::string&)");
+        return false;
+    }
+    infile >> m_fMin;
+    infile >> m_fMax;
+    infile.close();    
+    
+    m_bGotScaling = true;
+
+    METHOD_EXIT("SVMClassifier::loadScaling(const std::string&)");
+    return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -229,8 +302,14 @@ bool SVMClassifier::scaleFeatures(const bool& _bCalc,
 			}
 			++it;
 		}
+        m_bGotScaling = true;
 	}
-
+    if (!m_bGotScaling)
+    {
+        WARNING_MSG("SVM Classifier", "Feature scale has not been loaded or calculated, "
+                    "using default values. ", LOG_DOMAIN_NONE);
+    }
+    
 	DEBUG_MSG("SVM Classifier", "Min value: " << m_fMin, LOG_DOMAIN_VAR);
 	DEBUG_MSG("SVM Classifier", "Max value: " << m_fMax, LOG_DOMAIN_VAR);
 	
@@ -357,7 +436,6 @@ bool SVMClassifier::classify()
 	itOut.GoToBegin();
 	while ((ciIter != ciLast) && (!itOut.IsAtEnd()))
 	{
-		std::cout << ciIter.GetClassLabel();
 		itOut.Set(ciIter.GetClassLabel());
 		++ciIter;
 		++itOut;
@@ -428,7 +506,7 @@ bool SVMClassifier::train()
 	m_pEstimator->SetNu(0.5);
 	m_pEstimator->SetCacheSize(100);
 	m_pEstimator->SetEpsilon(1.0e-3);
-	m_pEstimator->SetC(1.0e100);
+	m_pEstimator->SetC(1.0e3);
 	m_pEstimator->SetP(0.1);
 	m_pEstimator->DoShrinking(true);
 	m_pEstimator->DoProbabilityEstimates(true);

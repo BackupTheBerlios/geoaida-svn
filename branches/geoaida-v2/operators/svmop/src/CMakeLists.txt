@@ -17,30 +17,35 @@ endif(OTB_FOUND)
 # include_directories(${OPENCV_INCLUDE_DIRS})
 
 set(sources
-	feature_extractor.cpp
-	log.cpp
-	main.cpp
-	svm_classifier.cpp
-	timer.cpp
+    feature_extractor.cpp
+    log.cpp
+    svm_classifier.cpp
+    timer.cpp
 )
+set(class_sources svm_class.cpp)
+set(train_sources svm_train.cpp)
 
 set(headers
 )
 
-add_executable(svmop ${sources})
+add_executable(svm_class ${sources} ${class_sources})
+add_executable(svm_train ${sources} ${train_sources})
 
-target_link_libraries(svmop
-	tiff
-	OTBCommon
-	OTBIO
-	OTBLearning
+target_link_libraries(svm_class
+    tiff
+    OTBCommon
+    OTBIO
+    OTBLearning
+)
+target_link_libraries(svm_train
+    tiff
+    OTBCommon
+    OTBIO
+    OTBLearning
 )
 
-install(TARGETS svmop RUNTIME DESTINATION bin)
+install(TARGETS svm_class svm_train RUNTIME DESTINATION bin)
+install(PROGRAMS ga_td_svmop_multi DESTINATION bin)
+install(FILES ga_svmop_multi.op DESTINATION share/data/operators)
 
-# install(TARGETS ga_gisop_multi DESTINATION bin)
 
-# install(FILES ga_gisop_multi.op
-#   DESTINATION share/data/operators)
-# 
-# install(PROGRAMS ga_td_gisop_multi DESTINATION bin)

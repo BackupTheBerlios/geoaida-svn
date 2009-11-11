@@ -25,6 +25,7 @@
 #include "otb_svmop_common.h"
 
 //--- Standard header --------------------------------------------------------//
+#include <fstream>
 
 //--- Misc. header -----------------------------------------------------------//
 
@@ -50,10 +51,12 @@ class SVMClassifier
 		double getFeatureMax() const;
 		bool saveClassificationResult(const std::string&) const;
 		bool saveData(const std::string&) const;
+        bool saveScaling(const std::string&) const;
 		bool saveModel(const std::string&) const;
 
 		//--- Methods --------------------------------------------------------//
 		bool loadModel(const std::string&);
+        bool loadScaling(const std::string&);
 
 		bool scaleFeatures(const bool& = false,
 						   const double& = -1.0, const double& = 1.0);
@@ -93,6 +96,7 @@ class SVMClassifier
 		bool			m_bGotFeatures;					///< Flags if features were passed
 		bool			m_bGotLabels;					///< Flags if labels were passed
 		bool			m_bGotModel;					///< Flags if a model exists
+        bool            m_bGotScaling;                  ///< Flags if features are already scaled
 		bool			m_bGotSize;						///< Flags if size of label image is known
 		
 		DEBUG(

@@ -30,7 +30,7 @@ DEBUG(
 /// \brief Constructor
 ///
 ///////////////////////////////////////////////////////////////////////////////
-FeatureExtractor::FeatureExtractor():	m_pInputChannelList(ImageListType::New()),
+FeatureExtractor::FeatureExtractor():   m_pInputChannelList(ImageListType::New()),
                                         m_bChannelLoaded(false),
                                         m_bFeaturesExtracted(false),
                                         m_bLabelsExtracted(false),
@@ -127,6 +127,16 @@ void FeatureExtractor::addInputChannel(const std::string& ImageName)
     pReader->Update();
     
     m_pInputChannelList->PushBack(pReader->GetOutput());
+    
+    DEBUG(
+    {
+        std::ostringstream oss("");
+        oss << "DEBUG_input_channel_" << m_unNoImageFiles << ".tif";
+        saveImage(pReader->GetOutput(), oss.str());
+        ++m_unNoImageFiles;
+    }
+    );
+    
 // 	m_pInputChannelList->Update();	
     
     m_ImageSize = m_pInputChannelList->Front()->GetLargestPossibleRegion().GetSize();
@@ -300,7 +310,7 @@ void FeatureExtractor::setNumberOfPyramidLevels(const int& _nNoPL)
 {
     METHOD_ENTRY("FeatureExtractor::setNumberOfPyramidLevels(const int&)");
 
-    m_nNumberOfPyramidLevels = _nNoPL;
+    m_nNumberOfPyramidLevels = _nNoPL-1; // -1 additional levels
     INFO_MSG("Image Feature Extractor", "Number of levels for image "
             "pyramid set to " << _nNoPL, LOG_DOMAIN_VAR);
             
@@ -380,7 +390,7 @@ bool FeatureExtractor::extractWithLabels()
     
     m_pInputChannelList->Update();
     ImageListType::ConstIterator it = m_pInputChannelList->Begin();
-    nSize = it.Get()->GetLargestPossibleRegion().GetSize();
+//     nSize = it.Get()->GetLargestPossibleRegion().GetSize();
     nSize = m_ImageSize;
     uint nChannel = 0u;
     uint nX;
@@ -415,6 +425,10 @@ bool FeatureExtractor::extractWithLabels()
     TextureFilter->SetInputImage(pGradientFilter->GetOutput());
     pMeanFilter->SetInput(it.Get());
     pMeanFilter->Update();
+    
+    INFO_MSG("Image Feature Extractor", "New pyramid level, size: " <<
+                pMeanFilter->GetOutput()->GetLargestPossibleRegion().GetSize(),
+                LOG_DOMAIN_VAR);
 
     // For debugging draw an image of feature extraction points
     DEBUG(
@@ -543,7 +557,7 @@ bool FeatureExtractor::extractWithLabels()
             pMeanFilter->SetInput(itP.Get());
             pMeanFilter->Update();
             fPyramidLevelFactor *= 1/m_fPyramidDecimationRate;
-            ++itP;
+            pPyramid->GetOutput()->Erase(itP); // Free some memory, implies ++itP
             
             INFO_MSG("Image Feature Extractor", "New pyramid level, size: " <<
                     pMeanFilter->GetOutput()->GetLargestPossibleRegion().GetSize(),
@@ -689,9 +703,10 @@ bool FeatureExtractor::extractWithoutLabels()
 
     pMeanFilter->SetRadius(nRadius);
     
-// 	m_pInputChannelList->Update();
+//     m_pInputChannelList->Update();
     ImageListType::Iterator it = m_pInputChannelList->Begin();
-    nSize = it.Get()->GetLargestPossibleRegion().GetSize();
+//     nSize = it.Get()->GetLargestPossibleRegion().GetSize();
+    nSize = m_ImageSize;
     uint nChannel = 0u;
     uint nX;
     uint nY;
@@ -740,24 +755,24 @@ bool FeatureExtractor::extractWithoutLabels()
     //--------------------------------------
     // Store first feature vector component
     //--------------------------------------
-//     nY = 0;
-//     while (nY < nSize[1])
-//     {
-//         nX = 0;
-//         nFeatureIndex[1] = nY;
-//         while (nX < nSize[0])
-//         {
-//             nFeatureIndex[0] = nX;
-//             
-//             FeatureVectorType vecFeature;
-//             vecFeature.push_back(TextureFilter->GetOutput()->GetPixel(nFeatureIndex));
-//             vecFeature.push_back(pMeanFilter->GetOutput()->GetPixel(nFeatureIndex));
-//             FeaturePoints.push_back(vecFeature);
-//             
-//             ++nX;
-//         }
-//         ++nY;
-//     }
+    nY = 0;
+    while (nY < nSize[1])
+    {
+        nX = 0;
+        nFeatureIndex[1] = nY;
+        while (nX < nSize[0])
+        {
+            nFeatureIndex[0] = nX;
+            
+            FeatureVectorType vecFeature;
+            vecFeature.push_back(TextureFilter->GetOutput()->GetPixel(nFeatureIndex));
+            vecFeature.push_back(pMeanFilter->GetOutput()->GetPixel(nFeatureIndex));
+            FeaturePoints.push_back(vecFeature);
+            
+            ++nX;
+        }
+        ++nY;
+    }
     ++it;
     ++nChannel;
     
@@ -791,7 +806,7 @@ bool FeatureExtractor::extractWithoutLabels()
             pMeanFilter->SetInput(itP.Get());
             pMeanFilter->Update();
             fPyramidLevelFactor *= 1/m_fPyramidDecimationRate;
-            ++itP;
+            pPyramid->GetOutput()->Erase(itP); // Free some memory, implies ++itP
             
             INFO_MSG("Image Feature Extractor", "New pyramid level, size: " <<
                     pMeanFilter->GetOutput()->GetLargestPossibleRegion().GetSize(),
@@ -850,44 +865,44 @@ bool FeatureExtractor::extractWithoutLabels()
         //--------------------------------
         // Store feature vector component
         //--------------------------------
-//         nY = 0;
-//         while (nY < nSize[1])
-//         {
-//             nX = 0;
-//             nFeatureIndex[1] = double(nY)*fPyramidLevelFactor;
-//             while (nX < nSize[0])
-//             {
-//                 nFeatureIndex[0] = double(nX)*fPyramidLevelFactor;
-//                 
-//                 FeaturePoints[i].push_back(TextureFilter->GetOutput()->GetPixel(nFeatureIndex));
-//                 FeaturePoints[i].push_back(pMeanFilter->GetOutput()->GetPixel(nFeatureIndex));
-//                 ++i;
-//                 
-//                 ++nX;
-//             }
-//             ++nY;
-//         }
+        nY = 0;
+        while (nY < nSize[1])
+        {
+            nX = 0;
+            nFeatureIndex[1] = double(nY)*fPyramidLevelFactor;
+            while (nX < nSize[0])
+            {
+                nFeatureIndex[0] = double(nX)*fPyramidLevelFactor;
+                
+                FeaturePoints[i].push_back(TextureFilter->GetOutput()->GetPixel(nFeatureIndex));
+                FeaturePoints[i].push_back(pMeanFilter->GetOutput()->GetPixel(nFeatureIndex));
+                ++i;
+                
+                ++nX;
+            }
+            ++nY;
+        }
     }
     
-    //////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////
     // Move feature points to point set for classification.
-    //////////////////////////////////////////////////////////////////////
-//     std::vector<FeatureVectorType>::const_iterator ci;
-//     int i=0;
-//     for (ci = FeaturePoints.begin(); ci != FeaturePoints.end(); ++ci)
-//     {
-//         
-//         FeaturePointType FP;
-// 
-//         FP[0] = -i;
-// 
-//         pFeatCont->InsertElement(i, FP);
-//         m_pFeatures->SetPointData(i, (*ci));
-// 
-//         ++i;
-//     }
+    ////////////////////////////////////////////////////////////////////
+    std::vector<FeatureVectorType>::const_iterator ci;
+    int i=0;
+    for (ci = FeaturePoints.begin(); ci != FeaturePoints.end(); ++ci)
+    {
+        
+        FeaturePointType FP;
 
-//     m_pFeatures->SetPoints(pFeatCont);
+        FP[0] = -i;
+
+        pFeatCont->InsertElement(i, FP);
+        m_pFeatures->SetPointData(i, (*ci));
+
+        ++i;
+    }
+
+    m_pFeatures->SetPoints(pFeatCont);
 
     METHOD_EXIT("FeatureExtractor::extractWithoutLabels()");
     return true;
@@ -950,15 +965,15 @@ void FeatureExtractor::saveImage(const ImageFloatType::Pointer _pImg,
 {
     METHOD_ENTRY("FeatureExtractor::saveImage(const ImageFloatType::Pointer, const std::string&)");
     
-    typedef itk::RescaleIntensityImageFilter<ImageFloatType,Image16BitType> FilterType;
+    typedef itk::RescaleIntensityImageFilter<ImageFloatType,Image8BitType> FilterType;
     
     FilterType::Pointer pFilter = FilterType::New();
     pFilter->SetOutputMinimum(0);
-    pFilter->SetOutputMaximum(65535);
+    pFilter->SetOutputMaximum(255);
     pFilter->SetInput(_pImg);
     DEBUG_MSG("Image Feature Extractor", "Rescaling image " << _Filename, LOG_DOMAIN_NONE);
     INFO_MSG("Image Feature Extractor", "Writing image " << _Filename, LOG_DOMAIN_NONE);
-    Writer16BitType::Pointer pWriter = Writer16BitType::New();
+    Writer8BitType::Pointer pWriter = Writer8BitType::New();
     pWriter->SetFileName(_Filename);
     pWriter->SetInput(pFilter->GetOutput());
     pWriter->Update();
