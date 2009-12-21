@@ -32,6 +32,7 @@
 
 #include <otbImageFileReader.h>
 #include <otbImageFileWriter.h>
+#include <otbStreamingImageFileWriter.h>
 
 #include <otbMultiToMonoChannelExtractROI.h>
 #include <itkExtractImageFilter.h>

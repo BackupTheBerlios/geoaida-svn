@@ -204,7 +204,7 @@ void ImageWidget::SaveSelection(QString filenametemplate, QVector<bool> channels
 			caster->GetFilter()->SetScale(((1 << 8) - 1) * fScale * (applycontrastbrightness ? contrast() : 1.0));
 			caster->SetInput(extractregion->GetOutput());
 			
-			typedef otb::ImageFileWriter<ExportImageTempType> wviTempType;
+			typedef otb::StreamingImageFileWriter<ExportImageTempType> wviTempType;
 			wviTempType::Pointer writer = wviTempType::New();
 			writer->SetFileName(filename.toStdString().c_str());
 			writer->SetInput(caster->GetOutput());
@@ -223,7 +223,7 @@ void ImageWidget::SaveSelection(QString filenametemplate, QVector<bool> channels
 			caster->GetFilter()->SetScale(((1 << 16) - 1) * fScale * (applycontrastbrightness ? contrast() : 1.0));
 			caster->SetInput(extractregion->GetOutput());
 			
-			typedef otb::ImageFileWriter<ExportImageTempType> wviTempType;
+			typedef otb::StreamingImageFileWriter<ExportImageTempType> wviTempType;
 			wviTempType::Pointer writer = wviTempType::New();
 			writer->SetFileName(filename.toStdString().c_str());
 			writer->SetInput(caster->GetOutput());
@@ -241,7 +241,7 @@ void ImageWidget::SaveSelection(QString filenametemplate, QVector<bool> channels
 			caster->GetFilter()->SetScale(fScale * (applycontrastbrightness ? contrast() : 1.0));
 			caster->SetInput(extractregion->GetOutput());
 			
-			typedef otb::ImageFileWriter<ImageType> wviTempType;
+			typedef otb::StreamingImageFileWriter<ImageType> wviTempType;
 			wviTempType::Pointer writer = wviTempType::New();
 			writer->SetFileName(filename.toStdString().c_str());
 			writer->SetInput(caster->GetOutput());
@@ -306,7 +306,7 @@ void ImageWidget::SaveSelectionSeparatedChannels(QString filenametemplate, QVect
 				caster->SetScale(((1 << 8) - 1) * fScale * (applycontrastbrightness ? contrast() : 1.0));
 				caster->SetInput(extractregion->GetOutput());
 				
-				typedef otb::ImageFileWriter<ExportImageTempType> wviTempType;
+				typedef otb::StreamingImageFileWriter<ExportImageTempType> wviTempType;
 				wviTempType::Pointer writer = wviTempType::New();
 				writer->SetFileName(filename.toStdString().c_str());
 				writer->SetInput(caster->GetOutput());
@@ -324,7 +324,7 @@ void ImageWidget::SaveSelectionSeparatedChannels(QString filenametemplate, QVect
 				caster->SetScale(((1 << 16) - 1) * fScale * (applycontrastbrightness ? contrast() : 1.0));
 				caster->SetInput(extractregion->GetOutput());
 				
-				typedef otb::ImageFileWriter<ExportImageTempType> wviTempType;
+				typedef otb::StreamingImageFileWriter<ExportImageTempType> wviTempType;
 				wviTempType::Pointer writer = wviTempType::New();
 				writer->SetFileName(filename.toStdString().c_str());
 				writer->SetInput(caster->GetOutput());
@@ -341,7 +341,7 @@ void ImageWidget::SaveSelectionSeparatedChannels(QString filenametemplate, QVect
 				caster->SetScale(fScale * (applycontrastbrightness ? contrast() : 1.0));
 				caster->SetInput(extractregion->GetOutput());
 				
-				typedef otb::ImageFileWriter<ChannelType> wviTempType;
+				typedef otb::StreamingImageFileWriter<ChannelType> wviTempType;
 				wviTempType::Pointer writer = wviTempType::New();
 				writer->SetFileName(filename.toStdString().c_str());
 				writer->SetInput(caster->GetOutput());
@@ -783,6 +783,7 @@ void ImageWidget::ZoomView(RealType zoomfactor)
 
 	// Zoom
 	_scaleFactor *= zoomfactor;
+	RecalculateBounds();
 
 	// Restore center point
 	_offset.setX(center.x() * _scaleFactor - width() / 2);
@@ -794,7 +795,6 @@ void ImageWidget::ZoomView(RealType zoomfactor)
 	if (_offset.y() + height() > _bounds.height())	_offset.setY(_bounds.height() - height());
 
 	// Redraw
-	RecalculateBounds();
 	Redraw();
 }
 
@@ -859,7 +859,7 @@ void ImageWidget::CalculateAutoCB()
 		maxvalue = std::max(maxvalue, mmcalc->GetMaximum());
 	}
 
-	_brightness = -minvalue / (fMax - fMin);
+	_brightness = -minvalue;
 	_contrast = (fMax - fMin) / (maxvalue - minvalue);
 
 	Redraw();
