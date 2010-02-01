@@ -24,8 +24,8 @@
 #include <iostream>
 
 //--- Program header ---------------------------------------------------------//
-#include "ImageEngineBase"
-#include "ImageEngineCommons"
+#include "image_engine_base.h"
+#include "image_engine_commons.h"
 
 //--- Misc header ------------------------------------------------------------//
 #include <QList>
@@ -51,7 +51,7 @@ class ImageServerThread : public QThread
 
         //--- Constructor / Destructor----------------------------------------//
         ImageServerThread(int nSocketDescriptor, QObject* pParent,
-                            const ImageEngineBase* const pImageEngine);
+                            ImageEngineBase* pImageEngine);
         ~ImageServerThread();
 
         //--- Methods --------------------------------------------------------//
@@ -81,7 +81,7 @@ class ImageServerThread : public QThread
         bool m_bShutdownRequested;                  ///< Flags if server should be shut down
         int m_nSocketDescriptor;                    ///< Associated to socket for this connection
 
-        const ImageEngineBase* const m_pImageEngine;///< Pointer to image engine
+        ImageEngineBase* m_pImageEngine;///< Pointer to image engine
 
 };
 

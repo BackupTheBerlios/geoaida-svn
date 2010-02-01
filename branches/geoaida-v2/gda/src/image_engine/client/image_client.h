@@ -24,7 +24,7 @@
 #include <iostream>
 
 //--- Program header ---------------------------------------------------------//
-#include "ImageEngineCommons"
+#include "image_engine_commons.h"
 
 //--- Misc header ------------------------------------------------------------//
 #include <QCoreApplication>
@@ -33,6 +33,7 @@
 #include <QString>
 #include <QTcpSocket>
 #include <QVariant>
+#include <QAbstractSocket>
 
 namespace GA{namespace IE{
 
@@ -55,11 +56,15 @@ class ImageClient : public QObject
         //--- Constant Methods -----------------------------------------------//
         
         //--- Methods --------------------------------------------------------//
-        void getPartOfImage(QString InputImage,
+        void getPartOfImage(QString imageKey,
                             float GeoWest, float GeoNorth,
                             float GeoEast, float GeoSouth,
                             QString FileName
                             );
+        void addImage(QString FileName, QString imageKey,
+                                        float GeoWest, float GeoNorth,
+                                        float GeoEast, float GeoSouth);
+        void addImages(QString FileName);
         void setupServer();
         void shutdownServer();
 

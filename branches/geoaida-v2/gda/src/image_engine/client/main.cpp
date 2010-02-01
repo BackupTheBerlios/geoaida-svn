@@ -30,7 +30,7 @@
 #include <string>
 
 //--- Program header ---------------------------------------------------------//
-#include "ImageClient"
+#include "image_client.h"
 
 //--- Misc header ------------------------------------------------------------//
 #include <QCoreApplication>
@@ -41,7 +41,6 @@
 ///
 /// \brief Prints out usage message if command was called incorrectly
 ///
-/// \note This usage and the parameters are only for testing purposes.
 ///
 ////////////////////////////////////////////////////////////////////////////////
 void usage()
@@ -50,6 +49,8 @@ void usage()
     std::cout << "  <host>: Host where the server is running on." << std::endl;
     std::cout << "  <port>: Port for connection" << std::endl;
     std::cout << "  <request>:" << std::endl;
+    std::cout << "     adf: add images by file" << std::endl;
+    std::cout << "     add: add image" << std::endl;
     std::cout << "     poi: part of image" << std::endl;
     std::cout << "     sus: setup server" << std::endl;
     std::cout << "     sds: shutdown server" << std::endl;
@@ -69,7 +70,7 @@ void usage()
 ////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char *argv[])
 {
-    if (argc != 4)
+    if (argc < 4)
     {
         usage();
         return EXIT_FAILURE;
@@ -77,18 +78,24 @@ int main(int argc, char *argv[])
 
     QCoreApplication app(argc, argv);
     GA::IE::ImageClient Client(QString(argv[1]), atoi(argv[2]));
-    GA::IE::ImageClient Client1(QString(argv[1]), atoi(argv[2]));
-//     GA::IE::ImageClient Client2(QString(argv[1]), atoi(argv[2]));
-//     GA::IE::ImageClient Client3(QString(argv[1]), atoi(argv[2]));
-//     GA::IE::ImageClient Client4(QString(argv[1]), atoi(argv[2]));
     
-    if (std::string(argv[3]) == "poi")
+    if (std::string(argv[3]) == "adf")
     {
-        Client.getPartOfImage("Test 01", 1.837483, 0.7356, 1.0e20, -19.0, "Test 00001");
-        Client1.getPartOfImage("Test 02", 1.837483, 0.7356, 1.0e20, -19.0, "Test 00002");
-//         Client2.getPartOfImage("Test 03", 1.837483, 0.7356, 1.0e20, -19.0, "Test 00003");
-//         Client3.getPartOfImage("Test 04", 1.837483, 0.7356, 1.0e20, -19.0, "Test 00004");
-//         Client4.getPartOfImage("Test 05", 1.837483, 0.7356, 1.0e20, -19.0, "Test 00005");
+        if (argc!=5)
+            return EXIT_FAILURE;
+        Client.addImages(argv[4]);
+    }
+    else if (std::string(argv[3]) == "add")
+    {
+        if (argc!=10)
+            return EXIT_FAILURE;
+        Client.addImage(argv[4], argv[5], atof(argv[6]),  atof(argv[7]),  atof(argv[8]),  atof(argv[9]));
+    }
+    else if (std::string(argv[3]) == "poi")
+    {
+        if (argc!=10)
+            return EXIT_FAILURE;
+        Client.getPartOfImage(argv[4], atof(argv[5]),  atof(argv[6]), atof( argv[7]),  atof(argv[8]), argv[9]);
     }
     else if (std::string(argv[3]) == "sus")
         Client.setupServer();
@@ -100,5 +107,6 @@ int main(int argc, char *argv[])
         usage();
         return EXIT_FAILURE;
     }
+
     return EXIT_SUCCESS;
 }

@@ -26,10 +26,10 @@
 
 //--- Standard header --------------------------------------------------------//
 #include <cstdlib>
-#include <iostream>
+#include <iostream.h>
 
 //--- Program header ---------------------------------------------------------//
-#include "ImageServer"
+#include "image_server.h"
 
 //--- Misc header ------------------------------------------------------------//
 #include <QCoreApplication>
@@ -67,6 +67,5 @@ int main(int argc, char *argv[])
 
     QCoreApplication app(argc, argv);
     GA::IE::ImageServer Server(atoi(argv[1]));
-    
     return EXIT_SUCCESS;
 }

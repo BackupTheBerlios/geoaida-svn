@@ -47,11 +47,16 @@ class ImageEngineBase
         //--- Methods --------------------------------------------------------//
         
         //--- Constant Methods -----------------------------------------------//
-        virtual bool getPartOfImage(QString InputImage,
+        virtual bool addImage(QString FileName,QString ImageKey, float GeoWest, float GeoNorth,
+                      float GeoEast, float GeoSouth) =0;
+
+        virtual bool addImages(QString FileName)=0;
+
+        virtual bool getPartOfImage(QString ImageKey,
                                     float GeoWest, float GeoNorth,
                                     float GeoEast, float GeoSouth,
                                     QString FileName
-                                    ) const = 0;
+                                    ) =0;
 
     private:
 

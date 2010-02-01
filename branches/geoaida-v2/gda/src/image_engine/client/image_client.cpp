@@ -17,7 +17,7 @@
 ///
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "ImageClient"
+#include "image_client.h"
 
 using namespace GA::IE;
 
@@ -60,6 +60,62 @@ ImageClient::~ImageClient()
 
 ///////////////////////////////////////////////////////////////////////////////
 ///
+/// \brief Method to add an image on image server
+///
+/// This method connects to the image server to add an image.
+///
+/// \param FileName File name
+/// \param key Inage key
+/// \param GeoWest Geo coordinate west
+/// \param GeoNorth Geo coordinate north
+/// \param GeoEast Geo coordinate east
+/// \param GeoSouth Geo coordinate south
+///
+///
+///////////////////////////////////////////////////////////////////////////////
+void ImageClient::addImage(QString FileName, QString imageKey,
+                                        float GeoWest, float GeoNorth,
+                                        float GeoEast, float GeoSouth)
+{
+    m_nRequest = REQUEST_ADD_IMAGE;
+    m_ParameterList.push_back(FileName);
+    m_ParameterList.push_back(imageKey);
+    m_ParameterList.push_back(GeoWest);
+    m_ParameterList.push_back(GeoNorth);
+    m_ParameterList.push_back(GeoEast);
+    m_ParameterList.push_back(GeoSouth);
+    connectToServer();
+    eventLoop();
+    m_ParameterList.pop_back();
+    m_ParameterList.pop_back();
+    m_ParameterList.pop_back();
+    m_ParameterList.pop_back();
+    m_ParameterList.pop_back();
+    m_ParameterList.pop_back();
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///
+/// \brief Method to add images on image server
+///
+/// This method connects to the image server to add images.
+///
+/// \param FileName File name
+///
+///
+///////////////////////////////////////////////////////////////////////////////
+void ImageClient::addImages(QString fname)
+{
+    m_nRequest = REQUEST_ADD_IMAGES;
+    m_ParameterList.push_back(fname);
+    connectToServer();
+    eventLoop();
+    m_ParameterList.pop_back();
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+///
 /// \brief Method to request a part of an image from image server
 ///
 /// This method connects to the image server to request a part of an image.
@@ -72,14 +128,14 @@ ImageClient::~ImageClient()
 /// \param FileName File name
 ///
 ///////////////////////////////////////////////////////////////////////////////
-void ImageClient::getPartOfImage(QString InputImage,
+void ImageClient::getPartOfImage(QString imageKey,
                                         float GeoWest, float GeoNorth,
                                         float GeoEast, float GeoSouth,
                                         QString FileName
                                         )
 {
     m_nRequest = REQUEST_PART_OF_IMAGE;
-    m_ParameterList.push_back(InputImage);
+    m_ParameterList.push_back(imageKey);
     m_ParameterList.push_back(GeoWest);
     m_ParameterList.push_back(GeoNorth);
     m_ParameterList.push_back(GeoEast);
@@ -87,6 +143,12 @@ void ImageClient::getPartOfImage(QString InputImage,
     m_ParameterList.push_back(FileName);
     connectToServer();
     eventLoop();
+    m_ParameterList.pop_back();
+    m_ParameterList.pop_back();
+    m_ParameterList.pop_back();
+    m_ParameterList.pop_back();
+    m_ParameterList.pop_back();
+    m_ParameterList.pop_back();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -23,7 +23,9 @@
 //--- Standard header --------------------------------------------------------//
 
 //--- Program header ---------------------------------------------------------//
-#include "ImageEngineBase"
+#include "image_engine_base.h"
+#include "QFile"
+#include "geoimagelist.h"
 
 //--- Misc header ------------------------------------------------------------//
 
@@ -46,11 +48,15 @@ class ImageEngineDefault : public ImageEngineBase
         //--- Methods --------------------------------------------------------//
 
         //--- Constant Methods -----------------------------------------------//
-        bool getPartOfImage(QString InputImage,
+        bool addImage(QString FileName,QString ImageKey, float GeoWest, float GeoNorth,
+              float GeoEast, float GeoSouth);
+        bool addImages(QString FileName);
+        bool getPartOfImage(QString ImageKey,
                             float GeoWest, float GeoNorth,
                             float GeoEast, float GeoSouth,
-                            QString FileName
-                            ) const;
+                            QString FileName);
+
+        GeoImageList geoImageList;
 
 };
 

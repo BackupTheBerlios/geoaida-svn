@@ -47,6 +47,12 @@ const quint16 REQUEST_RETURN_VALUE_WRONG_PARAM = 5; ///< Signal from server
                                                     ///  showing that a wrong
                                                     ///  number of parameters
                                                     ///  was transmitted
+const quint16 REQUEST_ADD_IMAGE	= 6;                ///< Signal to ask server
+                                                    ///  for addImage
+                                                    ///  method
+const quint16 REQUEST_ADD_IMAGES= 7;                ///< Signal to ask server
+                                                    ///  for addImages
+                                                    ///  method
 
 //--- Functions --------------------------------------------------------------//
 const std::string constToString(const quint16& nConst);

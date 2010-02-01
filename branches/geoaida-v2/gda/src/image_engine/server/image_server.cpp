@@ -17,8 +17,8 @@
 ///
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "ImageServer"
-#include "ImageServerThread"
+#include "image_server.h"
+#include "image_server_thread.h"
 
 using namespace GA::IE;
 

@@ -17,7 +17,7 @@
 ///
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "ImageServerThread"
+#include "image_server_thread.h"
 
 using namespace GA::IE;
 
@@ -31,7 +31,7 @@ using namespace GA::IE;
 ///
 ///////////////////////////////////////////////////////////////////////////////
 ImageServerThread::ImageServerThread(int nSocketDescriptor, QObject* pParent,
-                                    const ImageEngineBase* const pImageEngine) :
+                                    ImageEngineBase* pImageEngine) :
                                     QThread(pParent),
                                     m_bShutdownRequested(false),
                                     m_nSocketDescriptor(nSocketDescriptor),
@@ -131,6 +131,50 @@ void ImageServerThread::getRequest()
                 << std::endl;
         switch (m_nHeader)
         {
+            case REQUEST_ADD_IMAGE:
+            {
+                if (m_nNumberOfParameters != 6)
+                {
+                    std::cout << "ImageServerThread: Wrong number of parameters." << std::endl;
+                    this->sendRequestReturnValue(REQUEST_RETURN_VALUE_WRONG_PARAM);
+                    return;
+                }
+                QVariant FileName;
+                QVariant ImageKey;
+                QVariant GeoWest;
+                QVariant GeoNorth;
+                QVariant GeoEast;
+                QVariant GeoSouth;
+                in >> FileName;
+                in >> ImageKey;
+                in >> GeoWest;
+                in >> GeoNorth;
+                in >> GeoEast;
+                in >> GeoSouth;
+
+                m_pImageEngine->addImage(FileName.toString(), ImageKey.toString(),
+                                               GeoWest.toDouble(), GeoNorth.toDouble(),
+                                               GeoEast.toDouble(),GeoSouth.toDouble());
+
+                this->sendRequestReturnValue(REQUEST_RETURN_VALUE_ACCEPT);
+                break;
+            }
+            case REQUEST_ADD_IMAGES:
+            {
+                if (m_nNumberOfParameters != 1)
+                {
+                    std::cout << "ImageServerThread: Wrong number of parameters." << std::endl;
+                    this->sendRequestReturnValue(REQUEST_RETURN_VALUE_WRONG_PARAM);
+                    return;
+                }
+                QVariant FileName;
+                in >> FileName;
+
+                m_pImageEngine->addImages(FileName.toString());
+
+                this->sendRequestReturnValue(REQUEST_RETURN_VALUE_ACCEPT);
+                break;
+            }
             case REQUEST_PART_OF_IMAGE:
             {
                 if (m_nNumberOfParameters != 6)
@@ -139,20 +183,20 @@ void ImageServerThread::getRequest()
                     this->sendRequestReturnValue(REQUEST_RETURN_VALUE_WRONG_PARAM);
                     return;
                 }
-                QVariant InputImage;
+                QVariant ImageKey;
                 QVariant GeoWest;
                 QVariant GeoNorth;
                 QVariant GeoEast;
                 QVariant GeoSouth;
                 QVariant FileName;
-                in >> InputImage;
+                in >> ImageKey;
                 in >> GeoWest;
                 in >> GeoNorth;
                 in >> GeoEast;
                 in >> GeoSouth;
                 in >> FileName;
 
-                m_pImageEngine->getPartOfImage(InputImage.toString(), GeoWest.toDouble(),
+                m_pImageEngine->getPartOfImage(ImageKey.toString(), GeoWest.toDouble(),
                                             GeoNorth.toDouble(), GeoEast.toDouble(),
                                             GeoSouth.toDouble(), FileName.toString());
                 

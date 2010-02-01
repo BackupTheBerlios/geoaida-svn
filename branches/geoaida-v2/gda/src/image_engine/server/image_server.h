@@ -23,8 +23,8 @@
 //--- Standard header --------------------------------------------------------//
 
 //--- Program header ---------------------------------------------------------//
-#include "ImageEngineBase"
-#include "ImageEngineDefault"
+#include "image_engine_base.h"
+#include "image_engine_default.h"
 
 //--- Misc header ------------------------------------------------------------//
 #include <QCoreApplication>
