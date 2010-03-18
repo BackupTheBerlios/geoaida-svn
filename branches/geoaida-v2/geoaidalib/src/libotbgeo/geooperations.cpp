@@ -6,7 +6,7 @@
 
 namespace otbgeo {
 
-  GeoRegion cropGeoRegion(const GeoRegion region1, const GeoRegion region2){
+  GeoRegion cropGeoRegion(const GeoRegion& region1, const GeoRegion& region2){
     GeoRegion region;
     GeoRegion::PointType regionIndex;
     GeoRegion::SizeType regionSize;
@@ -15,6 +15,7 @@ namespace otbgeo {
     GeoRegion::PointType region2Index = region2.GetOrigin();
     GeoRegion::SizeType region1Size = region1.GetSize();
     GeoRegion::SizeType region2Size = region2.GetSize();
+
     const int Dimension = 2;
     for (int i = 0; i < Dimension; i++){
       regionIndex[i] = ( (region1Index[i] > region2Index[i]) ? region1Index[i]: region2Index[i]);
