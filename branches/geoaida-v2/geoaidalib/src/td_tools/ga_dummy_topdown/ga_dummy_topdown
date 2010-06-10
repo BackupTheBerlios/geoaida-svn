@@ -24,7 +24,13 @@ mask=$8
 input=$9
 output=${10}
 p=${11}
-echo "# $0 $*" >$output
+
+cat << EOF >$output
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+# $0 $*
+EOF
+
 if [ -z "$mask" ]
 then
   id=1
@@ -35,5 +41,8 @@ else
   echo "# pbm2plm $mask $output.td.plm $id" >>$output
 fi
 cat << EOF >>$output
-<REGION class=$classname id=$id geoWest=$geoWest geoNorth=$geoNorth geoEast=$geoEast geoSouth=$geoSouth p=$p file=$output.td.plm />
+-->
+<regionlist>
+  <region class="$classname" id="$id" geoWest="$geoWest" geoNorth="$geoNorth" geoEast="$geoEast" geoSouth="$geoSouth" p="$p" file="$output.td.plm" />
+</regionlist>
 EOF

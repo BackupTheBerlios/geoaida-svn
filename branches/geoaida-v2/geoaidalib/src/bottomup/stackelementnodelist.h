@@ -30,6 +30,8 @@ namespace BottomUpLib {
 
 class StackElementNodeList : public StackElement  {
 public: 
+  /** constructs a stack element  */
+  StackElementNodeList();
   /** constructs a stack element containing the given nodelist */
   StackElementNodeList(const NodeList& list);
   /** Copy constructor */

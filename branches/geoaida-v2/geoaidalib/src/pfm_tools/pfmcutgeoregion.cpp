@@ -15,6 +15,7 @@
  *                                                                         *
  ***************************************************************************/
 
+#include <cstring>
 #include <gaimage.h>
 #include <gavariance.h>
 using namespace Ga;

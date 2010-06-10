@@ -24,7 +24,8 @@
 #include <QRegExp>
 #include <QTextStream>
 #include <QXmlStreamWriter>
-#include "cleanup.h"
+#include "CleanUp"
+#include "FileIOException"
 #ifdef WIN32
 #include <QMessageBox>
 #endif
@@ -299,7 +300,7 @@ void SNode::execOperator(Operator * op, INode * iNode, AttribList & attribs,
                          QString path, int &counter)
 {
   if (!op) {
-    iNode->taskFinished(0,0);
+    iNode->taskFinished(0,0,"");
     return;
   }
   CleanUp::mkdir(CleanUp::getTmpDirPID(), path);
@@ -385,12 +386,14 @@ void SNode::execOperator(Operator * op, INode * iNode, AttribList & attribs,
 #endif
 
   QString stderr_file=iNode->output()+".stderr";
+  QString stdout_file=iNode->output()+".stdout";
   QFile fp(iNode->output()+".cmd");
   if (fp.open(QIODevice::WriteOnly)) {
     fp.write(cmd.toLatin1().constData(),cmd.length());
     fp.close();
   }
   cmd+=" 2>"+stderr_file;
+  cmd+=" >"+stdout_file;
   taskTable.queue(cmd, iNode);
   counter++;
   stateChanged(guiPtr_);
@@ -536,7 +539,7 @@ void SNode::execTopDownOp(INode * iNode)
     cleanUp_.append(maskfile);
   }
   else 
-    attribs.replace("mask_file", "\"\"");
+    attribs.replace("mask_file", QString("\"\""));
 
   attribs.replace("minRes", geoImageList->minResolution());
   attribs.replace("maxRes", geoImageList->maxResolution());
@@ -570,7 +573,7 @@ void SNode::execTemporalTopDownOp(INode * iNode)
 	  ++inodeYoungerSibling;
 	  if (inodeYoungerSibling == temporalSiblingList->end()) {
 		  qDebug("Temporal TD: Could not find earlier temporal node. Semantic Net definition error!\n");
-		  iNode->taskFinished(0,0);
+		  iNode->taskFinished(0,0,"");
 		  return;
 	  }
   }
@@ -580,7 +583,7 @@ void SNode::execTemporalTopDownOp(INode * iNode)
   QFile ifp(iname);
   if (!ifp.open(QIODevice::WriteOnly)) {
     qDebug("Could not open tempfile %s\n", iname.toLatin1().constData());
-    iNode->taskFinished(0,0);
+    iNode->taskFinished(0,0,"");
     return;
   }
 
@@ -676,7 +679,7 @@ void SNode::execTemporalBottomUpOp(INode * iNode)
   QFile ifp(iname);
   if (!ifp.open(QIODevice::WriteOnly)) {
     qDebug("Could not open tempfile %s\n", iname.toLatin1().constData());
-    iNode->taskFinished(0,0);
+    iNode->taskFinished(0,0,"");
     return;
   }
 
@@ -757,7 +760,7 @@ void SNode::execBottomUpOp(INode * iNode)
   QFile ifp(iname);
   if (!ifp.open(QIODevice::WriteOnly)) {
     qDebug("Could not open tempfile %s\n", iname.toLatin1().constData());
-    iNode->taskFinished(0,0);
+    iNode->taskFinished(0,0,"");
     return;
   }
 
@@ -835,9 +838,11 @@ QList < INode* > SNode::evalTopDown(INode * inode)
   if (!fp.open(QIODevice::ReadOnly)) {
     qDebug("SNode::evalTopDown(%s): file not founed\n",
            (inode->output().toLatin1().constData()));
+    throw FileIOException(FileIOException::FILE_NOT_EXISTS,inode->output(),__FILE__":SNode::evalTopDown",__LINE__);
     return list;
   }
   MLParser parser(&fp);
+  parser.setFilename(inode->output());
   QString classname;
   MLParser::setString(classname, &(attribList()), "class");
 #ifdef DEBUG_MSG
@@ -922,10 +927,12 @@ QList <INode*> *SNode::evalTemporalTopDown(INode * inode)
     qDebug("SNode::evalTemporalTopDown(%s): file not found\n",
            (inode->output().toLatin1().constData()));
     delete list;
+    throw FileIOException(FileIOException::FILE_NOT_EXISTS,inode->output(),__FILE__":SNode::evalTemporalTopDown",__LINE__);
     return 0;
   }
   QString classname = this->attribute("class");
   MLParser parser(&fp); 
+  parser.setFilename(fileName);
 #ifdef DEBUG_MSG
   qDebug("SNode::evalTemporalTopDown: Searching for %s\n", classname.toLatin1().constData());
 #endif
@@ -1008,9 +1015,11 @@ QList <INode*> &SNode::evalTemporalBottomUp(INode * iNode)
   if (!fp.open(QIODevice::ReadOnly)) {
     qDebug("SNode::evalTemporalBottomUp(%s): file not found\n",
            iNode->output().toLatin1().constData());
+    throw FileIOException(FileIOException::FILE_NOT_EXISTS,iNode->output(),__FILE__":SNode::evalTemporalBottomUp",__LINE__);
     return *groupList;
   }
   MLParser parser(&fp);
+  parser.setFilename(iNode->output());
  
   
 #ifdef DEBUG_MSG
@@ -1144,9 +1153,11 @@ QList < INode* > &SNode::evalBottomUp(INode * iNode)
   if (!fp.open(QIODevice::ReadOnly)) {
     qDebug("SNode::evalBottomUp(%s): file not found\n",
            iNode->output().toLatin1().constData());
+    throw FileIOException(FileIOException::FILE_NOT_EXISTS,iNode->output(),__FILE__":SNode::evalBottomUp",__LINE__);
     return *groupList;
   }
   MLParser parser(&fp);
+  parser.setFilename(iNode->output());
  
   
 #ifdef DEBUG_MSG

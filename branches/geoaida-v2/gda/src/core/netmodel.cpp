@@ -227,7 +227,8 @@ void NetModel::read(const QString & fname)
   QFile fp(fname);
   if (!fp.open(QIODevice::ReadOnly)) {
     qDebug("NetModel::read(%s): file not found", fname.toLatin1().constData());
-    throw FileIOException(FileIOException::FILE_NOT_EXISTS,fname);
+    throw FileIOException(FileIOException::FILE_NOT_EXISTS,fname, 
+			  __FILE__":NetModel::read", __LINE__);
   }
   read(fp);
   fp.close();
@@ -238,6 +239,7 @@ void NetModel::read(const QString & fname)
 void NetModel::read(QIODevice & fp)
 {
   MLParser parser(&fp);
+  parser.setFilename(filename_);
   readfile(parser);
 }
 
@@ -253,7 +255,7 @@ void NetModel::write()
 //  QFile fp(fname);
 //  if (!fp.open(QIODevice::WriteOnly)) {
 //    qDebug("NetModel::write(%s): file not accessable", fname.toLatin1().constData());
-//    throw FileIOException(FileIOException::OPEN_FAILED, fname);
+//    throw FileIOException(FileIOException::OPEN_FAILED, fname, __FILE__, __LINE__);
 //  }
 //  QTextStream str(&fp);
 //  write(str);
@@ -276,7 +278,8 @@ void NetModel::write(const QString & fname)
   QFile fp(fname);
   if (!fp.open(QIODevice::WriteOnly)) {
     qDebug("NetModel::write(%s): file not accessable", fname.toLatin1().constData());
-    throw FileIOException(FileIOException::OPEN_FAILED, fname);
+    throw FileIOException(FileIOException::OPEN_FAILED, fname, 
+			  __FILE__":NetModel::write", __LINE__);
   }
   
   if (!rootNode_) return;

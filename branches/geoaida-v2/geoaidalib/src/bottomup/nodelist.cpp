@@ -224,7 +224,9 @@ void NodeList::read(MLParser& parser) {
 
 /** operator +=  for NodeList*/
 NodeList& NodeList::operator += (NodeList& nl){
-  for (ConstIterator it=nl.begin(); it!=end(); ++it) {
+  qDebug("NodeList::operator +=: start");
+  for (ConstIterator it=nl.constBegin(); it!=constEnd(); ++it) {
+    qDebug("NodeList::operator +=: key %s ",it.key().toLatin1().constData());
     insert(it.key(), it.value());
   }
   return *this;

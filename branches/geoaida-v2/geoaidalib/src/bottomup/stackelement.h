@@ -26,8 +26,8 @@ namespace BottomUpLib {
 
 class StackElement {
 public:
-	StackElement();
-	virtual ~StackElement();
+  StackElement();
+  virtual ~StackElement();
   /** Type of stack element */
   virtual int type()=0;
   virtual const char* typeName()=0;

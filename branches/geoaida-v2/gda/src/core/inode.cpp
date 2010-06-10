@@ -175,9 +175,15 @@ bool INode::linkSNode(SNode * parent)
   * pid ==  0 -> no operator or node have no holistic operator
   * pid == -1 -> can't start process
   */
-void INode::taskFinished(int pid, int exit_state)
+void INode::taskFinished(int pid, int exit_state, QString cmd)
 {
+  if (exit_state!=0) 
+    throw ProcessException(exit_state,cmd,
+			   __FILE__":INode::taskFinished", __LINE__);
+#if 0
+  //! TODO
   try {
+#endif
     int flag = -1;
 #ifdef DEBUGMSG
     qDebug("#  INode::taskFinished (%s)(%p) pid=%d ES=%d",
@@ -225,12 +231,14 @@ void INode::taskFinished(int pid, int exit_state)
       delete this;
       break;
     }
+#if 0
   }
-  catch(FileIOException err) {
+  catch(const FileIOException& err) {
     qDebug("INode::taskFinished(): Exception(%s) %s", name().toLatin1().constData(),
            err.what().toLatin1().constData());
 //    emit analysis_->message(err.message());
   }
+#endif
 }
 
 /** handle the results of the temporal BottomUp operator
@@ -941,7 +949,7 @@ void INode::execTopDown(bool first)
 	  if (sNode_->holistic())
 	    sNode_->execTopDownOp(this);        //start TD
 	  else if (!sNode_->attributeBool("td_multiclass"))
-	    taskFinished(0,0);
+	    taskFinished(0,0,"");
 	  else { //no operator, remove initial hypothesis
 	    parent()->decrementCount();
 	    parent()->childUnlink(this);

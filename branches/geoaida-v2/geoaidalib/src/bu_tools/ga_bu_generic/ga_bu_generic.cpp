@@ -58,9 +58,12 @@ int main(int argc, char *argv[])
 #endif
   NodeList *nl = bu.selectClass("ALL");
   qDebug("no elem %d",nl->count());
-  if (nl->isEmpty()) return 0;
 #ifndef DEBUG_PRG
   Stack stack(nl,argv[2]);
+  if (nl->isEmpty()) {
+    stack.write(argv[2]);
+    return 0;
+  }
   QString command(argv[3]);
 #else
 // QString command("nodelist \"5 6 * \" runlocal \"test\" set \"test\" get");

@@ -17,6 +17,7 @@
 
 #include "semanticnet.h"
 #include "SNode"
+#include "NodeException"
 
 /** Read a  net  */
 void SemanticNet::readfile(MLParser& parser)
@@ -34,5 +35,7 @@ void SemanticNet::readfile(MLParser& parser)
     Q_ASSERT(rootNode_!=0);
     qDebug("NetModel: Root=%s\n", rootNode_->name().toLatin1().constData());
   }
+  else throw NodeException(NodeException::NOT_FOUND, 
+			   __FILE__":SemanticNet::readFile", __LINE__);
 }
 

@@ -1,10 +1,11 @@
-find_package(Qt3 REQUIRED)
+FIND_PACKAGE(Qt4 REQUIRED)
 
 add_definitions(${QT_DEFINITIONS})
 
 include_directories(.
         ${CMAKE_SOURCE_DIR}/pfm/libpfm
         ${CMAKE_SOURCE_DIR}/ga_image/src/gaimage
+        ${QT_INCLUDES}
 	)
 
 macro(pfm_tool name extra_sources)
@@ -15,7 +16,7 @@ macro(pfm_tool name extra_sources)
   add_executable(${name} ${sources})
 
 
-  target_link_libraries(${name} gaimage pfm pnm ${QT_LIBRARIES})
+  target_link_libraries(${name} gaimage pfm pnm ${QT_QTCORE_LIBRARY})
 
   install(TARGETS ${name} DESTINATION bin)
   install(FILES ${data} DESTINATION share/data/modules)
@@ -29,7 +30,7 @@ macro(pfm_tool_cpp name extra_sources)
   add_executable(${name} ${sources})
 
 
-  target_link_libraries(${name} gaimage pfm pnm ${QT_LIBRARIES})
+  target_link_libraries(${name} gaimage pfm pnm ${QT_QTCORE_LIBRARIES})
 
   install(TARGETS ${name} DESTINATION bin)
   install(FILES ${data} DESTINATION share/data/modules)
@@ -43,7 +44,7 @@ macro(pfm_tool_plain name extra_sources)
   add_executable(${name} ${sources})
 
 
-  target_link_libraries(${name} gaimage pfm pnm ${QT_LIBRARIES})
+  target_link_libraries(${name} gaimage pfm pnm ${QT_QTCORE_LIBRARIES})
 
   install(TARGETS ${name} DESTINATION bin)
 #  install(FILES ${data} DESTINATION share/data/modules)
@@ -68,7 +69,6 @@ pfm_tool(pfmmask "")
 pfm_tool(pgmcutregion "")
 pfm_tool(plm2pgm "")
 pfm_tool_cpp(pbm2plm "")
-pfm_tool(plm2pbm "")
 pfm_tool(pbmblow "")
 pfm_tool(pgm2pfm "")
 pfm_tool(pfm2pfm "")

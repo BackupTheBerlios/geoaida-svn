@@ -20,6 +20,11 @@
 using namespace BottomUpLib;
 
 /** constructs a stack element containing the given nodelist */
+StackElementNodeList::StackElementNodeList()
+{
+}
+
+/** constructs a stack element containing the given nodelist */
 StackElementNodeList::StackElementNodeList(const NodeList& list)
 {
   data_=list;

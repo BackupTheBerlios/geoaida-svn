@@ -10,12 +10,17 @@ INCLUDE_DIRECTORIES(.
 )
 
 SET(sources
+  baseexception.cpp
   mlparser.cpp
 )
 
 SET(headers
+  baseexception.h
   mlparser.h
   ArgDict
+  BaseException
+  GeneralException
+  ParserException
   MLParser
   MLTagTable
 )

@@ -67,6 +67,24 @@ int regionsToFile(QString filename, QList<RegDesc>& reglist)
   out.setAutoFormatting(true);
   out.writeStartDocument();
   out.writeStartElement("regionlist");
+
+  regionsToFile(out, reglist);
+		
+  out.writeEndElement();
+  out.writeEndDocument();
+  return EXIT_SUCCESS;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// \brief Save region description to file
+///
+/// \param fp pointer to QXmlStreamWriter the description will be save to
+/// \param reglist Structure defining description format
+///
+////////////////////////////////////////////////////////////////////////////////
+int regionsToFile(QXmlStreamWriter& out, QList<RegDesc>& reglist)
+{
   for (QList<RegDesc>::Iterator regIter= reglist.begin(); 
        regIter != reglist.end(); 
        ++regIter) {
@@ -77,8 +95,5 @@ int regionsToFile(QString filename, QList<RegDesc>& reglist)
     reg.write(out);
   }
   
-  out.writeEndElement();
-  out.writeEndDocument();
-  return EXIT_SUCCESS;
 }
 } // namespace Ga

@@ -295,11 +295,13 @@ void Analysis::start()
 void Analysis::ready()
 {
   if (error()) {
+    qDebug("Analysis::ready: aborted");
     emit message("Analysis aborted");
   }
   else {
     if (!noMap_)
       prepareResultImage();
+    qDebug("Analysis::ready: finished");
     emit message("Analysis finished");
 
   }

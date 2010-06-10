@@ -40,9 +40,10 @@ void Project::read(QString filename)
 
   QFile fp(filename);
   if (!fp.open(QIODevice::ReadOnly)) {
-    qDebug("GeoImageList::read(%s): file not found",
+    qDebug("Project::read(%s): file not found",
 	   filename.toLatin1().constData());
-    throw FileIOException(FileIOException::FILE_NOT_EXISTS, filename);
+    throw FileIOException(FileIOException::FILE_NOT_EXISTS, filename,
+			  __FILE__"Project::read",__LINE__);
   }
   read(fp);
   fp.close();
@@ -135,14 +136,14 @@ void Project::read(MLParser& parser)
 	      try {
 		mapImage_->load();
 	      }
-	      catch (FileIOException err) {
+	      catch (const FileIOException& err) {
 		delete mapImage_;
 		mapImage_=0;
 	      }
 	    }
 	  }
         }
-	catch (FileIOException err) {; }
+	catch (const FileIOException& err) {; }
         delete args;
       }
       break;
@@ -163,7 +164,7 @@ SemanticNet& Project::semanticNet()
 
 void Project::analyze()
 {
-  if (!analysis_) delete analysis_;
+  if (analysis_) delete analysis_;
   analysis_=new Analysis(&semanticNet_,&geoImageList_,&labelImageList_);
   connect(analysis_,SIGNAL(sigFinished()),this,SLOT(analysisFinished()));
   analysisRunning_=true;
@@ -184,7 +185,9 @@ void Project::saveResults()
   instanceNet_.write();
   QFileInfo finfo(instanceNet_.filename());
   finfo.setFile(finfo.dir().dirName(),finfo.baseName()+".map");
-  if (!mapImage_) throw GeneralException(QObject::tr("Map doesn't exists!"));
+  if (!mapImage_) 
+    throw GeneralException(QObject::tr("Map doesn't exists!"), 
+			   __FILE__":Project::saveResults", __LINE__);
   mapImage_->replace("file",finfo.filePath());
   mapImage_->write();
 }

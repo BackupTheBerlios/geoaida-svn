@@ -190,6 +190,7 @@ QString CleanUp::getTmpDirPID()
     qDebug("Creating tmpdir %s", tmpdir.path().toLatin1().constData());
     tmpdir.mkdir(tmpdir.path());
   }
+  qDebug("CleanUp::getTmpDirPID: %s",dir.toLatin1().constData());
   return dir;
 }
 
@@ -202,10 +203,12 @@ unsigned int CleanUp::getPID()
 QString CleanUp::mkdir(QString absDir, QString relDir)
 {
   QDir dir(absDir);
+  qDebug("CleanUp::mkdir: absDir=%s",absDir.toLatin1().constData());
   if (!dir.exists()) return "";
   dir.mkpath(relDir); //! throw exception
-  dir.setPath(relDir);  //! throw exception
-  return dir.path();
+  dir.cd(relDir);  //! throw exception
+  qDebug("CleanUp::mkdir: path=%s",dir.absolutePath().toLatin1().constData());
+  return dir.absolutePath();
 
 }
 

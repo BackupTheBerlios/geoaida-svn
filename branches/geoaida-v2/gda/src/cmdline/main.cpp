@@ -21,32 +21,51 @@
 #include <iostream>
 #include <getopt.h>
 #include "Project"
+#include <unistd.h>
+#include "GeneralException"
 
 using namespace std;
 
 void Usage(const char* prgname)
 {
   std::cout << "Usage:" << endl;
-  std::cout << "  " << prgname << " <project-file>" << endl;
+  std::cout << "  " << prgname << " -p <project-file>" << endl;
   
 }
 
 int main(int argc, char **argv)
 {
-  if (argc<=1) {
-    Usage(argv[0]);
-    return(1);
+  try {
+    if (argc<=1) {
+      Usage(argv[0]);
+      return(1);
+    }
+    QCoreApplication app(argc, argv);
+    int opt;
+    const char *filename=0;
+    while ((opt = getopt(argc, argv, "bmp:")) != -1) {
+      switch (opt) {
+      case 'm':
+	break;
+      case 'b':
+	break;
+      case 'p':
+	filename=optarg;
+      }
+    }
+    //  Q_INIT_RESOURCE(gda);
+    cleanUp_.prefix(PRGDIR);
+    QDir d(PRGDIR);
+    d.cd("share/data/operators");
+    operatorList_.readDir(d.path());	
+    Project project;
+    project.read(filename);
+    project.analyze();
+    project.saveResults();
+    return 0;
   }
-  QCoreApplication app(argc, argv);
-  //  Q_INIT_RESOURCE(gda);
-  cleanUp_.prefix(PRGDIR);
-  QDir d(PRGDIR);
-  d.cd("share/data/operators");
-  operatorList_.readDir(d.path());	
-  Project project;
-  project.read(argv[1]);
-  project.analyze();
-  project.saveResults();
-  return 0;
-
+  catch  (const BaseException& e) {
+    qCritical(("\033[0;31m"+e.what()+"\n"+e.debug()+"\33[0;22m").toLatin1().constData());
+    return 1;
+  }
 }

@@ -37,12 +37,18 @@
 #ifndef GAREGIONSPLITTER
 #define GAREGIONSPLITTER
 
-#include <cstdlib>
+
+
 #include <QList>
+
+#include <cstdlib>
 #include <limits>
 
 #include <gaimage.h>
 #include <garegionsplittert.h>
+
+class QXmlStreamWriter;
+
 namespace Ga{
 
 /* For Ga::Image specified Region Description 
@@ -146,6 +152,7 @@ namespace Ga{
                                      int minsize=0, int maxsize=INT_MAX);
     
     int regionsToFile(QString filename, QList<RegDesc>& reglist);
+    int regionsToFile(QXmlStreamWriter& out, QList<RegDesc>& reglist);
 }
 
 #endif

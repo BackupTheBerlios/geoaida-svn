@@ -174,7 +174,8 @@ void GeoImage::load()
     qDebug("#  (ERROR)GeoImage::load(%s) Can't open file for reading!",
            fname.toLatin1().constData());
 
-    throw FileIOException(FileIOException::FILE_NOT_EXISTS, fname);
+    throw FileIOException(FileIOException::FILE_NOT_EXISTS, fname, 
+			  __FILE__":GeoImage::load", __LINE__);
   }
   int pxmtype;
   xelval max_x;
@@ -250,6 +251,8 @@ const void *GeoImage::data()
   if (!fp) {
     qDebug("#  (ERROR)GeoImage::load(%s) Can't open file for reading!",
            fname.toLatin1().constData());
+    throw FileIOException(FileIOException::FILE_NOT_EXISTS, fname, 
+			  __FILE__":GeoImage::data", __LINE__);
     return 0;
   }
   int cols, rows;
@@ -360,9 +363,8 @@ QString GeoImage::filename()
   * if the file exist do nothing
   * argument fname is optional
   * the coordinates of the image part are geodata e.g. Gauss Krueger **/
-QString
-  GeoImage::part(float west, float north, float east, float south,
-                 QString fname)
+QString GeoImage::part(float west, float north, float east, float south,
+		       QString fname)
 {
   if (fname.isEmpty()) {        //create output filname
     Q_ASSERT(contains("key"));
@@ -390,12 +392,14 @@ QString
   if (dx <= 0 || dy <= 0) {
     qDebug("#  (ERROR) GeoImage::part: (dx=%d=%d-%d || dy=%d=%d-%d)", dx, rx2,
            rx1, dy, ry2, ry1);
-    throw ImageException(ImageException::Dimension,rx1,rx2,dx,ry1,ry2,dy); 
+    throw ImageException(ImageException::Dimension,rx1,rx2,dx,ry1,ry2,dy, 
+			 __FILE__":GeoImage::part", __LINE__); 
   }
 
   FILE *of = fopen(fname.toLatin1().constData(), "w");
   if (!of) {
-    throw FileIOException(FileIOException::OPEN_FAILED,fname);
+    throw FileIOException(FileIOException::OPEN_FAILED,fname, 
+			  __FILE__":GeoImage::part", __LINE__);
   }
 
   switch (type_) {
@@ -475,9 +479,10 @@ void GeoImage::write()
   default:{
     FILE *of = fopen(fname.toLatin1().constData(), "w");
     if (!of) {
-      fprintf(stderr,
-	      "GeoImage::write: (ERROR) Can't open file %s for writing!\n",
+      qWarning("GeoImage::write: (ERROR) Can't open file %s for writing!\n",
 	      fname.toLatin1().constData());
+      throw FileIOException(FileIOException::OPEN_FAILED, fname, 
+			    __FILE__":GeoImage::write", __LINE__);
       return;
     }
     pfm_geo_set(geoWest(),geoNorth(),geoEast(),geoSouth());
@@ -590,29 +595,36 @@ QString GeoImage::mask(float west, float north, float east, float south,
     fname.sprintf("%s/%f_%f_%f_%f.pbm", 
 		  dir.toLatin1().constData(),
                   west, north, east, south);
+    qDebug("GeoImage::mask: create output filename %s",fname.toLatin1().constData());
   }
   qDebug("#  GeoImage::mask %s (%f, %f, %f, %f)", fname.toLatin1().constData(),
          west, north, east, south);
   QFile f(fname);
-  if (f.exists())
+  if (f.exists()) {
+    qDebug("mask %s already exists",fname.toLatin1().constData());
     return fname;
+  }  
 
   const void *data_p = data();        //get pointer to data
   Q_ASSERT(data_p);
   if (type_ == UNKNOWN)
-    return 0;
+    throw ImageException(ImageException::UnknownType,  filename(),
+			 __FILE__":GeoImage::mask", __LINE__);
   int dx, dy, rx1, ry1, rx2, ry2;
   picBBox(west, north, east, south, rx1, ry2, rx2, ry1);
+  qDebug("GeoImage::mask: picBBox: (%f, %f, %f, %f) (rx1=%d, ry2=%d, rx2=%d, ry1=%d",
+	 west, north, east, south, rx1, ry2, rx2, ry1);
   dx = rx2 - rx1 + 1;
   dy = ry2 - ry1 + 1;
-  if (dx <= 0 || dy <= 0)
-    qDebug("#  (ERROR) GeoImage::part: (dx=%d=%d-%d || dy=%d=%d-%d)", dx, rx2,
-           rx1, dy, ry2, ry1);
+  if (dx <= 0 || dy <= 0) {
+    throw ImageException(ImageException::Dimension, rx1, rx2, dx, ry1, ry2, dy, 
+			 __FILE__":GeoImage::mask", __LINE__);
+  }
 
   FILE *of = fopen(fname.toLatin1().constData(), "w");
   if (!of) {
-    fprintf(stderr, "#  (ERROR) Can't open file %s for writing!\n",
-            fname.toLatin1().constData());
+    throw FileIOException(FileIOException::OPEN_FAILED, fname, 
+			  __FILE__":GeoImage::mask", __LINE__);
     return "";
   }
 

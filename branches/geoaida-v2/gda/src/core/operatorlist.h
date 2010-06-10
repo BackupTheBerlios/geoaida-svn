@@ -46,7 +46,7 @@ public:
   /** Read the operatorlist from the provided filename */
   void read(QString filename);
   /** Read the operatorlist from the provided filepointer */
-  void read(QIODevice & fp);
+  void read(QIODevice & fp, QString filename="");
   /** Returns a list of the keys contained in this dictionary */
   const QStringList& keys(QString type) const;
 protected:                     // Protected attributes

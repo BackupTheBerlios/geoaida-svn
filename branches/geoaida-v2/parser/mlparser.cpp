@@ -25,12 +25,27 @@
 
 #include "mlparser.h"
 #include <QTextStream>
-
-//#include <ctype.h>
-//#include <qstringlist.h>
 #include <QRegExp>
 
-#define DEBUGMSG
+
+//#define DEBUGMSG
+
+ParserException::ParserException(QString errorMessage, 
+				 QString filename, int line, int column, 
+				 const char* sourcefile, int sourceline)
+  : BaseException(sourcefile,sourceline),
+    message_(errorMessage),filename_(filename),line_(line),column_(column)
+{
+}
+
+QString ParserException::what() const
+{
+  return QObject::tr("%1 in %2 line %3 column %4")
+    .arg(message_)
+    .arg(filename_)
+    .arg(line_)
+    .arg(column_);
+}
 
 QXmlStreamWriter& ArgDict::write(QXmlStreamWriter& fp) const
 {
@@ -77,8 +92,15 @@ void ArgDict::replace(QString name, QString val) {
   insert(name.toLower(),val);
 }
 
-void ArgDict::replace(QString name, bool val) {
+void  ArgDict::replace(QString name, bool val) {
   insert(name.toLower(),val);
+}
+bool ArgDict::contains(QString key) {
+  return QHash<QString,QString>::contains(key.toLower()); 
+}
+
+QString ArgDict::value(QString key) {
+  return QHash<QString,QString>::value(key.toLower()); 
 }
 
 QXmlStreamWriter& operator<<(QXmlStreamWriter& fp, ArgDict& argDict)
@@ -127,13 +149,27 @@ MLTagTable::~MLTagTable()
 /*****************************************************************
 CLASS: MLParser
 *****************************************************************/
-MLParser::MLParser(QIODevice *fp) : QXmlStreamReader(fp)
+MLParser::MLParser(QIODevice *fp) 
+  : QXmlStreamReader(fp), filename_("<not set>")
 {
   //  this->setCodec("ISO 8859-1");
 }
 
 MLParser::~MLParser()
 {
+}
+
+
+/*!
+ * \brief set the filename to get more information in case of parsing errors
+ *
+ * 
+ *
+ * \param filename - filename
+ */
+void MLParser::setFilename(QString filename)
+{
+  filename_=filename;
 }
 
 int MLParser::tag(const MLTagTable &tagtable)
@@ -146,7 +182,8 @@ int MLParser::tag(const MLTagTable &tagtable)
     tag=tagtable[lasttag_];
     switch (token) {
     case Invalid:
-      qWarning("MLParser::tag: invalid token in line %d at column %d",lineNumber(),columnNumber());
+      throw ParserException(errorString(),filename_,lineNumber(),columnNumber(),
+			    __FILE__":MLParser::tag",__LINE__);
       break;
     case StartDocument:
     case EndDocument:

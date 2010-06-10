@@ -139,7 +139,7 @@ bool processRegion(ArgDict & args, GaMaskImage & mask, int mask_x, int mask_y,
   QString labelFileName;
   MLParser::setString(labelFileName, &args, "file");
   if (labelFileName.isEmpty())
-    return true;                // no label file given
+    return false;                // no label file given => discard this region
   LabelImage *labelImage =
     readLabelFile(labelFileName, mask, mask_x, mask_y, mask_size_x,
                   mask_size_y);
@@ -251,9 +251,10 @@ QList<ArgDict*>* readRegionFile(const char* filename)
   QList < ArgDict* > *regionList=new QList < ArgDict* >();
   //!  regionList->setAutoDelete(true);
   MLParser parser(&rfp);
-  QString keywords[] = { "region", "" };
+  QString keywords[] = { "region", "regionlist", "" };
   const MLTagTable nodeTagTable(keywords);
   const int TOK_REGION = 1;
+  const int TOK_REGIONLIST = 2;
   int tag;
   do {
     tag = parser.tag(nodeTagTable);
@@ -268,13 +269,14 @@ QList<ArgDict*>* readRegionFile(const char* filename)
       break;
     case MLParser::END_OF_FILE:
       break;
-    default:{
-        args = parser.args();
-        delete args;
-        qDebug("Unknown keyword %s in line %d", parser.lasttagstr().toLatin1().constData(),
-               parser.lineNumber());
-        break;
-      }
+    default:
+      qDebug("Unknown keyword %s in line %d", parser.lasttagstr().toLatin1().constData(),
+	     parser.lineNumber());
+    case TOK_REGIONLIST: // ignore this keyword without warning
+    case -TOK_REGIONLIST: // ignore this keyword without warning
+      args = parser.args();
+      delete args;
+      break;
     }
   } while (tag != MLParser::END_OF_FILE);
   rfp.close();
@@ -359,24 +361,25 @@ int DoIt(const char* outFile, const char* regFile, const char* maskFile, const c
     fprintf(stderr, "cannot open regionfile %s for writing\n", outFile);
     return 1;
   }
+
+  QXmlStreamWriter ts(&rfp);
+  ts.setAutoFormatting(true);
+  ts.writeStartDocument();
+  ts.writeStartElement("regionlist");
   if (regionList.count()>0) {
     
-    QXmlStreamWriter ts(&rfp);
-    ts.setAutoFormatting(true);
-    ts.writeStartDocument();
-    ts.writeStartElement("regionlist");
     for (QList<ArgDict*>::Iterator it=regionList.begin(); 
 	 it!=regionList.end();
 	 ++it) {
       ArgDict *argDict = *it;
       assert(argDict);
       
-      ts.writeEmptyElement("<region ");
+      ts.writeEmptyElement("region ");
       ts << (*argDict);
     }
-    ts.writeEndElement();
-    ts.writeEndDocument();
   }
+  ts.writeEndElement();
+  ts.writeEndDocument();
   rfp.close();
   //!  labelImageDict.setAutoDelete(true);
   for (QHash<QString,LabelImage*>::Iterator it=labelImageDict.begin();

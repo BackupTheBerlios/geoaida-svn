@@ -62,21 +62,23 @@ OperatorList::read(QString filename)
   qDebug("OperatorList::read(%s)", filename.toLatin1().constData());
   if (!fp.open(QIODevice::ReadOnly)) {
     qDebug("OperatorList::read(%s): file not found\n", filename.toLatin1().constData());
-    throw FileIOException(FileIOException::FILE_NOT_EXISTS,filename);
+    throw FileIOException(FileIOException::FILE_NOT_EXISTS,filename, 
+			  __FILE__":OperatorList::read", __LINE__);
   }
-  read(fp);
+  read(fp, filename);
   fp.close();
 
 }
 
 /** read the operatorlist from the provided filepointer */
 void
-OperatorList::read(QIODevice & fp)
+OperatorList::read(QIODevice & fp, QString filename)
 {
   QString keywords[] = { "operator", "" };
   const MLTagTable nodeTagTable(keywords);
   const int TOK_OPERATOR = 1;
   MLParser parser(&fp);
+  parser.setFilename(filename);
   int tag;
   do {
     tag = parser.tag(nodeTagTable);

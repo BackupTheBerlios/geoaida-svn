@@ -29,6 +29,22 @@
 #include <QHash>
 #include <QXmlStreamReader>
 #include <QXmlStreamWriter>
+#include <BaseException>
+
+class ParserException : public BaseException
+{
+ public:
+  ParserException(QString errorMessage, 
+		  QString filename, int line, int column, 
+		  const char* sourcefile=0, int sourceline=0);
+  QString what() const;
+  const char* classname() const { return "ParserException"; }
+ private:
+  QString message_;
+  QString filename_;
+  int line_;
+  int column_;
+};
 
 class ArgDict : public QHash<QString,QString> {
  public:
@@ -62,6 +78,8 @@ class ArgDict : public QHash<QString,QString> {
   void replace(QString name, double val);
   void replace(QString name, QString val);
   void replace(QString name, bool val);
+  bool contains(QString key);
+  QString value(QString key);
 };
 
 typedef ArgDict::Iterator ArgDictIterator;
@@ -81,6 +99,7 @@ class MLParser : public QXmlStreamReader {
  public:
   MLParser(QIODevice *fp);
   ~MLParser();
+  void setFilename(QString filename);
   int tag(const MLTagTable &tagtable);
   ArgDict *args(ArgDict *argdict=0, bool inserMode=true);
   QString lasttagstr();
@@ -108,6 +127,7 @@ class MLParser : public QXmlStreamReader {
   static void setBitMask(int &var, ArgDict *dict, 
 			QString name, QString *options, int *optionvals=0);
  private:
+  QString filename_;
   QHash<QString,QString> stringStorage_;
   QHash<QString,void*> voidStorage_;
   QString lasttag_;

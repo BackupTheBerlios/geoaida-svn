@@ -18,41 +18,31 @@
 #define EXCEPTION_H
 
 #include <QString>
+#include "BaseException"
 
-class Exception
-{
- public:
-  virtual QString what() const;
-};
-
-class GeneralException : public Exception
-{
- public:
-  GeneralException(QString errorMessage);
-  QString what() const;
- private:
-  QString message_;
-};
-
-class FileIOException : public Exception
+class FileIOException : public BaseException
 {
  public:
   enum ExceptionType { FILE_NOT_EXISTS, OPEN_FAILED };
-  FileIOException(ExceptionType type, QString filename);
+  FileIOException(ExceptionType type, QString filename, 
+		  const char* sourcefile=0, int sourceline=0);
   QString what() const;
+  const char* classname() const { return "FileIOException"; }
  private:
   ExceptionType type_;
   QString filename_;
 };
 
-class ImageException : public Exception
+class ImageException : public BaseException
 {
  public:
-  enum ExceptionType {
-    Dimension
-  };
-  ImageException(ExceptionType type, int x1, int x2, int dx, int y1, int y2, int dy);
+  enum ExceptionType { Dimension, UnknownType };
+  ImageException(ExceptionType type, int x1, int x2, int dx, int y1, int y2, int dy, 
+		 const char* sourcefile=0, int sourceline=0);
+  ImageException(ExceptionType type, QString filename,
+		 const char* sourcefile=0, int sourceline=0);
   QString what() const;
+  const char* classname() const { return "ImageException"; }
  private:
   ExceptionType type_;
   int x1_;
@@ -61,16 +51,31 @@ class ImageException : public Exception
   int y1_;
   int y2_;
   int dy_;
+  QString filename_;
 };
 
-class NodeException : public Exception
+class NodeException : public BaseException
 {
  public:
-  enum ExceptionType { ALLOC_FAILED };
-  NodeException(ExceptionType type);
+  enum ExceptionType { ALLOC_FAILED, NOT_FOUND };
+  NodeException(ExceptionType type, 
+		const char* sourcefile=0, int sourceline=0);
   QString what() const;
+  const char* classname() const { return "NodeException"; }
  private:
   ExceptionType type_;
+};
+
+class ProcessException : public BaseException
+{
+ public:
+  ProcessException(int error, QString cmd,
+		   const char* sourcefile=0, int sourceline=0);
+  QString what() const;
+  const char* classname() const { return "NodeException"; }
+ private:
+  int error_;
+  QString cmd_;
 };
 
 #endif

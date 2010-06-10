@@ -61,7 +61,7 @@ public:
   /** Link a sNode to this iNode. */
   bool linkSNode(SNode * parent);
   /** This method is called, when a task is finished for this inode */
-  void taskFinished(int pid, int status);
+  void taskFinished(int pid, int status, QString cmd);
   /** Sets the SNode this INode is type of */
   void sNode(SNode * node);
   /** returns the corresponding SNode */

@@ -61,7 +61,8 @@ bool Stack::numfkt(double f(double, double))
         printf("<<< >>> %f * %f = %f\n", nd, d, f(nd, d));
 #endif //DEBUGMSG
       }
-      push(new StackElementNodeList(nl));
+      push(el2);
+      el2=0;
       throw CleanUp(true);
     }
     else if (el1->type() == StackElement::NODELIST && el2->type() == StackElement::NODELIST) {        // 2 lists
@@ -93,7 +94,8 @@ bool Stack::numfkt(double f(double, double))
 #endif //DEBUGMSG
 	}
       }
-      push(new StackElementNodeList(nl2));
+      push(el2);
+      el2=0;
       throw CleanUp(true);
     }
     else if (el1->type() == StackElement::NUMBER && el2->type() == StackElement::NUMBER) {    //value + value
@@ -247,7 +249,8 @@ bool Stack::lofkt(bool f(double, double), bool sf(QString, QString))
       cout << "SIZE nl (lofkt nu-no): " << nl.size() << endl;
       //nl.info();
 #endif //DEBUGMSG
-      push(new StackElementNodeList(nl));
+      push(el2);
+      el2=0;
       throw CleanUp(true);
     }
     else if (el1->type() == StackElement::NODELIST && el2->type() == StackElement::NODELIST) {        //value + list
@@ -282,7 +285,8 @@ bool Stack::lofkt(bool f(double, double), bool sf(QString, QString))
 	}
       }
 
-      push(new StackElementNodeList(nl2));
+      push(el2);
+      el2=0;
       throw CleanUp(true);
     }
     else if (el1->type() == StackElement::NUMBER && el2->type() == StackElement::NUMBER) {    //value + value
@@ -632,7 +636,7 @@ Stack & Stack::copy(const Stack & stack)
 {
   if (this != &stack) {
     clear();
-    for (Iterator it=begin(); it!=end(); ++it) {
+    for (ConstIterator it=stack.begin(); it!=stack.end(); ++it) {
       push((*it)->copy());
     }
   }
@@ -1258,7 +1262,8 @@ bool Stack::nlSet()
       nl.set(attribName, val);
       delete nse;
 //          nl.stackPush(nse);
-      push(new StackElementNodeList(nl));
+      push(el2);
+      el2=0;
       throw CleanUp(true);
     }
     else
@@ -1626,7 +1631,8 @@ bool Stack::nlPush()
     if (el2->type() == StackElement::NODELIST) {   //value + list
       NodeList & nl = ((StackElementNodeList *) el2)->data();      //liste holen
       nl.stackPush(el1);
-      push(new StackElementNodeList(nl));
+      push(el2);
+      el2=0;
       throw CleanUp(true);
     }
     else
@@ -1650,7 +1656,8 @@ bool Stack::nlPop()
     if (el1->type() == StackElement::NODELIST) {   //value + list
       NodeList & nl = ((StackElementNodeList *) el1)->data();      //liste holen
       StackElement *el = nl.stackPop();
-      push(new StackElementNodeList(nl));
+      push(el1);
+      el1=0;
       push(el);
       throw CleanUp(true);
     }
@@ -1917,14 +1924,15 @@ bool Stack::nl_sum()
     el1 = pop();                //von stack holen
     if (el1->type() == StackElement::NODELIST) {   //list
       NodeList & nl = ((StackElementNodeList *) el1)->data();      //liste holen
-      NodeList *selected = new NodeList;        // new nodelist for result
+      StackElementNodeList* new_el=new StackElementNodeList();
+      NodeList& selected = new_el->data();        // new nodelist for result
       float sum = 0.0, val = 0.0;
       int count = 0;
       for (NodeList::Iterator it=nl.begin();
 	   it!=nl.end();
 	   ++it) {  
         Node *node = it.value();      //nl.find(*it);
-        selected->insert(it.key(), node);
+        selected.insert(it.key(), node);
         if (node->stackCount() < 1)
           throw CleanUp(false); //sind noch genug da?
         el2 = node->stackPop();
@@ -1938,8 +1946,8 @@ bool Stack::nl_sum()
       cout << "sum= " << sum << endl;
 #endif //DEBUGMSG
 
-      selected->stackPush(new StackElementNumber(sum));    //       sum to nodelist stack
-      push(new StackElementNodeList(*selected));
+      selected.stackPush(new StackElementNumber(sum));    //       sum to nodelist stack
+      push(new_el);
       throw CleanUp(true);
     }
     else
@@ -2032,37 +2040,21 @@ bool Stack::nl_count()
   StackElement *el1 = 0;
   try {
     if (count() < 1)
-      throw CleanUp(false);     //sind noch genug da?
-    el1 = pop();                //von stack holen
-    if (el1->type() == StackElement::NODELIST) {   // 1 lists
-      NodeList & nl1 = ((StackElementNodeList *) el1)->data();     //       liste 1 holen
-      NodeList *selected = new NodeList;        // new nodelist for result
-      //       values from nodelists
-      int sum = 0;
-
-      for (NodeList::Iterator it=nl1.begin();
-	   it!=nl1.end();
-	   ++it) {  
-        Node *node = it.value();
-        selected->insert(it.key(), node);
-        sum++;
-      }
-
-      selected->stackPush(new StackElementNumber(sum));
+      throw CleanUp(false);     
+    el1 = top();                
+    if (el1->type() == StackElement::NODELIST) {   
+      NodeList & nl = ((StackElementNodeList *) el1)->data();     
+      nl.stackPush(new StackElementNumber(nl.count()));
 
 #ifdef DEBUGMSG
-      cout << "in nl_count: Anzahl=" << sum << endl;
+      cout << "in nl_count: Anzahl=" << nl.count() << endl;
 #endif
-
-      push(new StackElementNodeList(*selected));
       throw CleanUp(true);
     }
     else
       throw CleanUp(false);
   }
   catch(CleanUp e) {
-    if (el1)
-      delete el1;
     return e.status_;
   }
 }

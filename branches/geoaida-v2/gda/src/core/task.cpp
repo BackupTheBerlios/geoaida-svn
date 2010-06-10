@@ -345,7 +345,7 @@ void Task::check()
     INode *iNode = p->node_;
     job_.remove(p->jid_);
     if (iNode)
-      iNode->taskFinished(p->pid_, p->status_);
+      iNode->taskFinished(p->pid_, p->status_, p->cmd_);
     delete p;
   }
 #ifdef WIN32
@@ -456,7 +456,7 @@ void Task::check()
 #ifdef DEBUG_MSG
     	//cout << "Task::check: STATUS DO PROCESSO %d = %d " << p->pid_ << p->status_ << endl;
 #endif
-      iNode->taskFinished(p->pid_, p->status_);
+      iNode->taskFinished(p->pid_, p->status_, p->cmd_);
     }
     emit processFinished(p->guiPtr_);
     delete p;

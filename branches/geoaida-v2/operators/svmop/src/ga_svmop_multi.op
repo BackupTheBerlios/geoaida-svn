@@ -1,10 +1,10 @@
-<operator type=topdown class=gis name=SVMOpMulti
-  cmd="ga_td_svmop_multi @class@ @VEC_TYPE@ @LIST_OB_CLASSES@ @LIST_SUB_CLASSES@ @shape_dir@ @context_region@ @context_type@ @mask_file@ @geoWest@ @geoNorth@ @geoEast@ @geoSouth@ @label_res@ @output@">
-  <attribute name=VEC_TYPE type=enum tip="Semantischer Katalog" options="ATKIS, MGCP" value="ATKIS" >
-  <attribute name=LIST_OB_CLASSES type=string tip="Objektarten, die eingelesen werden sollen" value="\"4101 4102\"">
-  <attribute name=LIST_SUB_CLASSES type=string tip="Objektart durch Attribut in Unterklassen aufteilen" value="\"off off\"">
-  <attribute name=shape_dir type=string tip="Ordner mit shapefiles">
-  <attribute name=context_region type=bool tip="Alle Einzelregionen zu einer Kontextregion verschmelzen" on="1" off="0">
-  <attribute name=context_type type=enum tip="Typ der Kontextregion" options="0,1,4,5" value="0">
-  <attribute name=label_res type=string tip="Auflösung des Labelbildes in m/pel" value="1">
+<?xml version="1.0" encoding="UTF-8"?>
+<operator type="topdown" class="gis" name="SVMOpMulti" cmd="ga_td_svmop_multi @class@ @VEC_TYPE@ @LIST_OB_CLASSES@ @LIST_SUB_CLASSES@ @shape_dir@ @context_region@ @context_type@ @mask_file@ @geoWest@ @geoNorth@ @geoEast@ @geoSouth@ @label_res@ @output@">
+  <attribute name="VEC_TYPE" type="enum" tip="Semantischer Katalog" options="ATKIS, MGCP" value="ATKIS" />
+  <attribute name="LIST_OB_CLASSES" type="string" tip="Objektarten, die eingelesen werden sollen" value="&quot;4101 4102&quot;" />
+  <attribute name="LIST_SUB_CLASSES" type="string" tip="Objektart durch Attribut in Unterklassen aufteilen" value="&quot;off off&quot;" />
+  <attribute name="shape_dir" type="string" tip="Ordner mit shapefiles" />
+  <attribute name="context_region" type="bool" tip="Alle Einzelregionen zu einer Kontextregion verschmelzen" on="1" off="0" />
+  <attribute name="context_type" type="enum" tip="Typ der Kontextregion" options="0,1,4,5" value="0" />
+  <attribute name="label_res" type="string" tip="AuflÃ¶sung des Labelbildes in m/pel" value="1"/>
 </operator>

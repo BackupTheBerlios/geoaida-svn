@@ -4,6 +4,7 @@ ADD_DEFINITIONS(${QT_DEFINITIONS})
 
 ADD_DEFINITIONS(-DTMPDIR=\"${CMAKE_INSTALL_PREFIX}/tmp\")
 ADD_DEFINITIONS(-DDEBUG_MSG)
+#ADD_DEFINITIONS(-DQT_NO_DEBUG_OUTPUT)
 
 INCLUDE_DIRECTORIES(.
         ${CMAKE_SOURCE_DIR}/3rdparty/netpbm/include
@@ -11,6 +12,7 @@ INCLUDE_DIRECTORIES(.
 	${CMAKE_SOURCE_DIR}/parser
 #	${CMAKE_BINARY_DIR}
         ${QT_INCLUDES}
+	${CMAKE_SOURCE_DIR}/logging/include
 )
 
 
@@ -38,7 +40,6 @@ SET(headers
             task.h)
 
 SET(classheaders 
-    Exception
     FileIOException
     ImageException
     NodeException
