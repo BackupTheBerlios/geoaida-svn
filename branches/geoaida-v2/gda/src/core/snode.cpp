@@ -1210,6 +1210,7 @@ QList < INode* > &SNode::evalBottomUp(INode * iNode)
     case TOK_NODE:
       {
         QString s = attribList->value("addr");
+	//! New nodes can't be created by bottom up operator? MP:2010-07-02
         if (s.isEmpty())
           break;
         node = 0;

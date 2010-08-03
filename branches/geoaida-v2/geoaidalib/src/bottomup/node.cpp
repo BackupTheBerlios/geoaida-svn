@@ -60,38 +60,32 @@ QString Node::getValue(const QString key) {
 /** set label id */
 void Node::id(int l) {
   id_ = l;
-  QString *s = new QString;
-  s->setNum(l);
-  replace("id",s);
+  replace("id",id_);
 }
 
 /** set label weighing */
 void Node::p(float f) {
-  QString *s = new QString;
-  s->setNum(f);
-  replace("p",s);
+  replace("p",f);
 }
 
 #if 0
 /** set data typ */
 void Node::dataTyp(int t) {
   type_ = (IMGTYPE)t;
-  QString *s = new QString;
-  s->setNum(type_);
-  replace("type",s);
+  replace("type",type_);
 }
 #endif
 
 /** set the image filename */
 void Node::filename(QString fn) {
   filename_ = fn;	
-  replace("file",&filename_);
+  replace("file",filename_);
 }
 
 /** set class name*/
 void Node::classname(QString str) {
   class_ = str;
-  replace("class",&class_);
+  replace("class",class_);
 }
 
 /** set  geoNorth*/
@@ -165,6 +159,9 @@ void Node::update()
   MLParser::setString(filename_,this,"file");
   MLParser::setString(name_,this,"name");
   MLParser::setString(class_,this,"class");
+  qDebug("Node::update: class=%s / %s",
+	 value("class").toLatin1().constData(),
+	 class_.toLatin1().constData());
   if (addr_.isEmpty()) key_=QString().sprintf("%04d",id_);
   else key_=addr_;
 }
@@ -311,7 +308,7 @@ QString Node::part(float north, float south, float west, float east, QString fna
   }
 
   if (type_ <= PFM_UINT16) {
-    pfm_writepfm_node_type(of, data_, cols_, rows_, minval_, maxval_,
+    pfm_writepfm_region_type(of, data_, cols_, rows_, minval_, maxval_,
         rx1, ry1, rx2, ry2, type_);
     return fname;
   } else if (type_ == PBM) {
@@ -403,7 +400,8 @@ int Node::geo2pic(float x, float y, int *rx, int *ry) {
 /** write data to file */
 void Node::write(QXmlStreamWriter& fp, QString keyword) {
   fp.writeEmptyElement(keyword);
-  if (keyword=="node") {
+  if (keyword=="region") {
+    //!MP 2010-07-02: Sombody should explain this
     for (Node::iterator it=begin();it!=end(); ++it) {
       if (! it.key().contains("file_geo", Qt::CaseInsensitive)) 
 	fp.writeAttribute(it.key(),it.value());

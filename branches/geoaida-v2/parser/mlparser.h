@@ -50,14 +50,9 @@ class ArgDict : public QHash<QString,QString> {
  public:
   ArgDict() 
     : QHash<QString,QString>(){}
+  ArgDict(const ArgDict& dict);
+  ArgDict& operator=(const ArgDict& dict);
 #if 0
-  ArgDict(const ArgDict& dict) 
-    : QHash<QString,QString>(dict) {
-    //    copy(dict);
-  }
-  ArgDict& operator=(const ArgDict& dict) {
-    return copy(dict);
-  }
   ArgDict& copy(const ArgDict& dict) {
     *this=dict;
     //    if (this!=&dict) {
@@ -80,6 +75,7 @@ class ArgDict : public QHash<QString,QString> {
   void replace(QString name, bool val);
   bool contains(QString key);
   QString value(QString key);
+  void debug();
 };
 
 typedef ArgDict::Iterator ArgDictIterator;

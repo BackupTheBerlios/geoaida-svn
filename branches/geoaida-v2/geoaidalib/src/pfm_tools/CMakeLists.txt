@@ -4,7 +4,7 @@ add_definitions(${QT_DEFINITIONS})
 
 include_directories(.
         ${CMAKE_SOURCE_DIR}/pfm/libpfm
-        ${CMAKE_SOURCE_DIR}/ga_image/src/gaimage
+        ${CMAKE_SOURCE_DIR}/ga_image-compatible/src/gaimage
         ${QT_INCLUDES}
 	)
 

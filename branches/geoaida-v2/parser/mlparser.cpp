@@ -47,6 +47,17 @@ QString ParserException::what() const
     .arg(column_);
 }
 
+
+ArgDict::ArgDict(const ArgDict& dict) 
+    : QHash<QString,QString>(dict) {
+  }
+
+ArgDict& ArgDict::operator=(const ArgDict& dict) 
+{
+  QHash<QString,QString>::operator=(dict);
+  return *this;
+} 
+
 QXmlStreamWriter& ArgDict::write(QXmlStreamWriter& fp) const
 {
   for (ArgDictConstIterator it=constBegin();it!=constEnd(); ++it) {
@@ -96,10 +107,12 @@ void  ArgDict::replace(QString name, bool val) {
   insert(name.toLower(),val);
 }
 bool ArgDict::contains(QString key) {
+  //  qDebug("ArgDict::contains: %s",key.toLatin1().constData());
   return QHash<QString,QString>::contains(key.toLower()); 
 }
 
 QString ArgDict::value(QString key) {
+  //  qDebug("ArgDict::value: %s",key.toLatin1().constData());
   return QHash<QString,QString>::value(key.toLower()); 
 }
 
@@ -108,6 +121,14 @@ QXmlStreamWriter& operator<<(QXmlStreamWriter& fp, ArgDict& argDict)
   return argDict.write(fp);
 }
 
+void ArgDict::debug() {
+  qDebug("ArgDict::debug()");
+  for (ConstIterator it=constBegin(); it!=constEnd(); ++it) {
+    qDebug("[%s]=\"%s\"",
+	   it.key().toLatin1().constData(),
+	   it.value().toLatin1().constData());
+  }
+}
 /*****************************************************************
 CLASS: MLTagTable
 *****************************************************************/

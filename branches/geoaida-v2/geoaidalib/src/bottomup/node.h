@@ -49,7 +49,7 @@ public:
   /** constructor read attributes for this Node through parser*/
   Node(MLParser& parser);
   
-  /** denstructor */
+  /** destructor */
   ~Node();
   
  protected: // Protected attributes
@@ -199,6 +199,9 @@ private:	 // Private attributes
   /** stack for bottom-up operator */
   Stack stack_;
   
+ private:
+  Node(const Node&);
+  Node& operator=(const Node&);
 };
 
 }  // namespace BottomUp

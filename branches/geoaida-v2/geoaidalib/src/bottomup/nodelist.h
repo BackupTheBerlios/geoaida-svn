@@ -19,6 +19,12 @@
 #ifndef NODE_LIST_H
 #define NODE_LIST_H
 
+#include "Sensor"
+#include "Relation"
+#include "Node"
+#include "Stack"
+
+
 #include <QString>
 #include <QStringList>
 #include <QPoint>
@@ -27,10 +33,6 @@
 #include <QList>
 #include <QXmlStreamWriter>
 #include <MLParser>
-#include "Sensor"
-#include "Relation"
-#include "Node"
-#include "Stack"
 
 #ifdef GAIMAGE_COMPAT
 #include "gaimage.h"
@@ -143,7 +145,11 @@ public:
   void writeGroupImage(QString filename);
   /** copy the nodes in this nodelist into the group image */
   void genGroupImage();
+
+  /** Loads images from hard disk. If file has been loaded before, it is not loaded twice. */
   Ga::Image& readLabelFile(QString filename, double gW, double gN, double gE, double gS);
+  /** Registers Image for later use by readLabelFile */
+  void registerLabelFile(QString filename, Ga::Image& labelimage);
 
   /** return stack - for bottom-up */
   Stack& stack(void);
@@ -181,41 +187,7 @@ protected: // Protected attributes
   Stack stack_;
   ArgDict attribList_;
 
-  class SortElement {//help class to sort nodelist; needed by help
-  public:
-    SortElement(BottomUpLib::Node* n, float p, QString key = "") {
-      node_=n;
-      p_ = p;
-      key_ = key;
-    }
-    bool operator == (SortElement& lval){return (p_==lval.p());}
-    bool operator < (SortElement& lval){return (p_<lval.p());}
-    float p()const { return p_; }
-    void p(float p) {p_ = p;}
-    void setGeoPos(int lx, int ly, int ux, int uy) {
-      llx=lx; lly=ly; urx=ux; ury=uy;}
-    QString key(){return key_;}
-    void key(QString k){key_ = k;}
-    BottomUpLib::Node* node(){return node_;}
-    QString key_;
-    float p_;
-    BottomUpLib::Node* node_;
-    int llx, lly, urx, ury;
-    virtual bool operator<(const SortElement* rval) const {
-      return (p()<rval->p());
-    }
-  };
-  
-  //sort list of 'SortElement' objects
-  class SortPtrList : public QList<SortElement*> { 
-  public:
-  SortPtrList() : QList<SortElement*> () {};
-    ~SortPtrList() {};
-    
-  };
-  
-  };
-
+};
 } // namespace BottomUp
 
 #endif

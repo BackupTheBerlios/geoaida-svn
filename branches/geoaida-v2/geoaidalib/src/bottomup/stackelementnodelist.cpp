@@ -48,6 +48,9 @@ int StackElementNodeList::type()
 
 const char* StackElementNodeList::typeName()
 {
+  static char s[1024];
+  sprintf(s,"nodelist (count %d)",data_.count());
+  return s;
   return "nodelist";
 }
 

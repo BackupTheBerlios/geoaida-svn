@@ -22,11 +22,51 @@
 #include "gaimage.h"
 #include "garegion.h"
 
+#include <QMultiMap>
+
 using namespace std;
 using namespace Ga;
 using namespace BottomUpLib;
 
 QHash<QString, Ga::Image*> NodeList::imageDict_;
+
+class SortElement {//help class to sort nodelist; needed by help
+public:
+  SortElement(BottomUpLib::Node* n, float p, QString key = "") {
+    node_=n;
+    p_ = p;
+    key_ = key;
+  }
+  bool operator == (SortElement& lval){return (p_==lval.p());}
+  bool operator < (SortElement& lval){return (p_<lval.p());}
+  float p()const { return p_; }
+  void p(float p) {p_ = p;}
+  void setGeoPos(int lx, int ly, int ux, int uy) {
+    llx=lx; lly=ly; urx=ux; ury=uy;}
+  QString key(){return key_;}
+  void key(QString k){key_ = k;}
+  BottomUpLib::Node* node(){return node_;}
+  QString key_;
+  float p_;
+  BottomUpLib::Node* node_;
+  int llx, lly, urx, ury;
+#if 0
+  virtual bool operator<(const SortElement* rval) const {
+    return (p()<rval->p());
+  }
+#endif
+};
+
+//sort list of 'SortElement' objects
+class SortPtrList : public QList<SortElement*> { 
+public:
+  SortPtrList() : QList<SortElement*> () {};
+  ~SortPtrList() {};
+  
+};
+
+typedef QMultiMap<float,SortElement> SortList;
+
 
 /** default constructor */
 NodeList::NodeList()
@@ -103,8 +143,8 @@ void NodeList::read(QString filename) {
     qDebug("NodeList::read(%s): file not founed\n",filename.toLatin1().constData());
     return;
   }
-	read(fp);
-	fp.close();
+  read(fp);
+  fp.close();
 }
 
 /** read a list of Node and the attributes from the provided filepointer */
@@ -225,7 +265,7 @@ void NodeList::read(MLParser& parser) {
 /** operator +=  for NodeList*/
 NodeList& NodeList::operator += (NodeList& nl){
   qDebug("NodeList::operator +=: start");
-  for (ConstIterator it=nl.constBegin(); it!=constEnd(); ++it) {
+  for (ConstIterator it=nl.constBegin(); it!=nl.constEnd(); ++it) {
     qDebug("NodeList::operator +=: key %s ",it.key().toLatin1().constData());
     insert(it.key(), it.value());
   }
@@ -417,24 +457,63 @@ NodeList* NodeList::merge (bool newReg, QString outImgName) {
   //calc new geo coordinates using all nodes of liste 'this'
   if (gN_==0.0 || gS_==0.0) calcNewGEOValues(gN_,gS_,gW_,gE_,sizeX_, sizeY_, xRes_,yRes_);
   qDebug("$#$merge gN_:%f gS_:%f gW_:%f gE_:%f sizeX_:%d sizeY_:%d xRes_:%f yRes_:%f ",gN_,gS_,gW_,gE_,sizeX_,sizeY_,xRes_,yRes_);
+
+  /*
+    Merging is only necessary, when there might be a conflict between regions.
+    If all regions share the same label image this cannot be the case.
+    
+    Implemented 2009-05-19, Christian Becker
+   */
+  if (isEmpty()) 
+    return new NodeList(*this, true);
+
+  {
+    bool merging_necessary=false;
+    {
+      ConstIterator it=constBegin();
+      QString oldFileName = (*it)->filename();
+      
+      for (; it!=constEnd(); ++it) {
+	if (oldFileName != (*it)->filename()){
+	  merging_necessary=true;
+	  break;
+	}
+      }
+    }
+
+    if (!merging_necessary) {
+      
+      // There is nothing to merge    
+      NodeList* selected=new NodeList(*this, true);// copy node list
+      Iterator it=begin();
+      outImage_=readLabelFile((*it)->filename(),(*it)->geoWest(), (*it)->geoNorth(), (*it)->geoEast(), (*it)->geoSouth());      
+      for (;it!=end();++it) {
+	(*it)->filename(outImgName);
+      }
+      registerLabelFile(outImgName, outImage_);
+      return selected;
+    }
+  }
   
   //generate a sorted list of nodes using 'p' the weighing
-  SortPtrList sortlist;
+  SortList sortlist;
   for (ConstIterator it=constBegin(); it!=constEnd(); ++it) {
     BottomUpLib::Node* node = it.value();
-    SortElement* e;
     if (node->contains( "p" ))
-      e = new SortElement(node,
-			  node->value("p").toFloat(),
-			  it.key());
+      sortlist.insert(node->value("p").toFloat(),
+		      SortElement(node,
+				  node->value("p").toFloat(),
+				  it.key()));
     else
-      e = new SortElement(node,
-			  node->p(),
-			  it.key());
-    sortlist.append(e);
+      sortlist.insert(node->p(),
+		      SortElement(node,
+				  node->p(),
+				  it.key()));
+		      //    sortlist.append(e);
   }
+#if 0
   qSort(sortlist.begin(), sortlist.end());
-  
+#endif  
   //merge and relabel the images of all nodes in nodelist
   int freeID=maxID_;
   maxID_++; //label count -> all label are relabeled / label 1 is reserved
@@ -442,12 +521,13 @@ NodeList* NodeList::merge (bool newReg, QString outImgName) {
   int changeVec[sortlist.count()+maxID_]; //vektor, um IDs der veränderten nodeen zu erfassen
   for (unsigned int j=0; j<sortlist.count()+maxID_; j++)changeVec[j]=0;//initialisierung
   qDebug("NodeList::merge: changeVec-size %d",  sortlist.count()+maxID_);
-  for (SortPtrList::Iterator se=sortlist.begin(); 
+  for (SortList::Iterator se=sortlist.begin(); 
        se != sortlist.end(); 
        ++se ) {
-    BottomUpLib::Node* node=(*se)->node();
+    BottomUpLib::Node* node=se->node();
+    node->debug();
     qDebug("### merge: p=%f, l_id=%d, n_id=%d, read:%s",
-	   (*se)->p(), 
+	   se->p(), 
 	   node->id(),
 	   maxID_, 
 	   node->filename().toLatin1().constData());
@@ -467,7 +547,7 @@ NodeList* NodeList::merge (bool newReg, QString outImgName) {
     qDebug("Done                        %4d %4d %4d %4d",
 	   nllx,nlly,nurx,nury);
     node->id(maxID_);
-    (*se)->setGeoPos(nllx, nlly, nurx, nury);
+    se->setGeoPos(nllx, nlly, nurx, nury);
     maxID_++;
   } //variable maxID is used later ([2..maxID-1] = count_of_old_nodes)
   outImage_.write(outImgName.toLatin1());	//NEW
@@ -475,10 +555,10 @@ NodeList* NodeList::merge (bool newReg, QString outImgName) {
   //calculate new Node attibutes and look for divided nodes
   NodeList* selected=new NodeList(*this, false);// new nodelist for result, no deep copy
   //  int *pic=(int*)outImage_.begin();
-  for (SortPtrList::Iterator se=sortlist.begin(); 
+  for (SortList::Iterator se=sortlist.begin(); 
        se != sortlist.end(); 
        ++se ) {
-    BottomUpLib::Node* node=(*se)->node();
+    BottomUpLib::Node* node=se->node();
     int oldID = node->id(); //urspruengliche ID der node - bleibt in der Schleife immer gleich
     QString addr = node->addr(); //daten zum uebertragen speichern
     QString classname = node->classname();
@@ -486,7 +566,7 @@ NodeList* NodeList::merge (bool newReg, QString outImgName) {
     float p =node->p();
     if (node->contains( "p" )) 
       p=node->value("p").toFloat();
-    node->clear(); //daten loeschen
+    //node->clear(); //daten loeschen , !! Removed by Becker 2008-09-28
     node->classname(classname);//neue daten eintragen
     node->filename(outImgName);//node->setValue("file",outImgName);
     node->setValue("addr",addr);
@@ -501,14 +581,15 @@ NodeList* NodeList::merge (bool newReg, QString outImgName) {
     node->replace("file_geoWest", gW_);
     node->load(*this);
     node->update();
+    node->debug();
 //node->info();
     if(changeVec)
       if(changeVec[oldID]){ //veraendert?
         node->setValue("change",(new QString)->sprintf("true"));
         if(!newReg) selected->insert(node->key(),node);			
         else {
-          for (int y=(*se)->ury; y<=(*se)->lly; y++)
-            for (int x=(*se)->llx; x<=(*se)->urx; x++) {
+          for (int y=se->ury; y<=se->lly; y++)
+            for (int x=se->llx; x<=se->urx; x++) {
               if (outImage_.getInt(x,y)==oldID) {
                 if(oldID != freeID) {
                   int newID=freeID;
@@ -552,11 +633,11 @@ NodeList* NodeList::merge (bool newReg, QString outImgName) {
 
 //  qDebug("maxId=%d",maxID_);
   Image bb = calcBoundingBoxes(outImage_, maxID_);
-  for (SortPtrList::Iterator se=sortlist.begin(); 
+  for (SortList::Iterator se=sortlist.begin(); 
        se != sortlist.end(); 
        ++se ) {
     //set bounding box values
-    BottomUpLib::Node* node=(*se)->node();
+    BottomUpLib::Node* node=se->node();
 //    qDebug("id=%4d, bbox=%4d %4d %4d %4d",
 //    node->id(),
 //    bb.getInt(node->id(),0),
@@ -572,6 +653,7 @@ NodeList* NodeList::merge (bool newReg, QString outImgName) {
         bb.getInt(node->id(),2)==0 && bb.getInt(node->id(),3)==0 )
       selected->remove(node->key());
     node->update();
+    node->debug();
   }
   //outImage_.write(outImgName);
   return selected;
@@ -631,6 +713,10 @@ Image& NodeList::readLabelFile(QString filename, double gW, double gN, double gE
   }
 #endif
   return *im;
+}
+
+void NodeList::registerLabelFile(QString filename, Image& labelimage){
+  imageDict_.insert(filename, &labelimage);
 }
 
 /** write the resulting label image */

@@ -184,7 +184,11 @@ void Project::saveResults()
 {
   instanceNet_.write();
   QFileInfo finfo(instanceNet_.filename());
-  finfo.setFile(finfo.dir().dirName(),finfo.baseName()+".map");
+  qDebug("Project::saveResult: %s dir=%s, name=%s",
+	 instanceNet_.filename().toLatin1().constData(),
+	 finfo.dir().path().toLatin1().constData(),
+	 finfo.baseName().toLatin1().constData());
+  finfo.setFile(finfo.dir().path(),finfo.baseName()+".map");
   if (!mapImage_) 
     throw GeneralException(QObject::tr("Map doesn't exists!"), 
 			   __FILE__":Project::saveResults", __LINE__);
