@@ -28,23 +28,25 @@ using namespace GA::IE;
 /// \param nConst Constant descriptor
 ///
 ///////////////////////////////////////////////////////////////////////////////
-const std::string GA::IE::constToString(const quint16& nConst)
+const char* GA::IE::constToString(const quint16& nConst)
 {
     switch(nConst)
     {
         case REQUEST_PART_OF_IMAGE:
-            return "REQUEST_PART_OF_IMAGE";
+            return QT_TR_NOOP("REQUEST_PART_OF_IMAGE");
         case REQUEST_SETUP_SERVER:
-            return "REQUEST_SETUP_SERVER";
+            return QT_TR_NOOP("REQUEST_SETUP_SERVER");
+        case REQUEST_SHUTDOWN_SERVER:
+            return QT_TR_NOOP("REQUEST_SHUTDOWN_SERVER");
         case REQUEST_RETURN_VALUE_ACCEPT:
-            return "REQUEST_RETURN_VALUE_ACCEPT";
+            return QT_TR_NOOP("REQUEST_RETURN_VALUE_ACCEPT");
         case REQUEST_RETURN_VALUE_WRONG_PARAM:
-            return "REQUEST_RETURN_VALUE_WRONG_PARAM";
+            return QT_TR_NOOP("REQUEST_RETURN_VALUE_WRONG_PARAM");
         case REQUEST_ADD_IMAGE:
-            return "REQUEST_ADD_IMAGE";
+            return QT_TR_NOOP("REQUEST_ADD_IMAGE");
         case REQUEST_ADD_IMAGES:
-            return "REQUEST_ADD_IMAGES";
+            return QT_TR_NOOP("REQUEST_ADD_IMAGES");
         default:
-            return "REQUEST_UNKNOWN";
+            return QT_TR_NOOP("REQUEST_UNKNOWN");
     }
 }

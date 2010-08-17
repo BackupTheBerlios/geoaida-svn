@@ -21,9 +21,11 @@ set(lib_sources
 
 set(exe_sources
 	main.cpp
+	main_client.cpp
 )
 
 set(moc_headers
+	main_client.h
 	image_client.h
 )
 

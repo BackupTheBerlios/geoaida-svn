@@ -42,7 +42,7 @@ bool ImageEngineDefault::addImage(QString FileName,QString ImageKey, float GeoWe
 {
   GeoImage *gi = new GeoImage(FileName, ImageKey, GeoWest, GeoNorth, GeoEast, GeoSouth);
   gi->load();
-  geoImageList.insert(*((*gi)["key"]), gi);
+  //geoImageList.insert(*((*gi)["key"]), gi);
 
   return true;
 }

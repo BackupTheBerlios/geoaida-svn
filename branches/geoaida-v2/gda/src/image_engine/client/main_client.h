@@ -9,40 +9,34 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-/// \file		image_server.h
-/// \brief		Prototype of class "ImageServer"
+/// \file		main_client.h
+/// \brief		
 ///
-/// \date		2009-05-19
-/// \author		Torsten Bueschenfeld (bfeld@tnt.uni-hannover.de)
-///			Karsten Vogt (vogt@tnt.uni-hannover.de
+/// \date		2010-04-21
+/// \author		Karsten Vogt (vogt@tnt.uni-hannover.de)
 ///
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef __IMAGE_SERVER_H
-#define __IMAGE_SERVER_H
+#ifndef __MAIN_CLIENT_H
+#define __MAIN_CLIENT_H
 
 //--- Standard header --------------------------------------------------------//
+#include <QtCore>
 
 //--- Program header ---------------------------------------------------------//
-#include "image_engine_base.h"
-#include "image_engine_default.h"
 
 //--- Misc header ------------------------------------------------------------//
-#include <QtCore>
-#include <QtNetwork>
-
-//--- Constants --------------------------------------------------------------//
 
 namespace GA{namespace IE{
 
-//class ImageServerThread;
+class ImageClient;
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-/// \brief Class that implements a TCP server to handle images.
+/// \brief This class handles the program logic.
 /// 
 ////////////////////////////////////////////////////////////////////////////////
-class ImageServer : public QTcpServer
+class MainClient : public QObject
 {
 
     Q_OBJECT
@@ -50,34 +44,30 @@ class ImageServer : public QTcpServer
     public:
 
         //--- Constructor / Destructor----------------------------------------//
-        ImageServer(const quint16& unPort, QObject* parent=0);
+        MainClient();
+        ~MainClient();
 
+        //--- Constant Methods -----------------------------------------------//
+        
         //--- Methods --------------------------------------------------------//
 
-        //--- Constant Methods -----------------------------------------------//
-    
     private slots:
-	void openPendingClientConnection();
-	void getRequest();
-        void shutdown();
-    
-    signals:
-	void closed();
-      
+
+        //--- Methods --------------------------------------------------------//
+	void usage();
+	void run();
+	
+	void processResponse(quint16 response);
+
     private:
-
-	//--- Methods --------------------------------------------------------//
-	void requestAddImage(const QList<QVariant> &parameterList);
-	void requestAddImages(const QList<QVariant> &parameterList);
-	void requestPartOfImage(const QList<QVariant> &parameterList);
-	void requestSetupServer(const QList<QVariant> &parameterList);
-	void requestShutdownServer(const QList<QVariant> &parameterList);
-
         //--- Constant Methods -----------------------------------------------//
-        void sendRequestReturnValue(const quint16& nReturn) const;
 
+        //--- Methods --------------------------------------------------------//
+        
+        //--- Methods --------------------------------------------------------//
+    
         //--- Private Variables ----------------------------------------------//
-        ImageEngineBase*    		m_pImageEngine;     ///< Pointer to image engine
+	ImageClient* m_client;
 };
 
 }}

@@ -6,6 +6,10 @@
 #include <otbRemoteSensingRegion.h>
 #include <otbImageList.h>
 
+#include <otbResampleImageFilter.h>
+//#include <itkAffineTransform.h>
+#include <itkIdentityTransform.h>
+#include <otbBSplineInterpolateImageFunction.h>
 
 namespace otbgeo {
       
@@ -135,6 +139,60 @@ namespace otbgeo {
     imageRegion.SetIndex(imageRegionIndex);
     imageRegion.SetSize(imageRegionSize);
     return imageRegion;
+  }
+
+  /**
+   * Extract image data that lies within the given geoRegion using resampling.
+   *
+   * @param geoRegion GeoRegion
+   * @param image Image
+   * @param spacing Spacing of the output image
+   * @return Image that contains the image data.
+   */
+  template <class TLabel> typename otb::Image<TLabel, 2>::RegionType geocutImage(const GeoRegion& geoRegion, const typename otb::Image<TLabel, 2>::Pointer image, double spacing) {
+    typedef otb::Image<TLabel> ImageType;
+    
+    // Calculate output spacing and origin and update the georegion
+    ImageType::SpacingType outputImageSpacing;
+    outputImageSpacing[0] = spacing * (geoRegion.GetSpacing()[0] < 0 ? -1 : 1);
+    outputImageSpacing[1] = spacing * (geoRegion.GetSpacing()[1] < 0 ? -1 : 1);
+
+    ImageType::SizeType outputImageSize;
+    outputImageSize[0] = static_cast<long>(geoRegion.GetSize()[0] / spacing);
+    outputImageSize[1] = static_cast<long>(geoRegion.GetSize()[1] / spacing);
+    
+    ImageType::PointType outputImageOrigin;
+    outputImageOrigin[0] = geoRegion.GetOrigin()[0];
+    outputImageOrigin[1] = geoRegion.GetOrigin()[1];
+        
+    // Create and execute resample filter
+    typedef otb::StreamingResampleImageFilter<ImageType, ImageType> ResamplerType;
+    typedef itk::IdentityTransform<double, 2> TransformType;
+    typedef otb::BSplineInterpolateImageFunction<ImageType> InterpolatorType;
+
+    typename TransformType::Pointer transform = TransformType::New();
+//     typename TransformType::InputPointType transform_center;
+//     typename TransformType::OutputVectorType transform_translation;
+//     typename TransformType::MatrixType transform_matrix;
+//     
+//     transform->SetCenter(transform_center);
+//     transform->SetTranslation(transform_translation);
+//     transform->SetMatrix(transform_matrix);
+
+    typename InterpolatorType::Pointer interpolator = InterpolatorType::New();
+    interpolator->SetSplineOrder(2);
+    
+    typename ResamplerType::Pointer resampler = ResamplerType::New();
+    resampler->SetInput(image);
+    resampler->SetOutputOrigin(outputOrigin);
+    resampler->SetOutputSpacing(outputSpacing);
+    resampler->SetSize(outputSize);
+    resampler->SetTransform(transform);
+    resampler->SetDefaultPixelValue(0);
+    resampler->SetInterpolator(interpolator);
+    resampler->Update();
+
+    return resampler->GetOutput();
   }
 
   /**

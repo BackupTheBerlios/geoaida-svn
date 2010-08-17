@@ -32,16 +32,19 @@ using namespace GA::IE;
 ImageClient::ImageClient(const QString& Host,
                          const quint16& unPort) : m_pTcpSocket(0),
                                                   m_unPort(unPort),
-                                                  m_Host(Host),
-                                                  m_bFinished(false)
+                                                  m_Host(Host)
 {
     m_pTcpSocket = new QTcpSocket(this);
     
     // Establish connections
     connect(m_pTcpSocket, SIGNAL(error(QAbstractSocket::SocketError)),
             this, SLOT(displayError(QAbstractSocket::SocketError)));
-            
-    connect(m_pTcpSocket, SIGNAL(connected()), this, SLOT(sendRequest()));
+    
+    connect(m_pTcpSocket, SIGNAL(readyRead()), this, SLOT(receiveData()));
+    connect(m_pTcpSocket, SIGNAL(disconnected()), this, SIGNAL(closed()));
+    
+    // Connect to server
+    connectToServer();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -51,11 +54,8 @@ ImageClient::ImageClient(const QString& Host,
 ///////////////////////////////////////////////////////////////////////////////
 ImageClient::~ImageClient()
 {
-    if (m_pTcpSocket != 0)
-    {
-        delete m_pTcpSocket;
-        m_pTcpSocket = 0;
-    }
+    delete m_pTcpSocket;
+    m_pTcpSocket = 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -77,21 +77,17 @@ void ImageClient::addImage(QString FileName, QString imageKey,
                                         float GeoWest, float GeoNorth,
                                         float GeoEast, float GeoSouth)
 {
-    m_nRequest = REQUEST_ADD_IMAGE;
-    m_ParameterList.push_back(FileName);
-    m_ParameterList.push_back(imageKey);
-    m_ParameterList.push_back(GeoWest);
-    m_ParameterList.push_back(GeoNorth);
-    m_ParameterList.push_back(GeoEast);
-    m_ParameterList.push_back(GeoSouth);
-    connectToServer();
-    eventLoop();
-    m_ParameterList.pop_back();
-    m_ParameterList.pop_back();
-    m_ParameterList.pop_back();
-    m_ParameterList.pop_back();
-    m_ParameterList.pop_back();
-    m_ParameterList.pop_back();
+    Request request;
+    request.m_Request = REQUEST_ADD_IMAGE;
+    request.m_ParameterList.push_back(FileName);
+    request.m_ParameterList.push_back(imageKey);
+    request.m_ParameterList.push_back(GeoWest);
+    request.m_ParameterList.push_back(GeoNorth);
+    request.m_ParameterList.push_back(GeoEast);
+    request.m_ParameterList.push_back(GeoSouth);
+    m_Requests.push_front(request);
+    
+    QTimer::singleShot(0, this, SLOT(sendRequest()));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -106,11 +102,12 @@ void ImageClient::addImage(QString FileName, QString imageKey,
 ///////////////////////////////////////////////////////////////////////////////
 void ImageClient::addImages(QString fname)
 {
-    m_nRequest = REQUEST_ADD_IMAGES;
-    m_ParameterList.push_back(fname);
-    connectToServer();
-    eventLoop();
-    m_ParameterList.pop_back();
+    Request request;
+    request.m_Request = REQUEST_ADD_IMAGES;
+    request.m_ParameterList.push_back(fname);
+    m_Requests.push_front(request);
+    
+    QTimer::singleShot(0, this, SLOT(sendRequest()));
 }
 
 
@@ -134,21 +131,17 @@ void ImageClient::getPartOfImage(QString imageKey,
                                         QString FileName
                                         )
 {
-    m_nRequest = REQUEST_PART_OF_IMAGE;
-    m_ParameterList.push_back(imageKey);
-    m_ParameterList.push_back(GeoWest);
-    m_ParameterList.push_back(GeoNorth);
-    m_ParameterList.push_back(GeoEast);
-    m_ParameterList.push_back(GeoSouth);
-    m_ParameterList.push_back(FileName);
-    connectToServer();
-    eventLoop();
-    m_ParameterList.pop_back();
-    m_ParameterList.pop_back();
-    m_ParameterList.pop_back();
-    m_ParameterList.pop_back();
-    m_ParameterList.pop_back();
-    m_ParameterList.pop_back();
+    Request request;
+    request.m_Request = REQUEST_PART_OF_IMAGE;
+    request.m_ParameterList.push_back(imageKey);
+    request.m_ParameterList.push_back(GeoWest);
+    request.m_ParameterList.push_back(GeoNorth);
+    request.m_ParameterList.push_back(GeoEast);
+    request.m_ParameterList.push_back(GeoSouth);
+    request.m_ParameterList.push_back(FileName);
+    m_Requests.push_front(request);
+    
+    QTimer::singleShot(0, this, SLOT(sendRequest()));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -161,9 +154,11 @@ void ImageClient::getPartOfImage(QString imageKey,
 ///////////////////////////////////////////////////////////////////////////////
 void ImageClient::setupServer()
 {
-    m_nRequest = REQUEST_SETUP_SERVER;
-    connectToServer();
-    eventLoop();
+    Request request;
+    request.m_Request = REQUEST_SETUP_SERVER;
+    m_Requests.push_front(request);
+    
+    QTimer::singleShot(0, this, SLOT(sendRequest()));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -176,9 +171,11 @@ void ImageClient::setupServer()
 ///////////////////////////////////////////////////////////////////////////////
 void ImageClient::shutdownServer()
 {
-    m_nRequest = REQUEST_SHUTDOWN_SERVER;
-    connectToServer();
-    eventLoop();
+    Request request;
+    request.m_Request = REQUEST_SHUTDOWN_SERVER;
+    m_Requests.push_front(request);
+    
+    QTimer::singleShot(0, this, SLOT(sendRequest()));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -190,10 +187,7 @@ void ImageClient::shutdownServer()
 ///////////////////////////////////////////////////////////////////////////////
 void ImageClient::displayError(QAbstractSocket::SocketError)
 {
-    std::cout << "ImageClient: Error, no connection." << std::endl;
-    
-    // Stop event loop
-    m_bFinished = true;
+    qCritical() << tr("ImageClient: Error, no connection.");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -203,31 +197,36 @@ void ImageClient::displayError(QAbstractSocket::SocketError)
 ///////////////////////////////////////////////////////////////////////////////
 void ImageClient::sendRequest()
 {
-    std::cout << "ImageClient: Sending " << constToString(m_nRequest) << std::endl;
+  while (!m_Requests.empty())
+  {
+    Request request = m_Requests.takeLast();
+    
+    qDebug() << tr("ImageClient: Sending ") << constToString(request.m_Request);
     
     // Prepare outstream to request part of image
     QByteArray block;
     QDataStream out(&block, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_4_0);
     
-    quint8 nNumberOfParameters = m_ParameterList.size();
+    quint8 nNumberOfParameters = request.m_ParameterList.size();
 
     // Stream header information and parameters
     out << (quint64)0; // Reserved for size of data stream
-    out << (quint16)m_nRequest;
+    out << (quint16)request.m_Request;
     out << (quint8)(nNumberOfParameters);
-    for (QList<QVariant>::const_iterator ci=m_ParameterList.begin();
-                                        ci!=m_ParameterList.end(); ++ci)
+    for (QList<QVariant>::const_iterator ci=request.m_ParameterList.begin();
+					ci!=request.m_ParameterList.end(); ++ci)
     {
-        out << (*ci);
+      out << (*ci);
     }
-    std::cout << "ImageClient: Stream size = " << block.size() << std::endl;
+    
+    qDebug() << tr("ImageClient: Stream size = ") << block.size();
+    
     out.device()->seek(0);
     out << (quint64)(block.size()); // Write size of data stream
     
     m_pTcpSocket->write(block);
-    
-    connect(m_pTcpSocket, SIGNAL(readyRead()), this, SLOT(receiveData()));
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -246,14 +245,10 @@ void ImageClient::receiveData()
     if (m_pTcpSocket->bytesAvailable() == sizeof(quint16))
         in >> nReturnVal;
     
-    std::cout << "ImageClient: Received return value from server: " 
-                << constToString(nReturnVal) << std::endl;
+    qDebug() << tr("ImageClient: Received return value from server: ") 
+                << constToString(nReturnVal);
     
-    std::cout << "ImageClient: Disconnecting from server." << std::endl;
-    m_pTcpSocket->disconnectFromHost();
-    
-    // Stop event loop
-    m_bFinished = true;
+    emit responseReceived(nReturnVal);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -263,22 +258,9 @@ void ImageClient::receiveData()
 ///////////////////////////////////////////////////////////////////////////////
 void ImageClient::connectToServer() const
 {
-    std::cout << "ImageClient: Connecting to server." << std::endl;
+    qDebug() << tr("ImageClient: Connecting to server.");
+    
     m_pTcpSocket->abort();
     m_pTcpSocket->connectToHost(m_Host, m_unPort);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-///
-/// \brief Starts the event loop
-///
-///////////////////////////////////////////////////////////////////////////////
-void ImageClient::eventLoop()
-{
-    m_bFinished = false;
-    while (!m_bFinished) 
-        QCoreApplication::processEvents(QEventLoop::AllEvents,30);
-    
-    // Has to be connected _after_ event loop is started
-    connect(m_pTcpSocket, SIGNAL(disconnected()), m_pTcpSocket, SLOT(deleteLater()));
+    m_pTcpSocket->waitForConnected();
 }

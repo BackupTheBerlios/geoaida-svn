@@ -12,7 +12,7 @@
 /// \file		image_client.h
 /// \brief		Prototype of class "ImageClient"
 ///
-///	\date		2009-05-19
+/// \date		2009-05-19
 /// \author		Torsten Bueschenfeld (bfeld@tnt.uni-hannover.de)
 ///
 ////////////////////////////////////////////////////////////////////////////////
@@ -75,25 +75,40 @@ class ImageClient : public QObject
         void receiveData();
         void sendRequest();
 
+    signals:
+      
+	void responseReceived(quint16 response);
+	void closed();
+      
     private:
+	//--- Private Structs / Classes --------------------------------------//
+	struct Request
+	{
+	    quint16		m_Request;
+	    QList<QVariant>	m_ParameterList;
+	    
+	    Request()
+	      : m_Request(0), m_ParameterList()
+	    {
+	    }
+	    
+	    Request(quint16 request, const QList<QVariant> &parameterList)
+	      : m_Request(request), m_ParameterList(parameterList)
+	    {
+	    }
+	};
+	
         //--- Constant Methods -----------------------------------------------//
         void connectToServer() const;
-        //--- Methods --------------------------------------------------------//
-        void eventLoop();
-        
-        //--- Methods --------------------------------------------------------//
-        
+
+        //--- Methods --------------------------------------------------------//        
     
         //--- Private Variables ----------------------------------------------//
         QTcpSocket*     m_pTcpSocket;           ///< Socked for this connection
-        quint8          m_nRequest;             ///< Request header description
         quint16         m_unPort;               ///< Port for connection
         QString         m_Host;                 ///< Host for connection
         
-        bool            m_bFinished;            ///< Flags if eventloop is finished
-        
-        QList<QVariant> m_ParameterList;        ///< List of parameters depending
-                                                ///  on method call
+	QList<Request>  m_Requests;		///< Request queue
 };
 
 }}

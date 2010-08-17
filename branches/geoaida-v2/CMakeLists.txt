@@ -5,7 +5,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I/opt/local/include")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L/opt/local/lib")
 endif(APPLE)
 
-ADD_SUBDIRECTORY(logging)
+#ADD_SUBDIRECTORY(logging)
 ADD_SUBDIRECTORY(pfm)
 #ADD_SUBDIRECTORY(ga_image)
 ADD_SUBDIRECTORY(ga_image-compatible)

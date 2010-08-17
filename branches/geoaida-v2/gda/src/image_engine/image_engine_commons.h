@@ -20,8 +20,7 @@
 #ifndef __IMAGE_ENGINE_COMMONS_H
 #define __IMAGE_ENGINE_COMMONS_H
 
-#include <QObject>
-#include <string>
+#include <QtCore>
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -55,7 +54,7 @@ const quint16 REQUEST_ADD_IMAGES= 7;                ///< Signal to ask server
                                                     ///  method
 
 //--- Functions --------------------------------------------------------------//
-const std::string constToString(const quint16& nConst);
+const char* constToString(const quint16& nConst);
 
 }}
 
